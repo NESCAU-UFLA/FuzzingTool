@@ -25,16 +25,16 @@ def main(argv):
         if ('=' in get):
             get = get.split('=')[0]
         args.append(get)
-        isGet = True
+        method = 'GET'
     except ValueError as e:
         url = argv[index+1]
-        isGet = False
+        method = 'POST'
     try:
         index = argv.index('-f')
         fileName = argv[index+1]
     except ValueError as e:
         exit('Need an file to make the fuzzying')
-    fuzz = FuzzyTool(isGet)
+    fuzz = FuzzyTool(method)
     fuzz.setUrl(url)
     fuzz.setArgs(args)
     if ('--cookie' in argv):
