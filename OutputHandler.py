@@ -1,8 +1,8 @@
-class MessageHandler:
+class OutputHandler:
     def __init__(self):
         self.__info = '\033[90m['+'\033[36mINFO'+'\033[90m] \033[0m'
         self.__warning = '\033[90m['+'\033[33mWARNING'+'\033[90m] \033[0m'
-        self.__error = '\033[90m['+'\u001b[31mERROR'+'\033[90m] \033[0m'
+        self.__error = '\033[90m['+'\u001b[31;1mERROR'+'\033[90m] \033[0m'
 
     def getInfo(self, msg):
         return self.__info + msg
@@ -47,4 +47,4 @@ class MessageHandler:
         else:
             return line
 
-mh = MessageHandler()
+oh = OutputHandler()
