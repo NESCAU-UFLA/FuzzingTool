@@ -14,15 +14,18 @@ class OutputHandler:
         return self.__error + msg
 
     def getInitOrEnd(self):
-        print('+'+('-'*9)+'+'+('-'*32)+'+'+('-'*8)+'+'+('-'*10)+'+'+('-'*12)+'+')
+        print('  +'+('-'*9)+'+'+('-'*32)+'+'+('-'*8)+'+'+('-'*10)+'+'+('-'*12)+'+')
 
     def getHeader(self):
         self.getInitOrEnd()
-        self.printContent(['Request', 'Data Send', 'Status', 'Length', 'Time'])
+        self.printContent(['Request', 'Data Send', 'Status', 'Length', 'Time'], False)
         self.getInitOrEnd()
 
-    def printContent(self, args):
-        print('| '+'{:<7}'.format(args[0])+' | '+'{:<30}'.format(args[1])+' | '+'{:<6}'.format(args[2])+' | '+'{:<8}'.format(args[3])+' | '+'{:<10}'.format(args[4])+' |')
+    def printContent(self, args, vulnValidator):
+        if (not vulnValidator):
+            print('  | '+'{:<7}'.format(args[0])+' | '+'{:<30}'.format(args[1])+' | '+'{:<6}'.format(args[2])+' | '+'{:<8}'.format(args[3])+' | '+'{:<10}'.format(args[4])+' |')
+        else:
+            print('  | '+u'\u001b[32;1m{:<7}'.format(args[0])+'\033[0m | '+'\u001b[32;1m{:<30}'.format(args[1])+'\033[0m | '+'\u001b[32;1m{:<6}'.format(args[2])+'\033[0m | '+'\u001b[32;1m{:<8}'.format(args[3])+'\033[0m | '+'\u001b[32;1m{:<10}'.format(args[4])+'\033[0m |')
 
     def askYesNo(self, msg):
         action = input(self.getWarning(msg))

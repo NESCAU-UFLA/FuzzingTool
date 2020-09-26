@@ -96,24 +96,13 @@ class RequestHandler:
         proxyList = self.getProxyList()
         self.setProxy(proxyList[int(i/10)%len(proxyList)])
 
-    def start(self, requestsFile, proxiesFile):
-        hasProxies = False
-        if (proxiesFile != None):
-            hasProxies = True
-            self.readProxiesFromFile(proxiesFile)
-            proxiesFile.close()
-        if (self.testConnection() != None):
-            oh.infoBox("Connection estabilished.")
-        else:
-            oh.errorBox("Failed to connect to the server.")
-        self.testRedirection()
-        oh.infoBox("Starting test on '"+self.getUrl()+"' ...")
+    def fuzzyingFromFile(self, requestsFile, hasProxies):
         oh.getHeader()
         i = 0
         requestAux = requests.get(self.getUrl(), params=self.getParam(), cookies=self.getCookie(), proxies=self.getProxy())
         firstRequestTime = requestAux.elapsed.total_seconds()
         firstRequestLength = requestAux.headers.get('content-length')
-        oh.printContent([i, self.getParam()[self.getArgs()[0]], requestAux.status_code, firstRequestLength, firstRequestTime])
+        oh.printContent([i, self.getParam()[self.getArgs()[0]], requestAux.status_code, firstRequestLength, firstRequestTime], False)
         for line in requestsFile:
             if (hasProxies and i%10 == 0):
                 self.setProxyByRequestIndex(i)
@@ -126,8 +115,25 @@ class RequestHandler:
                 r = requests.post(self.getUrl(), data=self.getParam(), cookies=self.getCookie(), proxies=self.getProxy())
             requestTime = r.elapsed.total_seconds()
             requestLength = r.headers.get('content-length')
-            #if (requestTime > 1):
-            oh.printContent([i, oh.fixLineToOutput(line), r.status_code, requestLength, requestTime])
+            probablyVulnerable = False
+            if (requestTime > (firstRequestTime+1)):
+                probablyVulnerable = True
+            oh.printContent([i, oh.fixLineToOutput(line), r.status_code, requestLength, requestTime], probablyVulnerable)
             time.sleep(self.getDelay())
-        oh.getInitOrEnd()
+        oh.getHeader()
         requestsFile.close()
+
+    def start(self, requestsFile, proxiesFile):
+        hasProxies = False
+        if (proxiesFile != None):
+            hasProxies = True
+            self.readProxiesFromFile(proxiesFile)
+            proxiesFile.close()
+        if (self.testConnection() != None):
+            oh.infoBox("Connection estabilished.")
+        else:
+            oh.errorBox("Failed to connect to the server.")
+        self.testRedirection()
+        oh.infoBox("Starting test on '"+self.getUrl()+"' ...")
+        self.fuzzyingFromFile(requestsFile, hasProxies)
+        oh.infoBox("Test completed.")
