@@ -10,6 +10,7 @@ class RequestHandler:
         self.__cookie = {}
         self.__delayBetweenRequests = 0
         self.__proxy = {}
+        self.__proxyList = []
     
     def getUrl(self):
         return self.__url
@@ -29,6 +30,9 @@ class RequestHandler:
     def getProxy(self):
         return self.__proxy
 
+    def getProxyList(self):
+        return self.__proxyList
+
     def setUrl(self, url):
         self.__url = url
     
@@ -44,8 +48,14 @@ class RequestHandler:
     def setProxy(self, proxy):
         self.__proxy = proxy
 
+    def setProxyList(self, proxyList):
+        self.__proxyList = proxyList
+
     def addParam(self, index, value):
         self.__param[index] = value
+
+    def addProxy(self, proxy):
+        self.__proxyList.append(proxy)
 
     def testConnection(self):
         try:
@@ -61,21 +71,26 @@ class RequestHandler:
             if (not mh.askYesNo("You was redirected to another page. Do you want to continue? (y/N): ")):
                 exit("Ended process...")
 
-    def getValidProxy(self, file):
-        oneProxy = file.readline()
-        oneProxy = oneProxy.rstrip("\n")
-        self.setProxy({
-            'http://': 'http://'+oneProxy,
-            'https://': 'http://'+oneProxy
-        })
-        while (self.testConnection() == None):
-            oneProxy = file.readline()
-            oneProxy = oneProxy.rstrip("\n")
-            self.setProxy({
-                'http://': 'http://'+oneProxy,
-                'https://': 'http://'+oneProxy
-            })
-        print(self.getProxy())
+    def readProxiesFromFile(self, fileName):
+        try:
+            file = open(fileName, 'r')
+            for line in file:
+                line = line.rstrip("\n")
+                self.setProxy({
+                    'http://': 'http://'+line,
+                    'https://': 'http://'+line
+                })
+                self.testProxy()
+        except FileNotFoundError as e:
+            exit("File '"+fileName+"' not found . . .")
+
+    def testProxy(self):
+        if (self.testConnection() != None):
+            self.addProxy(self.getProxy())
+
+    def setProxyByRequestIndex(self, i):
+        proxyList = self.getProxyList()
+        self.setProxy(proxyList[int(i/10)%len(proxyList)])
 
     def start(self, fileName, proxiesFileName):
         try:
@@ -85,10 +100,7 @@ class RequestHandler:
         hasProxies = False
         if (proxiesFileName != ""):
             hasProxies = True
-            try:
-                proxiesFile = open(proxiesFileName, 'r')
-            except FileNotFoundError as e:
-                exit("File '"+proxiesFileName+"' not found . . .")
+            self.readProxiesFromFile(proxiesFileName)
         requestAux = self.testConnection()
         if (requestAux != None):
             mh.infoBox("Connection estabilished")
@@ -103,7 +115,7 @@ class RequestHandler:
         mh.printContent([i, '', requestAux.status_code, firstRequestLength, firstRequestTime])
         for line in file:
             if (hasProxies and i%10 == 0):
-                self.getValidProxy(proxiesFile)
+                self.setProxyByRequestIndex(i)
             i += 1
             line = line.rstrip("\n")
             self.setParam({})
@@ -114,6 +126,5 @@ class RequestHandler:
             requestTime = r.elapsed.total_seconds()
             requestLength = r.headers.get('content-length')
             #if (requestTime > 1):
-            #mh.printContent([i, mh.fixLineToOutput(line), r.status_code, requestLength, requestTime])
-            
+            mh.printContent([i, mh.fixLineToOutput(line), r.status_code, requestLength, requestTime])
         mh.getInitOrEnd()
