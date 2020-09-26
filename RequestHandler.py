@@ -69,7 +69,7 @@ class RequestHandler:
     def testRedirection(self, request):
         if ('[302]' in str(request.history)):
             if (not mh.askYesNo("You was redirected to another page. Do you want to continue? (y/N): ")):
-                exit("Ended process...")
+                exit(0)
 
     def readProxiesFromFile(self, fileName):
         try:
@@ -82,7 +82,7 @@ class RequestHandler:
                 })
                 self.testProxy()
         except FileNotFoundError as e:
-            exit("File '"+fileName+"' not found . . .")
+            mh.errorBox("File '"+fileName+"' not found . . .")
 
     def testProxy(self):
         if (self.testConnection() != None):
@@ -105,7 +105,7 @@ class RequestHandler:
         if (requestAux != None):
             mh.infoBox("Connection estabilished")
         else:
-            exit("Failed to connect to the server.")
+            mh.errorBox("Failed to connect to the server.")
         self.testRedirection(requestAux)
         mh.infoBox("Starting test on '"+self.getUrl()+"' ...")
         mh.getHeader()
