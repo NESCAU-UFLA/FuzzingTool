@@ -1,3 +1,10 @@
+def writeOnFile(outputFile, i, value, status, requestLength, requestTime):
+    outputFile.write("Request: "+str(i)+"\n")
+    outputFile.write("Param value: "+value+"\n")
+    outputFile.write("Status code: "+str(status)+"\n")
+    outputFile.write("Length: "+str(requestLength)+"\n")
+    outputFile.write("Time taken: "+str(requestTime)+" seconds\n\n")
+
 class OutputHandler:
     def __init__(self):
         self.__info = '\033[90m['+'\033[36mINFO'+'\033[90m] \033[0m'
@@ -49,5 +56,8 @@ class OutputHandler:
             return output
         else:
             return line
+
+    def progressStatus(self, status):
+        print('\r'+self.getInfo("Progress status: "+'{:<4}'.format(status+'%')+' completed'), end='')
 
 oh = OutputHandler()
