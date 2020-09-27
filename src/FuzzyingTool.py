@@ -74,23 +74,18 @@ def getRequestParams(argv, param):
         @rtype: list
         @returns defaultEntries: The default parameters (variables and values) used in the first request
     """
-    entries = []
     defaultEntries = {}
     if ('&' in param):
         param = param.split('&', param.count('&'))
         for arg in param:
             if ('=' in arg):
                 arg, value = arg.split('=')
-                entries.append(arg)
-                if (value != ''):
-                    defaultEntries[arg] = value
+                defaultEntries[arg] = value
     else:
         if ('=' in param):
             arg, value = param.split('=')
-            entries.append(arg)
-            if (value != ''):
-                defaultEntries[arg] = value
-    return (entries, defaultEntries)
+            defaultEntries[arg] = value
+    return defaultEntries
 
 def getWordlistFile(argv):
     """Get the fuzzying wordlist filename from -f argument, and returns the file object
@@ -188,13 +183,12 @@ def main(argv):
         helpMenu()
     url = getUrl(argv)
     url, method, param = getMethodAndArgs(argv, url)
-    entries, defaultEntries = getRequestParams(argv, param)
+    defaultEntries = getRequestParams(argv, param)
     getWordlistFile(argv)
-    requestHandler = RequestHandler(url, method, entries, defaultEntries)
+    requestHandler = RequestHandler(url, method, defaultEntries)
     oh.infoBox("Set target: "+url)
     oh.infoBox("Set param method: "+method)
-    oh.infoBox("Set param variables: "+str(entries))
-    oh.infoBox("Set default entries: "+str(defaultEntries))
+    oh.infoBox("Set parameters: "+str(defaultEntries))
     checkCookie(argv, requestHandler)
     checkProxy(argv, requestHandler)
     checkProxies(argv)

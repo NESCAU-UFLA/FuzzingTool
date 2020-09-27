@@ -3,15 +3,15 @@ import time
 import datetime
 from OutputHandler import *
 import settings
+import os
 
 def getRequestTimeAndLength(request):
     return (request.elapsed.total_seconds(), request.headers.get('content-length'))
 
 class RequestHandler:
-    def __init__(self, url, method, args, defaultParam):
+    def __init__(self, url, method, defaultParam):
         self.__url = url
         self.__method = method
-        self.__args = args
         self.__param = defaultParam
         self.__defaultParam = defaultParam
         self.__cookie = {}
@@ -25,9 +25,6 @@ class RequestHandler:
     
     def getMethod(self):
         return self.__method
-
-    def getArgs(self):
-        return self.__args
 
     def getParam(self):
         return self.__param
@@ -50,9 +47,6 @@ class RequestHandler:
     def setUrl(self, url):
         self.__url = url
     
-    def setArgs(self, args):
-        self.__args = args
-
     def setParam(self, param):
         self.__param = param
     
@@ -82,10 +76,13 @@ class RequestHandler:
         except Exception as e:
             return None
 
-    def getPreparedRequest(self, value):
-        self.setParam({arg: value for arg in self.getArgs()})
+    def getPreparedRequest(self, paramValue):
+        self.setParam({})
         for key, value in self.getDefaultParam().items():
-            self.getParam()[key] = value
+            if (value != ''):
+                self.getParam()[key] = value
+            else:
+                self.getParam()[key] = paramValue
         if (self.getMethod() == 'GET'):
             return requests.get(self.getUrl(), params=self.getParam(), cookies=self.getCookie(), proxies=self.getProxy())
         else:
@@ -124,7 +121,11 @@ class RequestHandler:
         firstRequestTime, firstRequestLength = getRequestTimeAndLength(firstRequest)
         i = 0
         t = datetime.datetime.now()
-        outputFile = open('../output/'+str(t.year)+'-'+str(t.month)+'-'+str(t.day)+'_'+str(t.hour)+':'+str(t.minute)+'.txt', 'w')
+        try:
+            outputFile = open('../output/'+str(t.year)+'-'+str(t.month)+'-'+str(t.day)+'_'+str(t.hour)+':'+str(t.minute)+'.txt', 'w')
+        except FileNotFoundError as e:
+            os.system('mkdir ../output')
+            outputFile = open('../output/'+str(t.year)+'-'+str(t.month)+'-'+str(t.day)+'_'+str(t.hour)+':'+str(t.minute)+'.txt', 'w')
         if (settings.verboseMode):
             oh.getHeader()
             oh.printContent([i, '', firstRequest.status_code, firstRequestLength, firstRequestTime], False)
