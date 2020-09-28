@@ -5,11 +5,11 @@ from OutputHandler import *
 import settings
 import os
 
-def getRequestTimeAndLength(request):
+def getRequestTimeAndLength(request: object):
     return (request.elapsed.total_seconds(), request.headers.get('content-length'))
 
 class RequestHandler:
-    def __init__(self, url, method, defaultParam):
+    def __init__(self, url: str, method: str, defaultParam: dict):
         self.__url = url
         self.__method = method
         self.__param = defaultParam
@@ -44,29 +44,26 @@ class RequestHandler:
     def getDelay(self):
         return self.__delay
 
-    def setUrl(self, url):
+    def setUrl(self, url: str):
         self.__url = url
     
-    def setParam(self, param):
+    def setParam(self, param: dict):
         self.__param = param
     
-    def setDefaultParam(self, defaultParam):
+    def setDefaultParam(self, defaultParam: dict):
         self.__defaultParam = defaultParam
 
-    def setCookie(self, cookie):
+    def setCookie(self, cookie: dict):
         self.__cookie = cookie
     
-    def setProxy(self, proxy):
+    def setProxy(self, proxy: dict):
         self.__proxy = proxy
 
-    def setProxyList(self, proxyList):
+    def setProxyList(self, proxyList: list):
         self.__proxyList = proxyList
 
-    def setDelay(self, delay):
+    def setDelay(self, delay: float):
         self.__delay = delay
-
-    def addProxy(self, proxy):
-        self.__proxyList.append(proxy)
 
     def testConnection(self):
         try:
@@ -76,7 +73,7 @@ class RequestHandler:
         except Exception as e:
             return None
 
-    def getPreparedRequest(self, paramValue):
+    def getPreparedRequest(self, paramValue: str):
         self.setParam({})
         for key, value in self.getDefaultParam().items():
             if (value != ''):
@@ -108,13 +105,13 @@ class RequestHandler:
 
     def testProxy(self):
         if (self.testConnection() != None):
-            self.addProxy(self.getProxy())
+            self.__proxyList.append(self.getProxy())
 
-    def setProxyByRequestIndex(self, i):
+    def setProxyByRequestIndex(self, i: int):
         proxyList = self.getProxyList()
         self.setProxy(proxyList[int(i/10)%len(proxyList)])
 
-    def fuzzyingFromFile(self, hasProxies):
+    def fuzzyingFromFile(self, hasProxies: bool):
         numLines = sum(1 for line in settings.wordlistFile)
         settings.wordlistFile.seek(0)
         firstRequest = self.getPreparedRequest(' ')
@@ -136,11 +133,11 @@ class RequestHandler:
             i += 1
             r = self.getPreparedRequest(line)
             requestTime, requestLength = getRequestTimeAndLength(r)
-            status = r.status_code
+            status = str(r.status_code)
             probablyVulnerable = False
             if (int(requestLength) > (int(firstRequestLength)+settings.additionalLength) or requestTime > (firstRequestTime+settings.additionalTime)):
                 probablyVulnerable = True
-                writeOnFile(outputFile, i, line, status, requestLength, requestTime)
+                writeOnFile(outputFile, str(i), line, status, str(requestLength), str(requestTime))
             if (settings.verboseMode):
                 oh.printContent([i, oh.fixLineToOutput(line), status, requestLength, requestTime], probablyVulnerable)
             else:

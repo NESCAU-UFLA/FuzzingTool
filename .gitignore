@@ -1,1 +1,3 @@
 src/__pycache__/
+input/*
+output/*
