@@ -5,18 +5,21 @@ import settings
 
 def helpMenu():
     """Creates the Help Menu"""
-    print("\nParameters:")
-    print(' '*3+"{:<23}".format("-h, --help")+" Display the help menu and exit")
-    print(' '*3+"{:<23}".format("-V, --verbose")+" Enable the verbose mode")
-    print("\n"+' '*3+"Core:")
-    print(' '*5+"{:<21}".format("-u URL")+" Define the target URL")
-    print(' '*5+"{:<21}".format("-f FILENAME")+" Define the entry file")
-    print("\n"+' '*3+"Request options:")
-    print(' '*5+"{:<21}".format("--data DATA")+" Define the POST data")
-    print(' '*5+"{:<21}".format("--proxy IP:PORT")+" Define the proxy")
-    print(' '*5+"{:<21}".format("--proxies FILENAME")+" Define the proxies file")
-    print(' '*5+"{:<21}".format("--cookie COOKIE")+" Define the HTTP Cookie header value")
-    print(' '*5+"{:<21}".format("--delay DELAY")+" Define the delay between each request (in seconds)")
+    oh.helpTitle(0, "Parameters:")
+    oh.helpContent(3, "-h, --help", "Display the help menu and exit")
+    oh.helpContent(3, "-V, --verbose", "Enable the verbose mode")
+    oh.helpTitle(3, "Core:")
+    oh.helpContent(5, "-u URL", "Define the target URL")
+    oh.helpContent(5, "-f FILENAME", "Define the entry file")
+    oh.helpTitle(3, "Request options:")
+    oh.helpContent(5, "--data DATA", "Define the POST data")
+    oh.helpContent(5, "--proxy IP:PORT", "Define the proxy")
+    oh.helpContent(5, "--proxies FILENAME", "Define the proxies file")
+    oh.helpContent(5, "--cookie COOKIE", "Define the HTTP Cookie header value")
+    oh.helpContent(5, "--delay DELAY", "Define the delay between each request (in seconds)")
+    oh.helpTitle(0, "Examples:")
+    oh.helpContent(3, "python3 FuzzyingTool.py -u http://127.0.0.1/post.php?id= -f sqli.txt", '')
+    oh.helpContent(3, "python3 FuzzyingTool.py -f sqli.txt -u http://127.0.0.1/controller/user.php --data 'login&passw&user=login'", '')
     exit("")
 
 def getUrl(argv: list):
@@ -24,8 +27,7 @@ def getUrl(argv: list):
 
     @type argv: list
     @param argv: The arguments given in the execution
-    @rtype: str
-    @returns url: The target URL
+    @returns str: The target URL
     """
     try:
         return argv[argv.index('-u')+1]
@@ -39,8 +41,7 @@ def getMethodAndArgs(argv: list, url: str):
     @param argv: The arguments given in the execution
     @type url: str
     @param url: The target URL
-    @rtype: tuple(str, str, str)
-    @returns (url, method, param): The tuple with the new target URL, the request method and params
+    @returns tuple(str, str, str): The tuple with the new target URL, the request method and params
     """
     if ('?' in url):
         url, param = url.split('?')
@@ -62,8 +63,7 @@ def getRequestParams(argv: list, param: str):
     @param argv: The arguments given in the execution
     @type param: str
     @param param: The parameter string of the request
-    @rtype: dict
-    @returns defaultEntries: The entries of the request
+    @returns dict: The entries of the request
     """
     defaultEntries = {}
     if ('&' in param):
@@ -143,6 +143,7 @@ def checkProxies(argv: list):
             settings.proxiesFile = open('../input/'+proxiesFileName, 'r')
         except FileNotFoundError as e:
             oh.errorBox("File '"+fileName+"' not found.")
+        oh.infoBox("Set proxy: Load proxies from file.")
 
 def checkDelay(argv: list, requestHandler: RequestHandler):
     """Check if the --delay argument is present, and set the value into the requestHandler
