@@ -28,8 +28,14 @@ On this example, you set the POST variables 'login' and 'passw' as entries for t
 ```
 $ python3 FuzzyingTool.py -f sqli.txt -u http://mydomainexample.com/controller/user.php --data 'login&passw&user=login'
 ```
-<br/>
-Put `-h` on the execution parameter tosee the help menu.
+
+Put `-h` on the execution parameter to see the help menu.
+
+## Versioning
+We use <a target="_blank" href="https://semver.org/">SemVer</a> for versioning. For the versions available, see the <a target="_blank" href="https://github.com/NESCAU-UFLA/FuzzyingTool/releases">tags on this repository</a>.
 
 ## Authors
 * <b>Vitor Oriel</b> - <a target="_blank" href="https://github.com/VitorOriel">Profile</a>
+
+## License
+This project is licensed under the MIT License - see the <a target="_blank" href="https://github.com/NESCAU-UFLA/FuzzyingTool/blob/master/LICENSE.md">LICENSE.md</a> for details.
