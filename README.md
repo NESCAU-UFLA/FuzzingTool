@@ -1,6 +1,6 @@
 # FuzzyingTool
-
-
+FuzzyingTool is a web penetration testing tool, that handles with fuzzing. At now, GET and POST are the parameters that you can send data from a file. After the test is completed, all possible vulnerable entries (and the request) are saved on an output file. For examples, see <a href="#usage-examples">Usage Examples</a>.
+<br/><br/>
 This application was made under python v3.6.9.
 
 ## Disclaimer
@@ -16,9 +16,9 @@ $ pip install requests
 ```
 
 ### Installing
-First, download the last release or clone this repository. Give read and write permissions to the installed folder before start the tests.
+First, download the last release or clone this repository. Give read and write permissions to the installed folder before start the tests. Run the tests into `src` directory.
 
-### Usage examples
+### Usage Examples
 On this example, you set the GET variable 'id' as an entry for the fuzzying test. The parameter values are read from the file 'sqli.txt'.
 ```
 $ python3 FuzzyingTool.py -u http://mydomainexample.com/post.php?id= -f sqli.txt
@@ -28,6 +28,8 @@ On this example, you set the POST variables 'login' and 'passw' as entries for t
 ```
 $ python3 FuzzyingTool.py -f sqli.txt -u http://mydomainexample.com/controller/user.php --data 'login&passw&user=login'
 ```
+<br/>
+Put `-h` on the execution parameter tosee the help menu.
 
 ## Authors
 * <b>Vitor Oriel</b> - <a target="_blank" href="https://github.com/VitorOriel">Profile</a>
