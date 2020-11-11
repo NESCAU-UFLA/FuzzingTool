@@ -32,7 +32,7 @@ def getUrl(argv: list):
     try:
         return argv[argv.index('-u')+1]
     except ValueError as e:
-        oh.errorBox("An URL is needed to make the fuzzying.")
+        oh.errorBox("An URL is needed to make the fuzzing.")
 
 def getMethodAndArgs(argv: list, url: str):
     """Get the param method to use ('?' in URL if GET, or --data) and the request param string
@@ -52,7 +52,7 @@ def getMethodAndArgs(argv: list, url: str):
             index = argv.index('--data')+1
             param = argv[index]
         except ValueError as e:
-            oh.errorBox("You must set at least GET or POST parameters for the Fuzzying test.")
+            oh.errorBox("You must set at least GET or POST parameters for the fuzzing test.")
     return (url, method, param)
 
 def getRequestParams(argv: list, param: str):
@@ -79,11 +79,11 @@ def getRequestParams(argv: list, param: str):
             arg, value = param.split('=')
             defaultEntries[arg] = value
         else:
-            defaultEntries[arg] = ''
+            defaultEntries[param] = ''
     return defaultEntries
 
 def getWordlistFile(argv: list):
-    """Get the fuzzying wordlist filename from -f argument, and returns the file object
+    """Get the fuzzing wordlist filename from -f argument, and returns the file object
        if the argument -f doesn't exists, or the file couldn't be open, an error is thrown and the application exits
 
     @type argv: list

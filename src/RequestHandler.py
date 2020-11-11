@@ -223,7 +223,7 @@ class RequestHandler:
         """
         return (request.elapsed.total_seconds(), request.headers.get('content-length'))
 
-    def __fuzzying(self, hasProxies: bool):
+    def __fuzzy(self, hasProxies: bool):
         """Make the fuzzy
 
         @param type: bool
@@ -270,7 +270,7 @@ class RequestHandler:
             print("")
 
     def start(self):
-        """Start the application, test the connection and redirection before make the fuzzying"""
+        """Start the application, test the connection and redirection before make the fuzzing"""
         hasProxies = False
         if (settings.proxiesFile != None):
             hasProxies = True
@@ -282,5 +282,5 @@ class RequestHandler:
         oh.infoBox("Testing redirections ...")
         self.__testRedirection()
         oh.infoBox("Starting test on '"+self.getUrl()+"' ...")
-        self.__fuzzying(hasProxies)
+        self.__fuzzy(hasProxies)
         oh.infoBox("Test completed.")
