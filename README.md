@@ -32,12 +32,12 @@ First, download the last release or clone this repository. Give read and write p
 ### Usage Examples
 On this example, you set the GET variable 'id' as an entry for the fuzzing test. The parameter values are read from the file 'sqli.txt'.
 ```
-$ python3 FuzzyingTool.py -u http://mydomainexample.com/post.php?id= -f sqli.txt
+$ ./FuzzyingTool.py -u http://mydomainexample.com/post.php?id= -f sqli.txt
 ```
 
 On this example, you set the POST variables 'login' and 'passw' as entries for the fuzzing test; and also sets the fixed value 'login' for 'user' variable.
 ```
-$ python3 FuzzyingTool.py -f sqli.txt -u http://mydomainexample.com/controller/user.php --data 'login&passw&user=login'
+$ ./FuzzyingTool.py -f sqli.txt -u http://mydomainexample.com/controller/user.php --data 'login&passw&user=login'
 ```
 
 ## Versioning

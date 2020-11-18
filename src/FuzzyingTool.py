@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 import sys
 from RequestHandler import RequestHandler
 from OutputHandler import *
@@ -18,8 +20,8 @@ def helpMenu():
     oh.helpContent(5, "--cookie COOKIE", "Define the HTTP Cookie header value")
     oh.helpContent(5, "--delay DELAY", "Define the delay between each request (in seconds)")
     oh.helpTitle(0, "Examples:")
-    oh.helpContent(3, "python3 FuzzyingTool.py -u http://127.0.0.1/post.php?id= -f sqli.txt", '')
-    oh.helpContent(3, "python3 FuzzyingTool.py -f sqli.txt -u http://127.0.0.1/controller/user.php --data 'login&passw&user=login'", '')
+    oh.helpContent(3, "./FuzzyingTool.py -u http://127.0.0.1/post.php?id= -f sqli.txt", '')
+    oh.helpContent(3, "./FuzzyingTool.py -f sqli.txt -u http://127.0.0.1/controller/user.php --data 'login&passw&user=login'", '')
     exit("")
 
 def getUrl(argv: list):
