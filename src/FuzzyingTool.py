@@ -31,7 +31,7 @@ def getUrl(argv: list):
     """
     try:
         return argv[argv.index('-u')+1]
-    except ValueError as e:
+    except ValueError:
         oh.errorBox("An URL is needed to make the fuzzing.")
 
 def getMethodAndArgs(argv: list, url: str):
@@ -51,36 +51,41 @@ def getMethodAndArgs(argv: list, url: str):
         try:
             index = argv.index('--data')+1
             param = argv[index]
-        except ValueError as e:
+        except ValueError:
             oh.errorBox("You must set at least GET or POST parameters for the fuzzing test.")
     return (url, method, param)
 
 def getRequestParams(argv: list, param: str):
     """Split all the request parameters into a list of arguments used in the request
-       also set the default parameters value if is given
 
     @type argv: list
     @param argv: The arguments given in the execution
     @type param: str
     @param param: The parameter string of the request
-    @returns dict: The entries of the request
+    @returns dict: The entries data of the request
     """
-    defaultEntries = {}
+    defaultParam = {}
     if ('&' in param):
         param = param.split('&', param.count('&'))
         for arg in param:
-            if ('=' in arg):
-                arg, value = arg.split('=')
-                defaultEntries[arg] = value
-            else:
-                defaultEntries[arg] = ''
+            makeDefaultParam(defaultParam, arg)
     else:
-        if ('=' in param):
-            arg, value = param.split('=')
-            defaultEntries[arg] = value
-        else:
-            defaultEntries[param] = ''
-    return defaultEntries
+        makeDefaultParam(defaultParam, param)
+    return defaultParam
+
+def makeDefaultParam(defaultParam: dict, param: str):
+    """Set the default parameter values if are given
+
+    @type defaultParam: dict
+    @param defaultParam: The entries data of the request
+    @type param: str
+    @param param: The parameter string of the request
+    """
+    if ('=' in param):
+        param, value = param.split('=')
+        defaultParam[param] = value
+    else:
+        defaultParam[param] = ''
 
 def getWordlistFile(argv: list):
     """Get the fuzzing wordlist filename from -f argument, and returns the file object
@@ -94,10 +99,10 @@ def getWordlistFile(argv: list):
         fileName = argv[index]
         try:
             settings.wordlistFile = open('../input/'+fileName, 'r')
-        except FileNotFoundError as e:
-            oh.errorBox("File '"+fileName+"' not found.")
-    except ValueError as e:
-        oh.errorBox("An file is needed to make the fuzzying")
+        except FileNotFoundError:
+            oh.errorBox("File '"+fileName+"' not found. Did you put it in the correct folder?")
+    except ValueError:
+        oh.errorBox("An file is needed to make the fuzzing")
 
 def checkCookie(argv: list, requestHandler: RequestHandler):
     """Check if the --cookie argument is present, and set the value into the requestHandler
@@ -141,7 +146,7 @@ def checkProxies(argv: list):
         proxiesFileName = argv[index]
         try:
             settings.proxiesFile = open('../input/'+proxiesFileName, 'r')
-        except FileNotFoundError as e:
+        except FileNotFoundError:
             oh.errorBox("File '"+fileName+"' not found.")
         oh.infoBox("Set proxy: Load proxies from file.")
 
@@ -179,12 +184,12 @@ def main(argv: list):
         helpMenu()
     url = getUrl(argv)
     url, method, param = getMethodAndArgs(argv, url)
-    defaultEntries = getRequestParams(argv, param)
+    defaultParam = getRequestParams(argv, param)
     getWordlistFile(argv)
-    requestHandler = RequestHandler(url, method, defaultEntries)
+    requestHandler = RequestHandler(url, method, defaultParam)
     oh.infoBox("Set target: "+url)
-    oh.infoBox("Set param method: "+method)
-    oh.infoBox("Set parameters: "+str(defaultEntries))
+    oh.infoBox("Set request method: "+method)
+    oh.infoBox("Set request data: "+str(defaultParam))
     checkCookie(argv, requestHandler)
     checkProxy(argv, requestHandler)
     checkProxies(argv)

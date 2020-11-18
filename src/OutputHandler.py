@@ -96,6 +96,7 @@ class OutputHandler:
 
         @param type: str
         @param line: The line from the file
+        @returns str: The fixed line to output
         """
         if (len(line) > 30):
             output = ""
@@ -107,10 +108,10 @@ class OutputHandler:
             return line
 
     def progressStatus(self, status: str):
-        """Output the progress status of the fuzzying
+        """Output the progress status of the fuzzing
 
         @param type: str
-        @param status: The status progress of the fuzzying (between 0 to 100)
+        @param status: The status progress of the fuzzing (between 0 to 100)
         """
         print('\r'+self.getInfo("Progress status: "+'{:<4}'.format(status+'%')+' completed'), end='')
 

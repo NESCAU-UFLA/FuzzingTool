@@ -158,7 +158,7 @@ class RequestHandler:
             r = requests.get(self.getUrl(), cookies=self.getCookie(), proxies=self.getProxy())
             r.raise_for_status()
             return r
-        except Exception as e:
+        except Exception:
             return None
 
     def __getPreparedRequest(self, paramValue: str):
@@ -223,27 +223,35 @@ class RequestHandler:
         """
         return (request.elapsed.total_seconds(), request.headers.get('content-length'))
 
+    def __makeOutputFile(self):
+        """Makes the output file with the probably vulnerable response data
+
+        @returns object: The output file
+        """
+        t = datetime.datetime.now()
+        try:
+            outputFile = open('../output/'+str(t.year)+'-'+str(t.month)+'-'+str(t.day)+'_'+str(t.hour)+':'+str(t.minute)+'.txt', 'w')
+        except FileNotFoundError:
+            os.system('mkdir ../output')
+            outputFile = open('../output/'+str(t.year)+'-'+str(t.month)+'-'+str(t.day)+'_'+str(t.hour)+':'+str(t.minute)+'.txt', 'w')
+        return outputFile
+
     def __fuzzy(self, hasProxies: bool):
         """Make the fuzzy
 
         @param type: bool
         @param hasProxies: Case will use proxies from a list
         """
-        if (not settings.verboseMode):
-            numLines = sum(1 for line in settings.wordlistFile)
-            settings.wordlistFile.seek(0)
         firstRequest = self.__getPreparedRequest(' ')
         firstRequestTime, firstRequestLength = self.__getRequestTimeAndLength(firstRequest)
         i = 0 # The request index
-        t = datetime.datetime.now()
-        try:
-            outputFile = open('../output/'+str(t.year)+'-'+str(t.month)+'-'+str(t.day)+'_'+str(t.hour)+':'+str(t.minute)+'.txt', 'w')
-        except FileNotFoundError as e:
-            os.system('mkdir ../output')
-            outputFile = open('../output/'+str(t.year)+'-'+str(t.month)+'-'+str(t.day)+'_'+str(t.hour)+':'+str(t.minute)+'.txt', 'w')
+        outputFile = self.__makeOutputFile()
         if (settings.verboseMode):
             oh.getHeader()
             oh.printContent([i, '', firstRequest.status_code, firstRequestLength, firstRequestTime], False)
+        else:
+            numLines = sum(1 for line in settings.wordlistFile)
+            settings.wordlistFile.seek(0)
         for line in settings.wordlistFile:
             line = line.rstrip("\n")
             if (hasProxies and i%10 == 0):
