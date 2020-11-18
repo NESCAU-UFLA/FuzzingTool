@@ -1,6 +1,6 @@
 import requests
 import time
-import datetime
+from datetime import datetime
 from OutputHandler import *
 import settings
 import os
@@ -183,7 +183,7 @@ class RequestHandler:
         """Test if the connection will has a redirection"""
         request = self.__getPreparedRequest(' ')
         if ('[302]' in str(request.history)):
-            if (not oh.askYesNo("You was redirected to another page. Do you want to continue? (y/N): ")):
+            if (not oh.askYesNo("You was redirected to another page. Continue? (y/N): ")):
                 exit(0)
         else:
             oh.infoBox("No redirections.")
@@ -228,7 +228,7 @@ class RequestHandler:
 
         @returns object: The output file
         """
-        t = datetime.datetime.now()
+        t = datetime.now()
         try:
             outputFile = open('../output/'+str(t.year)+'-'+str(t.month)+'-'+str(t.day)+'_'+str(t.hour)+':'+str(t.minute)+'.txt', 'w')
         except FileNotFoundError:

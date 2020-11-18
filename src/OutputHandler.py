@@ -1,3 +1,5 @@
+from datetime import datetime
+
 class OutputHandler:
     """Class that handle with the outputs
     
@@ -11,6 +13,15 @@ class OutputHandler:
         self.__info = '\033[90m['+'\033[36mINFO'+'\033[90m] \033[0m'
         self.__warning = '\033[90m['+'\033[33mWARNING'+'\033[90m] \033[0m'
         self.__error = '\033[90m['+'\u001b[31;1mERROR'+'\033[90m] \033[0m'
+
+    def __getTime(self):
+        """Get a time label
+
+        @returns str: The time label with format HH:MM:SS
+        """
+        now = datetime.now()
+        time = now.strftime("%H:%M:%S")
+        return '\033[90m['+'\u001b[38;5;48m'+time+'\033[90m] \033[0m'
 
     def getInfo(self, msg: str):
         """The info getter, with a custom message
@@ -69,19 +80,19 @@ class OutputHandler:
         @param msg: The message
         @returns bool: The answer based on the user's input
         """
-        action = input(self.getWarning(msg))
+        action = input(self.__getTime()+self.getWarning(msg))
         if (action == 'y' or action == 'Y'):
             return True
         else:
             return False
-    
+
     def infoBox(self, msg: str):
         """Print the message with a info label
 
         @param type: str
         @param msg: The message
         """
-        print(self.getInfo(msg))
+        print(self.__getTime()+self.getInfo(msg))
 
     def errorBox(self, msg: str):
         """End the application with error label and a message
@@ -89,7 +100,7 @@ class OutputHandler:
         @param type: str
         @param msg: The message
         """
-        exit(self.getError(msg))
+        exit(self.__getTime()+self.getError(msg))
  
     def fixLineToOutput(self, line: str):
         """Fix the line's size readed by the file
@@ -113,7 +124,7 @@ class OutputHandler:
         @param type: str
         @param status: The status progress of the fuzzing (between 0 to 100)
         """
-        print('\r'+self.getInfo("Progress status: "+'{:<4}'.format(status+'%')+' completed'), end='')
+        print('\r'+self.__getTime()+self.getInfo("Progress status: "+'{:<4}'.format(status+'%')+' completed'), end='')
 
     def helpTitle(self, numSpaces: int, title: str):
         """Output the help title
