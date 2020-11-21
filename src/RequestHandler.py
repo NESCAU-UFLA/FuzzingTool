@@ -221,7 +221,10 @@ class RequestHandler:
         @rtype: tuple(float, int)
         @returns (requestTime, requestLength): The request time and length
         """
-        return (request.elapsed.total_seconds(), request.headers.get('content-length'))
+        requestLength = request.headers.get('Content-Length')
+        if (requestLength == None):
+            requestLength = 0
+        return (request.elapsed.total_seconds(), requestLength)
 
     def __makeOutputFile(self):
         """Makes the output file with the probably vulnerable response data
@@ -262,7 +265,7 @@ class RequestHandler:
             requestStatus = str(r.status_code)
             probablyVulnerable = False
             # If the request content has some predefined characteristics (settings.py) based on a parameter, it'll be considered as vulnerable
-            if (int(requestLength) > (int(firstRequestLength)+settings.additionalLength) or requestTime > (firstRequestTime+settings.additionalTime)):
+            if (int(requestLength) > (int(firstRequestLength)+settings.additionalLength) or requestTime > firstRequestTime+settings.additionalTime):
                 probablyVulnerable = True
                 oh.writeOnFile(outputFile, str(i), line, requestStatus, str(requestLength), str(requestTime))
             if (settings.verboseMode):
