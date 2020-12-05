@@ -13,7 +13,13 @@ class FileHandler:
         if FileHandler.__instance == None:
             FileHandler()
         return FileHandler.__instance
-    
+
+    """
+    Attributes:
+        wordlistFile: The wordlist file
+        proxiesFile: The proxies file
+        outputFile: The output file
+    """
     def __init__(self):
         """Class constructor"""
         if FileHandler.__instance != None:
@@ -25,9 +31,18 @@ class FileHandler:
         self.__outputFile = None
     
     def getProxiesFile(self):
+        """The proxiesFile getter
+
+        @returns file: The proxies file
+        """
         return self.__proxiesFile
 
     def openProxies(self, proxiesFileName: str):
+        """Open the proxies file
+
+        @type proxiesFileName: str
+        @param proxiesFileName: The name of the proxies file
+        """
         try:
             self.__proxiesFile = open('../input/'+proxiesFileName, 'r')
         except FileNotFoundError:
@@ -46,12 +61,21 @@ class FileHandler:
         return proxies
 
     def openWordlist(self, wordlistFileName: str):
+        """Open the wordlist file
+
+        @type wordlistFileName: str
+        @param wordlistFileName: The name of the wordlist file
+        """
         try:
             self.__wordlistFile = open('../input/'+wordlistFileName, 'r')
         except FileNotFoundError:
             oh.errorBox("File '"+wordlistFileName+"' not found. Did you put it in the correct directory?")
 
     def getWordlistContentAndLength(self):
+        """Get the wordlist content, into a list, and the number of lines in file
+
+        @returns (wordlist, length): The tuple with the wordlist and the number of lines
+        """
         wordlist = []
         length = 0
         for line in self.__wordlistFile:
@@ -78,14 +102,20 @@ class FileHandler:
         """Opens the output file 
            for store the probably vulnerable response data
         """
-        t = datetime.now()
+        now = datetime.now()
+        time = now.strftime("%Y-%m-%d_%H-%M")
         try:
-            self.__outputFile = open('../output/'+str(t.year)+'-'+str(t.month)+'-'+str(t.day)+'_'+str(t.hour)+':'+str(t.minute)+'.txt', 'w')
+            self.__outputFile = open('../output/'+time+'.txt', 'w')
         except FileNotFoundError:
             os.system('mkdir ../output')
-            self.__outputFile = open('../output/'+str(t.year)+'-'+str(t.month)+'-'+str(t.day)+'_'+str(t.hour)+':'+str(t.minute)+'.txt', 'w')
+            self.__outputFile = open('../output/'+time+'.txt', 'w')
 
     def __close(self, file: object):
+        """Closes the file
+
+        @type file: object
+        @param file: The file
+        """
         file.close()
 
 fh = FileHandler.getInstance()

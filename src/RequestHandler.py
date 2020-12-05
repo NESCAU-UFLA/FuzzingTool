@@ -77,7 +77,7 @@ class RequestHandler:
     def setUrl(self, url: str):
         """The url setter
 
-        @param type: str
+        @type url: str
         @param url: The target URL
         """
         self.__url = url
@@ -85,7 +85,7 @@ class RequestHandler:
     def setParam(self, param: dict):
         """The param setter
 
-        @param type: dict
+        @type param: dict
         @param param: The parameter of the request
         """
         self.__param = param
@@ -93,7 +93,7 @@ class RequestHandler:
     def setCookie(self, cookie: dict):
         """The cookie setter
 
-        @param type: dict
+        @type cookie: dict
         @param cookie: The HTTP Cookie header value
         """
         self.__cookie = cookie
@@ -101,7 +101,7 @@ class RequestHandler:
     def setProxy(self, proxy: dict):
         """The proxy setter
 
-        @param type: dict
+        @type proxy: dict
         @param proxy: The proxy used in the request
         """
         self.__proxy = proxy
@@ -109,7 +109,7 @@ class RequestHandler:
     def setProxyList(self, proxyList: list):
         """The proxyList setter
 
-        @param type: list
+        @type proxyList: list
         @param proxyList: The proxies list
         """
         self.__proxyList = proxyList
@@ -127,11 +127,17 @@ class RequestHandler:
             return None
 
     def request(self, payload: str):
+        """Make a request and get the response
+
+        @type payload: str
+        @param payload: The payload used in the request
+        @returns dict: The response data dictionary
+        """
         response = self.__getRequestResponse(payload)
         return self.__getResponseData(response)
 
     def testRedirection(self):
-        """Test if the connection will has a redirection"""
+        """Test if the connection will have a redirection"""
         response = self.__getRequestResponse(' ')
         if ('[302]' in str(response.history)):
             if (not oh.askYesNo("You was redirected to another page. Continue? (y/N): ")):
@@ -148,7 +154,7 @@ class RequestHandler:
     def setProxyByRequestIndex(self, i: int):
         """Set the proxy based on request index
 
-        @param type: int
+        @type i: int
         @param i: The request index
         """
         proxyList = self.getProxyList()
@@ -157,7 +163,7 @@ class RequestHandler:
     def __getRequestParameters(self, payload: str):
         """Get the request parameters using in the request fields
 
-        @param type: str
+        @type payload: str
         @param payload: The payload used in the parameter of the request
         @returns dict: The parameters dict of the request
         """
@@ -177,7 +183,7 @@ class RequestHandler:
     def __getRequestResponse(self, payload: str):
         """Get the response of a request with a custom parameter
 
-        @param type: str
+        @type payload: str
         @param payload: The payload used in the parameter of the request
         @returns object: The response of the request
         """
@@ -186,6 +192,12 @@ class RequestHandler:
         return self.__session.send(request.prepare(), proxies=self.getProxy())
 
     def __getResponseData(self, response: object):
+        """Get the response data parsed into a dictionary
+
+        @type response: object
+        @param response: The response of a request
+        @returns dict: The response data parsed into a dictionary
+        """
         responseTime, responseLength = self.__getResponseTimeAndLength(response)
         responseStatus = str(response.status_code)
         responseData = {

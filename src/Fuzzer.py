@@ -4,10 +4,22 @@ from FileHandler import *
 import time
 
 class Fuzzer:
-    """
-        delay: The delay time between each request
+    """Fuzzer class, the core of the software
+    
+    Attributes:
+        requestHandler: The RequestHandler object to deal with the requests
+        delay: The delay between each fuzzy test
+        verboseMode: The verbose mode flag
+        additionalLength: The additional length to consider an entry probably vulnerable
+        additionalTime: The additional time to consider an entry probably vulnerable
+        hasProxies: A flag to define if a proxies file is used
     """
     def __init__(self, requestHandler: RequestHandler):
+        """Class constructor
+
+        @type requestHandler: RequestHandler
+        @param requestHandler: The RequestHandler object to deal with the requests
+        """
         self.__requestHandler = requestHandler
         self.__delay = 0
         self.__verboseMode = False
@@ -16,6 +28,10 @@ class Fuzzer:
         self.__hasProxies = False
 
     def getRequestHandler(self):
+        """The requestHandler getter
+
+        @returns object: The RequestHandler object
+        """
         return self.__requestHandler
 
     def getDelay(self):
@@ -26,20 +42,26 @@ class Fuzzer:
         return self.__delay
 
     def getVerboseMode(self):
-        return self.__verboseMode
+        """The verboseMode getter
 
-    def setRequestHandler(self, requestHandler: RequestHandler):
-        self.__requestHandler = requestHandler
+        @returns bool: The verbose mode flag
+        """
+        return self.__verboseMode
 
     def setDelay(self, delay: float):
         """The delay setter
 
-        @param type: float
+        @type delay: float
         @param delay: The delay used between each request
         """
         self.__delay = delay
-
+    
     def setVerboseMode(self, verboseMode: bool):
+        """The verboseMode setter
+
+        @type verboseMode: bool
+        @param verboseMode: The verbose mode flag
+        """
         self.__verboseMode = verboseMode
 
     def prepareApplication(self):
@@ -61,11 +83,7 @@ class Fuzzer:
         oh.infoBox("Test completed.")
 
     def __start(self):
-        """Make the start
-
-        @param type: bool
-        @param hasProxies: Case will use proxies from a list
-        """
+        """Starts the application"""
         rh = self.getRequestHandler()
         firstResponse = rh.request(' ')
         if (self.getVerboseMode()):
@@ -80,6 +98,13 @@ class Fuzzer:
             print("")
 
     def __startFuzzy(self, firstResponse: object, outputFileContent: list):
+        """Starts the fuzzing tests
+
+        @type firstResponse: object
+        @param firstResponse: The first response
+        @type outputFileContent: list
+        @param outputFileContent: The output list with probably vulnerable data into a dictionary
+        """
         rh = self.getRequestHandler()
         wordlist, numLines = fh.getWordlistContentAndLength()
         i = 0 # The request index
