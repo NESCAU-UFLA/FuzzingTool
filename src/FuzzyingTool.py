@@ -1,9 +1,10 @@
 #!/usr/bin/python3
 
 import sys
+from Fuzzer import Fuzzer
 from RequestHandler import RequestHandler
 from OutputHandler import *
-import settings
+from FileHandler import *
 
 def helpMenu():
     """Creates the Help Menu"""
@@ -98,11 +99,8 @@ def getWordlistFile(argv: list):
     """
     try:
         index = argv.index('-f')+1
-        fileName = argv[index]
-        try:
-            settings.wordlistFile = open('../input/'+fileName, 'r')
-        except FileNotFoundError:
-            oh.errorBox("File '"+fileName+"' not found. Did you put it in the correct folder?")
+        wordlistFileName = argv[index]
+        fh.openWordlist(wordlistFileName)
     except ValueError:
         oh.errorBox("An file is needed to make the fuzzing")
 
@@ -146,33 +144,32 @@ def checkProxies(argv: list):
     if ('--proxies' in argv):
         index = argv.index('--proxies')+1
         proxiesFileName = argv[index]
-        try:
-            settings.proxiesFile = open('../input/'+proxiesFileName, 'r')
-        except FileNotFoundError:
-            oh.errorBox("File '"+fileName+"' not found.")
+        fh.openProxies(proxiesFileName)
         oh.infoBox("Set proxy: Load proxies from file.")
 
-def checkDelay(argv: list, requestHandler: RequestHandler):
-    """Check if the --delay argument is present, and set the value into the requestHandler
+def checkDelay(argv: list, fuzzer: Fuzzer):
+    """Check if the --delay argument is present, and set the value into the fuzzer
 
     @type argv: list
     @param argv: The arguments given in the execution
-    @type requestHandler: RequestHandler
-    @param requestHandler: The object responsible to handle the requests
+    @type fuzzer: Fuzzer
+    @param fuzzer: The Fuzzer object
     """
     if ('--delay' in argv):
         delay = argv[argv.index('--delay')+1]
-        requestHandler.setDelay(float(delay))
+        fuzzer.setDelay(float(delay))
         oh.infoBox("Set delay: "+delay+" second(s)")
 
-def checkVerboseMode(argv: list):
+def checkVerboseMode(argv: list, fuzzer: Fuzzer):
     """Check if the -V or --verbose argument is present, and set the verbose mode
 
     @type argv: str
     @param argv: The arguments given in the execution
+    @type fuzzer: Fuzzer
+    @param fuzzer: The Fuzzer object
     """
     if ('-V' in argv or '--verbose' in argv):
-        settings.verboseMode = True
+        fuzzer.setVerboseMode(True)
 
 def main(argv: list):
     """The main function
@@ -188,16 +185,16 @@ def main(argv: list):
     url, method, param = getMethodAndArgs(argv, url)
     defaultParam = getRequestParams(argv, param)
     getWordlistFile(argv)
-    requestHandler = RequestHandler(url, method, defaultParam)
+    fuzzer = Fuzzer(RequestHandler(url, method, defaultParam))
     oh.infoBox("Set target: "+url)
     oh.infoBox("Set request method: "+method)
     oh.infoBox("Set request data: "+str(defaultParam))
-    checkCookie(argv, requestHandler)
-    checkProxy(argv, requestHandler)
+    checkCookie(argv, fuzzer.getRequestHandler())
+    checkProxy(argv, fuzzer.getRequestHandler())
     checkProxies(argv)
-    checkDelay(argv, requestHandler)
-    checkVerboseMode(argv)
-    requestHandler.start()
+    checkDelay(argv, fuzzer)
+    checkVerboseMode(argv, fuzzer)
+    fuzzer.prepareApplication()
 
 if __name__ == "__main__":
    main(sys.argv)

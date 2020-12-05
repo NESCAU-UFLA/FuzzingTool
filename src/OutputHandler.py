@@ -2,7 +2,17 @@ from datetime import datetime
 
 class OutputHandler:
     """Class that handle with the outputs
-    
+       Singleton Class
+    """
+    __instance = None
+
+    @staticmethod
+    def getInstance():
+        if OutputHandler.__instance == None:
+            OutputHandler()
+        return OutputHandler.__instance
+
+    """
     Attributes:
         info: The info label
         warning: The warning label
@@ -10,6 +20,10 @@ class OutputHandler:
     """
     def __init__(self):
         """Class constructor"""
+        if OutputHandler.__instance != None:
+            raise Exception("This class is a singleton!")
+        else:
+            OutputHandler.__instance = self
         self.__info = '\033[90m['+'\033[36mINFO'+'\033[90m] \033[0m'
         self.__warning = '\033[90m['+'\033[33mWARNING'+'\033[90m] \033[0m'
         self.__error = '\033[90m['+'\u001b[31;1mERROR'+'\033[90m] \033[0m'
@@ -148,26 +162,4 @@ class OutputHandler:
         """
         print(' '*numSpaces+("{:<"+str(26-numSpaces)+"}").format(command)+' '+desc)
 
-    def writeOnFile(self, outputFile: object, i: str, value: str, status: str, requestLength: str, requestTime: str):
-        """Write the vulnerable input and request content into a file
-
-        @param type: object
-        @param outputFile: The output file
-        @param type: str
-        @param i: The request index
-        @param type: str
-        @param value: The request parameter input
-        @param type: str
-        @param status: The request status
-        @param type: str
-        @param requestLength: The request length
-        @param type: str
-        @param requestTime: The request time
-        """
-        outputFile.write("Request: "+i+"\n")
-        outputFile.write("Param value: "+value+"\n")
-        outputFile.write("Status code: "+status+"\n")
-        outputFile.write("Length: "+requestLength+"\n")
-        outputFile.write("Time taken: "+requestTime+" seconds\n\n")
-
-oh = OutputHandler() # The object used in the files that imports this file
+oh = OutputHandler.getInstance() # The object used in the files that imports this file

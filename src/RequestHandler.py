@@ -1,9 +1,6 @@
-import requests
-import time
-from datetime import datetime
 from OutputHandler import *
-import settings
-import os
+from FileHandler import *
+import requests
 
 class RequestHandler:
     """Class that handle with the requests
@@ -15,7 +12,7 @@ class RequestHandler:
         cookie: The HTTP Cookie header value
         proxy: The proxy used in the request
         proxyList: The list with valid proxies gived by a file
-        delay: The delay time between each request
+        session: The session of the requests
     """
     def __init__(self, url: str, method: str, defaultParam: dict):
         """Class constructor
@@ -33,7 +30,6 @@ class RequestHandler:
         self.__cookie = {}
         self.__proxy = {}
         self.__proxyList = []
-        self.__delay = 0
         self.__session = requests.Session()
     
     def getUrl(self):
@@ -78,13 +74,6 @@ class RequestHandler:
         """
         return self.__proxyList
 
-    def getDelay(self):
-        """The delay getter
-
-        @returns float: The delay used between each request
-        """
-        return self.__delay
-
     def setUrl(self, url: str):
         """The url setter
 
@@ -125,15 +114,7 @@ class RequestHandler:
         """
         self.__proxyList = proxyList
 
-    def setDelay(self, delay: float):
-        """The delay setter
-
-        @param type: float
-        @param delay: The delay used between each request
-        """
-        self.__delay = delay
-
-    def __testConnection(self):
+    def testConnection(self):
         """Test the connection with the target, and returns the request obj
 
         @returns object: The request object
@@ -145,7 +126,41 @@ class RequestHandler:
         except Exception:
             return None
 
+    def request(self, payload: str):
+        response = self.__getRequestResponse(payload)
+        return self.__getResponseData(response)
+
+    def testRedirection(self):
+        """Test if the connection will has a redirection"""
+        response = self.__getRequestResponse(' ')
+        if ('[302]' in str(response.history)):
+            if (not oh.askYesNo("You was redirected to another page. Continue? (y/N): ")):
+                exit(0)
+        else:
+            oh.infoBox("No redirections.")
+
+    def setProxiesFromFile(self):
+        """Get the proxies from a file and test each one"""
+        for proxy in fh.readProxies():
+            self.setProxy(proxy)
+            self.__testProxy()
+
+    def setProxyByRequestIndex(self, i: int):
+        """Set the proxy based on request index
+
+        @param type: int
+        @param i: The request index
+        """
+        proxyList = self.getProxyList()
+        self.setProxy(proxyList[int(i/10)%len(proxyList)])
+
     def __getRequestParameters(self, payload: str):
+        """Get the request parameters using in the request fields
+
+        @param type: str
+        @param payload: The payload used in the parameter of the request
+        @returns dict: The parameters dict of the request
+        """
         requestParameters = {
             'Method': self.getMethod(),
             'Url': self.getUrl(),
@@ -170,119 +185,30 @@ class RequestHandler:
         request = requests.Request(requestParameters['Method'], requestParameters['Url'], data=requestParameters['Data'], params=requestParameters['Data'], cookies=self.getCookie())
         return self.__session.send(request.prepare(), proxies=self.getProxy())
 
-    def __testRedirection(self):
-        """Test if the connection will has a redirection"""
-        request = self.__getRequestResponse(' ')
-        if ('[302]' in str(request.history)):
-            if (not oh.askYesNo("You was redirected to another page. Continue? (y/N): ")):
-                exit(0)
-        else:
-            oh.infoBox("No redirections.")
+    def __getResponseData(self, response: object):
+        responseTime, responseLength = self.__getResponseTimeAndLength(response)
+        responseStatus = str(response.status_code)
+        responseData = {
+            'Time': responseTime,
+            'Length': responseLength,
+            'Status': responseStatus,
+        }
+        return responseData
 
-    def __readProxiesFromFile(self):
-        """Read the proxies from a file"""
-        for line in settings.proxiesFile:
-            line = line.rstrip("\n")
-            self.setProxy({
-                'http://': 'http://'+line,
-                'https://': 'http://'+line
-            })
-            self.__testProxy()
-        settings.proxiesFile.close()
+    def __getResponseTimeAndLength(self, response: object):
+        """Get the response time and length
+
+        @type response: object
+        @param response: The Response object
+        @rtype: tuple(float, int)
+        @returns (responseTime, responseLength): The response time and length
+        """
+        responseLength = response.headers.get('Content-Length')
+        if (responseLength == None):
+            responseLength = 0
+        return (response.elapsed.total_seconds(), responseLength)
 
     def __testProxy(self):
         """Test if the proxy can be used on the connection, and insert it into the proxies list"""
         if (self.__testConnection() != None):
             self.__proxyList.append(self.getProxy())
-
-    def __setProxyByRequestIndex(self, i: int):
-        """Set the proxy based on request index
-
-        @param type: int
-        @param i: The request index
-        """
-        proxyList = self.getProxyList()
-        self.setProxy(proxyList[int(i/10)%len(proxyList)])
-
-    def __getRequestTimeAndLength(self, request: object):
-        """Get the request time and length
-
-        @type request: object
-        @param request: The request
-        @rtype: tuple(float, int)
-        @returns (requestTime, requestLength): The request time and length
-        """
-        requestLength = request.headers.get('Content-Length')
-        if (requestLength == None):
-            requestLength = 0
-        return (request.elapsed.total_seconds(), requestLength)
-
-    def __makeOutputFile(self):
-        """Makes the output file with the probably vulnerable response data
-
-        @returns object: The output file
-        """
-        t = datetime.now()
-        try:
-            outputFile = open('../output/'+str(t.year)+'-'+str(t.month)+'-'+str(t.day)+'_'+str(t.hour)+':'+str(t.minute)+'.txt', 'w')
-        except FileNotFoundError:
-            os.system('mkdir ../output')
-            outputFile = open('../output/'+str(t.year)+'-'+str(t.month)+'-'+str(t.day)+'_'+str(t.hour)+':'+str(t.minute)+'.txt', 'w')
-        return outputFile
-
-    def __fuzzy(self, hasProxies: bool):
-        """Make the fuzzy
-
-        @param type: bool
-        @param hasProxies: Case will use proxies from a list
-        """
-        firstRequest = self.__getRequestResponse(' ')
-        firstRequestTime, firstRequestLength = self.__getRequestTimeAndLength(firstRequest)
-        i = 0 # The request index
-        outputFile = self.__makeOutputFile()
-        if (settings.verboseMode):
-            oh.getHeader()
-            oh.printContent([i, '', firstRequest.status_code, firstRequestLength, firstRequestTime], False)
-        else:
-            numLines = sum(1 for line in settings.wordlistFile)
-            settings.wordlistFile.seek(0)
-        for line in settings.wordlistFile:
-            line = line.rstrip("\n")
-            if (hasProxies and i%10 == 0):
-                self.__setProxyByRequestIndex(i)
-            i += 1
-            r = self.__getRequestResponse(line)
-            requestTime, requestLength = self.__getRequestTimeAndLength(r)
-            requestStatus = str(r.status_code)
-            probablyVulnerable = False
-            # If the request content has some predefined characteristics (settings.py) based on a parameter, it'll be considered as vulnerable
-            if (int(requestLength) > (int(firstRequestLength)+settings.additionalLength) or requestTime > firstRequestTime+settings.additionalTime):
-                probablyVulnerable = True
-                oh.writeOnFile(outputFile, str(i), line, requestStatus, str(requestLength), str(requestTime))
-            if (settings.verboseMode):
-                oh.printContent([i, oh.fixLineToOutput(line), requestStatus, requestLength, requestTime], probablyVulnerable)
-            else:
-                oh.progressStatus(str(int((i/numLines)*100)))
-            time.sleep(self.getDelay())
-        settings.wordlistFile.close()
-        outputFile.close()
-        if (settings.verboseMode):
-            oh.getHeader()
-        else:
-            print("")
-
-    def start(self):
-        """Start the application, test the connection and redirection before make the fuzzing"""
-        hasProxies = False
-        if (settings.proxiesFile != None):
-            hasProxies = True
-            self.__readProxiesFromFile()
-        if (self.__testConnection() != None):
-            oh.infoBox("Connection status: OK")
-        else:
-            oh.errorBox("Failed to connect to the server.")
-        oh.infoBox("Testing redirections ...")
-        self.__testRedirection()
-        oh.infoBox("Starting test on '"+self.getUrl()+"' ...")
-        self.__fuzzy(hasProxies)
-        oh.infoBox("Test completed.")
