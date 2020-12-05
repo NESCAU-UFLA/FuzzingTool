@@ -10,9 +10,8 @@ class RequestHandler:
     
     Attributes:
         url: The target URL
-        method: The request method (POST or GET)
+        method: The request method
         param: The parameter of the request
-        defaultParam: The dictionary with request parameters and default values
         cookie: The HTTP Cookie header value
         proxy: The proxy used in the request
         proxyList: The list with valid proxies gived by a file
@@ -31,11 +30,11 @@ class RequestHandler:
         self.__url = url
         self.__method = method
         self.__param = defaultParam
-        self.__defaultParam = defaultParam
         self.__cookie = {}
         self.__proxy = {}
         self.__proxyList = []
         self.__delay = 0
+        self.__session = requests.Session()
     
     def getUrl(self):
         """The url getter
@@ -57,13 +56,6 @@ class RequestHandler:
         @returns dict: The parameters of the request
         """
         return self.__param
-    
-    def getDefaultParam(self):
-        """The defaultParam getter
-
-        @returns dict: The default parameters of the request
-        """
-        return self.__defaultParam
 
     def getCookie(self):
         """The cookie getter
@@ -108,14 +100,6 @@ class RequestHandler:
         @param param: The parameter of the request
         """
         self.__param = param
-    
-    def setDefaultParam(self, defaultParam: dict):
-        """The defaultParam setter
-
-        @param type: dict
-        @param defaultParam: The default parameter of the request
-        """
-        self.__defaultParam = defaultParam
 
     def setCookie(self, cookie: dict):
         """The cookie setter
@@ -161,27 +145,34 @@ class RequestHandler:
         except Exception:
             return None
 
-    def __getPreparedRequest(self, paramValue: str):
-        """Get the prepared request with a custom parameter
+    def __getRequestParameters(self, payload: str):
+        requestParameters = {
+            'Method': self.getMethod(),
+            'Url': self.getUrl(),
+            'Data': {},
+            'HttpHeader': {},
+        }
+        for key, value in self.getParam().items():
+            if (value != ''):
+                requestParameters['Data'][key] = value
+            else:
+                requestParameters['Data'][key] = payload
+        return requestParameters
+
+    def __getRequestResponse(self, payload: str):
+        """Get the response of a request with a custom parameter
 
         @param type: str
-        @param paramValue: The value used in the parameter of the request
-        @returns object: The prepared request with a custom parameter
+        @param payload: The payload used in the parameter of the request
+        @returns object: The response of the request
         """
-        self.setParam({})
-        for key, value in self.getDefaultParam().items():
-            if (value != ''):
-                self.getParam()[key] = value
-            else:
-                self.getParam()[key] = paramValue
-        if (self.getMethod() == 'GET'):
-            return requests.get(self.getUrl(), params=self.getParam(), cookies=self.getCookie(), proxies=self.getProxy())
-        else:
-            return requests.post(self.getUrl(), data=self.getParam(), cookies=self.getCookie(), proxies=self.getProxy())
+        requestParameters = self.__getRequestParameters(payload)
+        request = requests.Request(requestParameters['Method'], requestParameters['Url'], data=requestParameters['Data'], params=requestParameters['Data'], cookies=self.getCookie())
+        return self.__session.send(request.prepare(), proxies=self.getProxy())
 
     def __testRedirection(self):
         """Test if the connection will has a redirection"""
-        request = self.__getPreparedRequest(' ')
+        request = self.__getRequestResponse(' ')
         if ('[302]' in str(request.history)):
             if (not oh.askYesNo("You was redirected to another page. Continue? (y/N): ")):
                 exit(0)
@@ -245,7 +236,7 @@ class RequestHandler:
         @param type: bool
         @param hasProxies: Case will use proxies from a list
         """
-        firstRequest = self.__getPreparedRequest(' ')
+        firstRequest = self.__getRequestResponse(' ')
         firstRequestTime, firstRequestLength = self.__getRequestTimeAndLength(firstRequest)
         i = 0 # The request index
         outputFile = self.__makeOutputFile()
@@ -260,7 +251,7 @@ class RequestHandler:
             if (hasProxies and i%10 == 0):
                 self.__setProxyByRequestIndex(i)
             i += 1
-            r = self.__getPreparedRequest(line)
+            r = self.__getRequestResponse(line)
             requestTime, requestLength = self.__getRequestTimeAndLength(r)
             requestStatus = str(r.status_code)
             probablyVulnerable = False
