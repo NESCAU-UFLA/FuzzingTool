@@ -71,7 +71,7 @@ class OutputHandler:
     def getHeader(self):
         """Output the header of the requests table"""
         self.getInitOrEnd()
-        self.printContent(['Request', 'Data Send', 'Status', 'Length', 'Time'], False)
+        self.printContent(['Request', 'Payload', 'Status', 'Length', 'Time'], False)
         self.getInitOrEnd()
 
     def printContent(self, args: list, vulnValidator: bool):
@@ -83,9 +83,9 @@ class OutputHandler:
         @param vulnValidator: Case the output is marked as vulnerable
         """
         if (not vulnValidator):
-            print('  | '+'{:<7}'.format(args[0])+' | '+'{:<30}'.format(args[1])+' | '+'{:<6}'.format(args[2])+' | '+'{:<8}'.format(args[3])+' | '+'{:<10}'.format(args[4])+' |')
+            print('  | '+'{:<7}'.format(args[0])+' | '+'{:<30}'.format(self.fixLineToOutput(args[1]))+' | '+'{:<6}'.format(args[2])+' | '+'{:<8}'.format(args[3])+' | '+'{:<10}'.format(args[4])+' |')
         else:
-            print('  | '+u'\u001b[32;1m{:<7}'.format(args[0])+'\033[0m | '+'\u001b[32;1m{:<30}'.format(args[1])+'\033[0m | '+'\u001b[32;1m{:<6}'.format(args[2])+'\033[0m | '+'\u001b[32;1m{:<8}'.format(args[3])+'\033[0m | '+'\u001b[32;1m{:<10}'.format(args[4])+'\033[0m |')
+            print('  | '+u'\u001b[32;1m{:<7}'.format(args[0])+'\033[0m | '+'\u001b[32;1m{:<30}'.format(self.fixLineToOutput(args[1]))+'\033[0m | '+'\u001b[32;1m{:<6}'.format(args[2])+'\033[0m | '+'\u001b[32;1m{:<8}'.format(args[3])+'\033[0m | '+'\u001b[32;1m{:<10}'.format(args[4])+'\033[0m |')
 
     def askYesNo(self, msg: str):
         """Output an warning message, and ask for the user if wants to continue

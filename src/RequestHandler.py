@@ -9,6 +9,7 @@ class RequestHandler:
         url: The target URL
         method: The request method
         param: The parameter of the request
+        urlIndexToPayload: The URL index to set the payload
         cookie: The HTTP Cookie header value
         proxy: The proxy used in the request
         proxyList: The list with valid proxies gived by a file
@@ -27,6 +28,7 @@ class RequestHandler:
         self.__url = url
         self.__method = method
         self.__param = defaultParam
+        self.__urlIndexToPayload = self.__getUrlIndexToPayload()
         self.__cookie = {}
         self.__proxy = {}
         self.__proxyList = []
@@ -52,6 +54,13 @@ class RequestHandler:
         @returns dict: The parameters of the request
         """
         return self.__param
+
+    def getUrlIndexToPayload(self):
+        """The urlIndexToPayload getter
+        
+        @returns int: The URL index to insert the payload
+        """
+        return self.__urlIndexToPayload
 
     def getCookie(self):
         """The cookie getter
@@ -133,8 +142,11 @@ class RequestHandler:
         @param payload: The payload used in the request
         @returns dict: The response data dictionary
         """
-        response = self.__getRequestResponse(payload)
-        return self.__getResponseData(response)
+        try:
+            response = self.__getRequestResponse(payload)
+        except:
+            oh.errorBox("An error has occurred during the request.")
+        return self.__getResponseData(response, payload)
 
     def testRedirection(self):
         """Test if the connection will have a redirection"""
@@ -160,6 +172,18 @@ class RequestHandler:
         proxyList = self.getProxyList()
         self.setProxy(proxyList[int(i/10)%len(proxyList)])
 
+    def __getUrlIndexToPayload(self):
+        """If the fuzzing tests will occur on URL,
+           so get the position of it to insert the payloads
+        
+        @returns int: The position index to insert the payload.
+                      Returns -1 if the tests'll not occur in URL
+        """
+        if '$' in self.__url:
+            index = self.__url.index('$')
+            return index
+        return -1
+
     def __getRequestParameters(self, payload: str):
         """Get the request parameters using in the request fields
 
@@ -173,11 +197,16 @@ class RequestHandler:
             'Data': {},
             'HttpHeader': {},
         }
-        for key, value in self.getParam().items():
-            if (value != ''):
-                requestParameters['Data'][key] = value
-            else:
-                requestParameters['Data'][key] = payload
+        if self.__urlIndexToPayload != -1:
+            head = self.getUrl()[:self.__urlIndexToPayload]
+            tail = self.getUrl()[(self.__urlIndexToPayload+1):]
+            requestParameters['Url'] = head+payload+tail
+        if len(self.getParam()) > 0:
+            for key, value in self.getParam().items():
+                if (value != ''):
+                    requestParameters['Data'][key] = value
+                else:
+                    requestParameters['Data'][key] = payload
         return requestParameters
 
     def __getRequestResponse(self, payload: str):
@@ -191,7 +220,7 @@ class RequestHandler:
         request = requests.Request(requestParameters['Method'], requestParameters['Url'], data=requestParameters['Data'], params=requestParameters['Data'], cookies=self.getCookie())
         return self.__session.send(request.prepare(), proxies=self.getProxy())
 
-    def __getResponseData(self, response: object):
+    def __getResponseData(self, response: object, payload: str):
         """Get the response data parsed into a dictionary
 
         @type response: object
@@ -199,11 +228,13 @@ class RequestHandler:
         @returns dict: The response data parsed into a dictionary
         """
         responseTime, responseLength = self.__getResponseTimeAndLength(response)
-        responseStatus = str(response.status_code)
+        responseStatus = response.status_code
         responseData = {
-            'Time': responseTime,
-            'Length': responseLength,
+            'Request': 0,
+            'Payload': payload,
             'Status': responseStatus,
+            'Length': responseLength,
+            'Time': responseTime,
         }
         return responseData
 

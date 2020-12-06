@@ -94,7 +94,7 @@ class FileHandler:
         self.__openOutput()
         for content in outputContent:
             for key, value in content.items():
-                self.__outputFile.write(key+': '+value+'\n')
+                self.__outputFile.write(key+': '+str(value)+'\n')
             self.__outputFile.write('\n')
         self.__close(self.__outputFile)
 

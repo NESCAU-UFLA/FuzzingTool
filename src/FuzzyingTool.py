@@ -38,7 +38,7 @@ def getUrl(argv: list):
         oh.errorBox("An URL is needed to make the fuzzing.")
 
 def getMethodAndArgs(argv: list, url: str):
-    """Get the param method to use ('?' in URL if GET, or --data) and the request param string
+    """Get the param method to use ('?' or '$' in URL if GET, or --data) and the request param string
 
     @type argv: list
     @param argv: The arguments given in the execution
@@ -46,8 +46,10 @@ def getMethodAndArgs(argv: list, url: str):
     @param url: The target URL
     @returns tuple(str, str, str): The tuple with the new target URL, the request method and params
     """
-    if ('?' in url):
-        url, param = url.split('?')
+    param = ''
+    if '?' in url or '$' in url:
+        if '?' in url:
+            url, param = url.split('?', 1)
         method = 'GET'
     else:
         method = 'POST'
@@ -84,7 +86,7 @@ def makeDefaultParam(defaultParam: dict, param: str):
     @type param: str
     @param param: The parameter string of the request
     """
-    if ('=' in param):
+    if '=' in param and not '=$' in param:
         param, value = param.split('=')
         defaultParam[param] = value
     else:
@@ -183,7 +185,7 @@ def main(argv: list):
         helpMenu()
     url = getUrl(argv)
     url, method, param = getMethodAndArgs(argv, url)
-    defaultParam = getRequestParams(argv, param)
+    defaultParam = getRequestParams(argv, param) if param != '' else {}
     getWordlistFile(argv)
     fuzzer = Fuzzer(RequestHandler(url, method, defaultParam))
     oh.infoBox("Set target: "+url)
