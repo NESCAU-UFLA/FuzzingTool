@@ -198,16 +198,36 @@ class RequestHandler:
             'HttpHeader': {},
         }
         if self.__urlIndexToPayload != -1:
-            head = self.getUrl()[:self.__urlIndexToPayload]
-            tail = self.getUrl()[(self.__urlIndexToPayload+1):]
-            requestParameters['Url'] = head+payload+tail
+            self.__setUrlPayload(requestParameters, payload)
         if len(self.getParam()) > 0:
-            for key, value in self.getParam().items():
-                if (value != ''):
-                    requestParameters['Data'][key] = value
-                else:
-                    requestParameters['Data'][key] = payload
+            self.__setDataPayload(requestParameters, payload)
         return requestParameters
+
+    def __setUrlPayload(self, requestParameters: dict, payload: str):
+        """Put the payload into the URL requestParameters dictionary
+
+        @type requestParameters: dict
+        @param requestParameters: The parameters dict of the request
+        @type payload: str
+        @param payload: The payload used in the parameter of the request
+        """
+        head = self.getUrl()[:self.__urlIndexToPayload]
+        tail = self.getUrl()[(self.__urlIndexToPayload+1):]
+        requestParameters['Url'] = head+payload+tail
+
+    def __setDataPayload(self, requestParameters: dict, payload: str):
+        """Put the payload into the Data requestParameters dictionary
+
+        @type requestParameters: dict
+        @param requestParameters: The parameters dict of the request
+        @type payload: str
+        @param payload: The payload used in the parameter of the request
+        """
+        for key, value in self.getParam().items():
+            if (value != ''):
+                requestParameters['Data'][key] = value
+            else:
+                requestParameters['Data'][key] = payload
 
     def __getRequestResponse(self, payload: str):
         """Get the response of a request with a custom parameter

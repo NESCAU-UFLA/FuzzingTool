@@ -40,7 +40,7 @@ class OutputHandler:
     def getInfo(self, msg: str):
         """The info getter, with a custom message
 
-        @param type: str
+        @type msg: str
         @param msg: The custom message
         @returns str: The message with info label
         """
@@ -49,7 +49,7 @@ class OutputHandler:
     def getWarning(self, msg: str):
         """The warning getter, with a custom message
 
-        @param type: str
+        @type msg: str
         @param msg: The custom message
         @returns str: The message with warning label
         """
@@ -58,7 +58,7 @@ class OutputHandler:
     def getError(self, msg: str):
         """The error getter, with a custom message
 
-        @param type: str
+        @type msg: str
         @param msg: The custom message
         @returns str: The message with error label
         """
@@ -77,9 +77,9 @@ class OutputHandler:
     def printContent(self, args: list, vulnValidator: bool):
         """Output the content of the requests table
 
-        @param type: list
+        @type args: list
         @param args: The arguments used in the table content
-        @param type: bool
+        @type vulnValidator: bool
         @param vulnValidator: Case the output is marked as vulnerable
         """
         if (not vulnValidator):
@@ -90,7 +90,7 @@ class OutputHandler:
     def askYesNo(self, msg: str):
         """Output an warning message, and ask for the user if wants to continue
 
-        @param type: str
+        @type msg: str
         @param msg: The message
         @returns bool: The answer based on the user's input
         """
@@ -103,7 +103,7 @@ class OutputHandler:
     def infoBox(self, msg: str):
         """Print the message with a info label
 
-        @param type: str
+        @type msg: str
         @param msg: The message
         """
         print(self.__getTime()+self.getInfo(msg))
@@ -111,7 +111,7 @@ class OutputHandler:
     def errorBox(self, msg: str):
         """End the application with error label and a message
 
-        @param type: str
+        @type msg: str
         @param msg: The message
         """
         exit(self.__getTime()+self.getError(msg))
@@ -119,7 +119,7 @@ class OutputHandler:
     def fixLineToOutput(self, line: str):
         """Fix the line's size readed by the file
 
-        @param type: str
+        @type line: str
         @param line: The line from the file
         @returns str: The fixed line to output
         """
@@ -135,7 +135,7 @@ class OutputHandler:
     def progressStatus(self, status: str):
         """Output the progress status of the fuzzing
 
-        @param type: str
+        @type status: str
         @param status: The status progress of the fuzzing (between 0 to 100)
         """
         print('\r'+self.__getTime()+self.getInfo("Progress status: "+'{:<4}'.format(status+'%')+' completed'), end='')
@@ -143,9 +143,9 @@ class OutputHandler:
     def helpTitle(self, numSpaces: int, title: str):
         """Output the help title
 
-        @param type: int
+        @type numSpaces: int
         @param numSpaces: The number of spaces before the title
-        @param type: str
+        @type title: str
         @param title: The title or subtitle
         """
         print("\n"+' '*numSpaces+title)
@@ -153,11 +153,11 @@ class OutputHandler:
     def helpContent(self, numSpaces: int, command: str, desc: str):
         """Output the help content
 
-        @param type: int
+        @type numSpaces: int
         @param numSpaces: The number of spaces before the content
-        @param type: str
+        @type command: str
         @param command: The command to be used in the execution argument
-        @param type: str
+        @type desc: str
         @param desc: The description of the command
         """
         print(' '*numSpaces+("{:<"+str(26-numSpaces)+"}").format(command)+' '+desc)
