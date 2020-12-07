@@ -1,19 +1,28 @@
 #!/usr/bin/python3
 
+## FuzzingTool
+# 
+# Version: 2.1.0
+# Authors:
+#    Vitor Oriel Borges <https://github.com/VitorOriel>
+#
+## https://github.com/NESCAU-UFLA/FuzzingTool
+
 import sys
 from Fuzzer import Fuzzer
 from RequestHandler import RequestHandler
 from OutputHandler import *
 from FileHandler import *
 
-def helpMenu():
+def showHelpMenu():
     """Creates the Help Menu"""
     oh.helpTitle(0, "Parameters:")
     oh.helpContent(3, "-h, --help", "Display the help menu and exit")
     oh.helpContent(3, "-V, --verbose", "Enable the verbose mode")
+    oh.helpContent(3, "-v, --version", "Show the current version")
     oh.helpTitle(3, "Core:")
     oh.helpContent(5, "-u URL", "Define the target URL")
-    oh.helpContent(5, "-f FILENAME", "Define the entry file")
+    oh.helpContent(5, "-f FILENAME", "Define the payload file")
     oh.helpTitle(3, "Request options:")
     oh.helpContent(5, "--data DATA", "Define the POST data")
     oh.helpContent(5, "--proxy IP:PORT", "Define the proxy")
@@ -21,8 +30,9 @@ def helpMenu():
     oh.helpContent(5, "--cookie COOKIE", "Define the HTTP Cookie header value")
     oh.helpContent(5, "--delay DELAY", "Define the delay between each request (in seconds)")
     oh.helpTitle(0, "Examples:")
-    oh.helpContent(3, "./FuzzyingTool.py -u http://127.0.0.1/post.php?id= -f sqli.txt", '')
-    oh.helpContent(3, "./FuzzyingTool.py -f sqli.txt -u http://127.0.0.1/controller/user.php --data 'login&passw&user=login'", '')
+    oh.helpContent(3, "./FuzzingTool.py -u http://127.0.0.1/post.php?id= -f sqli.txt", '')
+    oh.helpContent(3, "./FuzzingTool.py -f sqli.txt -u http://127.0.0.1/controller/user.php --data 'login&passw&user=login'", '')
+    oh.helpContent(3, "./FuzzingTool.py -f paths.txt -u http://127.0.0.1/$", '')
     exit("")
 
 def getUrl(argv: list):
@@ -182,7 +192,9 @@ def main(argv: list):
     if (len(argv) < 2):
         oh.errorBox("Invalid format! Use -h on 2nd parameter to show the help menu.")
     if (argv[1] == '-h' or argv[1] == '--help'):
-        helpMenu()
+        showHelpMenu()
+    if (argv[1] == '-v' or argv[1] == '--version'):
+        exit("FuzzingTool v2.1.0")
     url = getUrl(argv)
     url, method, param = getMethodAndArgs(argv, url)
     defaultParam = getRequestParams(argv, param) if param != '' else {}
