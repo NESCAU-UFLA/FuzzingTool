@@ -10,7 +10,7 @@ class RequestHandler:
         method: The request method
         param: The parameter of the request
         urlIndexToPayload: The URL index to set the payload
-        cookie: The HTTP Cookie header value
+        headers: The HTTP headers
         proxy: The proxy used in the request
         proxyList: The list with valid proxies gived by a file
         session: The session of the requests
@@ -23,13 +23,15 @@ class RequestHandler:
         @type method: str
         @param method: The request method
         @type defaultParam: dict
-        @param defaultParam: The parameters of the request, with default values if is given
+        @param defaultParam: The parameters of the request, with default values if are given
         """
-        self.__url = url
+        self.__url = {
+            'content': url,
+            'indexToParse': self.__getIndexesToParse(url),
+        }
         self.__method = method
         self.__param = defaultParam
-        self.__urlIndexToPayload = self.__getUrlIndexToPayload()
-        self.__cookie = {}
+        self.__headers = {}
         self.__proxy = {}
         self.__proxyList = []
         self.__session = requests.Session()
@@ -55,12 +57,15 @@ class RequestHandler:
         """
         return self.__param
 
+    def getHeaders(self):
+        return self.__headers
+
     def getUrlIndexToPayload(self):
         """The urlIndexToPayload getter
         
         @returns int: The URL index to insert the payload
         """
-        return self.__urlIndexToPayload
+        return self.__url['indexToParse']
 
     def getCookie(self):
         """The cookie getter
@@ -89,7 +94,7 @@ class RequestHandler:
         @type url: str
         @param url: The target URL
         """
-        self.__url = url
+        self.__url['content'] = url
     
     def setParam(self, param: dict):
         """The param setter
@@ -105,7 +110,7 @@ class RequestHandler:
         @type cookie: dict
         @param cookie: The HTTP Cookie header value
         """
-        self.__cookie = cookie
+        self.__headers['Cookie'] = cookie
     
     def setProxy(self, proxy: dict):
         """The proxy setter
@@ -129,7 +134,7 @@ class RequestHandler:
         @returns object: The request object
         """
         try:
-            r = requests.get(self.getUrl(), cookies=self.getCookie(), proxies=self.getProxy())
+            r = requests.get(self.__url['content'], proxies=self.__proxy)
             r.raise_for_status()
             return r
         except Exception:
@@ -145,7 +150,7 @@ class RequestHandler:
         try:
             response = self.__getRequestResponse(payload)
         except:
-            oh.errorBox("An error has occurred during the request.")
+            oh.errorBox("Connection aborted due an error.")
         return self.__getResponseData(response, payload)
 
     def testRedirection(self):
@@ -169,20 +174,20 @@ class RequestHandler:
         @type i: int
         @param i: The request index
         """
-        proxyList = self.getProxyList()
-        self.setProxy(proxyList[int(i/10)%len(proxyList)])
+        self.setProxy(self.__proxyList[int(i/1000)%len(self.__proxyList)])
 
-    def __getUrlIndexToPayload(self):
-        """If the fuzzing tests will occur on URL,
-           so get the position of it to insert the payloads
+    def __getIndexesToParse(self, paramContent: str):
+        """If the fuzzing tests will occur on the given value,
+           so get the list of positions of it to insert the payloads
         
-        @returns int: The position index to insert the payload.
-                      Returns -1 if the tests'll not occur in URL
+        @type paramContent: str
+        @param paramContent: The parameter content
+        @returns int: The positions indexes to insert the payload.
+                      Returns an empty list if the tests'll not occur
         """
-        if '$' in self.__url:
-            index = self.__url.index('$')
-            return index
-        return -1
+        if '$' in paramContent:
+            return [i for i, char in enumerate(paramContent) if char == '$']
+        return []
 
     def __getRequestParameters(self, payload: str):
         """Get the request parameters using in the request fields
@@ -192,42 +197,39 @@ class RequestHandler:
         @returns dict: The parameters dict of the request
         """
         requestParameters = {
-            'Method': self.getMethod(),
-            'Url': self.getUrl(),
-            'Data': {},
-            'HttpHeader': {},
+            'Method': self.__method,
+            'Url': self.__url['content'] if not self.__url['indexToParse'] else self.__getAjustedUrl(payload),
+            'Headers': self.__headers,
+            'Data': {} if not self.__param else self.__getAjustedData(payload),
         }
-        if self.__urlIndexToPayload != -1:
-            self.__setUrlPayload(requestParameters, payload)
-        if len(self.getParam()) > 0:
-            self.__setDataPayload(requestParameters, payload)
         return requestParameters
 
-    def __setUrlPayload(self, requestParameters: dict, payload: str):
+    def __getAjustedUrl(self, payload: str):
         """Put the payload into the URL requestParameters dictionary
 
-        @type requestParameters: dict
-        @param requestParameters: The parameters dict of the request
         @type payload: str
         @param payload: The payload used in the parameter of the request
+        @returns str: 
         """
-        head = self.getUrl()[:self.__urlIndexToPayload]
-        tail = self.getUrl()[(self.__urlIndexToPayload+1):]
-        requestParameters['Url'] = head+payload+tail
+        url = self.__url['content']
+        i = self.__url['indexToParse'][0]
+        head = url[:i]
+        tail = url[(i+1):]
+        return head+payload+tail
 
-    def __setDataPayload(self, requestParameters: dict, payload: str):
+    def __getAjustedData(self, payload: str):
         """Put the payload into the Data requestParameters dictionary
 
-        @type requestParameters: dict
-        @param requestParameters: The parameters dict of the request
         @type payload: str
         @param payload: The payload used in the parameter of the request
         """
-        for key, value in self.getParam().items():
+        data = {}
+        for key, value in self.__param.items():
             if (value != ''):
-                requestParameters['Data'][key] = value
+                data[key] = value
             else:
-                requestParameters['Data'][key] = payload
+                data[key] = payload
+        return data
 
     def __getRequestResponse(self, payload: str):
         """Get the response of a request with a custom parameter
@@ -237,8 +239,8 @@ class RequestHandler:
         @returns object: The response of the request
         """
         requestParameters = self.__getRequestParameters(payload)
-        request = requests.Request(requestParameters['Method'], requestParameters['Url'], data=requestParameters['Data'], params=requestParameters['Data'], cookies=self.getCookie())
-        return self.__session.send(request.prepare(), proxies=self.getProxy())
+        request = requests.Request(requestParameters['Method'], requestParameters['Url'], data=requestParameters['Data'], params=requestParameters['Data'], headers=requestParameters['Headers'])
+        return self.__session.send(request.prepare(), proxies=self.__proxy)
 
     def __getResponseData(self, response: object, payload: str):
         """Get the response data parsed into a dictionary
@@ -274,4 +276,4 @@ class RequestHandler:
     def __testProxy(self):
         """Test if the proxy can be used on the connection, and insert it into the proxies list"""
         if (self.__testConnection() != None):
-            self.__proxyList.append(self.getProxy())
+            self.__proxyList.append(self.__proxy)

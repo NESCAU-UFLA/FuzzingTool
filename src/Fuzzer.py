@@ -66,13 +66,13 @@ class Fuzzer:
 
     def prepareApplication(self):
         """Prepares the application"""
-        rh = self.getRequestHandler()
+        rh = self.__requestHandler
         if fh.getProxiesFile() != None:
             self.__hasProxies = True
             rh.setProxiesFromFile()
         # If we'll not fuzzing the url paths, so
         # test the connection and redirections before start the fuzzing
-        if rh.getUrlIndexToPayload() != -1:
+        if rh.getUrlIndexToPayload():
             oh.infoBox("Test mode set to URL Fuzzing. No connections or redirections to target are being tested.")
         else:
             if rh.testConnection() != None:
@@ -81,28 +81,28 @@ class Fuzzer:
                 oh.errorBox("Failed to connect to the server.")
             oh.infoBox("Testing redirections ...")
             rh.testRedirection()
-        oh.infoBox("Starting test on '"+rh.getUrl()+"' ...")
+        oh.infoBox("Starting test on '"+rh.getUrl()['content']+"' ...")
         try:
-            self.__start()
+            self.__startApplication()
         except KeyboardInterrupt:
             oh.infoBox("Test cancelled.")
         else:
             oh.infoBox("Test completed.")
 
-    def __start(self):
+    def __startApplication(self):
         """Starts the application"""
-        rh = self.getRequestHandler()
+        rh = self.__requestHandler
         firstResponse = rh.request(' ')
-        if (self.getVerboseMode()):
+        if (self.__verboseMode):
             oh.getHeader()
             oh.printContent([0, '', firstResponse['Status'], firstResponse['Length'], firstResponse['Time']], False)
         outputFileContent = []
         self.__startFuzz(firstResponse, outputFileContent)
-        fh.writeOnOutput(outputFileContent)
-        if (self.getVerboseMode()):
+        if (self.__verboseMode):
             oh.getHeader()
         else:
             print("")
+        fh.writeOnOutput(outputFileContent)
 
     def __startFuzz(self, firstResponse: object, outputFileContent: list):
         """Starts the fuzzing tests
@@ -112,7 +112,7 @@ class Fuzzer:
         @type outputFileContent: list
         @param outputFileContent: The output list with probably vulnerable data into a dictionary
         """
-        rh = self.getRequestHandler()
+        rh = self.__requestHandler
         wordlist, numLines = fh.getWordlistContentAndLength()
         i = 0 # The request index
         for payload in wordlist:
@@ -124,11 +124,11 @@ class Fuzzer:
             probablyVulnerable = self.__isVulnerable(thisResponse, firstResponse)
             if probablyVulnerable:
                 outputFileContent.append(thisResponse)
-            if (self.getVerboseMode()):
+            if (self.__verboseMode):
                 oh.printContent([value for key, value in thisResponse.items()], probablyVulnerable)
             else:
                 oh.progressStatus(str(int((i/numLines)*100)))
-            time.sleep(self.getDelay())
+            time.sleep(self.__delay)
 
     def __isVulnerable(self, thisResponse: dict, firstResponse: dict):
         """Check if the request content has some predefined characteristics based on a payload, it'll be considered as vulnerable
@@ -139,7 +139,7 @@ class Fuzzer:
         @param firstResponse: The first response dictionary
         @returns bool: A vulnerability flag
         """
-        if self.getRequestHandler().getUrlIndexToPayload() != -1 and thisResponse['Status'] < 400:
+        if self.__requestHandler.getUrlIndexToPayload() and thisResponse['Status'] < 400:
             return True
         elif ((int(thisResponse['Length']) > (int(firstResponse['Length'])+self.__additionalLength)
               or thisResponse['Time'] > (firstResponse['Time']+self.__additionalTime))):

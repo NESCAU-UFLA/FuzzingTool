@@ -126,8 +126,7 @@ def checkCookie(argv: list, requestHandler: RequestHandler):
     """
     if ('--cookie' in argv):
         cookie = argv[argv.index('--cookie')+1]
-        cookieSplited = cookie.split('=')
-        requestHandler.setCookie({cookieSplited[0]: cookieSplited[1]})
+        requestHandler.setCookie(cookie)
         oh.infoBox("Set cookie: "+cookie)
 
 def checkProxy(argv: list, requestHandler: RequestHandler):

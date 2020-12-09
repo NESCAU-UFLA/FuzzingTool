@@ -97,6 +97,7 @@ class FileHandler:
                 self.__outputFile.write(key+': '+str(value)+'\n')
             self.__outputFile.write('\n')
         self.__close(self.__outputFile)
+        oh.infoBox('Results saved.')
 
     def __openOutput(self):
         """Opens the output file 
@@ -109,6 +110,8 @@ class FileHandler:
         except FileNotFoundError:
             os.system('mkdir ../output')
             self.__outputFile = open('../output/'+time+'.txt', 'w')
+        finally:
+            oh.infoBox(f'Saving results on {time}.txt ...')
 
     def __close(self, file: object):
         """Closes the file

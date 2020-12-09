@@ -128,9 +128,9 @@ class OutputHandler:
             for i in range(27):
                 output += line[i]
             output += '...'
-            return output
+            return output.rstrip()
         else:
-            return line
+            return line.rstrip()
 
     def progressStatus(self, status: str):
         """Output the progress status of the fuzzing
