@@ -2,13 +2,14 @@
 
 ## FuzzingTool
 # 
-# Version: 2.1.0
+# Version: 3.0.0
 # Authors:
 #    Vitor Oriel Borges <https://github.com/VitorOriel>
 #
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
 import sys
+from collections import deque
 from Fuzzer import Fuzzer
 from modules.RequestHandler import RequestHandler
 from modules.IO.OutputHandler import outputHandler as oh
@@ -21,6 +22,7 @@ def showHelpMenu():
     oh.helpContent(3, "-V, --verbose", "Enable the verbose mode")
     oh.helpContent(3, "-v, --version", "Show the current version")
     oh.helpTitle(3, "Core:")
+    oh.helpContent(5, "-r FILENAME", "Define the request data (including target)")
     oh.helpContent(5, "-u URL", "Define the target URL")
     oh.helpContent(5, "-f FILENAME", "Define the payload file")
     oh.helpTitle(3, "Request options:")
@@ -33,7 +35,26 @@ def showHelpMenu():
     oh.helpContent(3, "./FuzzingTool.py -u http://127.0.0.1/post.php?id= -f sqli.txt", '')
     oh.helpContent(3, "./FuzzingTool.py -f sqli.txt -u http://127.0.0.1/controller/user.php --data 'login&passw&user=login'", '')
     oh.helpContent(3, "./FuzzingTool.py -f paths.txt -u http://127.0.0.1/$", '')
+    oh.helpContent(3, "./FuzzingTool.py -r data.txt -f sqli.txt -V", '')
     exit("")
+
+def getHeaders(args: list):
+    '''Get the HTTP headers
+
+    @tyoe args: list
+    @param args: the list with HTTP headers
+    @returns dict: the HTTP headers parsed into a dict
+    '''
+    headers = {}
+    i = 0
+    thisArg = args.popleft()
+    argsLength = len(args)
+    while i < argsLength and thisArg != '':
+        key, value = thisArg.split(': ', 1)
+        headers[key] = value
+        thisArg = args.popleft()
+        i += 1
+    return headers
 
 def getUrl(argv: list):
     """Get the target URL
@@ -96,11 +117,35 @@ def makeDefaultParam(defaultParam: dict, param: str):
     @type param: str
     @param param: The parameter string of the request
     """
-    if '=' in param and not '=$' in param:
-        param, value = param.split('=')
-        defaultParam[param] = value
+    if '=' in param:
+        if not '$' in param:
+            param, value = param.split('=')
+            defaultParam[param] = value
     else:
         defaultParam[param] = ''
+
+def getDefaultRequestData(argv: list):
+    '''Get the default data of the requests
+
+    @type argv: list
+    @param argv: The arguments given in the execution
+    @returns tuple(str, str, str, dict): The default data of the requests
+    '''
+    if '-r' in argv:
+        args = deque(fh.readData(argv[argv.index('-r')+1]))
+        method, url, httpVer = args.popleft().split(' ')
+        headers = getHeaders(args)
+        param = ''
+        if method == 'GET' and '?' in url:
+            url, param = url.split('?', 1)
+        url = 'http://'+headers['Host']+url
+        if method == 'POST' and len(args) > 0:
+            args.popleft()
+            param = args.popleft()
+    else:
+        url, method, param = getMethodAndArgs(argv, getUrl(argv))
+        headers = {}
+    return (url, method, param, headers)
 
 def getWordlistFile(argv: list):
     """Get the fuzzing wordlist filename from -f argument, and returns the file object
@@ -193,12 +238,11 @@ def main(argv: list):
     if (argv[1] == '-h' or argv[1] == '--help'):
         showHelpMenu()
     if (argv[1] == '-v' or argv[1] == '--version'):
-        exit("FuzzingTool v2.1.0")
-    url = getUrl(argv)
-    url, method, param = getMethodAndArgs(argv, url)
+        exit("FuzzingTool v3.0.0")
+    url, method, param, headers = getDefaultRequestData(argv)
     defaultParam = getRequestParams(argv, param) if param != '' else {}
     getWordlistFile(argv)
-    fuzzer = Fuzzer(RequestHandler(url, method, defaultParam))
+    fuzzer = Fuzzer(RequestHandler(url, method, defaultParam, headers))
     oh.infoBox("Set target: "+url)
     oh.infoBox("Set request method: "+method)
     oh.infoBox("Set request data: "+str(defaultParam))

@@ -15,7 +15,7 @@ class RequestHandler:
         proxyList: The list with valid proxies gived by a file
         session: The session of the requests
     """
-    def __init__(self, url: str, method: str, defaultParam: dict):
+    def __init__(self, url: str, method: str, defaultParam: dict, headers: dict):
         """Class constructor
 
         @type url: str
@@ -24,6 +24,8 @@ class RequestHandler:
         @param method: The request method
         @type defaultParam: dict
         @param defaultParam: The parameters of the request, with default values if are given
+        @type headers: dict
+        @param headers: The HTTP headers of the request
         """
         self.__url = {
             'content': url,
@@ -31,7 +33,7 @@ class RequestHandler:
         }
         self.__method = method
         self.__param = defaultParam
-        self.__headers = {}
+        self.__headers = headers
         self.__proxy = {}
         self.__proxyList = []
         self.__session = requests.Session()

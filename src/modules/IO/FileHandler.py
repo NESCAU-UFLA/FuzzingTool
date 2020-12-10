@@ -30,6 +30,19 @@ class FileHandler:
         self.__proxiesFile = None
         self.__outputFile = None
     
+    def readData(self, dataFileName: str):
+        '''Reads the default data of the requests.
+
+        @type dataFileName: str
+        @param dataFileName: The filename
+        @returns list: The content into data file
+        '''
+        try:
+            dataFile = open('../input/'+dataFileName, 'r')
+            return [data.rstrip('\n') for data in dataFile]
+        except FileNotFoundError:
+            oh.errorBox("File '"+dataFileName+"' not found.")
+
     def getProxiesFile(self):
         """The proxiesFile getter
 
@@ -46,7 +59,7 @@ class FileHandler:
         try:
             self.__proxiesFile = open('../input/'+proxiesFileName, 'r')
         except FileNotFoundError:
-            oh.errorBox("File '"+fileName+"' not found.")
+            oh.errorBox("File '"+proxiesFileName+"' not found.")
 
     def readProxies(self):
         """Read the proxies from a file"""
