@@ -17,6 +17,7 @@ class OutputHandler:
         info: The info label
         warning: The warning label
         error: The error label
+        abort: The abort label
     """
     def __init__(self):
         """Class constructor"""
@@ -27,6 +28,7 @@ class OutputHandler:
         self.__info = '\033[90m['+'\033[36mINFO'+'\033[90m] \033[0m'
         self.__warning = '\033[90m['+'\033[33mWARNING'+'\033[90m] \033[0m'
         self.__error = '\033[90m['+'\u001b[31;1mERROR'+'\033[90m] \033[0m'
+        self.__abord = '\033[90m['+'\u001b[31;1mABORT'+'\033[90m] \033[0m'
 
     def __getTime(self):
         """Get a time label
@@ -37,7 +39,7 @@ class OutputHandler:
         time = now.strftime("%H:%M:%S")
         return '\033[90m['+'\u001b[38;5;48m'+time+'\033[90m] \033[0m'
 
-    def getInfo(self, msg: str):
+    def __getInfo(self, msg: str):
         """The info getter, with a custom message
 
         @type msg: str
@@ -46,7 +48,7 @@ class OutputHandler:
         """
         return self.__info + msg
 
-    def getWarning(self, msg: str):
+    def __getWarning(self, msg: str):
         """The warning getter, with a custom message
 
         @type msg: str
@@ -55,7 +57,7 @@ class OutputHandler:
         """
         return self.__warning + msg
     
-    def getError(self, msg: str):
+    def __getError(self, msg: str):
         """The error getter, with a custom message
 
         @type msg: str
@@ -63,6 +65,15 @@ class OutputHandler:
         @returns str: The message with error label
         """
         return self.__error + msg
+
+    def __getAbort(self, msg: str):
+        """The abort getter, with a custom message
+
+        @type msg: str
+        @param msg: The custom message
+        @returns str: The message with abort label
+        """
+        return self.__abord + msg
 
     def getInitOrEnd(self):
         """Output the initial line of the requests table"""
@@ -94,7 +105,7 @@ class OutputHandler:
         @param msg: The message
         @returns bool: The answer based on the user's input
         """
-        action = input(self.__getTime()+self.getWarning(msg))
+        action = input(self.__getTime()+self.__getWarning(msg))
         if (action == 'y' or action == 'Y'):
             return True
         else:
@@ -106,7 +117,7 @@ class OutputHandler:
         @type msg: str
         @param msg: The message
         """
-        print(self.__getTime()+self.getInfo(msg))
+        print(self.__getTime()+self.__getInfo(msg))
 
     def errorBox(self, msg: str):
         """End the application with error label and a message
@@ -114,8 +125,24 @@ class OutputHandler:
         @type msg: str
         @param msg: The message
         """
-        exit(self.__getTime()+self.getError(msg))
+        exit(self.__getTime()+self.__getError(msg))
  
+    def warningBox(self, msg: str):
+        """Print the message with a warning label
+
+        @type msg: str
+        @param msg: The message
+        """
+        print(self.__getTime()+self.__getWarning(msg))
+
+    def abortBox(self, msg: str):
+        """End the application with abort label and a message
+
+        @type msg: str
+        @param msg: The message
+        """
+        exit('\n'+self.__getTime()+self.__getAbort(msg))
+
     def fixLineToOutput(self, line: str):
         """Fix the line's size readed by the file
 
@@ -162,4 +189,4 @@ class OutputHandler:
         """
         print(' '*numSpaces+("{:<"+str(26-numSpaces)+"}").format(command)+' '+desc)
 
-oh = OutputHandler.getInstance() # The object used in the files that imports this file
+outputHandler = OutputHandler.getInstance()

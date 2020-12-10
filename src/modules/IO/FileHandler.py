@@ -1,6 +1,6 @@
-from OutputHandler import *
-from datetime import datetime
+from modules.IO.OutputHandler import outputHandler as oh
 import os
+from datetime import datetime
 
 class FileHandler:
     """Class that handle with the files
@@ -97,6 +97,7 @@ class FileHandler:
                 self.__outputFile.write(key+': '+str(value)+'\n')
             self.__outputFile.write('\n')
         self.__close(self.__outputFile)
+        global outputHandler
         oh.infoBox('Results saved.')
 
     def __openOutput(self):
@@ -111,7 +112,8 @@ class FileHandler:
             os.system('mkdir ../output')
             self.__outputFile = open('../output/'+time+'.txt', 'w')
         finally:
-            oh.infoBox(f'Saving results on {time}.txt ...')
+            global outputHandler
+            oh.infoBox(f'Saving results on \'{time}.txt\' ...')
 
     def __close(self, file: object):
         """Closes the file
@@ -121,4 +123,4 @@ class FileHandler:
         """
         file.close()
 
-fh = FileHandler.getInstance()
+fileHandler = FileHandler.getInstance()

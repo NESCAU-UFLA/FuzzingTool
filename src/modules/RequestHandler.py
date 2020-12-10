@@ -1,5 +1,5 @@
-from OutputHandler import *
-from FileHandler import *
+from modules.IO.OutputHandler import outputHandler as oh
+from modules.IO.FileHandler import fileHandler as fh
 import requests
 
 class RequestHandler:
@@ -58,6 +58,10 @@ class RequestHandler:
         return self.__param
 
     def getHeaders(self):
+        '''The headers getter
+
+        @returns dict: The HTTP headers
+        '''
         return self.__headers
 
     def getUrlIndexToPayload(self):
@@ -129,16 +133,9 @@ class RequestHandler:
         self.__proxyList = proxyList
 
     def testConnection(self):
-        """Test the connection with the target, and returns the request obj
-
-        @returns object: The request object
-        """
-        try:
-            r = requests.get(self.__url['content'], proxies=self.__proxy)
-            r.raise_for_status()
-            return r
-        except Exception:
-            return None
+        """Test the connection with the target"""
+        r = requests.get(self.__url['content'], proxies=self.__proxy)
+        r.raise_for_status()
 
     def request(self, payload: str):
         """Make a request and get the response
@@ -149,7 +146,7 @@ class RequestHandler:
         """
         try:
             response = self.__getRequestResponse(payload)
-        except:
+        except requests.exceptions.RequestException:
             oh.errorBox("Connection aborted due an error.")
         return self.__getResponseData(response, payload)
 
@@ -164,6 +161,7 @@ class RequestHandler:
 
     def setProxiesFromFile(self):
         """Get the proxies from a file and test each one"""
+        oh.infoBox("Testing proxies ...")
         for proxy in fh.readProxies():
             self.setProxy(proxy)
             self.__testProxy()
@@ -178,16 +176,44 @@ class RequestHandler:
 
     def __getIndexesToParse(self, paramContent: str):
         """If the fuzzing tests will occur on the given value,
-           so get the list of positions of it to insert the payloads
+        so get the list of positions of it to insert the payloads
         
         @type paramContent: str
         @param paramContent: The parameter content
-        @returns int: The positions indexes to insert the payload.
-                      Returns an empty list if the tests'll not occur
+        @returns list: The positions indexes to insert the payload.
+                       Returns an empty list if the tests'll not occur
         """
         if '$' in paramContent:
             return [i for i, char in enumerate(paramContent) if char == '$']
         return []
+
+    def __getAjustedUrl(self, payload: str):
+        """Put the payload into the URL requestParameters dictionary
+
+        @type payload: str
+        @param payload: The payload used in the parameter of the request
+        @returns str: The ajusted URL
+        """
+        url = self.__url['content']
+        i = self.__url['indexToParse'][0]
+        head = url[:i]
+        tail = url[(i+1):]
+        return head+payload+tail
+
+    def __getAjustedData(self, payload: str):
+        """Put the payload into the Data requestParameters dictionary
+
+        @type payload: str
+        @param payload: The payload used in the parameter of the request
+        @returns dict: The data dictionary of the request
+        """
+        data = {}
+        for key, value in self.__param.items():
+            if (value != ''):
+                data[key] = value
+            else:
+                data[key] = payload
+        return data
 
     def __getRequestParameters(self, payload: str):
         """Get the request parameters using in the request fields
@@ -203,33 +229,6 @@ class RequestHandler:
             'Data': {} if not self.__param else self.__getAjustedData(payload),
         }
         return requestParameters
-
-    def __getAjustedUrl(self, payload: str):
-        """Put the payload into the URL requestParameters dictionary
-
-        @type payload: str
-        @param payload: The payload used in the parameter of the request
-        @returns str: 
-        """
-        url = self.__url['content']
-        i = self.__url['indexToParse'][0]
-        head = url[:i]
-        tail = url[(i+1):]
-        return head+payload+tail
-
-    def __getAjustedData(self, payload: str):
-        """Put the payload into the Data requestParameters dictionary
-
-        @type payload: str
-        @param payload: The payload used in the parameter of the request
-        """
-        data = {}
-        for key, value in self.__param.items():
-            if (value != ''):
-                data[key] = value
-            else:
-                data[key] = payload
-        return data
 
     def __getRequestResponse(self, payload: str):
         """Get the response of a request with a custom parameter
@@ -275,5 +274,9 @@ class RequestHandler:
 
     def __testProxy(self):
         """Test if the proxy can be used on the connection, and insert it into the proxies list"""
-        if (self.__testConnection() != None):
+        try:
+            self.__testConnection()
+            oh.infoBox(f"Proxy {self.__proxy['http://']} worked.")
             self.__proxyList.append(self.__proxy)
+        except:
+            oh.warningBox(f"Proxy {self.__proxy['http://']} not worked.")

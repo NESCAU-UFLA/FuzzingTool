@@ -10,9 +10,9 @@
 
 import sys
 from Fuzzer import Fuzzer
-from RequestHandler import RequestHandler
-from OutputHandler import *
-from FileHandler import *
+from modules.RequestHandler import RequestHandler
+from modules.IO.OutputHandler import outputHandler as oh
+from modules.IO.FileHandler import fileHandler as fh
 
 def showHelpMenu():
     """Creates the Help Menu"""

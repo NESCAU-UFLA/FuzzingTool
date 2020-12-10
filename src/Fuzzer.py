@@ -1,6 +1,6 @@
-from RequestHandler import RequestHandler
-from OutputHandler import *
-from FileHandler import *
+from modules.RequestHandler import RequestHandler
+from modules.IO.OutputHandler import outputHandler as oh
+from modules.IO.FileHandler import fileHandler as fh
 import time
 
 class Fuzzer:
@@ -70,22 +70,23 @@ class Fuzzer:
         if fh.getProxiesFile() != None:
             self.__hasProxies = True
             rh.setProxiesFromFile()
-        # If we'll not fuzzing the url paths, so
-        # test the connection and redirections before start the fuzzing
-        if rh.getUrlIndexToPayload():
-            oh.infoBox("Test mode set to URL Fuzzing. No connections or redirections to target are being tested.")
-        else:
-            if rh.testConnection() != None:
-                oh.infoBox("Connection status: OK")
-            else:
-                oh.errorBox("Failed to connect to the server.")
-            oh.infoBox("Testing redirections ...")
-            rh.testRedirection()
-        oh.infoBox("Starting test on '"+rh.getUrl()['content']+"' ...")
         try:
+            # If we'll not fuzzing the url paths, so
+            # test the connection and redirections before start the fuzzing
+            if rh.getUrlIndexToPayload():
+                oh.infoBox("Test mode set to URL Fuzzing. No connections or redirections to target are being tested.")
+            else:
+                try:
+                    rh.testConnection()
+                except:
+                    oh.errorBox("Failed to connect to the server.")
+                oh.infoBox("Connection status: OK")
+                oh.infoBox("Testing redirections ...")
+                rh.testRedirection()
+            oh.infoBox("Starting test on '"+rh.getUrl()['content']+"' ...")
             self.__startApplication()
         except KeyboardInterrupt:
-            oh.infoBox("Test cancelled.")
+            oh.abortBox("Test cancelled.")
         else:
             oh.infoBox("Test completed.")
 
