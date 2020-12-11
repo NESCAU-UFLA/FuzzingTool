@@ -22,7 +22,7 @@ First, download the last release or clone this repository. Give read and write p
  * `-h, --help`: Display the help menu and exit;
  * `-V, --verbose`: Enable the verbose mode;
  * `-v, --version`: Show the current version;
- * `-r`: Define the request data (including target);
+ * `-r FILENAME`: Define the request data (including target);
  * `-u URL`: Define the target URL;
  * `-f FILENAME`: Define the payload wordlist file;
  * `--data DATA`: Define the POST data;
