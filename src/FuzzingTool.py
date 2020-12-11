@@ -117,7 +117,7 @@ def makeDefaultParam(defaultParam: dict, param: str):
     @type param: str
     @param param: The parameter string of the request
     """
-    if '=' in param:
+    if '=' in param and not '=$' in param:
         if not '$' in param:
             param, value = param.split('=')
             defaultParam[param] = value

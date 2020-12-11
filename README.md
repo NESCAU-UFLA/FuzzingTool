@@ -22,6 +22,7 @@ First, download the last release or clone this repository. Give read and write p
  * `-h, --help`: Display the help menu and exit;
  * `-V, --verbose`: Enable the verbose mode;
  * `-v, --version`: Show the current version;
+ * `-r`: Define the request data (including target);
  * `-u URL`: Define the target URL;
  * `-f FILENAME`: Define the payload wordlist file;
  * `--data DATA`: Define the POST data;
@@ -45,6 +46,19 @@ On this example, you set the payload mode on URL for the fuzzing test. It's base
 ```
 $ ./FuzzingTool.py -f paths.txt -u http://mydomainexample.com/$
 ```
+
+On this example, you can read the request content (headers, target, data and method) from a file.
+```
+$ ./FuzzingTool.py -r data.txt -f sqli.txt -V
+```
+
+Here we've two examples of request format. The first one is about the Raw data sended to server during the request
+
+![request-before](https://user-images.githubusercontent.com/43549176/101906085-2ca45600-3b97-11eb-818d-b0170bb27397.png)
+
+This other is a modified version of the Raw, to be readable for the FuzzingTool. Note that the POST data was changed, and removed the Cookie from tthe HTTP Header (we don't want to send the Cookie as part of the request on this example).
+
+![request-after](https://user-images.githubusercontent.com/43549176/101906180-53628c80-3b97-11eb-83c3-631115fc420e.png)
 
 ## Versioning
 We use <a target="_blank" href="https://semver.org/">SemVer</a> for versioning. For the versions available, see the <a target="_blank" href="https://github.com/NESCAU-UFLA/FuzzingTool/releases">tags on this repository</a>.
