@@ -2,7 +2,7 @@
 
 ## FuzzingTool
 # 
-# Version: 3.1.0a
+# Version: 3.1.0
 # Authors:
 #    Vitor Oriel C N Borges <https://github.com/VitorOriel>
 # License: MIT (LICENSE.md)
@@ -256,7 +256,7 @@ def main(argv: list):
     if (argv[1] == '-h' or argv[1] == '--help'):
         showHelpMenu()
     if (argv[1] == '-v' or argv[1] == '--version'):
-        exit("FuzzingTool v3.1.0 - Alpha")
+        exit("FuzzingTool v3.1.0")
     url, method, param, headers = getDefaultRequestData(argv)
     defaultParam = getRequestParams(param) if param != '' else {}
     getWordlistFile(argv)
