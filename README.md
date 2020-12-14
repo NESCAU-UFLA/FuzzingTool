@@ -1,5 +1,5 @@
 # FuzzingTool
-FuzzingTool is a web penetration testing tool, that handles with fuzzing. At now, GET and POST are the parameters that you can send data from a file. After the test is completed, all possible vulnerable entries (and the request) are saved on an output file. For examples, see <a href="#usage-examples">Usage Examples</a>.
+FuzzingTool is a web penetration testing tool, that handles with fuzzing. After the test is completed, all possible vulnerable entries (and the request) are saved on an output file. For examples, see <a href="#usage-examples">Usage Examples</a>.
 <br/><br/>
 This application was made under python v3.6.9.
 
