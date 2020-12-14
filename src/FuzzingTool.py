@@ -177,7 +177,7 @@ def checkCookie(argv: list, requestHandler: RequestHandler):
     if ('--cookie' in argv):
         cookie = argv[argv.index('--cookie')+1]
         requestHandler.setCookie(cookie)
-        oh.infoBox("Set cookie: "+cookie)
+        oh.infoBox(f"Set cookie: {cookie}")
 
 def checkProxy(argv: list, requestHandler: RequestHandler):
     """Check if the --proxy argument is present, and set the value into the requestHandler
@@ -194,7 +194,7 @@ def checkProxy(argv: list, requestHandler: RequestHandler):
             'http://': 'http://'+proxy,
             'https://': 'http://'+proxy
         })
-        oh.infoBox("Set proxy: "+proxy)
+        oh.infoBox(f"Set proxy: {proxy}")
 
 def checkProxies(argv: list, requestHandler: RequestHandler):
     """Check if the --proxies argument is present, and open a file
@@ -220,7 +220,7 @@ def checkDelay(argv: list, fuzzer: Fuzzer):
     if ('--delay' in argv):
         delay = argv[argv.index('--delay')+1]
         fuzzer.setDelay(float(delay))
-        oh.infoBox("Set delay: "+delay+" second(s)")
+        oh.infoBox(f"Set delay: {delay} second(s)")
 
 def checkVerboseMode(argv: list, fuzzer: Fuzzer):
     """Check if the -V or --verbose argument is present, and set the verbose mode
@@ -244,7 +244,7 @@ def checkNumThreads(argv: list, fuzzer: Fuzzer):
     if ('-t' in argv):
         numThreads = argv[argv.index('-t')+1]
         fuzzer.setNumThreads(int(numThreads))
-        oh.infoBox("Set number of threads: "+numThreads+" thread(s)")
+        oh.infoBox(f"Set number of threads: {numThreads} thread(s)")
 
 def main(argv: list):
     """The main function
@@ -262,9 +262,9 @@ def main(argv: list):
     defaultParam = getRequestParams(param) if param != '' else {}
     getWordlistFile(argv)
     fuzzer = Fuzzer(RequestHandler(url, method, defaultParam, headers))
-    oh.infoBox("Set target: "+url)
-    oh.infoBox("Set request method: "+method)
-    oh.infoBox("Set request data: "+str(defaultParam))
+    oh.infoBox(f"Set target: {fuzzer.getRequestHandler().getHost()}")
+    oh.infoBox(f"Set request method: {method}")
+    oh.infoBox(f"Set request data: {str(defaultParam)}")
     checkCookie(argv, fuzzer.getRequestHandler())
     checkProxy(argv, fuzzer.getRequestHandler())
     checkProxies(argv, fuzzer.getRequestHandler())
