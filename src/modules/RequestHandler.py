@@ -8,7 +8,6 @@ class RequestHandler:
     
     Attributes:
         url: The target URL
-        host: The target host
         method: The request method
         param: The parameter of the request
         headers: The HTTP headers
@@ -32,7 +31,6 @@ class RequestHandler:
             'content': url,
             'indexToParse': self.__getIndexesToParse(url),
         }
-        self.__host = headers['Host'] if 'Host' in headers.keys() else self.__getHostFromUrl()
         self.__method = method
         self.__param = defaultParam
         self.__headers = headers
@@ -45,14 +43,7 @@ class RequestHandler:
 
         @returns str: The target URL
         """
-        return self.__url
-
-    def getHost(self):
-        """The host getter
-
-        @returns str: The target host
-        """
-        return self.__host
+        return self.__url['content']
 
     def getMethod(self):
         """The method getter
@@ -145,7 +136,7 @@ class RequestHandler:
 
     def testConnection(self):
         """Test the connection with the target, and raise an exception if couldn't connect (by status code)"""
-        connectionTest = requests.get(('http://'+self.__host), proxies=self.__proxy, headers=self.__headers)
+        connectionTest = requests.get(self.__getTargetFromUrl(), proxies=self.__proxy, headers=self.__headers)
         connectionTest.raise_for_status()
 
     def request(self, payload: str):
@@ -202,17 +193,15 @@ class RequestHandler:
             return [i for i, char in enumerate(paramContent) if char == '$']
         return []
 
-    def __getHostFromUrl(self):
+    def __getTargetFromUrl(self):
         """Gets the host from an URL
 
-        @returns str: The target host
+        @returns str: The target url
         """
         url = self.__url['content']
-        try:
-            urlWithoutProtocol = url[(url.index('://', 1)+3):]
-            return urlWithoutProtocol[:(urlWithoutProtocol.index('/', 1))]
-        except:
-            oh.errorBox('Invalid URL format.')
+        if self.__url['indexToParse']:
+            return url[:self.__url['indexToParse'][0]]
+        return url
 
     def __getAjustedUrl(self, payload: str):
         """Put the payload into the URL requestParameters dictionary

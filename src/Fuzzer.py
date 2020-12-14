@@ -117,25 +117,36 @@ class Fuzzer:
         """Prepares the application"""
         rh = self.__requestHandler
         try:
-            try:
-                rh.testConnection()
-            except:
-                oh.errorBox("Failed to connect to the server.")
-            oh.infoBox("Connection status: OK")
-            # If we'll not fuzzing the url paths, so
-            # test the redirections before start the fuzzing
-            if rh.getUrlIndexToPayload():
-                oh.infoBox("Test mode set to URL Fuzzing. No redirection verifications to target are being tested.")
-            else:
-                oh.infoBox("Testing redirections ...")
-                rh.testRedirection()
-            oh.infoBox(f"Starting test on '{rh.getHost()}' ...")
+            self.__checkConnectionAndRedirections()
+            oh.infoBox(f"Starting test on '{rh.getUrl()}' ...")
             self.__startApplication()
         except KeyboardInterrupt:
             oh.abortBox("Test aborted.")
             fh.writeOnOutput(self.__outputFileContent)
         else:
             oh.infoBox("Test completed.")
+
+    def __checkConnectionAndRedirections(self):
+        """Test the connection and redirection to target"""
+        # If we'll not fuzzing the url paths, so
+        # test the redirections before start the fuzzing
+        if rh.getUrlIndexToPayload():
+            oh.infoBox("Test mode set to URL Fuzzing. No redirection verifications to target are being tested.")
+            try:
+                rh.testConnection()
+            except:
+                if not oh.askYesNo("Connection to target failed. Continue anyway? "):
+                    exit()
+            else:
+                oh.infoBox("Connection status: OK")
+        else:
+            try:
+                rh.testConnection()
+            except:
+                oh.errorBox("Failed to connect to the server.")
+            oh.infoBox("Connection status: OK")
+            oh.infoBox("Testing redirections ...")
+            rh.testRedirection()
 
     def __startApplication(self):
         """Starts the application"""

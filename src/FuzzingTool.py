@@ -145,7 +145,6 @@ def getDefaultRequestData(argv: list):
             url, param = url.split('?', 1)
         url = 'http://'+headers['Host']+url
         if method == 'POST' and len(args) > 0:
-            args.popleft()
             param = args.popleft()
     else:
         url, method, param = getMethodAndArgs(argv, getUrl(argv))
@@ -262,7 +261,7 @@ def main(argv: list):
     defaultParam = getRequestParams(param) if param != '' else {}
     getWordlistFile(argv)
     fuzzer = Fuzzer(RequestHandler(url, method, defaultParam, headers))
-    oh.infoBox(f"Set target: {fuzzer.getRequestHandler().getHost()}")
+    oh.infoBox(f"Set target: {fuzzer.getRequestHandler().getUrl()}")
     oh.infoBox(f"Set request method: {method}")
     oh.infoBox(f"Set request data: {str(defaultParam)}")
     checkCookie(argv, fuzzer.getRequestHandler())
