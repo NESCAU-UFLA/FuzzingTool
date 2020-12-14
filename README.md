@@ -29,7 +29,8 @@ First, download the last release or clone this repository. Give read and write p
  * `--proxy IP:PORT`: Define the proxy;
  * `--proxies FILENAME`: Define the file that reads a list of proxies;
  * `--cookie COOKIE`: Define the HTTP Cookie header value;
- * `--delay DELAY`: Define the delay between each request.
+ * `--delay DELAY`: Define the delay between each request;
+ * `-t NUMBEROFTHREADS`: Define the number of threads used in the tests.
 
 ### Usage Examples
 On this example, you set the GET variable 'id' as an entry for the fuzzing test. The parameter values are read from the file 'sqli.txt'.
