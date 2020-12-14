@@ -115,10 +115,9 @@ class Fuzzer:
 
     def prepareApplication(self):
         """Prepares the application"""
-        rh = self.__requestHandler
         try:
             self.__checkConnectionAndRedirections()
-            oh.infoBox(f"Starting test on '{rh.getUrl()}' ...")
+            oh.infoBox(f"Starting test on '{self.__requestHandler.getUrl()}' ...")
             self.__startApplication()
         except KeyboardInterrupt:
             oh.abortBox("Test aborted.")
@@ -130,6 +129,7 @@ class Fuzzer:
         """Test the connection and redirection to target"""
         # If we'll not fuzzing the url paths, so
         # test the redirections before start the fuzzing
+        rh = self.__requestHandler
         if rh.getUrlIndexToPayload():
             oh.infoBox("Test mode set to URL Fuzzing. No redirection verifications to target are being tested.")
             try:
