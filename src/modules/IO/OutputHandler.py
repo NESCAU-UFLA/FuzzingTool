@@ -136,12 +136,12 @@ class OutputHandler:
         print(self.__getTime()+self.__getWarning(msg))
 
     def abortBox(self, msg: str):
-        """End the application with abort label and a message
+        """Print the message with abort label and a message
 
         @type msg: str
         @param msg: The message
         """
-        exit('\n'+self.__getTime()+self.__getAbort(msg))
+        print('\n'+self.__getTime()+self.__getAbort(msg))
 
     def fixLineToOutput(self, line: str):
         """Fix the line's size readed by the file

@@ -8,10 +8,10 @@ class RequestHandler:
     
     Attributes:
         url: The target URL
+        host: The target host
         method: The request method
         param: The parameter of the request
         headers: The HTTP headers
-        hasProxies: The proxies list flag
         proxy: The proxy used in the request
         proxyList: The list with valid proxies gived by a file
         requestIndex: The request index
@@ -32,10 +32,10 @@ class RequestHandler:
             'content': url,
             'indexToParse': self.__getIndexesToParse(url),
         }
+        self.__host = headers['Host'] if 'Host' in headers.keys() else self.__getHostFromUrl()
         self.__method = method
         self.__param = defaultParam
         self.__headers = headers
-        self.__hasProxies = False
         self.__proxy = {}
         self.__proxyList = []
         self.__requestIndex = 0
@@ -46,6 +46,13 @@ class RequestHandler:
         @returns str: The target URL
         """
         return self.__url
+
+    def getHost(self):
+        """The host getter
+
+        @returns str: The target host
+        """
+        return self.__host
 
     def getMethod(self):
         """The method getter
@@ -119,14 +126,6 @@ class RequestHandler:
         @param cookie: The HTTP Cookie header value
         """
         self.__headers['Cookie'] = cookie
-    
-    def setHasProxies(self, hasProxies: bool):
-        """The hasProxies setter
-
-        @type hasProxies: bool
-        @param hasProxies: The hasProxies flag
-        """
-        self.__hasProxies = hasProxies
 
     def setProxy(self, proxy: dict):
         """The proxy setter
@@ -145,9 +144,9 @@ class RequestHandler:
         self.__proxyList = proxyList
 
     def testConnection(self):
-        """Test the connection with the target"""
-        r = requests.get(self.__url['content'], proxies=self.__proxy)
-        r.raise_for_status()
+        """Test the connection with the target, and raise an exception if couldn't connect (by status code)"""
+        connectionTest = requests.get(('http://'+self.__host), proxies=self.__proxy, headers=self.__headers)
+        connectionTest.raise_for_status()
 
     def request(self, payload: str):
         """Make a request and get the response
@@ -156,7 +155,7 @@ class RequestHandler:
         @param payload: The payload used in the request
         @returns dict: The response data dictionary
         """
-        if (self.__hasProxies and self.__requestIndex%1000 == 0):
+        if (self.__proxyList and self.__requestIndex%1000 == 0):
             self.__setProxyByRequestIndex()
         self.__requestIndex += 1
         requestParameters = self.__getRequestParameters(payload)
@@ -166,6 +165,7 @@ class RequestHandler:
             timeTaken = (time.time() - before)
         except requests.exceptions.RequestException:
             oh.abortBox("Connection aborted due an error.")
+            exit()
         return self.__getResponseData(response, payload, timeTaken)
 
     def testRedirection(self):
@@ -187,11 +187,11 @@ class RequestHandler:
 
     def __setProxyByRequestIndex(self):
         """Set the proxy based on request index"""
-        self.setProxy(self.__proxyList[int(self.__requestIndex/1000)%len(self.__proxyList)])
+        self.setProxy(self.__proxyList[(self.__requestIndex%1000)%len(self.__proxyList)])
 
     def __getIndexesToParse(self, paramContent: str):
         """If the fuzzing tests will occur on the given value,
-        so get the list of positions of it to insert the payloads
+           so get the list of positions of it to insert the payloads
         
         @type paramContent: str
         @param paramContent: The parameter content
@@ -201,6 +201,18 @@ class RequestHandler:
         if '$' in paramContent:
             return [i for i, char in enumerate(paramContent) if char == '$']
         return []
+
+    def __getHostFromUrl(self):
+        """Gets the host from an URL
+
+        @returns str: The target host
+        """
+        url = self.__url['content']
+        try:
+            urlWithoutProtocol = url[(url.index('://', 1)+3):]
+            return urlWithoutProtocol[:(urlWithoutProtocol.index('/', 1))]
+        except:
+            oh.errorBox('Invalid URL format.')
 
     def __getAjustedUrl(self, payload: str):
         """Put the payload into the URL requestParameters dictionary
@@ -280,7 +292,7 @@ class RequestHandler:
     def __testProxy(self):
         """Test if the proxy can be used on the connection, and insert it into the proxies list"""
         try:
-            self.__testConnection()
+            self.testConnection()
             oh.infoBox(f"Proxy {self.__proxy['http://']} worked.")
             self.__proxyList.append(self.__proxy)
         except:

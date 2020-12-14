@@ -4,7 +4,12 @@
 # 
 # Version: 3.1.0a
 # Authors:
-#    Vitor Oriel Borges <https://github.com/VitorOriel>
+#    Vitor Oriel C N Borges <https://github.com/VitorOriel>
+# License: MIT (LICENSE.md)
+#    Copyright (c) 2020 Vitor Oriel
+#    Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+#    The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+#    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
@@ -30,7 +35,9 @@ def showHelpMenu():
     oh.helpContent(5, "--proxy IP:PORT", "Define the proxy")
     oh.helpContent(5, "--proxies FILENAME", "Define the proxies file")
     oh.helpContent(5, "--cookie COOKIE", "Define the HTTP Cookie header value")
+    oh.helpTitle(3, "More options:")
     oh.helpContent(5, "--delay DELAY", "Define the delay between each request (in seconds)")
+    oh.helpContent(5, "-t NUMBEROFTHREADS", "Define the number of threads used in the tests")
     oh.helpTitle(0, "Examples:")
     oh.helpContent(3, "./FuzzingTool.py -u http://127.0.0.1/post.php?id= -f sqli.txt", '')
     oh.helpContent(3, "./FuzzingTool.py -f sqli.txt -u http://127.0.0.1/controller/user.php --data 'login&passw&user=login'", '')
@@ -189,7 +196,7 @@ def checkProxy(argv: list, requestHandler: RequestHandler):
         })
         oh.infoBox("Set proxy: "+proxy)
 
-def checkProxies(argv: list):
+def checkProxies(argv: list, requestHandler: RequestHandler):
     """Check if the --proxies argument is present, and open a file
 
     @type argv: list
@@ -199,7 +206,8 @@ def checkProxies(argv: list):
         index = argv.index('--proxies')+1
         proxiesFileName = argv[index]
         fh.openProxies(proxiesFileName)
-        oh.infoBox("Set proxy: Load proxies from file")
+        oh.infoBox(f"Loading proxies from file '{proxiesFileName}' ...")
+        requestHandler.setProxiesFromFile()
 
 def checkDelay(argv: list, fuzzer: Fuzzer):
     """Check if the --delay argument is present, and set the value into the fuzzer
@@ -259,7 +267,7 @@ def main(argv: list):
     oh.infoBox("Set request data: "+str(defaultParam))
     checkCookie(argv, fuzzer.getRequestHandler())
     checkProxy(argv, fuzzer.getRequestHandler())
-    checkProxies(argv)
+    checkProxies(argv, fuzzer.getRequestHandler())
     checkDelay(argv, fuzzer)
     checkVerboseMode(argv, fuzzer)
     checkNumThreads(argv, fuzzer)

@@ -62,7 +62,10 @@ class FileHandler:
             oh.errorBox("File '"+proxiesFileName+"' not found.")
 
     def readProxies(self):
-        """Read the proxies from a file"""
+        """Read the proxies from a file
+        
+        @returns list: The list with proxies dictionary
+        """
         proxies = []
         for line in self.__proxiesFile:
             line = line.rstrip("\n")
@@ -104,28 +107,28 @@ class FileHandler:
         @param type: list
         @param outputContent: The list with probably vulnerable content
         """
-        self.__openOutput()
-        for content in outputContent:
-            for key, value in content.items():
-                self.__outputFile.write(key+': '+str(value)+'\n')
-            self.__outputFile.write('\n')
-        self.__close(self.__outputFile)
-        global outputHandler
-        oh.infoBox('Results saved.')
+        if outputContent:
+            self.__openOutput()
+            for content in outputContent:
+                for key, value in content.items():
+                    self.__outputFile.write(key+': '+str(value)+'\n')
+                self.__outputFile.write('\n')
+            self.__close(self.__outputFile)
+            global outputHandler
+            oh.infoBox('Results saved.')
 
     def __openOutput(self):
         """Opens the output file 
            for store the probably vulnerable response data
         """
         now = datetime.now()
-        time = now.strftime("%Y-%m-%d_%H-%M")
+        time = now.strftime("%Y-%m-%d_%H:%M")
         try:
             self.__outputFile = open('../output/'+time+'.txt', 'w')
         except FileNotFoundError:
             os.system('mkdir ../output')
             self.__outputFile = open('../output/'+time+'.txt', 'w')
         finally:
-            global outputHandler
             oh.infoBox(f'Saving results on \'{time}.txt\' ...')
 
     def __close(self, file: object):

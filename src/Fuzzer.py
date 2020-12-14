@@ -6,7 +6,20 @@ from queue import Queue
 import time
 
 class ThreadHandler(Thread):
+    """ThreadHandler class, handles with the threads
+
+    Attributes:
+        queue: The payload queue
+        fuzzer: The fuzzer object to do the fuzzing tests
+    """
     def __init__(self, queue, fuzzer):
+        """Class constructor
+
+        @type queue: Queue
+        @param queue: The payload queue
+        @type fuzzer: Fuzzer
+        @param fuzzer: The fuzzer object to do the fuzzing tests
+        """
         Thread.__init__(self)
         self.queue = queue
         self.fuzzer = fuzzer
@@ -15,7 +28,7 @@ class ThreadHandler(Thread):
         while True:
             payload = self.queue.get()
             try:
-                self.fuzzer.requestPayload(payload)
+                self.fuzzer.do(payload)
             finally:
                 self.queue.task_done()
 
@@ -28,7 +41,9 @@ class Fuzzer:
         verboseMode: The verbose mode flag
         additionalLength: The additional length to consider an entry probably vulnerable
         additionalTime: The additional time to consider an entry probably vulnerable
-        hasProxies: A flag to define if a proxies file is used
+        firstResponse: The first response to be used in comparation with the requests with payloads
+        outputFileContent: The output content to be send to the file
+        numLines: The number of payloads in the payload file
     """
     def __init__(self, requestHandler: RequestHandler):
         """Class constructor
@@ -101,27 +116,24 @@ class Fuzzer:
     def prepareApplication(self):
         """Prepares the application"""
         rh = self.__requestHandler
-        if fh.getProxiesFile() != None:
-            rh.setHasProxies(True)
-            rh.setProxiesFromFile()
         try:
+            try:
+                rh.testConnection()
+            except:
+                oh.errorBox("Failed to connect to the server.")
+            oh.infoBox("Connection status: OK")
             # If we'll not fuzzing the url paths, so
-            # test the connection and redirections before start the fuzzing
+            # test the redirections before start the fuzzing
             if rh.getUrlIndexToPayload():
-                oh.infoBox("Test mode set to URL Fuzzing. No connections or redirections to target are being tested.")
+                oh.infoBox("Test mode set to URL Fuzzing. No redirection verifications to target are being tested.")
             else:
-                try:
-                    rh.testConnection()
-                except:
-                    oh.errorBox("Failed to connect to the server.")
-                oh.infoBox("Connection status: OK")
                 oh.infoBox("Testing redirections ...")
                 rh.testRedirection()
-            oh.infoBox("Starting test on '"+rh.getUrl()['content']+"' ...")
+            oh.infoBox(f"Starting test on '{rh.getHost()}' ...")
             self.__startApplication()
         except KeyboardInterrupt:
-            fh.writeOnOutput(self.__outputFileContent)
             oh.abortBox("Test aborted.")
+            fh.writeOnOutput(self.__outputFileContent)
         else:
             oh.infoBox("Test completed.")
 
@@ -132,15 +144,15 @@ class Fuzzer:
         if (self.__verboseMode):
             oh.getHeader()
             oh.printContent([value for key, value in self.__firstResponse.items()], False)
-        self.__startFuzz()
+        self.__prepareFuzzEnv()
         if (self.__verboseMode):
             oh.getHeader()
         else:
             print("")
         fh.writeOnOutput(self.__outputFileContent)
 
-    def __startFuzz(self):
-        """Starts the fuzzing tests"""
+    def __prepareFuzzEnv(self):
+        """Prepare the Fuzzing env"""
         queue = Queue()
         for i in range(self.__numberOfThreads):
             worker = ThreadHandler(queue, self)
@@ -151,7 +163,12 @@ class Fuzzer:
             queue.put(payload)
         queue.join()
 
-    def requestPayload(self, payload):
+    def do(self, payload: str):
+        """Do the fuzzing test with a given payload
+        
+        @type payload: str
+        @param payload: The payload to be used on the request
+        """
         thisResponse = self.__requestHandler.request(payload)
         probablyVulnerable = self.__isVulnerable(thisResponse)
         if probablyVulnerable:
