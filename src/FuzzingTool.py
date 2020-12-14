@@ -2,7 +2,7 @@
 
 ## FuzzingTool
 # 
-# Version: 3.0.0
+# Version: 3.1.0a
 # Authors:
 #    Vitor Oriel Borges <https://github.com/VitorOriel>
 #
@@ -91,11 +91,9 @@ def getMethodAndArgs(argv: list, url: str):
             oh.errorBox("You must set at least GET or POST parameters for the fuzzing test.")
     return (url, method, param)
 
-def getRequestParams(argv: list, param: str):
+def getRequestParams(param: str):
     """Split all the request parameters into a list of arguments used in the request
 
-    @type argv: list
-    @param argv: The arguments given in the execution
     @type param: str
     @param param: The parameter string of the request
     @returns dict: The entries data of the request
@@ -201,7 +199,7 @@ def checkProxies(argv: list):
         index = argv.index('--proxies')+1
         proxiesFileName = argv[index]
         fh.openProxies(proxiesFileName)
-        oh.infoBox("Set proxy: Load proxies from file.")
+        oh.infoBox("Set proxy: Load proxies from file")
 
 def checkDelay(argv: list, fuzzer: Fuzzer):
     """Check if the --delay argument is present, and set the value into the fuzzer
@@ -227,6 +225,19 @@ def checkVerboseMode(argv: list, fuzzer: Fuzzer):
     if ('-V' in argv or '--verbose' in argv):
         fuzzer.setVerboseMode(True)
 
+def checkNumThreads(argv: list, fuzzer: Fuzzer):
+    """Check if the -t argument is present, and set the number of threads in the fuzzer
+
+    @type argv: list
+    @param argv: The arguments given in the execution
+    @type fuzzer: Fuzzer
+    @param fuzzer: The Fuzzer object
+    """
+    if ('-t' in argv):
+        numThreads = argv[argv.index('-t')+1]
+        fuzzer.setNumThreads(int(numThreads))
+        oh.infoBox("Set number of threads: "+numThreads+" thread(s)")
+
 def main(argv: list):
     """The main function
 
@@ -238,9 +249,9 @@ def main(argv: list):
     if (argv[1] == '-h' or argv[1] == '--help'):
         showHelpMenu()
     if (argv[1] == '-v' or argv[1] == '--version'):
-        exit("FuzzingTool v3.0.0")
+        exit("FuzzingTool v3.1.0 - Alpha")
     url, method, param, headers = getDefaultRequestData(argv)
-    defaultParam = getRequestParams(argv, param) if param != '' else {}
+    defaultParam = getRequestParams(param) if param != '' else {}
     getWordlistFile(argv)
     fuzzer = Fuzzer(RequestHandler(url, method, defaultParam, headers))
     oh.infoBox("Set target: "+url)
@@ -251,6 +262,7 @@ def main(argv: list):
     checkProxies(argv)
     checkDelay(argv, fuzzer)
     checkVerboseMode(argv, fuzzer)
+    checkNumThreads(argv, fuzzer)
     fuzzer.prepareApplication()
 
 if __name__ == "__main__":
