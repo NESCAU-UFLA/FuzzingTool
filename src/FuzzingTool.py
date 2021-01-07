@@ -2,11 +2,11 @@
 
 ## FuzzingTool
 # 
-# Version: 3.1.0
+# Version: 3.2.0
 # Authors:
 #    Vitor Oriel C N Borges <https://github.com/VitorOriel>
 # License: MIT (LICENSE.md)
-#    Copyright (c) 2020 Vitor Oriel
+#    Copyright (c) 2021 Vitor Oriel
 #    Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 #    The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 #    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
@@ -19,31 +19,6 @@ from Fuzzer import Fuzzer
 from modules.RequestHandler import RequestHandler
 from modules.IO.OutputHandler import outputHandler as oh
 from modules.IO.FileHandler import fileHandler as fh
-
-def showHelpMenu():
-    """Creates the Help Menu"""
-    oh.helpTitle(0, "Parameters:")
-    oh.helpContent(3, "-h, --help", "Display the help menu and exit")
-    oh.helpContent(3, "-V, --verbose", "Enable the verbose mode")
-    oh.helpContent(3, "-v, --version", "Show the current version")
-    oh.helpTitle(3, "Core:")
-    oh.helpContent(5, "-r FILENAME", "Define the request data (including target)")
-    oh.helpContent(5, "-u URL", "Define the target URL")
-    oh.helpContent(5, "-f FILENAME", "Define the payload file")
-    oh.helpTitle(3, "Request options:")
-    oh.helpContent(5, "--data DATA", "Define the POST data")
-    oh.helpContent(5, "--proxy IP:PORT", "Define the proxy")
-    oh.helpContent(5, "--proxies FILENAME", "Define the proxies file")
-    oh.helpContent(5, "--cookie COOKIE", "Define the HTTP Cookie header value")
-    oh.helpTitle(3, "More options:")
-    oh.helpContent(5, "--delay DELAY", "Define the delay between each request (in seconds)")
-    oh.helpContent(5, "-t NUMBEROFTHREADS", "Define the number of threads used in the tests")
-    oh.helpTitle(0, "Examples:")
-    oh.helpContent(3, "./FuzzingTool.py -u http://127.0.0.1/post.php?id= -f sqli.txt", '')
-    oh.helpContent(3, "./FuzzingTool.py -f sqli.txt -u http://127.0.0.1/controller/user.php --data 'login&passw&user=login'", '')
-    oh.helpContent(3, "./FuzzingTool.py -f paths.txt -u http://127.0.0.1/$", '')
-    oh.helpContent(3, "./FuzzingTool.py -r data.txt -f sqli.txt -V", '')
-    exit("")
 
 def getHeaders(args: list):
     '''Get the HTTP headers
@@ -252,11 +227,13 @@ def main(argv: list):
     @param argv: The arguments given in the execution
     """
     if (len(argv) < 2):
+        oh.showIntro()
         oh.errorBox("Invalid format! Use -h on 2nd parameter to show the help menu.")
     if (argv[1] == '-h' or argv[1] == '--help'):
-        showHelpMenu()
+        oh.showHelpMenu()
     if (argv[1] == '-v' or argv[1] == '--version'):
-        exit("FuzzingTool v3.1.0")
+        exit("FuzzingTool v3.2.0")
+    oh.showIntro()
     url, method, param, headers = getDefaultRequestData(argv)
     defaultParam = getRequestParams(param) if param != '' else {}
     getWordlistFile(argv)

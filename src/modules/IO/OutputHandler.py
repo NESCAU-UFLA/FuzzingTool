@@ -167,7 +167,7 @@ class OutputHandler:
         """
         print('\r'+self.__getTime()+self.__getInfo("Progress status: "+'{:<4}'.format(status+'%')+' completed'), end='')
 
-    def helpTitle(self, numSpaces: int, title: str):
+    def __helpTitle(self, numSpaces: int, title: str):
         """Output the help title
 
         @type numSpaces: int
@@ -177,7 +177,7 @@ class OutputHandler:
         """
         print("\n"+' '*numSpaces+title)
 
-    def helpContent(self, numSpaces: int, command: str, desc: str):
+    def __helpContent(self, numSpaces: int, command: str, desc: str):
         """Output the help content
 
         @type numSpaces: int
@@ -188,5 +188,41 @@ class OutputHandler:
         @param desc: The description of the command
         """
         print(' '*numSpaces+("{:<"+str(26-numSpaces)+"}").format(command)+' '+desc)
+    
+    def showIntro(self):
+        """Creates the intro"""
+        print("\033[36m   ____                        _____       _")
+        print("\033[36m  |  __|_ _ ___ ___ _ ___ ___ |_   _|_ ___| | \033[0mVersion 3.2.0")
+        print("\033[36m  | .__| | |- _|- _|'|   | . |  | | . | . | |")
+        print("\033[36m  |_|  |___|___|___|_|_|_|_  |  |_|___|___|_|")
+        print("\033[36m                         |___|\033[0m\n")
+        print("  [!] Disclaimer: We're not responsible for the misuse of this tool.")
+        print("      This project was created for educational purposes")
+        print("      and should not be used in environments without legal authorization.\n")
+
+    def showHelpMenu(self):
+        """Creates the Help Menu"""
+        self.__helpTitle(0, "Parameters:")
+        self.__helpContent(3, "-h, --help", "Display the help menu and exit")
+        self.__helpContent(3, "-V, --verbose", "Enable the verbose mode")
+        self.__helpContent(3, "-v, --version", "Show the current version")
+        self.__helpTitle(3, "Core:")
+        self.__helpContent(5, "-r FILENAME", "Define the request data (including target)")
+        self.__helpContent(5, "-u URL", "Define the target URL")
+        self.__helpContent(5, "-f FILENAME", "Define the payload file")
+        self.__helpTitle(3, "Request options:")
+        self.__helpContent(5, "--data DATA", "Define the POST data")
+        self.__helpContent(5, "--proxy IP:PORT", "Define the proxy")
+        self.__helpContent(5, "--proxies FILENAME", "Define the proxies file")
+        self.__helpContent(5, "--cookie COOKIE", "Define the HTTP Cookie header value")
+        self.__helpTitle(3, "More options:")
+        self.__helpContent(5, "--delay DELAY", "Define the delay between each request (in seconds)")
+        self.__helpContent(5, "-t NUMBEROFTHREADS", "Define the number of threads used in the tests")
+        self.__helpTitle(0, "Examples:")
+        self.__helpContent(3, "./FuzzingTool.py -u http://127.0.0.1/post.php?id= -f sqli.txt", '')
+        self.__helpContent(3, "./FuzzingTool.py -f sqli.txt -u http://127.0.0.1/controller/user.php --data 'login&passw&user=login'", '')
+        self.__helpContent(3, "./FuzzingTool.py -f paths.txt -u http://127.0.0.1/$", '')
+        self.__helpContent(3, "./FuzzingTool.py -r data.txt -f sqli.txt -V", '')
+        exit("")
 
 outputHandler = OutputHandler.getInstance()

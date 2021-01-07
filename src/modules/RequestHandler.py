@@ -3,6 +3,56 @@ from modules.IO.FileHandler import fileHandler as fh
 import requests
 import time
 
+class Response:
+    """Class that handle with the response
+
+    Attributes:
+        response: The response object of the request
+    """
+    def __init__(self, response: object):
+        """Class constructor
+
+        @type response: object
+        @param response: The response of a request
+        """
+        self.__response = response
+
+    def __getResponseTimeAndLength(self):
+        """Get the response time and length
+
+        @type response: object
+        @param response: The Response object
+        @rtype: tuple(float, int)
+        @returns (responseTime, responseLength): The response time and length
+        """
+        responseLength = self.__response.headers.get('Content-Length')
+        if (responseLength == None):
+            responseLength = len(self.__response.content)
+        return (self.__response.elapsed.total_seconds(), responseLength)
+
+    def getResponseData(self, payload: str, timeTaken: float, requestIndex: int):
+        """Get the response data parsed into a dictionary
+
+        @type payload: str
+        @param payload: The payload used in the request
+        @type timeTaken: float
+        @param timeTaken: The time taken after make the request
+        @type requestIndex: int
+        @param requestIndex: The request index
+        @returns dict: The response data parsed into a dictionary
+        """
+        responseTime, responseLength = self.__getResponseTimeAndLength()
+        responseStatus = self.__response.status_code
+        responseData = {
+            'Request': str(requestIndex),
+            'Req Time': float('%.6f'%(timeTaken-responseTime)),
+            'Payload': payload,
+            'Status': responseStatus,
+            'Length': responseLength,
+            'Resp Time': responseTime,
+        }
+        return responseData
+
 class RequestHandler:
     """Class that handle with the requests
     
@@ -10,12 +60,12 @@ class RequestHandler:
         url: The target URL
         method: The request method
         param: The parameter of the request
-        headers: The HTTP headers
+        header: The HTTP header
         proxy: The proxy used in the request
         proxyList: The list with valid proxies gived by a file
         requestIndex: The request index
     """
-    def __init__(self, url: str, method: str, defaultParam: dict, headers: dict):
+    def __init__(self, url: str, method: str, defaultParam: dict, header: dict):
         """Class constructor
 
         @type url: str
@@ -24,8 +74,8 @@ class RequestHandler:
         @param method: The request method
         @type defaultParam: dict
         @param defaultParam: The parameters of the request, with default values if are given
-        @type headers: dict
-        @param headers: The HTTP headers of the request
+        @type header: dict
+        @param header: The HTTP header of the request
         """
         self.__url = {
             'content': url,
@@ -33,7 +83,7 @@ class RequestHandler:
         }
         self.__method = method
         self.__param = defaultParam
-        self.__headers = headers
+        self.__header = self.__setupHeader(header)
         self.__proxy = {}
         self.__proxyList = []
         self.__requestIndex = 0
@@ -59,12 +109,12 @@ class RequestHandler:
         """
         return self.__param
 
-    def getHeaders(self):
-        '''The headers getter
+    def getheader(self):
+        '''The header getter
 
-        @returns dict: The HTTP headers
+        @returns dict: The HTTP header
         '''
-        return self.__headers
+        return self.__header
 
     def getUrlIndexToPayload(self):
         """The urlIndexToPayload getter
@@ -116,7 +166,7 @@ class RequestHandler:
         @type cookie: dict
         @param cookie: The HTTP Cookie header value
         """
-        self.__headers['Cookie'] = cookie
+        self.__header['Cookie'] = cookie
 
     def setProxy(self, proxy: dict):
         """The proxy setter
@@ -136,7 +186,7 @@ class RequestHandler:
 
     def testConnection(self):
         """Test the connection with the target, and raise an exception if couldn't connect (by status code)"""
-        connectionTest = requests.get(self.__getTargetFromUrl(), proxies=self.__proxy, headers=self.__headers)
+        connectionTest = requests.get(self.__getTargetFromUrl(), proxies=self.__proxy, headers=self.__header['content'] if not self.__header['keysCustom'] else self.__getAjustedHeader(''))
         connectionTest.raise_for_status()
 
     def request(self, payload: str):
@@ -147,25 +197,27 @@ class RequestHandler:
         @returns dict: The response data dictionary
         """
         if (self.__proxyList and self.__requestIndex%1000 == 0):
-            self.__setProxyByRequestIndex()
-        self.__requestIndex += 1
+            self.__updateProxy()
         requestParameters = self.__getRequestParameters(payload)
         try:
             before = time.time()
-            response = requests.request(requestParameters['Method'], requestParameters['Url'], data=requestParameters['Data'], params=requestParameters['Data'], headers=requestParameters['Headers'], proxies=self.__proxy)
+            response = requests.request(requestParameters['Method'], requestParameters['Url'], data=requestParameters['Data'], params=requestParameters['Data'], headers=requestParameters['Header'], proxies=self.__proxy)
             timeTaken = (time.time() - before)
         except requests.exceptions.RequestException:
             oh.abortBox("Connection aborted due an error.")
             exit()
-        return self.__getResponseData(response, payload, timeTaken)
+        response = Response(response)
+        responseDict = response.getResponseData(payload, timeTaken, self.__requestIndex)
+        self.__requestIndex += 1
+        return responseDict
 
     def testRedirection(self):
         """Test if the connection will have a redirection"""
         requestParameters = self.__getRequestParameters(' ')
-        response = requests.request(requestParameters['Method'], requestParameters['Url'], data=requestParameters['Data'], params=requestParameters['Data'], headers=requestParameters['Headers'], proxies=self.__proxy)
+        response = requests.request(requestParameters['Method'], requestParameters['Url'], data=requestParameters['Data'], params=requestParameters['Data'], headers=requestParameters['Header'], proxies=self.__proxy)
         if ('[302]' in str(response.history)):
             if (not oh.askYesNo("You was redirected to another page. Continue? (y/N): ")):
-                exit(0)
+                exit()
         else:
             oh.infoBox("No redirections.")
 
@@ -176,7 +228,7 @@ class RequestHandler:
             self.setProxy(proxy)
             self.__testProxy()
 
-    def __setProxyByRequestIndex(self):
+    def __updateProxy(self):
         """Set the proxy based on request index"""
         self.setProxy(self.__proxyList[(self.__requestIndex%1000)%len(self.__proxyList)])
 
@@ -189,9 +241,43 @@ class RequestHandler:
         @returns list: The positions indexes to insert the payload.
                        Returns an empty list if the tests'll not occur
         """
-        if '$' in paramContent:
-            return [i for i, char in enumerate(paramContent) if char == '$']
-        return []
+        return [i for i, char in enumerate(paramContent) if char == '$']
+
+    def __parseHeaderValue(self, value: str):
+        """Parse the header value into a list
+
+        @type value: str
+        @param value: The HTTP Header value
+        @returns list: The list with the HTTP Header value content
+        """
+        headerValue = []
+        lastIndex = 0
+        for i in self.__getIndexesToParse(value):
+            headerValue.append(value[lastIndex:i])
+            lastIndex = i+1
+        if lastIndex == len(value):
+            headerValue.append('')
+        else:
+            headerValue.append(value[lastIndex:len(value)])
+        return headerValue
+
+    def __setupHeader(self, header: dict):
+        """Setup the HTTP Header
+
+        @type header: dict
+        @param header: The HTTP Header
+        @returns dict: The HTTP Header parsed
+        """
+        keysWithPayload = []
+        for key, value in header.items():
+            if '$' in value:
+                keysWithPayload.append(key)
+                header[key] = self.__parseHeaderValue(value)
+        header = {
+            'content': header,
+            'keysCustom': keysWithPayload
+        }
+        return header
 
     def __getTargetFromUrl(self):
         """Gets the host from an URL
@@ -215,6 +301,25 @@ class RequestHandler:
         head = url[:i]
         tail = url[(i+1):]
         return head+payload+tail
+
+    def __getAjustedHeader(self, payload: str):
+        """Put the payload in the header that contains $
+
+        @type payload: str
+        @param payload: The payload used in the parameter of the request
+        @returns dict: The new HTTP Header
+        """
+        header = {}
+        for key, value in self.__header['content'].items():
+            header[key] = value
+        for key in self.__header['keysCustom']:
+            result = ''
+            value = header[key]
+            for i in range(len(value)-1):
+                result += value[i] + payload
+            result += value[len(value)-1]
+            header[key] = result.encode('utf-8')
+        return header
 
     def __getAjustedData(self, payload: str):
         """Put the payload into the Data requestParameters dictionary
@@ -241,42 +346,10 @@ class RequestHandler:
         requestParameters = {
             'Method': self.__method,
             'Url': self.__url['content'] if not self.__url['indexToParse'] else self.__getAjustedUrl(payload),
-            'Headers': self.__headers,
+            'Header': self.__header['content'] if not self.__header['keysCustom'] else self.__getAjustedHeader(payload),
             'Data': {} if not self.__param else self.__getAjustedData(payload),
         }
         return requestParameters
-
-    def __getResponseData(self, response: object, payload: str, timeTaken: float):
-        """Get the response data parsed into a dictionary
-
-        @type response: object
-        @param response: The response of a request
-        @returns dict: The response data parsed into a dictionary
-        """
-        responseTime, responseLength = self.__getResponseTimeAndLength(response)
-        responseStatus = response.status_code
-        responseData = {
-            'Request': str(self.__requestIndex),
-            'Req Time': float('%.6f'%(timeTaken-responseTime)),
-            'Payload': payload,
-            'Status': responseStatus,
-            'Length': responseLength,
-            'Resp Time': responseTime,
-        }
-        return responseData
-
-    def __getResponseTimeAndLength(self, response: object):
-        """Get the response time and length
-
-        @type response: object
-        @param response: The Response object
-        @rtype: tuple(float, int)
-        @returns (responseTime, responseLength): The response time and length
-        """
-        responseLength = response.headers.get('Content-Length')
-        if (responseLength == None):
-            responseLength = 0
-        return (response.elapsed.total_seconds(), responseLength)
 
     def __testProxy(self):
         """Test if the proxy can be used on the connection, and insert it into the proxies list"""

@@ -1,4 +1,4 @@
-from modules.RequestHandler import RequestHandler
+from modules.RequestHandler import RequestHandler, Response
 from modules.IO.OutputHandler import outputHandler as oh
 from modules.IO.FileHandler import fileHandler as fh
 from threading import Thread
@@ -25,6 +25,7 @@ class ThreadHandler(Thread):
         self.fuzzer = fuzzer
 
     def run(self):
+        """Run the threads"""
         while True:
             payload = self.queue.get()
             try:
@@ -197,12 +198,10 @@ class Fuzzer:
         @param thisResponse: The actual response dictionary
         @returns bool: A vulnerability flag
         """
-        if self.__requestHandler.getUrlIndexToPayload():
-            if thisResponse['Status'] < 400:
+        if thisResponse['Status'] < 400:
+            if self.__requestHandler.getUrlIndexToPayload():
                 return True
-            else:
-                return False
-        elif (int(thisResponse['Length']) > (int(self.__firstResponse['Length'])+self.__additionalLength)
-              or (thisResponse['Resp Time']+thisResponse['Req Time']) > ((self.__firstResponse['Req Time']+self.__firstResponse['Resp Time'])+self.__additionalTime)):
-            return True
+            elif (int(thisResponse['Length']) > (int(self.__firstResponse['Length'])+self.__additionalLength)
+                or (thisResponse['Resp Time']+thisResponse['Req Time']) > ((self.__firstResponse['Req Time']+self.__firstResponse['Resp Time'])+self.__additionalTime)):
+                return True
         return False
