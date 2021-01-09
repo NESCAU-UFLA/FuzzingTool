@@ -2,7 +2,7 @@
 
 ## FuzzingTool
 # 
-# Version: 3.2.0
+# Version: 3.3.0
 # Authors:
 #    Vitor Oriel C N Borges <https://github.com/VitorOriel>
 # License: MIT (LICENSE.md)
@@ -231,7 +231,7 @@ def main(argv: list):
     if (argv[1] == '-h' or argv[1] == '--help'):
         oh.showHelpMenu()
     if (argv[1] == '-v' or argv[1] == '--version'):
-        exit("FuzzingTool v3.2.0")
+        exit("FuzzingTool v3.3.0")
     oh.showIntro()
     url, method, param, httpHeader = getDefaultRequestData(argv)
     defaultParam = getRequestParams(param) if param != '' else {}
