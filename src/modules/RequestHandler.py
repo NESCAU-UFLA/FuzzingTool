@@ -65,7 +65,7 @@ class RequestHandler:
         proxyList: The list with valid proxies gived by a file
         requestIndex: The request index
     """
-    def __init__(self, url: str, method: str, defaultParam: dict, header: dict):
+    def __init__(self, url: str, method: str, defaultParam: dict, httpHeader: dict):
         """Class constructor
 
         @type url: str
@@ -83,7 +83,7 @@ class RequestHandler:
         }
         self.__method = method
         self.__param = defaultParam
-        self.__header = self.__setupHeader(header)
+        self.__httpHeader = self.__setupHeader(httpHeader)
         self.__proxy = {}
         self.__proxyList = []
         self.__requestIndex = 0
@@ -114,7 +114,7 @@ class RequestHandler:
 
         @returns dict: The HTTP header
         '''
-        return self.__header
+        return self.__httpHeader
 
     def getUrlIndexToPayload(self):
         """The urlIndexToPayload getter
@@ -166,7 +166,7 @@ class RequestHandler:
         @type cookie: dict
         @param cookie: The HTTP Cookie header value
         """
-        self.__header['Cookie'] = cookie
+        self.__httpHeader['Cookie'] = cookie
 
     def setProxy(self, proxy: dict):
         """The proxy setter
@@ -186,7 +186,7 @@ class RequestHandler:
 
     def testConnection(self):
         """Test the connection with the target, and raise an exception if couldn't connect (by status code)"""
-        connectionTest = requests.get(self.__getTargetFromUrl(), proxies=self.__proxy, headers=self.__header['content'] if not self.__header['keysCustom'] else self.__getAjustedHeader(''))
+        connectionTest = requests.get(self.__getTargetFromUrl(), proxies=self.__proxy, headers=self.__httpHeader['content'] if not self.__httpHeader['keysCustom'] else self.__getAjustedHeader(''))
         connectionTest.raise_for_status()
 
     def request(self, payload: str):
@@ -310,9 +310,9 @@ class RequestHandler:
         @returns dict: The new HTTP Header
         """
         header = {}
-        for key, value in self.__header['content'].items():
+        for key, value in self.__httpHeader['content'].items():
             header[key] = value
-        for key in self.__header['keysCustom']:
+        for key in self.__httpHeader['keysCustom']:
             result = ''
             value = header[key]
             for i in range(len(value)-1):
@@ -346,7 +346,7 @@ class RequestHandler:
         requestParameters = {
             'Method': self.__method,
             'Url': self.__url['content'] if not self.__url['indexToParse'] else self.__getAjustedUrl(payload),
-            'Header': self.__header['content'] if not self.__header['keysCustom'] else self.__getAjustedHeader(payload),
+            'Header': self.__httpHeader['content'] if not self.__httpHeader['keysCustom'] else self.__getAjustedHeader(payload),
             'Data': {} if not self.__param else self.__getAjustedData(payload),
         }
         return requestParameters

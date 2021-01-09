@@ -20,23 +20,23 @@ from modules.RequestHandler import RequestHandler
 from modules.IO.OutputHandler import outputHandler as oh
 from modules.IO.FileHandler import fileHandler as fh
 
-def getHeaders(args: list):
-    '''Get the HTTP headers
+def getHeader(args: list):
+    '''Get the HTTP header
 
     @tyoe args: list
-    @param args: the list with HTTP headers
-    @returns dict: the HTTP headers parsed into a dict
+    @param args: the list with HTTP header
+    @returns dict: the HTTP header parsed into a dict
     '''
-    headers = {}
+    httpHeader = {}
     i = 0
     thisArg = args.popleft()
     argsLength = len(args)
     while i < argsLength and thisArg != '':
         key, value = thisArg.split(': ', 1)
-        headers[key] = value
+        httpHeader[key] = value
         thisArg = args.popleft()
         i += 1
-    return headers
+    return httpHeader
 
 def getUrl(argv: list):
     """Get the target URL
@@ -113,29 +113,28 @@ def getDefaultRequestData(argv: list):
     '''
     if '-r' in argv:
         args = deque(fh.readData(argv[argv.index('-r')+1]))
-        method, url, httpVer = args.popleft().split(' ')
-        headers = getHeaders(args)
+        method, path, httpVer = args.popleft().split(' ')
+        httpHeader = getHeader(args)
         param = ''
-        if method == 'GET' and '?' in url:
-            url, param = url.split('?', 1)
-        url = 'http://'+headers['Host']+url
+        if method == 'GET' and '?' in path:
+            path, param = path.split('?', 1)
+        url = 'http://'+httpHeader['Host']+path
         if method == 'POST' and len(args) > 0:
             param = args.popleft()
     else:
         url, method, param = getMethodAndArgs(argv, getUrl(argv))
-        headers = {}
-    return (url, method, param, headers)
+        httpHeader = {}
+    return (url, method, param, httpHeader)
 
 def getWordlistFile(argv: list):
-    """Get the fuzzing wordlist filename from -f argument, and returns the file object
+    """Get the fuzzing wordlist filename from -f argument
        if the argument -f doesn't exists, or the file couldn't be open, an error is thrown and the application exits
 
     @type argv: list
     @param argv: The arguments given in the execution
     """
     try:
-        index = argv.index('-f')+1
-        wordlistFileName = argv[index]
+        wordlistFileName = argv[argv.index('-f')+1]
         fh.openWordlist(wordlistFileName)
     except ValueError:
         oh.errorBox("An file is needed to make the fuzzing")
@@ -162,8 +161,7 @@ def checkProxy(argv: list, requestHandler: RequestHandler):
     @param requestHandler: The object responsible to handle the requests
     """
     if ('--proxy' in argv):
-        index = argv.index('--proxy')+1
-        proxy = argv[index]
+        proxy = argv[argv.index('--proxy')+1]
         requestHandler.setProxy({
             'http://': 'http://'+proxy,
             'https://': 'http://'+proxy
@@ -177,8 +175,7 @@ def checkProxies(argv: list, requestHandler: RequestHandler):
     @param argv: The arguments given in the execution
     """
     if ('--proxies' in argv):
-        index = argv.index('--proxies')+1
-        proxiesFileName = argv[index]
+        proxiesFileName = argv[argv.index('--proxies')+1]
         fh.openProxies(proxiesFileName)
         oh.infoBox(f"Loading proxies from file '{proxiesFileName}' ...")
         requestHandler.setProxiesFromFile()
@@ -234,10 +231,10 @@ def main(argv: list):
     if (argv[1] == '-v' or argv[1] == '--version'):
         exit("FuzzingTool v3.2.0")
     oh.showIntro()
-    url, method, param, headers = getDefaultRequestData(argv)
+    url, method, param, httpHeader = getDefaultRequestData(argv)
     defaultParam = getRequestParams(param) if param != '' else {}
     getWordlistFile(argv)
-    fuzzer = Fuzzer(RequestHandler(url, method, defaultParam, headers))
+    fuzzer = Fuzzer(RequestHandler(url, method, defaultParam, httpHeader))
     oh.infoBox(f"Set target: {fuzzer.getRequestHandler().getUrl()}")
     oh.infoBox(f"Set request method: {method}")
     oh.infoBox(f"Set request data: {str(defaultParam)}")

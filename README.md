@@ -9,6 +9,13 @@ We're not responsible for the misuse of this tool. This project was created for 
 ## Getting Started
 Before we start the *penetration testings*, take a look at the **prerequisites** and **installing**.
 
+### Supported OS
+| OS | Supported |
+| :--- | :---: |
+| Windows | No |
+| Linux | Yes |
+| MacOS | Not tested |
+
 ### Prerequisites
 * Install the requests python package
 ```
@@ -19,18 +26,20 @@ $ pip install requests
 First, download the last release or clone this repository. Give read and write permissions to the installed folder before start the tests. Run the tests into `src` directory.
 
 ### List of Execution Parameters
- * `-h, --help`: Display the help menu and exit;
- * `-V, --verbose`: Enable the verbose mode;
- * `-v, --version`: Show the current version;
- * `-r FILENAME`: Define the request data (including target);
- * `-u URL`: Define the target URL;
- * `-f FILENAME`: Define the payload wordlist file;
- * `--data DATA`: Define the POST data;
- * `--proxy IP:PORT`: Define the proxy;
- * `--proxies FILENAME`: Define the file that reads a list of proxies;
- * `--cookie COOKIE`: Define the HTTP Cookie header value;
- * `--delay DELAY`: Define the delay between each request;
- * `-t NUMBEROFTHREADS`: Define the number of threads used in the tests.
+| Argument | Required | Description | Default |
+| :--- | :---: | :--- | :---: |
+| `-h, --help` | Misc | Show the help menu and exit | |
+| `-V, --verbose` | No | Enable the verbose mode | |
+| `-v, --version` | Misc | Show the current version and exit | |
+| `-r` | Yes/No | Define the file with the request data (including target) | |
+| `-u` | Yes/No | Define the target URL | |
+| `-f` | Yes | Define the wordlist file with the payloads | |
+| `--data` | Yes/No | Define the POST data | |
+| `--proxy` | No | Define the proxy | |
+| `--proxies` | No | Define the file with a list of proxies | |
+| `--cookie` | No | Define the HTTP Cookie header value | |
+| `--delay` | No | Define the delay between each request | 0 |
+| `-t` | No | Define the number of threads used in the tests | 1 |
 
 ### Usage Examples
 On this example, you set the GET variable 'id' as an entry for the fuzzing test. The parameter values are read from the file 'sqli.txt'.
@@ -57,7 +66,7 @@ Here we've two examples of request format. The first one is about the Raw data s
 
 ![request-before](https://user-images.githubusercontent.com/43549176/101906085-2ca45600-3b97-11eb-818d-b0170bb27397.png)
 
-This other is a modified version of the Raw, to be readable for the FuzzingTool. Note that the POST data was changed, and removed the Cookie from tthe HTTP Header (we don't want to send the Cookie as part of the request on this example).
+This other is a modified version of the Raw, to be readable for the FuzzingTool. Note that the POST data was changed, and removed the Cookie from the HTTP Header (we don't want to send the Cookie as part of the request on this example).
 
 ![request-after](https://user-images.githubusercontent.com/43549176/101906180-53628c80-3b97-11eb-83c3-631115fc420e.png)
 

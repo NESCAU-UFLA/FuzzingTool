@@ -21,17 +21,17 @@ class ThreadHandler(Thread):
         @param fuzzer: The fuzzer object to do the fuzzing tests
         """
         Thread.__init__(self)
-        self.queue = queue
-        self.fuzzer = fuzzer
+        self.__queue = queue
+        self.__fuzzer = fuzzer
 
     def run(self):
         """Run the threads"""
         while True:
-            payload = self.queue.get()
+            payload = self.__queue.get()
             try:
-                self.fuzzer.do(payload)
+                self.__fuzzer.do(payload)
             finally:
-                self.queue.task_done()
+                self.__queue.task_done()
 
 class Fuzzer:
     """Fuzzer class, the core of the software
@@ -121,10 +121,13 @@ class Fuzzer:
             oh.infoBox(f"Starting test on '{self.__requestHandler.getUrl()}' ...")
             self.__startApplication()
         except KeyboardInterrupt:
-            oh.abortBox("Test aborted.")
-            fh.writeOnOutput(self.__outputFileContent)
+            oh.abortBox("Test aborted")
+            if self.__outputFileContent:
+                fh.writeOnOutput(self.__outputFileContent)
+            else:
+                oh.infoBox("No vulnerable entries was found")
         else:
-            oh.infoBox("Test completed.")
+            oh.infoBox("Test completed")
 
     def __checkConnectionAndRedirections(self):
         """Test the connection and redirection to target"""
@@ -132,7 +135,7 @@ class Fuzzer:
         # test the redirections before start the fuzzing
         rh = self.__requestHandler
         if rh.getUrlIndexToPayload():
-            oh.infoBox("Test mode set to URL Fuzzing. No redirection verifications to target are being tested.")
+            oh.infoBox("Test mode set to URL Fuzzing")
             try:
                 rh.testConnection()
             except:
@@ -140,6 +143,7 @@ class Fuzzer:
                     exit()
             else:
                 oh.infoBox("Connection status: OK")
+            oh.infoBox("No redirection verifications to target are being tested")
         else:
             try:
                 rh.testConnection()
@@ -161,7 +165,10 @@ class Fuzzer:
             oh.getHeader()
         else:
             print("")
-        fh.writeOnOutput(self.__outputFileContent)
+        if self.__outputFileContent:
+            fh.writeOnOutput(self.__outputFileContent)
+        else:
+            oh.infoBox("No vulnerable entries was found")
 
     def __prepareFuzzEnv(self):
         """Prepare the Fuzzing env"""
