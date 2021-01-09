@@ -115,7 +115,7 @@ class FileHandler:
                 self.__outputFile.write('\n')
             self.__close(self.__outputFile)
             global outputHandler
-            oh.infoBox('Results saved.')
+            oh.infoBox('Results saved')
 
     def __openOutput(self):
         """Opens the output file 

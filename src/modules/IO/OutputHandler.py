@@ -153,19 +153,22 @@ class OutputHandler:
         if (len(line) > 30):
             output = ""
             for i in range(27):
-                output += line[i]
+                if line[i] == '	':
+                    output += ' '
+                else:
+                    output += line[i]
             output += '...'
             return output.rstrip()
         else:
             return line.rstrip()
 
-    def progressStatus(self, status: str):
+    def progressStatus(self, status: str, itemsFound: int):
         """Output the progress status of the fuzzing
 
         @type status: str
         @param status: The status progress of the fuzzing (between 0 to 100)
         """
-        print('\r'+self.__getTime()+self.__getInfo("Progress status: "+'{:<4}'.format(status+'%')+' completed'), end='')
+        print('\r'+self.__getTime()+self.__getInfo("Progress status: "+'{:<4}'.format(status+'%')+f' completed | Found {str(itemsFound)} possible payload(s)'), end='')
 
     def __helpTitle(self, numSpaces: int, title: str):
         """Output the help title

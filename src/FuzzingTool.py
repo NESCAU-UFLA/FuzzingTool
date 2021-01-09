@@ -97,10 +97,12 @@ def makeDefaultParam(defaultParam: dict, param: str):
     @type param: str
     @param param: The parameter string of the request
     """
-    if '=' in param and not '=$' in param:
-        if not '$' in param:
-            param, value = param.split('=')
+    if '=' in param:
+        param, value = param.split('=')
+        if not '$' in value:
             defaultParam[param] = value
+        else:
+            defaultParam[param] = ''
     else:
         defaultParam[param] = ''
 
@@ -149,7 +151,7 @@ def checkCookie(argv: list, requestHandler: RequestHandler):
     """
     if ('--cookie' in argv):
         cookie = argv[argv.index('--cookie')+1]
-        requestHandler.setCookie(cookie)
+        requestHandler.setHeaderContent('Cookie', cookie)
         oh.infoBox(f"Set cookie: {cookie}")
 
 def checkProxy(argv: list, requestHandler: RequestHandler):

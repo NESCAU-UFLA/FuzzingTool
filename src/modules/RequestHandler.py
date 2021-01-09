@@ -60,7 +60,7 @@ class RequestHandler:
         url: The target URL
         method: The request method
         param: The parameter of the request
-        header: The HTTP header
+        httpHeader: The HTTP header
         proxy: The proxy used in the request
         proxyList: The list with valid proxies gived by a file
         requestIndex: The request index
@@ -74,8 +74,8 @@ class RequestHandler:
         @param method: The request method
         @type defaultParam: dict
         @param defaultParam: The parameters of the request, with default values if are given
-        @type header: dict
-        @param header: The HTTP header of the request
+        @type httpHeader: dict
+        @param httpHeader: The HTTP header of the request
         """
         self.__url = {
             'content': url,
@@ -83,10 +83,11 @@ class RequestHandler:
         }
         self.__method = method
         self.__param = defaultParam
-        self.__httpHeader = self.__setupHeader(httpHeader)
+        self.__httpHeader = httpHeader
         self.__proxy = {}
         self.__proxyList = []
         self.__requestIndex = 0
+        self.__setupHeader()
     
     def getUrl(self):
         """The url getter
@@ -95,27 +96,6 @@ class RequestHandler:
         """
         return self.__url['content']
 
-    def getMethod(self):
-        """The method getter
-
-        @returns str: The param method
-        """
-        return self.__method
-
-    def getParam(self):
-        """The param getter
-
-        @returns dict: The parameters of the request
-        """
-        return self.__param
-
-    def getheader(self):
-        '''The header getter
-
-        @returns dict: The HTTP header
-        '''
-        return self.__httpHeader
-
     def getUrlIndexToPayload(self):
         """The urlIndexToPayload getter
         
@@ -123,50 +103,17 @@ class RequestHandler:
         """
         return self.__url['indexToParse']
 
-    def getCookie(self):
-        """The cookie getter
-
-        @returns dict: The HTTP Cookie header value
-        """
-        return self.__cookie
-    
-    def getProxy(self):
-        """The proxy getter
-
-        @returns dict: The proxy used in the request
-        """
-        return self.__proxy
-
-    def getProxyList(self):
-        """The proxyList getter
-
-        @returns list: The proxies list
-        """
-        return self.__proxyList
-
-    def setUrl(self, url: str):
-        """The url setter
-
-        @type url: str
-        @param url: The target URL
-        """
-        self.__url['content'] = url
-    
-    def setParam(self, param: dict):
-        """The param setter
-
-        @type param: dict
-        @param param: The parameter of the request
-        """
-        self.__param = param
-
-    def setCookie(self, cookie: dict):
+    def setHeaderContent(self, key: str, value: str):
         """The cookie setter
 
-        @type cookie: dict
+        @type cookie: str
         @param cookie: The HTTP Cookie header value
         """
-        self.__httpHeader['Cookie'] = cookie
+        if '$' in value:
+            self.__httpHeader['keysCustom'].append(key)
+            self.__httpHeader['content'][key] = self.__parseHeaderValue(value)
+        else:
+            self.__httpHeader['content'][key] = value
 
     def setProxy(self, proxy: dict):
         """The proxy setter
@@ -175,14 +122,6 @@ class RequestHandler:
         @param proxy: The proxy used in the request
         """
         self.__proxy = proxy
-
-    def setProxyList(self, proxyList: list):
-        """The proxyList setter
-
-        @type proxyList: list
-        @param proxyList: The proxies list
-        """
-        self.__proxyList = proxyList
 
     def testConnection(self):
         """Test the connection with the target, and raise an exception if couldn't connect (by status code)"""
@@ -219,7 +158,7 @@ class RequestHandler:
             if (not oh.askYesNo("You was redirected to another page. Continue? (y/N): ")):
                 exit()
         else:
-            oh.infoBox("No redirections.")
+            oh.infoBox("No redirections")
 
     def setProxiesFromFile(self):
         """Get the proxies from a file and test each one"""
@@ -261,23 +200,19 @@ class RequestHandler:
             headerValue.append(value[lastIndex:len(value)])
         return headerValue
 
-    def __setupHeader(self, header: dict):
+    def __setupHeader(self):
         """Setup the HTTP Header
 
         @type header: dict
         @param header: The HTTP Header
         @returns dict: The HTTP Header parsed
         """
-        keysWithPayload = []
-        for key, value in header.items():
-            if '$' in value:
-                keysWithPayload.append(key)
-                header[key] = self.__parseHeaderValue(value)
-        header = {
-            'content': header,
-            'keysCustom': keysWithPayload
+        self.__httpHeader = {
+            'content': self.__httpHeader,
+            'keysCustom': [],
         }
-        return header
+        for key, value in self.__httpHeader['content'].items():
+            self.setHeaderContent(key, value)
 
     def __getTargetFromUrl(self):
         """Gets the host from an URL

@@ -40,9 +40,7 @@ class Fuzzer:
         requestHandler: The RequestHandler object to deal with the requests
         delay: The delay between each test
         verboseMode: The verbose mode flag
-        additionalLength: The additional length to consider an entry probably vulnerable
-        additionalTime: The additional time to consider an entry probably vulnerable
-        firstResponse: The first response to be used in comparation with the requests with payloads
+        defaultComparator: The dictionary with the default entries to be compared with the current request
         outputFileContent: The output content to be send to the file
         numLines: The number of payloads in the payload file
     """
@@ -56,11 +54,13 @@ class Fuzzer:
         self.__delay = 0
         self.__verboseMode = False
         self.__numberOfThreads = 1
-        self.__additionalLength = 300
-        self.__additionalTime = 5
-        self.__firstResponse = {}
+        self.__defaultComparator = {
+            'Length': 300,
+            'Time': 5,
+        }
         self.__outputFileContent = []
         self.__numLines = 0
+        self.__startedTime = 0
 
     def getRequestHandler(self):
         """The requestHandler getter
@@ -68,27 +68,6 @@ class Fuzzer:
         @returns object: The RequestHandler object
         """
         return self.__requestHandler
-
-    def getDelay(self):
-        """The delay getter
-
-        @returns float: The delay used between each request
-        """
-        return self.__delay
-
-    def getVerboseMode(self):
-        """The verboseMode getter
-
-        @returns bool: The verbose mode flag
-        """
-        return self.__verboseMode
-
-    def getFirstResponse(self):
-        """The firstResponse getter
-
-        @returns dict: The first response dictionary
-        """
-        return self.__firstResponse
 
     def setDelay(self, delay: float):
         """The delay setter
@@ -122,10 +101,7 @@ class Fuzzer:
             self.__startApplication()
         except KeyboardInterrupt:
             oh.abortBox("Test aborted")
-            if self.__outputFileContent:
-                fh.writeOnOutput(self.__outputFileContent)
-            else:
-                oh.infoBox("No vulnerable entries was found")
+            self.__showFooter()
         else:
             oh.infoBox("Test completed")
 
@@ -156,19 +132,18 @@ class Fuzzer:
     def __startApplication(self):
         """Starts the application"""
         rh = self.__requestHandler
-        self.__firstResponse = rh.request(' ')
+        firstResponse = rh.request(' ')
+        self.__defaultComparator['Length'] += int(firstResponse['Length'])
+        self.__defaultComparator['Time'] += (firstResponse['Req Time']+firstResponse['Resp Time'])
         if (self.__verboseMode):
             oh.getHeader()
-            oh.printContent([value for key, value in self.__firstResponse.items()], False)
+            oh.printContent([value for key, value in firstResponse.items()], False)
         self.__prepareFuzzEnv()
         if (self.__verboseMode):
             oh.getHeader()
         else:
             print("")
-        if self.__outputFileContent:
-            fh.writeOnOutput(self.__outputFileContent)
-        else:
-            oh.infoBox("No vulnerable entries was found")
+        self.__showFooter()
 
     def __prepareFuzzEnv(self):
         """Prepare the Fuzzing env"""
@@ -180,6 +155,7 @@ class Fuzzer:
         wordlist, self.__numLines = fh.getWordlistContentAndLength()
         for payload in wordlist:
             queue.put(payload)
+        self.__startedTime = time.time()
         queue.join()
 
     def do(self, payload: str):
@@ -195,7 +171,7 @@ class Fuzzer:
         if (self.__verboseMode):
             oh.printContent([value for key, value in thisResponse.items()], probablyVulnerable)
         else:
-            oh.progressStatus(str(int((int(thisResponse['Request'])/self.__numLines)*100)))
+            oh.progressStatus(str(int((int(thisResponse['Request'])/self.__numLines)*100)), len(self.__outputFileContent))
         time.sleep(self.__delay)
 
     def __isVulnerable(self, thisResponse: dict):
@@ -208,7 +184,21 @@ class Fuzzer:
         if thisResponse['Status'] < 400:
             if self.__requestHandler.getUrlIndexToPayload():
                 return True
-            elif (int(thisResponse['Length']) > (int(self.__firstResponse['Length'])+self.__additionalLength)
-                or (thisResponse['Resp Time']+thisResponse['Req Time']) > ((self.__firstResponse['Req Time']+self.__firstResponse['Resp Time'])+self.__additionalTime)):
+            elif self.__defaultComparator['Length'] < int(thisResponse['Length']):
                 return True
+        if not self.__requestHandler.getUrlIndexToPayload() and self.__defaultComparator['Time'] < (thisResponse['Resp Time']+thisResponse['Req Time']):
+            return True
         return False
+
+    def __showFooter(self):
+        """Show the footer content of the software, after making the fuzzing"""
+        oh.infoBox(f"Time taken: {float('%.2f'%(time.time() - self.__startedTime))} seconds")
+        if self.__outputFileContent:
+            oh.infoBox(f"Found {len(self.__outputFileContent)} possible payload(s)")
+            oh.getHeader()
+            for content in self.__outputFileContent:
+                oh.printContent([value for key, value in content.items()], True)
+            oh.getHeader()
+            fh.writeOnOutput(self.__outputFileContent)
+        else:
+            oh.infoBox("No vulnerable entries was found")
