@@ -1,6 +1,6 @@
-from modules.RequestHandler import RequestHandler, Response
-from modules.IO.OutputHandler import outputHandler as oh
-from modules.IO.FileHandler import fileHandler as fh
+from ..conn.Request import Request
+from ..IO.OutputHandler import outputHandler as oh
+from ..IO.FileHandler import fileHandler as fh
 from threading import Thread
 from queue import Queue
 import time
@@ -44,7 +44,7 @@ class Fuzzer:
         outputFileContent: The output content to be send to the file
         numLines: The number of payloads in the payload file
     """
-    def __init__(self, requestHandler: RequestHandler):
+    def __init__(self, requestHandler: Request):
         """Class constructor
 
         @type requestHandler: RequestHandler
@@ -97,6 +97,9 @@ class Fuzzer:
         """Prepares the application"""
         try:
             self.__checkConnectionAndRedirections()
+        except KeyboardInterrupt:
+            exit('')
+        try:
             oh.infoBox(f"Starting test on '{self.__requestHandler.getUrl()}' ...")
             self.__startApplication()
         except KeyboardInterrupt:
@@ -124,7 +127,7 @@ class Fuzzer:
             try:
                 rh.testConnection()
             except:
-                oh.errorBox("Failed to connect to the server.")
+                oh.errorBox("Failed to connect to the server")
             oh.infoBox("Connection status: OK")
             oh.infoBox("Testing redirections ...")
             rh.testRedirection()

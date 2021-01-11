@@ -1,4 +1,12 @@
 from datetime import datetime
+import platform
+
+if platform.system() == 'Windows':
+    try:
+        from colorama import init
+    except:
+        exit("Colorama package not installed. Install all dependencies first.")
+    init()
 
 class OutputHandler:
     """Class that handle with the outputs
@@ -105,7 +113,8 @@ class OutputHandler:
         @param msg: The message
         @returns bool: The answer based on the user's input
         """
-        action = input(self.__getTime()+self.__getWarning(msg))
+        print(self.__getTime()+self.__getWarning(msg), end='')
+        action = input()
         if (action == 'y' or action == 'Y'):
             return True
         else:
@@ -167,6 +176,8 @@ class OutputHandler:
 
         @type status: str
         @param status: The status progress of the fuzzing (between 0 to 100)
+        @type itemsFound: int
+        @param itemsFound: The number of possible payloads found
         """
         print('\r'+self.__getTime()+self.__getInfo("Progress status: "+'{:<4}'.format(status+'%')+f' completed | Found {str(itemsFound)} possible payload(s)'), end='')
 

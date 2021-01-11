@@ -1,4 +1,4 @@
-from modules.IO.OutputHandler import outputHandler as oh
+from .OutputHandler import outputHandler as oh
 import os
 from datetime import datetime
 
