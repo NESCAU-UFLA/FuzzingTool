@@ -9,6 +9,24 @@ def getIndexesToParse(paramContent: str):
     """
     return [i for i, char in enumerate(paramContent) if char == '$']
 
+def parseHeaderValue(value: str):
+    """Parse the header value into a list
+
+    @type value: str
+    @param value: The HTTP Header value
+    @returns list: The list with the HTTP Header value content
+    """
+    headerValue = []
+    lastIndex = 0
+    for i in getIndexesToParse(value):
+        headerValue.append(value[lastIndex:i])
+        lastIndex = i+1
+    if lastIndex == len(value):
+        headerValue.append('')
+    else:
+        headerValue.append(value[lastIndex:len(value)])
+    return headerValue
+
 class RequestParser:
     def __init__(self, url: dict, httpHeader: dict, method: str = '', param: dict = {}):
         self.__url = url
@@ -39,24 +57,6 @@ class RequestParser:
             return url[:self.__url['indexToParse'][0]]
         return url
 
-    def __parseHeaderValue(self, value: str):
-        """Parse the header value into a list
-
-        @type value: str
-        @param value: The HTTP Header value
-        @returns list: The list with the HTTP Header value content
-        """
-        headerValue = []
-        lastIndex = 0
-        for i in getIndexesToParse(value):
-            headerValue.append(value[lastIndex:i])
-            lastIndex = i+1
-        if lastIndex == len(value):
-            headerValue.append('')
-        else:
-            headerValue.append(value[lastIndex:len(value)])
-        return headerValue
-
     def __getAjustedUrl(self, payload: str):
         """Put the payload into the URL requestParameters dictionary
 
@@ -77,7 +77,6 @@ class RequestParser:
         @param payload: The payload used in the parameter of the request
         @returns dict: The new HTTP Header
         """
-        print('aaaaaaaaaaa')
         header = {}
         for key, value in self.__httpHeader['content'].items():
             header[key] = value

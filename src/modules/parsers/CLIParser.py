@@ -49,42 +49,42 @@ class CLIParser:
         except ValueError:
             oh.errorBox("An file is needed to make the fuzzing")
 
-    def checkCookie(self, requestHandler: Request):
-        """Check if the --cookie argument is present, and set the value into the requestHandler
+    def checkCookie(self, requester: Request):
+        """Check if the --cookie argument is present, and set the value into the requester
 
-        @type requestHandler: Request
-        @param requestHandler: The object responsible to handle the requests
+        @type requester: Request
+        @param requester: The object responsible to handle the requests
         """
         if ('--cookie' in self.__argv):
             cookie = self.__argv[self.__argv.index('--cookie')+1]
-            requestHandler.setHeaderContent('Cookie', cookie)
+            requester.setHeaderContent('Cookie', cookie)
             oh.infoBox(f"Set cookie: {cookie}")
 
-    def checkProxy(self, requestHandler: Request):
-        """Check if the --proxy argument is present, and set the value into the requestHandler
+    def checkProxy(self, requester: Request):
+        """Check if the --proxy argument is present, and set the value into the requester
 
-        @type requestHandler: Request
-        @param requestHandler: The object responsible to handle the requests
+        @type requester: Request
+        @param requester: The object responsible to handle the requests
         """
         if ('--proxy' in self.__argv):
             proxy = self.__argv[self.__argv.index('--proxy')+1]
-            requestHandler.setProxy({
-                'http://': 'http://'+proxy,
-                'https://': 'http://'+proxy
+            requester.setProxy({
+                'http': 'http://'+proxy,
+                'https': 'https://'+proxy
             })
             oh.infoBox(f"Set proxy: {proxy}")
 
-    def checkProxies(self, requestHandler: Request):
+    def checkProxies(self, requester: Request):
         """Check if the --proxies argument is present, and open a file
         
-        @type requestHandler: Request
-        @param requestHandler: The object responsible to handle the requests
+        @type requester: Request
+        @param requester: The object responsible to handle the requests
         """
         if ('--proxies' in self.__argv):
             proxiesFileName = self.__argv[self.__argv.index('--proxies')+1]
             fh.openProxies(proxiesFileName)
             oh.infoBox(f"Loading proxies from file '{proxiesFileName}' ...")
-            requestHandler.setProxiesFromFile()
+            requester.setProxyList(fh.readProxies())
 
     def checkDelay(self, fuzzer: Fuzzer):
         """Check if the --delay argument is present, and set the value into the fuzzer

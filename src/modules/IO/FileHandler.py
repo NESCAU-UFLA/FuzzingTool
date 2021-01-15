@@ -70,8 +70,8 @@ class FileHandler:
         for line in self.__proxiesFile:
             line = line.rstrip("\n")
             proxies.append({
-                'http://': 'http://'+line,
-                'https://': 'http://'+line
+                'http': 'http://'+line,
+                'https': 'https://'+line
             })
         self.__close(self.__proxiesFile)
         return proxies

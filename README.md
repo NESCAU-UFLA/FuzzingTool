@@ -12,7 +12,7 @@ Before we start the *penetration testings*, take a look at the **prerequisites**
 ### Supported OS
 | OS | Supported |
 | :--- | :---: |
-| Windows | No |
+| Windows | Yes |
 | Linux | Yes |
 | MacOS | Not tested |
 
@@ -20,6 +20,10 @@ Before we start the *penetration testings*, take a look at the **prerequisites**
 * Install the requests python package
 ```
 $ pip install requests
+```
+* If you are using Windows, please install the colorama too
+```
+$ pip install colorama
 ```
 
 ### Installing
