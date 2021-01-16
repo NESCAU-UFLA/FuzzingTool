@@ -18,7 +18,13 @@ from ..IO.FileHandler import fileHandler as fh
 from collections import deque
 
 class CLIParser:
+    """Class that handle with the sys argument parsing"""
     def __init__(self, argv: list):
+        """Class constructor
+
+        @type argv: list
+        @param argv: The system arguments list
+        """
         self.__argv = argv
 
     def getUrl(self):
@@ -54,7 +60,7 @@ class CLIParser:
 
     def getWordlistFile(self):
         """Get the fuzzing wordlist filename from -f argument
-        if the argument -f doesn't exists, or the file couldn't be open, an error is thrown and the application exits
+           if the argument -f doesn't exists, or the file couldn't be open, an error is thrown and the application exits
         """
         try:
             wordlistFileName = self.__argv[self.__argv.index('-f')+1]
@@ -95,9 +101,8 @@ class CLIParser:
         """
         if ('--proxies' in self.__argv):
             proxiesFileName = self.__argv[self.__argv.index('--proxies')+1]
-            fh.openProxies(proxiesFileName)
             oh.infoBox(f"Loading proxies from file '{proxiesFileName}' ...")
-            requester.setProxyList(fh.readProxies())
+            requester.setProxyList(fh.readProxies(proxiesFileName))
 
     def checkDelay(self, fuzzer: Fuzzer):
         """Check if the --delay argument is present, and set the value into the fuzzer

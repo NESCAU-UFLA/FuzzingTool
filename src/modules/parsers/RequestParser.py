@@ -40,7 +40,27 @@ def parseHeaderValue(value: str):
     return headerValue
 
 class RequestParser:
+    """Class that handle with request arguments parsing
+    
+    Attributes:
+        url: The target URL
+        method: The request method
+        param: The parameter of the request
+        httpHeader: The HTTP header
+        payload: The payload used in the request
+    """
     def __init__(self, url: dict, httpHeader: dict, method: str = '', param: dict = {}):
+        """Class constructor
+
+        @type url: dict
+        @param url: The target URL
+        @type httpHeader: dict
+        @param httpHeader: The HTTP header
+        @type method: str
+        @param method: The request method
+        @type param: dict
+        @param param: The parameter of the request
+        """
         self.__url = url
         self.__method = method
         self.__param = param
@@ -48,15 +68,32 @@ class RequestParser:
         self.__payload = ''
 
     def getUrl(self):
+        """The url getter
+        
+        @returns str: The target url
+        """
         return self.__url['content'] if not self.__url['indexToParse'] else self.__getAjustedUrl(self.__payload)
 
     def getHeader(self):
+        """The HTTP Header getter
+
+        @returns dict: The HTTP Header
+        """
         return self.__httpHeader['content'] if not self.__httpHeader['keysCustom'] else self.__getAjustedHeader()
 
     def getData(self):
+        """The param getter
+
+        @returns dict: The param data of the request
+        """
         return {} if not self.__param else self.__getAjustedData(self.__payload)
 
     def setPayload(self, payload: str):
+        """The payload setter
+
+        @type payload: str
+        @param payload: The payload used in the request
+        """
         self.__payload = payload
 
     def getTargetFromUrl(self):

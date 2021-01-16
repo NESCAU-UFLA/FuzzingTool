@@ -40,7 +40,6 @@ class FileHandler:
         else:
             FileHandler.__instance = self
         self.__wordlistFile = None
-        self.__proxiesFile = None
         self.__outputFile = None
     
     def readData(self, dataFileName: str):
@@ -51,8 +50,8 @@ class FileHandler:
         @returns list: The content into data file
         '''
         try:
-            dataFile = open('../input/'+dataFileName, 'r')
-            return [data.rstrip('\n') for data in dataFile]
+            with open('../input/'+dataFileName, 'r') as dataFile:
+                return [data.rstrip('\n') for data in dataFile]
         except FileNotFoundError:
             oh.errorBox("File '"+dataFileName+"' not found.")
 
@@ -63,30 +62,24 @@ class FileHandler:
         """
         return self.__proxiesFile
 
-    def openProxies(self, proxiesFileName: str):
-        """Open the proxies file
-
+    def readProxies(self, proxiesFileName: str):
+        """Open the proxies file, and read the proxies
+        
         @type proxiesFileName: str
         @param proxiesFileName: The name of the proxies file
-        """
-        try:
-            self.__proxiesFile = open('../input/'+proxiesFileName, 'r')
-        except FileNotFoundError:
-            oh.errorBox("File '"+proxiesFileName+"' not found.")
-
-    def readProxies(self):
-        """Read the proxies from a file
-        
         @returns list: The list with proxies dictionary
         """
         proxies = []
-        for line in self.__proxiesFile:
-            line = line.rstrip("\n")
-            proxies.append({
-                'http': 'http://'+line,
-                'https': 'https://'+line
-            })
-        self.__close(self.__proxiesFile)
+        try:
+            with open('../input/'+proxiesFileName, 'r') as proxiesFile:
+                for line in proxiesFile:
+                    line = line.rstrip("\n")
+                    proxies.append({
+                        'http': 'http://'+line,
+                        'https': 'https://'+line
+                    })
+        except FileNotFoundError:
+            oh.errorBox("File '"+proxiesFileName+"' not found.")
         return proxies
 
     def openWordlist(self, wordlistFileName: str):

@@ -18,7 +18,19 @@ from .IO.FileHandler import fileHandler as fh
 import time
 
 class ApplicationManager:
+    """Class that handle with the entire application
+
+    Attributes:
+        fuzzer: The fuzzer object
+        requester: The request object
+        startedTime: The time when start the fuzzing test
+    """
     def __init__(self, fuzzer: Fuzzer):
+        """Class constructor
+
+        @type fuzzer: Fuzzer
+        @param fuzzer: The fuzzer object
+        """
         self.__fuzzer = fuzzer
         self.__requester = fuzzer.getRequester()
         self.__startedTime = 0
@@ -78,6 +90,7 @@ class ApplicationManager:
                 oh.infoBox("No redirections")
     
     def __checkProxies(self):
+        """Check for connection status if a proxy is given"""
         if self.__requester.getProxy():
             oh.infoBox("Testing proxy ...")
             try:

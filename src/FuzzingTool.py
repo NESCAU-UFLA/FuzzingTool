@@ -2,7 +2,7 @@
 
 ## FuzzingTool
 # 
-# Version: 3.3.0
+# Version: 3.4.0
 # Authors:
 #    Vitor Oriel C N Borges <https://github.com/VitorOriel>
 # License: MIT (LICENSE.md)
@@ -13,12 +13,13 @@
 #
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
-import sys
 from modules.ApplicationManager import ApplicationManager
 from modules.core.Fuzzer import Fuzzer
 from modules.parsers.CLIParser import CLIParser
 from modules.conn.Request import Request
 from modules.IO.OutputHandler import outputHandler as oh
+
+import sys
 
 def main(argv: list):
     """The main function
@@ -26,15 +27,8 @@ def main(argv: list):
     @type argv: list
     @param argv: The arguments given in the execution
     """
-    if (len(argv) < 2):
-        oh.showIntro()
-        oh.errorBox("Invalid format! Use -h on 2nd parameter to show the help menu.")
-    if (argv[1] == '-h' or argv[1] == '--help'):
-        oh.showHelpMenu()
-    if (argv[1] == '-v' or argv[1] == '--version'):
-        exit("FuzzingTool v3.3.0")
-    cliParser = CLIParser(argv)
     oh.showIntro()
+    cliParser = CLIParser(argv)
     url, method, requestData, httpHeader = cliParser.getDefaultRequestData()
     cliParser.getWordlistFile()
     fuzzer = Fuzzer(Request(url, method, requestData, httpHeader))
@@ -50,4 +44,11 @@ def main(argv: list):
     ApplicationManager(fuzzer).prepare()
 
 if __name__ == "__main__":
-   main(sys.argv)
+    if (len(sys.argv) < 2):
+        oh.showIntro()
+        oh.errorBox("Invalid format! Use -h on 2nd parameter to show the help menu.")
+    if (sys.argv[1] == '-h' or sys.argv[1] == '--help'):
+        oh.showHelpMenu()
+    if (sys.argv[1] == '-v' or sys.argv[1] == '--version'):
+        exit("FuzzingTool v3.4.0")
+    main(sys.argv)

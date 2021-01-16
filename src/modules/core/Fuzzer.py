@@ -26,8 +26,9 @@ class Fuzzer:
         requester: The requester object to deal with the requests
         delay: The delay between each test
         verboseMode: The verbose mode flag
+        numberOfThreads: The number of threads used in the application
         defaultComparator: The dictionary with the default entries to be compared with the current request
-        outputFileContent: The output content to be send to the file
+        output: The output content to be send to the file
         numLines: The number of payloads in the payload file
     """
     def __init__(self, requester: Request):
@@ -131,7 +132,15 @@ class Fuzzer:
                     self.__semaphoreHandler.acquire()
 
         def setup():
-            """Handle with threads setup"""
+            """Handle with threads setup
+            
+            New Fuzzer Attributes:
+                payloads: The queue that contains all payloads inside the wordlist file
+                threads: The list with the threads used in the application
+                running: A flag to say if the application is running or not
+                eventHandler: The Event object handler - an internal flag manager for the threads
+                semaphoreHandler: The Semaphore object handler - an internal counter manager for the threads
+            """
             self.__payloads = Queue()
             self.__threads = []
             self.__running = True
