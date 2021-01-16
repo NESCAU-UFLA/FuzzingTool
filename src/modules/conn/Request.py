@@ -15,6 +15,7 @@ from .RequestException import RequestException
 from ..parsers.RequestParser import *
 from ..IO.OutputHandler import outputHandler as oh
 from ..IO.FileHandler import fileHandler as fh
+
 import time
 try:
     import requests

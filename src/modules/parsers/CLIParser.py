@@ -14,6 +14,7 @@ from ..core.Fuzzer import Fuzzer
 from ..conn.Request import Request
 from ..IO.OutputHandler import outputHandler as oh
 from ..IO.FileHandler import fileHandler as fh
+
 from collections import deque
 
 class CLIParser:

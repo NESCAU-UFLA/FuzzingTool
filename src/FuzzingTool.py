@@ -14,6 +14,7 @@
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
 import sys
+from modules.ApplicationManager import ApplicationManager
 from modules.core.Fuzzer import Fuzzer
 from modules.parsers.CLIParser import CLIParser
 from modules.conn.Request import Request
@@ -46,7 +47,7 @@ def main(argv: list):
     cliParser.checkDelay(fuzzer)
     cliParser.checkVerboseMode(fuzzer)
     cliParser.checkNumThreads(fuzzer)
-    fuzzer.prepareApplication()
+    ApplicationManager(fuzzer).prepare()
 
 if __name__ == "__main__":
    main(sys.argv)

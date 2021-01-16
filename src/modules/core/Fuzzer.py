@@ -14,6 +14,7 @@ from ..conn.Request import Request
 from ..conn.RequestException import RequestException
 from ..IO.OutputHandler import outputHandler as oh
 from ..IO.FileHandler import fileHandler as fh
+
 from threading import Thread, Event, Semaphore
 from queue import Queue
 import time
@@ -43,9 +44,8 @@ class Fuzzer:
             'Length': 300,
             'Time': 5,
         }
-        self.__outputFileContent = []
+        self.__output = []
         self.__numLines = 0
-        self.__startedTime = 0
 
     def getRequester(self):
         """The requester getter
@@ -53,6 +53,20 @@ class Fuzzer:
         @returns object: The requester object
         """
         return self.__requester
+
+    def isVerboseMode(self):
+        """The verboseMode getter
+
+        @returns bool: The verbose mode flag
+        """
+        return self.__verboseMode
+    
+    def getOutput(self):
+        """The output content getter
+
+        @returns list: The output content list
+        """
+        return self.__output
 
     def setDelay(self, delay: float):
         """The delay setter
@@ -78,135 +92,6 @@ class Fuzzer:
         """
         self.__numberOfThreads = numberOfThreads
 
-    def prepareApplication(self):
-        """Prepares the application"""
-        try:
-            self.__checkConnectionAndRedirections()
-            self.__checkProxies()
-        except KeyboardInterrupt:
-            exit('')
-        try:
-            oh.infoBox(f"Starting test on '{self.__requester.getUrl()}' ...")
-            self.__startApplication()
-        except KeyboardInterrupt:
-            self.threadHandle('stop')
-            while self.__numberOfThreads > 0:
-                pass
-            oh.abortBox("Test aborted")
-            self.__showFooter()
-        else:
-            oh.infoBox("Test completed")
-
-    def __checkConnectionAndRedirections(self):
-        """Test the connection and redirection to target"""
-        # If we'll not fuzzing the url paths, so
-        # test the redirections before start the fuzzing
-        if self.__requester.getUrlIndexToPayload():
-            oh.infoBox("Test mode set to URL Fuzzing")
-            try:
-                self.__requester.testConnection()
-            except RequestException:
-                if not oh.askYesNo("Connection to target failed. Continue anyway? "):
-                    exit()
-            else:
-                oh.infoBox("Connection status: OK")
-            oh.infoBox("No redirection verifications to target are being tested")
-        else:
-            try:
-                self.__requester.testConnection()
-            except RequestException:
-                oh.errorBox("Failed to connect to the server")
-            oh.infoBox("Connection status: OK")
-            oh.infoBox("Testing redirections ...")
-            if self.__requester.hasRedirection():
-                if (not oh.askYesNo("You was redirected to another page. Continue? (y/N): ")):
-                    exit()
-            else:
-                oh.infoBox("No redirections")
-
-    def __startApplication(self):
-        """Starts the application"""
-        firstResponse = self.__requester.request(' ')
-        self.__defaultComparator['Length'] += int(firstResponse['Length'])
-        self.__defaultComparator['Time'] += (firstResponse['Req Time']+firstResponse['Resp Time'])
-        if (self.__verboseMode):
-            oh.getHeader()
-            oh.printContent([value for key, value in firstResponse.items()], False)
-        self.threadHandle()
-        if (self.__verboseMode):
-            oh.getHeader()
-        else:
-            print("")
-        self.__showFooter()
-
-    def do(self, payload: str):
-        """Do the fuzzing test with a given payload
-        
-        @type payload: str
-        @param payload: The payload to be used on the request
-        """
-        thisResponse = self.__requester.request(payload)
-        probablyVulnerable = self.__isVulnerable(thisResponse)
-        if probablyVulnerable:
-            self.__outputFileContent.append(thisResponse)
-        if self.__verboseMode:
-            oh.printContent([value for key, value in thisResponse.items()], probablyVulnerable)
-        else:
-            oh.progressStatus(str(int((int(thisResponse['Request'])/self.__numLines)*100)), len(self.__outputFileContent))
-
-    def __checkProxies(self):
-        if self.__requester.getProxy():
-            oh.infoBox("Testing proxy ...")
-            try:
-                self.__requester.testConnection(proxy=True)
-                oh.infoBox(f"Proxy {self.__requester.getProxy()['http']} worked")
-            except RequestException:
-                oh.warningBox(f"Proxy {proxy['http']} not worked")
-                self.__requester.setProxy({})
-        elif self.__requester.getProxyList():
-            proxyList = []
-            oh.infoBox("Testing proxies ...")
-            for proxy in self.__requester.getProxyList():
-                self.__requester.setProxy(proxy)
-                try:
-                    self.__requester.testConnection(proxy=True)
-                    proxyList.append(proxy)
-                    oh.infoBox(f"Proxy {proxy['http']} worked")
-                except RequestException:
-                    oh.warningBox(f"Proxy {proxy['http']} not worked")
-            self.__requester.setProxy({})
-            self.__requester.setProxyList(proxyList)
-
-    def __isVulnerable(self, thisResponse: dict):
-        """Check if the request content has some predefined characteristics based on a payload, it'll be considered as vulnerable
-        
-        @type thisResponse: dict
-        @param thisResponse: The actual response dictionary
-        @returns bool: A vulnerability flag
-        """
-        if thisResponse['Status'] < 400:
-            if self.__requester.getUrlIndexToPayload():
-                return True
-            elif self.__defaultComparator['Length'] < int(thisResponse['Length']):
-                return True
-        if not self.__requester.getUrlIndexToPayload() and self.__defaultComparator['Time'] < (thisResponse['Resp Time']+thisResponse['Req Time']):
-            return True
-        return False
-
-    def __showFooter(self):
-        """Show the footer content of the software, after making the fuzzing"""
-        if  self.__startedTime:
-            oh.infoBox(f"Time taken: {float('%.2f'%(time.time() - self.__startedTime))} seconds")
-        if self.__outputFileContent:
-            oh.infoBox(f"Found {len(self.__outputFileContent)} possible payload(s)")
-            oh.getHeader()
-            for content in self.__outputFileContent:
-                oh.printContent([value for key, value in content.items()], True)
-            oh.getHeader()
-            fh.writeOnOutput(self.__outputFileContent)
-        else:
-            oh.infoBox("No vulnerable entries was found")
-    
     def threadHandle(self, action: str = 'setup'):
         """Function that handle with all of the threads functions and atributes
 
@@ -235,6 +120,7 @@ class Fuzzer:
             self.__eventHandler.set() # Awake threads
             for thread in self.__threads:
                 thread.start()
+            self.__payloads.join()
 
         def stop():
             """Handle with threads stop"""
@@ -258,9 +144,6 @@ class Fuzzer:
             wordlist, self.__numLines = fh.getWordlistContentAndLength()
             for payload in wordlist:
                 self.__payloads.put(payload)
-            self.threadHandle('start')
-            self.__startedTime = time.time()
-            self.__payloads.join()
         
         if action == 'setup':
             return setup()
@@ -270,3 +153,51 @@ class Fuzzer:
             return start()
         elif action == 'stop':
             return stop()
+
+    def start(self):
+        """Starts the fuzzer application"""
+        firstResponse = self.__requester.request(' ')
+        self.__defaultComparator['Length'] += int(firstResponse['Length'])
+        self.__defaultComparator['Time'] += (firstResponse['Req Time']+firstResponse['Resp Time'])
+        if self.__verboseMode:
+            oh.getHeader()
+            oh.printContent([value for key, value in firstResponse.items()], False)
+        self.threadHandle('setup')
+        self.threadHandle('start')
+
+    def stop(self):
+        """Stop the fuzzer application"""
+        self.threadHandle('stop')
+        while self.__numberOfThreads > 0:
+            pass
+
+    def do(self, payload: str):
+        """Do the fuzzing test with a given payload
+        
+        @type payload: str
+        @param payload: The payload to be used on the request
+        """
+        thisResponse = self.__requester.request(payload)
+        probablyVulnerable = self.__isVulnerable(thisResponse)
+        if probablyVulnerable:
+            self.__output.append(thisResponse)
+        if self.__verboseMode:
+            oh.printContent([value for key, value in thisResponse.items()], probablyVulnerable)
+        else:
+            oh.progressStatus(str(int((int(thisResponse['Request'])/self.__numLines)*100)), len(self.__output))
+
+    def __isVulnerable(self, thisResponse: dict):
+        """Check if the request content has some predefined characteristics based on a payload, it'll be considered as vulnerable
+        
+        @type thisResponse: dict
+        @param thisResponse: The actual response dictionary
+        @returns bool: A vulnerability flag
+        """
+        if thisResponse['Status'] < 400:
+            if self.__requester.getUrlIndexToPayload():
+                return True
+            elif self.__defaultComparator['Length'] < int(thisResponse['Length']):
+                return True
+        if not self.__requester.getUrlIndexToPayload() and self.__defaultComparator['Time'] < (thisResponse['Resp Time']+thisResponse['Req Time']):
+            return True
+        return False

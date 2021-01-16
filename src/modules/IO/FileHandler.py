@@ -11,6 +11,7 @@
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
 from .OutputHandler import outputHandler as oh
+
 import os
 from datetime import datetime
 
