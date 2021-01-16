@@ -1,41 +1,22 @@
+## FuzzingTool
+# 
+# Authors:
+#    Vitor Oriel C N Borges <https://github.com/VitorOriel>
+# License: MIT (LICENSE.md)
+#    Copyright (c) 2021 Vitor Oriel
+#    Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+#    The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+#    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#
+## https://github.com/NESCAU-UFLA/FuzzingTool
+
 from ..conn.Request import Request
 from ..conn.RequestException import RequestException
 from ..IO.OutputHandler import outputHandler as oh
 from ..IO.FileHandler import fileHandler as fh
-from threading import Thread
+from threading import Thread, Event, Semaphore
 from queue import Queue
 import time
-
-class ThreadHandler(Thread):
-    """ThreadHandler class, handles with the threads
-
-    Attributes:
-        queue: The payload queue
-        fuzzer: The fuzzer object to do the fuzzing tests
-    """
-    def __init__(self, queue, fuzzer):
-        """Class constructor
-
-        @type queue: Queue
-        @param queue: The payload queue
-        @type fuzzer: Fuzzer
-        @param fuzzer: The fuzzer object to do the fuzzing tests
-        """
-        Thread.__init__(self)
-        self.__queue = queue
-        self.__fuzzer = fuzzer
-
-    def run(self):
-        """Run the threads"""
-        while True:
-            payload = self.__queue.get()
-            try:
-                self.__fuzzer.do(payload)
-            except RequestException as e:
-                print('')
-                oh.warningBox(e.getMessage())
-            finally:
-                self.__queue.task_done()
 
 class Fuzzer:
     """Fuzzer class, the core of the software
@@ -108,6 +89,9 @@ class Fuzzer:
             oh.infoBox(f"Starting test on '{self.__requester.getUrl()}' ...")
             self.__startApplication()
         except KeyboardInterrupt:
+            self.threadHandle('stop')
+            while self.__numberOfThreads > 0:
+                pass
             oh.abortBox("Test aborted")
             self.__showFooter()
         else:
@@ -148,25 +132,12 @@ class Fuzzer:
         if (self.__verboseMode):
             oh.getHeader()
             oh.printContent([value for key, value in firstResponse.items()], False)
-        self.__prepareFuzzEnv()
+        self.threadHandle()
         if (self.__verboseMode):
             oh.getHeader()
         else:
             print("")
         self.__showFooter()
-
-    def __prepareFuzzEnv(self):
-        """Prepare the Fuzzing env"""
-        queue = Queue()
-        for i in range(self.__numberOfThreads):
-            worker = ThreadHandler(queue, self)
-            worker.daemon = True
-            worker.start()
-        wordlist, self.__numLines = fh.getWordlistContentAndLength()
-        for payload in wordlist:
-            queue.put(payload)
-        self.__startedTime = time.time()
-        queue.join()
 
     def do(self, payload: str):
         """Do the fuzzing test with a given payload
@@ -178,11 +149,10 @@ class Fuzzer:
         probablyVulnerable = self.__isVulnerable(thisResponse)
         if probablyVulnerable:
             self.__outputFileContent.append(thisResponse)
-        if (self.__verboseMode):
+        if self.__verboseMode:
             oh.printContent([value for key, value in thisResponse.items()], probablyVulnerable)
         else:
             oh.progressStatus(str(int((int(thisResponse['Request'])/self.__numLines)*100)), len(self.__outputFileContent))
-        time.sleep(self.__delay)
 
     def __checkProxies(self):
         if self.__requester.getProxy():
@@ -236,3 +206,67 @@ class Fuzzer:
             fh.writeOnOutput(self.__outputFileContent)
         else:
             oh.infoBox("No vulnerable entries was found")
+    
+    def threadHandle(self, action: str = 'setup'):
+        """Function that handle with all of the threads functions and atributes
+
+        @type action: str
+        @param action: The action taken by the thread handler
+        @returns func: A thread function
+        """
+        def run():
+            """Run the threads"""
+            while self.__running:
+                payload = self.__payloads.get()
+                try:
+                    self.do(payload)
+                    time.sleep(self.__delay)
+                except RequestException as e:
+                    oh.warningBox(e.getMessage())
+                finally:
+                    self.__payloads.task_done()
+                    if not self.__eventHandler.isSet():
+                        self.__numberOfThreads -= 1
+                        self.__semaphoreHandler.release()
+                        self.__eventHandler.wait()
+
+        def start():
+            """Handle with threads start"""
+            self.__eventHandler.set() # Awake threads
+            for thread in self.__threads:
+                thread.start()
+
+        def stop():
+            """Handle with threads stop"""
+            self.__running = False
+            self.__eventHandler.clear() # Block the threads
+            for thread in self.__threads:
+                if thread.is_alive():
+                    self.__semaphoreHandler.acquire()
+
+        def setup():
+            """Handle with threads setup"""
+            self.__payloads = Queue()
+            self.__threads = []
+            self.__running = True
+            for i in range(self.__numberOfThreads):
+                self.__threads.append(Thread(target=self.threadHandle('run')))
+                self.__threads[i].daemon = True
+            self.__eventHandler = Event()
+            self.__semaphoreHandler = Semaphore(0)
+            self.__eventHandler.clear() # Not necessary, but force the blocking of the threads
+            wordlist, self.__numLines = fh.getWordlistContentAndLength()
+            for payload in wordlist:
+                self.__payloads.put(payload)
+            self.threadHandle('start')
+            self.__startedTime = time.time()
+            self.__payloads.join()
+        
+        if action == 'setup':
+            return setup()
+        elif action == 'run':
+            return run
+        elif action == 'start':
+            return start()
+        elif action == 'stop':
+            return stop()
