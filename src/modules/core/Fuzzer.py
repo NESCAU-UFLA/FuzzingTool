@@ -101,35 +101,57 @@ class Fuzzer:
         @returns func: A thread function
         """
         def run():
+            self.__playerHandler.wait()
             """Run the threads"""
-            while self.__running:
+            while self.__running and not self.__payloads.empty():
                 payload = self.__payloads.get()
                 try:
                     self.do(payload)
                     time.sleep(self.__delay)
                 except RequestException as e:
-                    oh.warningBox(e.getMessage())
+                    if e.type == 'stop':
+                        self.stop()
+                        oh.abortBox(str(e))
                 finally:
-                    self.__payloads.task_done()
-                    if not self.__eventHandler.isSet():
+                    if not self.__playerHandler.isSet():
                         self.__numberOfThreads -= 1
                         self.__semaphoreHandler.release()
-                        self.__eventHandler.wait()
+                        self.__playerHandler.wait()
 
         def start():
             """Handle with threads start"""
-            self.__eventHandler.set() # Awake threads
+            self.__playerHandler.set() # Awake threads
             for thread in self.__threads:
                 thread.start()
-            self.__payloads.join()
+            for thread in self.__threads:
+                thread.join()
 
-        def stop():
-            """Handle with threads stop"""
-            self.__running = False
-            self.__eventHandler.clear() # Block the threads
+        def resume():
+            """Handle with threads resume process"""
+            self.__semaphoreHandler.release()
+            self.__playerHandler.set()
+            self.__numberOfThreads = len(self.__threads)
+
+        def pause():
+            """Handle with threads pause"""
+            self.__playerHandler.clear() # Block the threads
             for thread in self.__threads:
                 if thread.is_alive():
                     self.__semaphoreHandler.acquire()
+
+        def isRunning():
+            """Getter for the event handler flag
+            
+            @returns bool: A running flag
+            """
+            return self.__playerHandler.isSet()
+
+        def stop():
+            """Handle with threads stop"""
+            if self.__playerHandler.isSet():
+                self.threadHandle('pause')
+            self.__running = False
+            self.__playerHandler.set()
 
         def setup():
             """Handle with threads setup
@@ -138,18 +160,19 @@ class Fuzzer:
                 payloads: The queue that contains all payloads inside the wordlist file
                 threads: The list with the threads used in the application
                 running: A flag to say if the application is running or not
-                eventHandler: The Event object handler - an internal flag manager for the threads
+                playerHandler: The Event object handler - an internal flag manager for the threads
                 semaphoreHandler: The Semaphore object handler - an internal counter manager for the threads
             """
             self.__payloads = Queue()
             self.__threads = []
             self.__running = True
+            self.__paused = False
             for i in range(self.__numberOfThreads):
                 self.__threads.append(Thread(target=self.threadHandle('run')))
                 self.__threads[i].daemon = True
-            self.__eventHandler = Event()
+            self.__playerHandler = Event()
             self.__semaphoreHandler = Semaphore(0)
-            self.__eventHandler.clear() # Not necessary, but force the blocking of the threads
+            self.__playerHandler.clear() # Not necessary, but force the blocking of the threads
             wordlist, self.__numLines = fh.getWordlistContentAndLength()
             for payload in wordlist:
                 self.__payloads.put(payload)
@@ -160,12 +183,26 @@ class Fuzzer:
             return run
         elif action == 'start':
             return start()
+        elif action == 'pause':
+            return pause()
         elif action == 'stop':
             return stop()
+        elif action == 'isRunning':
+            return isRunning()
 
     def start(self):
         """Starts the fuzzer application"""
-        firstResponse = self.__requester.request(' ')
+        try:
+            firstResponse = self.__requester.request(' ')
+        except:
+            firstResponse = {
+                'Request': 0,
+                'Req Time': 0,
+                'Payload': '',
+                'Status': 0,
+                'Length': 0,
+                'Resp Time': 0
+            }
         self.__defaultComparator['Length'] += int(firstResponse['Length'])
         self.__defaultComparator['Time'] += (firstResponse['Req Time']+firstResponse['Resp Time'])
         if self.__verboseMode:
@@ -175,10 +212,21 @@ class Fuzzer:
         self.threadHandle('start')
 
     def stop(self):
-        """Stop the fuzzer application"""
+        """stop the fuzzer application"""
         self.threadHandle('stop')
         while self.__numberOfThreads > 0:
             pass
+
+    def pause(self):
+        """Pause the fuzzer application"""
+        self.threadHandle('pause')
+
+    def isRunning(self):
+        """Checker if the application is running or not
+        
+        @returns bool: A running flag
+        """
+        return self.threadHandle('isRunning')
 
     def do(self, payload: str):
         """Do the fuzzing test with a given payload

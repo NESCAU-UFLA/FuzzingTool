@@ -10,12 +10,37 @@
 #
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
-from .conn.Request import Request, RequestException
+from .parsers.CLIParser import CLIParser
 from .core.Fuzzer import Fuzzer
+from .conn.Request import Request, RequestException
 from .IO.OutputHandler import outputHandler as oh
 from .IO.FileHandler import fileHandler as fh
 
 import time
+
+APP_VERSION = {
+    'MAJOR_VERSION': 3,
+    "MINOR_VERSION": 4,
+    "PATCH": 1
+}
+
+def version():
+    global APP_VERSION
+    version = (str(APP_VERSION['MAJOR_VERSION'])+"."+
+               str(APP_VERSION['MINOR_VERSION'])+"."+
+               str(APP_VERSION['PATCH']))
+    return version
+
+def banner():
+    banner = ("\033[36m   ____                        _____       _"+'\n'+
+              "\033[36m  |  __|_ _ ___ ___ _ ___ ___ |_   _|_ ___| | \033[0mVersion "+version()+'\n'+
+              "\033[36m  |  __| | |- _|- _|'|   | . |  | | . | . | |"+'\n'+
+              "\033[36m  |_|  |___|___|___|_|_|_|_  |  |_|___|___|_|"+'\n'+
+              "\033[36m                         |___|\033[0m\n\n"
+              "  [!] Disclaimer: We're not responsible for the misuse of this tool.\n"
+              "      This project was created for educational purposes\n"
+              "      and should not be used in environments without legal authorization.\n")
+    return banner
 
 class ApplicationManager:
     """Class that handle with the entire application
@@ -25,15 +50,54 @@ class ApplicationManager:
         requester: The request object
         startedTime: The time when start the fuzzing test
     """
-    def __init__(self, fuzzer: Fuzzer):
+    def __init__(self):
         """Class constructor
 
         @type fuzzer: Fuzzer
         @param fuzzer: The fuzzer object
         """
-        self.__fuzzer = fuzzer
-        self.__requester = fuzzer.getRequester()
+        self.__fuzzer = None
+        self.__requester = None
         self.__startedTime = 0
+
+    def main(self, argv: list):
+        """The main function
+
+        @type argv: list
+        @param argv: The arguments given in the execution
+        """
+        if (len(argv) < 2):
+            oh.print(banner())
+            oh.errorBox("Invalid format! Use -h on 2nd parameter to show the help menu.")
+        if (argv[1] == '-h' or argv[1] == '--help'):
+            oh.showHelpMenu()
+        if (argv[1] == '-v' or argv[1] == '--version'):
+            exit("FuzzingTool v"+version())
+        oh.print(banner())
+        cliParser = CLIParser(argv)
+        url, method, requestData, httpHeader = cliParser.getDefaultRequestData()
+        cliParser.getWordlistFile()
+        self.__fuzzer = Fuzzer(Request(url, method, requestData, httpHeader))
+        self.__requester = self.__fuzzer.getRequester()
+        oh.infoBox(f"Set target: {self.__requester.getUrl()}")
+        oh.infoBox(f"Set request method: {method}")
+        oh.infoBox(f"Set request data: {str(requestData)}")
+        cliParser.checkCookie(self.__requester)
+        cliParser.checkProxy(self.__requester)
+        cliParser.checkProxies(self.__requester)
+        cliParser.checkDelay(self.__fuzzer)
+        cliParser.checkVerboseMode(self.__fuzzer)
+        cliParser.checkNumThreads(self.__fuzzer)
+        self.prepare()
+        self.start()
+
+    def prepare(self):
+        """Prepares the application"""
+        try:
+            self.__checkConnectionAndRedirections()
+            self.__checkProxies()
+        except KeyboardInterrupt:
+            exit('')
 
     def start(self):
         """Starts the application"""
@@ -52,15 +116,6 @@ class ApplicationManager:
                 print("")
             self.__showFooter()
             oh.infoBox("Test completed")
-
-    def prepare(self):
-        """Prepares the application"""
-        try:
-            self.__checkConnectionAndRedirections()
-            self.__checkProxies()
-        except KeyboardInterrupt:
-            exit('')
-        self.start()
 
     def __checkConnectionAndRedirections(self):
         """Test the connection and redirection to target"""
@@ -104,6 +159,7 @@ class ApplicationManager:
             oh.infoBox("Testing proxies ...")
             for proxy in self.__requester.getProxyList():
                 self.__requester.setProxy(proxy)
+                proxyList.append(proxy)
                 try:
                     self.__requester.testConnection(proxy=True)
                     proxyList.append(proxy)

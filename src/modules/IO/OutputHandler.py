@@ -215,16 +215,13 @@ class OutputHandler:
         """
         print(' '*numSpaces+("{:<"+str(26-numSpaces)+"}").format(command)+' '+desc)
     
-    def showIntro(self):
-        """Creates the intro"""
-        print("\033[36m   ____                        _____       _")
-        print("\033[36m  |  __|_ _ ___ ___ _ ___ ___ |_   _|_ ___| | \033[0mVersion 3.4.0")
-        print("\033[36m  |  __| | |- _|- _|'|   | . |  | | . | . | |")
-        print("\033[36m  |_|  |___|___|___|_|_|_|_  |  |_|___|___|_|")
-        print("\033[36m                         |___|\033[0m\n")
-        print("  [!] Disclaimer: We're not responsible for the misuse of this tool.")
-        print("      This project was created for educational purposes")
-        print("      and should not be used in environments without legal authorization.\n")
+    def print(self, msg: str):
+        """Print the message
+
+        @type msg: str
+        @param msg: The message
+        """
+        print(msg)
 
     def showHelpMenu(self):
         """Creates the Help Menu"""

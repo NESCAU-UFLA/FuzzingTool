@@ -108,7 +108,7 @@ class Request:
     def testConnection(self, proxy: bool = False):
         """Test the connection with the target, and raise an exception if couldn't connect (by status code)"""
         try:
-            response = requests.get(self.__parser.getTargetFromUrl(), proxies=self.__proxy if proxy else {}, headers=self.__parser.getHeader(), timeout=20)
+            response = requests.get(self.__parser.getTargetFromUrl(), proxies=self.__proxy if proxy else {}, headers=self.__parser.getHeader(), timeout=10)
             response.raise_for_status()
         except:
             raise RequestException()
@@ -129,12 +129,9 @@ class Request:
             response = Response(requests.request(requestParameters['Method'], requestParameters['Url'], data=requestParameters['Data'], params=requestParameters['Data'], headers=requestParameters['Header'], proxies=self.__proxy))
             timeTaken = (time.time() - before)
         except requests.exceptions.ProxyError:
-            lastProxy = self.__proxy['http']
-            self.__handleProxyException()
-            raise RequestException('message', f"Proxy {lastProxy} isn't working anymore, removing it ...")
+            raise RequestException('pause', "The actual proxy isn't working anymore, removing it ...")
         except requests.exceptions.RequestException:
-            oh.abortBox("Connection aborted due an error.")
-            exit()
+            raise RequestException('stop', "Connection aborted due an error.")
         else:
             self.__requestIndex += 1
             return response.getResponseData(payload, timeTaken, self.__requestIndex)
@@ -162,11 +159,11 @@ class Request:
         """Set the proxy based on request index"""
         self.setProxy(self.__proxyList[(self.__requestIndex%1000)%len(self.__proxyList)])
 
-    def __handleProxyException(self):
+    def handleProxyException(self):
+        self.__proxy = {}
         if self.__proxyList:
-            self.__proxy = {}
             del self.__proxyList[(self.__requestIndex%1000)%len(self.__proxyList)]
             if self.__proxyList:
                 self.__updateProxy()
-        else:
-            self.__proxy = {}
+                return True
+        return False
