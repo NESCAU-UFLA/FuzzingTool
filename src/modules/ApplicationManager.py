@@ -12,7 +12,8 @@
 
 from .parsers.CLIParser import CLIParser
 from .core.Fuzzer import Fuzzer
-from .conn.Request import Request, RequestException
+from .conn.Request import Request
+from .conn.RequestException import RequestException
 from .IO.OutputHandler import outputHandler as oh
 from .IO.FileHandler import fileHandler as fh
 

@@ -10,6 +10,7 @@
 #
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
+from .VulnValidator import VulnValidator
 from ..conn.Request import Request
 from ..conn.RequestException import RequestException
 from ..IO.OutputHandler import outputHandler as oh
@@ -27,9 +28,9 @@ class Fuzzer:
         delay: The delay between each test
         verboseMode: The verbose mode flag
         numberOfThreads: The number of threads used in the application
-        defaultComparator: The dictionary with the default entries to be compared with the current request
         output: The output content to be send to the file
         numLines: The number of payloads in the payload file
+        vulnValidator: A vulnerability validator object
     """
     def __init__(self, requester: Request):
         """Class constructor
@@ -41,12 +42,9 @@ class Fuzzer:
         self.__delay = 0
         self.__verboseMode = False
         self.__numberOfThreads = 1
-        self.__defaultComparator = {
-            'Length': 300,
-            'Time': 5,
-        }
         self.__output = []
         self.__numLines = 0
+        self.__vulnValidator = None
 
     def getRequester(self):
         """The requester getter
@@ -101,17 +99,15 @@ class Fuzzer:
         @returns func: A thread function
         """
         def run():
-            self.__playerHandler.wait()
             """Run the threads"""
+            self.__playerHandler.wait()
             while self.__running and not self.__payloads.empty():
                 payload = self.__payloads.get()
                 try:
                     self.do(payload)
                     time.sleep(self.__delay)
                 except RequestException as e:
-                    if e.type == 'stop':
-                        self.stop()
-                        oh.abortBox(str(e))
+                    self.__handleRequestException(e, payload)
                 finally:
                     if not self.__playerHandler.isSet():
                         self.__numberOfThreads -= 1
@@ -160,6 +156,7 @@ class Fuzzer:
                 payloads: The queue that contains all payloads inside the wordlist file
                 threads: The list with the threads used in the application
                 running: A flag to say if the application is running or not
+                paused: A flag to say if the application is paused or not
                 playerHandler: The Event object handler - an internal flag manager for the threads
                 semaphoreHandler: The Semaphore object handler - an internal counter manager for the threads
             """
@@ -177,18 +174,13 @@ class Fuzzer:
             for payload in wordlist:
                 self.__payloads.put(payload)
         
-        if action == 'setup':
-            return setup()
-        elif action == 'run':
-            return run
-        elif action == 'start':
-            return start()
-        elif action == 'pause':
-            return pause()
-        elif action == 'stop':
-            return stop()
-        elif action == 'isRunning':
-            return isRunning()
+        if action == 'setup': return setup()
+        elif action == 'run': return run
+        elif action == 'start': return start()
+        elif action == 'pause': return pause()
+        elif action == 'resume': return resume()
+        elif action == 'stop': return stop()
+        elif action == 'isRunning': return isRunning()
 
     def start(self):
         """Starts the fuzzer application"""
@@ -203,8 +195,11 @@ class Fuzzer:
                 'Length': 0,
                 'Resp Time': 0
             }
-        self.__defaultComparator['Length'] += int(firstResponse['Length'])
-        self.__defaultComparator['Time'] += (firstResponse['Req Time']+firstResponse['Resp Time'])
+        self.__vulnValidator = VulnValidator(
+            int(firstResponse['Length']),
+            (firstResponse['Req Time']+firstResponse['Resp Time']),
+            False if not self.__requester.getUrlIndexToPayload() else True
+        )
         if self.__verboseMode:
             oh.getHeader()
             oh.printContent([value for key, value in firstResponse.items()], False)
@@ -217,12 +212,18 @@ class Fuzzer:
         while self.__numberOfThreads > 0:
             pass
 
+    def resume(self):
+        """Resume the fuzzer application"""
+        self.__paused = False
+        self.threadHandle('resume')
+
     def pause(self):
         """Pause the fuzzer application"""
+        self.__paused = True
         self.threadHandle('pause')
 
     def isRunning(self):
-        """Checker if the application is running or not
+        """Check if the application is running or not
         
         @returns bool: A running flag
         """
@@ -235,7 +236,7 @@ class Fuzzer:
         @param payload: The payload to be used on the request
         """
         thisResponse = self.__requester.request(payload)
-        probablyVulnerable = self.__isVulnerable(thisResponse)
+        probablyVulnerable = self.__vulnValidator.isVulnerable(thisResponse)
         if probablyVulnerable:
             self.__output.append(thisResponse)
         if self.__verboseMode:
@@ -243,18 +244,16 @@ class Fuzzer:
         else:
             oh.progressStatus(str(int((int(thisResponse['Request'])/self.__numLines)*100)), len(self.__output))
 
-    def __isVulnerable(self, thisResponse: dict):
-        """Check if the request content has some predefined characteristics based on a payload, it'll be considered as vulnerable
-        
-        @type thisResponse: dict
-        @param thisResponse: The actual response dictionary
-        @returns bool: A vulnerability flag
-        """
-        if thisResponse['Status'] < 400:
-            if self.__requester.getUrlIndexToPayload():
-                return True
-            elif self.__defaultComparator['Length'] < int(thisResponse['Length']):
-                return True
-        if not self.__requester.getUrlIndexToPayload() and self.__defaultComparator['Time'] < (thisResponse['Resp Time']+thisResponse['Req Time']):
-            return True
-        return False
+    def __handleRequestException(self, e: RequestException, payload: str):
+        if e.type == 'pause':
+            if not self.__paused:
+                self.pause()
+                oh.warningBox("Pausing due "+str(e))
+                if 'proxy' in str(e).tolower():
+                    if self.__requester.handleProxyException():
+                        self.resume()
+                    else:
+                        self.stop()
+        elif e.type == 'stop':
+            self.stop()
+            oh.abortBox(str(e))
