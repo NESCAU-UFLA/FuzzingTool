@@ -17,6 +17,7 @@ from ..IO.OutputHandler import outputHandler as oh
 from ..IO.FileHandler import fileHandler as fh
 
 import time
+import socket
 try:
     import requests
 except:
@@ -32,6 +33,7 @@ class Request:
         httpHeader: The HTTP header
         proxy: The proxy used in the request
         proxyList: The list with valid proxies gived by a file
+        timeout: The request timeout before raise a TimeoutException
         requestIndex: The request index
         parser: The request parser
     """
@@ -47,32 +49,31 @@ class Request:
         @type httpHeader: dict
         @param httpHeader: The HTTP header of the request
         """
-        self.__url = {
-            'content': url,
-            'indexToParse': getIndexesToParse(url),
-        }
+        self.__url = url
         self.__method = method
         self.__param = defaultParam
         self.__httpHeader = httpHeader
         self.__proxy = {}
         self.__proxyList = []
+        self.__timeout = None
         self.__requestIndex = 0
         self.__setupHeader()
         self.__parser = RequestParser(self.__url, self.__httpHeader, self.__method, self.__param)
+        self.__subdomainFuzzing = self.__parser.checkForSubdomainFuzz()
     
     def getUrl(self):
         """The url getter
 
         @returns str: The target URL
         """
-        return self.__url['content']
+        return self.__url
 
-    def getUrlIndexToPayload(self):
-        """The urlIndexToPayload getter
+    def isUrlFuzzing(self):
+        """The URL Fuzzing flag getter
         
-        @returns int: The URL index to insert the payload
+        @returns bool: The URL Fuzzing flag
         """
-        return self.__url['indexToParse']
+        return self.__parser.isUrlFuzzing()
 
     def getProxy(self):
         return self.__proxy
@@ -82,6 +83,9 @@ class Request:
 
     def getParser(self):
         return self.__parser
+
+    def isSubdomainFuzzing(self):
+        return self.__subdomainFuzzing
 
     def setHeaderContent(self, key: str, value: str):
         """The header content setter
@@ -111,7 +115,12 @@ class Request:
     def testConnection(self, proxy: bool = False):
         """Test the connection with the target, and raise an exception if couldn't connect (by status code)"""
         try:
-            response = requests.get(self.__parser.getTargetFromUrl(), proxies=self.__proxy if proxy else {}, headers=self.__parser.getHeader(), timeout=10)
+            response = requests.get(
+                self.__parser.getTargetFromUrl(),
+                proxies=self.__proxy if proxy else {},
+                headers=self.__parser.getHeader(),
+                timeout=self.__timeout
+            )
             response.raise_for_status()
         except:
             raise RequestException()
@@ -127,6 +136,13 @@ class Request:
             self.__updateProxy()
         self.__parser.setPayload(payload)
         requestParameters = self.__parser.getRequestParameters()
+        self.__requestIndex += 1
+        if self.__subdomainFuzzing:
+            try:
+                domain = self.__parser.getPayloadedDomain(requestParameters['Url'])
+                socket.gethostbyname(domain)
+            except:
+                raise RequestException('continue', f"Couldn't connect to the host {domain}")
         try:
             before = time.time()
             response = Response(requests.request(
@@ -136,18 +152,30 @@ class Request:
                 params=requestParameters['Data'],
                 headers=requestParameters['Header'],
                 proxies=self.__proxy,
-                timeout=10
+                timeout=self.__timeout
             ))
             timeTaken = (time.time() - before)
         except requests.exceptions.ProxyError:
             raise RequestException('pause', "The actual proxy isn't working anymore, removing it ...")
         except requests.exceptions.TooManyRedirects:
-            raise RequestException('stop', "Too many redirects.")
-        except requests.exceptions.RequestException:
-            raise RequestException('stop', "Connection aborted due an error.")
+            raise RequestException(
+                'stop' if not self.__subdomainFuzzing else 'continue',
+                f"Too many redirects on {requestParameters['Url']}."
+            )
+        except requests.exceptions.RequestException as e:
+            raise RequestException(
+                'stop' if not self.__subdomainFuzzing else 'continue',
+                f"Connection aborted due an error {str(e)}."
+            )
+        except UnicodeError:
+            raise RequestException('continue', f"Invalid domain {domain} for HTTP request")
         else:
-            self.__requestIndex += 1
-            return response.getResponseData(self.__parser.getPayload(), timeTaken, self.__requestIndex)
+            response = response.getResponseData(
+                self.__parser.getPayload() if not self.__subdomainFuzzing else requestParameters['Url'],
+                timeTaken,
+                self.__requestIndex
+            )
+            return response
 
     def hasRedirection(self):
         """Test if the connection will have a redirection"""
@@ -157,6 +185,15 @@ class Request:
         response = requests.request(requestParameters['Method'], requestParameters['Url'], data=requestParameters['Data'], params=requestParameters['Data'], headers=requestParameters['Header'], proxies=self.__proxy)
         if ('[302]' in str(response.history)):
             return True
+        return False
+
+    def handleProxyException(self):
+        self.__proxy = {}
+        if self.__proxyList:
+            del self.__proxyList[(self.__requestIndex%1000)%len(self.__proxyList)]
+            if self.__proxyList:
+                self.__updateProxy()
+                return True
         return False
 
     def __setupHeader(self):
@@ -171,12 +208,3 @@ class Request:
     def __updateProxy(self):
         """Set the proxy based on request index"""
         self.setProxy(self.__proxyList[(self.__requestIndex%1000)%len(self.__proxyList)])
-
-    def handleProxyException(self):
-        self.__proxy = {}
-        if self.__proxyList:
-            del self.__proxyList[(self.__requestIndex%1000)%len(self.__proxyList)]
-            if self.__proxyList:
-                self.__updateProxy()
-                return True
-        return False

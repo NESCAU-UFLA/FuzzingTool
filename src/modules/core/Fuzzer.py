@@ -164,7 +164,7 @@ class Fuzzer:
             self.__running = True
             self.__paused = False
             for i in range(self.__numberOfThreads):
-                self.__threads.append(Thread(target=self.threadHandle('run')))
+                self.__threads.append(Thread(target=run))
                 self.__threads[i].daemon = True
             self.__playerHandler = Event()
             self.__semaphoreHandler = Semaphore(0)
@@ -174,7 +174,6 @@ class Fuzzer:
                 self.__payloads.put(payload)
         
         if action == 'setup': return setup()
-        elif action == 'run': return run
         elif action == 'start': return start()
         elif action == 'pause': return pause()
         elif action == 'resume': return resume()
@@ -183,8 +182,9 @@ class Fuzzer:
 
     def start(self):
         """Starts the fuzzer application"""
-        urlFuzzing = False if not self.__requester.getUrlIndexToPayload() else True
+        urlFuzzing = self.__requester.isUrlFuzzing()
         if not urlFuzzing:
+            payload = ' '
             firstResponse = self.__requester.request(payload)
             self.__vulnValidator = VulnValidator(
                 urlFuzzing,
@@ -194,7 +194,6 @@ class Fuzzer:
         else:
             self.__vulnValidator = VulnValidator(urlFuzzing)
         if self.__verboseMode:
-            oh.getHeader()
             if not urlFuzzing:
                 oh.printContent([value for key, value in firstResponse.items()], False)
         self.threadHandle('setup')
@@ -203,7 +202,7 @@ class Fuzzer:
     def stop(self):
         """stop the fuzzer application"""
         self.threadHandle('stop')
-        while self.__numberOfThreads > 0:
+        while self.__numberOfThreads > 1:
             pass
 
     def resume(self):
@@ -234,9 +233,21 @@ class Fuzzer:
         if probablyVulnerable:
             self.__output.append(thisResponse)
         if self.__verboseMode:
-            oh.printContent([value for key, value in thisResponse.items()], probablyVulnerable)
+            if self.__requester.isSubdomainFuzzing():
+                oh.printForSubdomainMode(
+                    f"Host {thisResponse['Payload']} connected, raised a {thisResponse['Status']} status code",
+                    probablyVulnerable
+                )
+            else:
+                oh.printContent(
+                    [value for key, value in thisResponse.items()],
+                    probablyVulnerable
+                )
         else:
-            oh.progressStatus(str(int((int(thisResponse['Request'])/self.__numLines)*100)), len(self.__output))
+            oh.progressStatus(
+                str(int((int(thisResponse['Request'])/self.__numLines)*100)),
+                len(self.__output)
+            )
 
     def __handleRequestException(self, e: RequestException, payload: str):
         if e.type == 'pause':
@@ -253,3 +264,5 @@ class Fuzzer:
                 self.__numberOfThreads = 0
                 self.stop()
                 oh.abortBox(str(e))
+        elif e.type == 'continue':
+            oh.notWorkedBox(str(e))

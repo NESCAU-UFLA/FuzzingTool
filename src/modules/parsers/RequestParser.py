@@ -49,10 +49,10 @@ class RequestParser:
         httpHeader: The HTTP header
         payload: The payload used in the request
     """
-    def __init__(self, url: dict, httpHeader: dict, method: str = '', param: dict = {}):
+    def __init__(self, url: str, httpHeader: dict, method: str = '', param: dict = {}):
         """Class constructor
 
-        @type url: dict
+        @type url: str
         @param url: The target URL
         @type httpHeader: dict
         @param httpHeader: The HTTP header
@@ -61,20 +61,23 @@ class RequestParser:
         @type param: dict
         @param param: The parameter of the request
         """
-        self.__url = url
+        self.__url = self.__setupUrl(url)
+        self.__schema = ''
+        self.__host = ''
         self.__method = method
         self.__param = param
         self.__httpHeader = httpHeader
         self.__payload = ''
         self.__preffix = ''
         self.__suffix = ''
+        self.__urlFuzzing = True if getIndexesToParse(self.__url) else False
 
     def getUrl(self):
         """The url getter
         
         @returns str: The target url
         """
-        return self.__url['content'] if not self.__url['indexToParse'] else self.__getAjustedUrl(self.__payload)
+        return self.__url if not self.__urlFuzzing else self.__getAjustedUrl(self.__payload)
 
     def getHeader(self):
         """The HTTP Header getter
@@ -97,6 +100,9 @@ class RequestParser:
         """
         return self.__payload
 
+    def isUrlFuzzing(self):
+        return self.__urlFuzzing
+
     def setPayload(self, payload: str):
         """The payload setter
 
@@ -111,16 +117,49 @@ class RequestParser:
     def setSuffix(self, suffix: str):
         self.__suffix = suffix
 
+    def checkForSubdomainFuzz(self):
+        url = self.__url
+        if self.__urlFuzzing:
+            if '$.' in url:
+                if url.index('$.') < url.index('.'):
+                    return True
+        return False
+
+    def getPayloadedDomain(self, url: str):
+        host = url[(url.index('://')+3):]
+        try:
+            return host[:host.index('/')]
+        except ValueError:
+            return host
+
     def getTargetFromUrl(self):
         """Gets the host from an URL
 
         @returns str: The target url
         """
-        url = self.__url['content']
-        if self.__url['indexToParse']:
-            if '$.' in url:
-                return url.replace('$.', '')
-            return url.replace('$', '')
+        if self.__urlFuzzing:
+            if '$.' in self.__url:
+                return self.__url.replace('$.', '')
+            return self.__url.replace('$', '')
+        return self.__url
+
+    def getRequestParameters(self):
+        """Get the request parameters using in the request fields
+
+        @returns dict: The parameters dict of the request
+        """
+        requestParameters = {
+            'Method': self.__method,
+            'Url': self.getUrl(),
+            'Header': self.getHeader(),
+            'Data': self.getData(),
+        }
+        return requestParameters
+
+    def __setupUrl(self, url: str):
+        if '://' not in url:
+            # No schema was defined, default protocol http
+            return 'http://' + url
         return url
 
     def __getAjustedUrl(self, payload: str):
@@ -130,11 +169,14 @@ class RequestParser:
         @param payload: The payload used in the parameter of the request
         @returns str: The ajusted URL
         """
-        url = self.__url['content']
-        i = self.__url['indexToParse'][0]
-        head = url[:i]
-        tail = url[(i+1):]
-        return head+payload+tail
+        ajustedUrl = self.__url
+        for i in range(len(getIndexesToParse(ajustedUrl))):
+            j = ajustedUrl.index('$')
+            head = ajustedUrl[:j]
+            tail = ajustedUrl[(j+1):]
+            ajustedUrl = head+payload+tail
+            i += 1
+        return ajustedUrl
 
     def __getAjustedHeader(self):
         """Put the payload in the header value that contains $
@@ -169,16 +211,3 @@ class RequestParser:
             else:
                 data[key] = payload
         return data
-
-    def getRequestParameters(self):
-        """Get the request parameters using in the request fields
-
-        @returns dict: The parameters dict of the request
-        """
-        requestParameters = {
-            'Method': self.__method,
-            'Url': self.getUrl(),
-            'Header': self.getHeader(),
-            'Data': self.getData(),
-        }
-        return requestParameters

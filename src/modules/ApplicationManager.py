@@ -107,6 +107,8 @@ class ApplicationManager:
         oh.infoBox(f"Starting test on '{self.__requester.getUrl()}' ...")
         self.__startedTime = time.time()
         try:
+            if self.__fuzzer.isVerboseMode() and not self.__requester.isSubdomainFuzzing():
+                oh.getHeader()
             self.__fuzzer.start()
         except KeyboardInterrupt:
             self.__fuzzer.stop()
@@ -114,7 +116,8 @@ class ApplicationManager:
             self.__showFooter()
         else:
             if self.__fuzzer.isVerboseMode():
-                oh.getHeader()
+                if not self.__requester.isSubdomainFuzzing():
+                    oh.getHeader()
             else:
                 print("")
             self.__showFooter()
@@ -124,7 +127,7 @@ class ApplicationManager:
         """Test the connection and redirection to target"""
         # If we'll not fuzzing the url paths, so
         # test the redirections before start the fuzzing
-        if self.__requester.getUrlIndexToPayload():
+        if self.__requester.isUrlFuzzing():
             oh.infoBox("Test mode set to URL Fuzzing")
             try:
                 self.__requester.testConnection()
