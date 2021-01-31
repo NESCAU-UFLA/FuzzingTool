@@ -5,15 +5,15 @@ class VulnValidator:
         urlFuzzing: The URL Fuzzing flag
         defaultComparator: The dictionary with the default entries to be compared with the current request
     """
-    def __init__(self, length: int, time: float, urlFuzzing: bool):
+    def __init__(self, urlFuzzing: bool, length: int = 0, time: float = 0):
         """Class constructor
 
+        @type urlFuzzing: bool
+        @param urlFuzzing: The URL Fuzzing flag
         @type length: int
         @param length: The first request length
         @type time: float
         @param time: The first request time taken
-        @type urlFuzzing: bool
-        @param urlFuzzing: The URL Fuzzing flag
         """
         self.__urlFuzzing = urlFuzzing
         self.__defaultComparator = {

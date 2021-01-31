@@ -113,6 +113,7 @@ class Fuzzer:
                         self.__numberOfThreads -= 1
                         self.__semaphoreHandler.release()
                         self.__playerHandler.wait()
+            self.__numberOfThreads -= 1
 
         def start():
             """Handle with threads start"""
@@ -144,8 +145,6 @@ class Fuzzer:
 
         def stop():
             """Handle with threads stop"""
-            if self.__playerHandler.isSet():
-                self.threadHandle('pause')
             self.__running = False
             self.__playerHandler.set()
 
@@ -184,25 +183,20 @@ class Fuzzer:
 
     def start(self):
         """Starts the fuzzer application"""
-        try:
-            firstResponse = self.__requester.request(' ')
-        except:
-            firstResponse = {
-                'Request': 0,
-                'Req Time': 0,
-                'Payload': '',
-                'Status': 0,
-                'Length': 0,
-                'Resp Time': 0
-            }
-        self.__vulnValidator = VulnValidator(
-            int(firstResponse['Length']),
-            (firstResponse['Req Time']+firstResponse['Resp Time']),
-            False if not self.__requester.getUrlIndexToPayload() else True
-        )
+        urlFuzzing = False if not self.__requester.getUrlIndexToPayload() else True
+        if not urlFuzzing:
+            firstResponse = self.__requester.request(payload)
+            self.__vulnValidator = VulnValidator(
+                urlFuzzing,
+                int(firstResponse['Length']),
+                (firstResponse['Req Time']+firstResponse['Resp Time'])
+            )
+        else:
+            self.__vulnValidator = VulnValidator(urlFuzzing)
         if self.__verboseMode:
             oh.getHeader()
-            oh.printContent([value for key, value in firstResponse.items()], False)
+            if not urlFuzzing:
+                oh.printContent([value for key, value in firstResponse.items()], False)
         self.threadHandle('setup')
         self.threadHandle('start')
 
@@ -255,5 +249,7 @@ class Fuzzer:
                     else:
                         self.stop()
         elif e.type == 'stop':
-            self.stop()
-            oh.abortBox(str(e))
+            if self.__running:
+                self.__numberOfThreads = 0
+                self.stop()
+                oh.abortBox(str(e))

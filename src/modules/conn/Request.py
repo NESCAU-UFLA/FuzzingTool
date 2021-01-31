@@ -80,6 +80,9 @@ class Request:
     def getProxyList(self):
         return self.__proxyList
 
+    def getParser(self):
+        return self.__parser
+
     def setHeaderContent(self, key: str, value: str):
         """The header content setter
 
@@ -126,15 +129,25 @@ class Request:
         requestParameters = self.__parser.getRequestParameters()
         try:
             before = time.time()
-            response = Response(requests.request(requestParameters['Method'], requestParameters['Url'], data=requestParameters['Data'], params=requestParameters['Data'], headers=requestParameters['Header'], proxies=self.__proxy))
+            response = Response(requests.request(
+                requestParameters['Method'],
+                requestParameters['Url'],
+                data=requestParameters['Data'],
+                params=requestParameters['Data'],
+                headers=requestParameters['Header'],
+                proxies=self.__proxy,
+                timeout=10
+            ))
             timeTaken = (time.time() - before)
         except requests.exceptions.ProxyError:
             raise RequestException('pause', "The actual proxy isn't working anymore, removing it ...")
+        except requests.exceptions.TooManyRedirects:
+            raise RequestException('stop', "Too many redirects.")
         except requests.exceptions.RequestException:
             raise RequestException('stop', "Connection aborted due an error.")
         else:
             self.__requestIndex += 1
-            return response.getResponseData(payload, timeTaken, self.__requestIndex)
+            return response.getResponseData(self.__parser.getPayload(), timeTaken, self.__requestIndex)
 
     def hasRedirection(self):
         """Test if the connection will have a redirection"""

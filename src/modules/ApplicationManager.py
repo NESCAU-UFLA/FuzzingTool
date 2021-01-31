@@ -82,13 +82,15 @@ class ApplicationManager:
         self.__requester = self.__fuzzer.getRequester()
         oh.infoBox(f"Set target: {self.__requester.getUrl()}")
         oh.infoBox(f"Set request method: {method}")
-        oh.infoBox(f"Set request data: {str(requestData)}")
+        if requestData:
+            oh.infoBox(f"Set request data: {str(requestData)}")
         cliParser.checkCookie(self.__requester)
         cliParser.checkProxy(self.__requester)
         cliParser.checkProxies(self.__requester)
         cliParser.checkDelay(self.__fuzzer)
         cliParser.checkVerboseMode(self.__fuzzer)
         cliParser.checkNumThreads(self.__fuzzer)
+        cliParser.checkPreffixAndSuffix(self.__requester)
         self.prepare()
         self.start()
 
@@ -131,7 +133,6 @@ class ApplicationManager:
                     exit()
             else:
                 oh.infoBox("Connection status: OK")
-            oh.infoBox("No redirection verifications to target are being tested")
         else:
             try:
                 self.__requester.testConnection()
