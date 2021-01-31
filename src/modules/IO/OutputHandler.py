@@ -38,6 +38,8 @@ class OutputHandler:
         warning: The warning label
         error: The error label
         abort: The abort label
+        worked: The worked label
+        notWorked: The not worked label
     """
     def __init__(self):
         """Class constructor"""

@@ -265,4 +265,10 @@ class Fuzzer:
                 self.stop()
                 oh.abortBox(str(e))
         elif e.type == 'continue':
-            oh.notWorkedBox(str(e))
+            if self.__verboseMode:
+                oh.notWorkedBox(str(e))
+            else:
+                oh.progressStatus(
+                    str(int((int(self.__requester.getRequestIndex())/self.__numLines)*100)),
+                    len(self.__output)
+                )

@@ -81,6 +81,9 @@ class Request:
     def getProxyList(self):
         return self.__proxyList
 
+    def getRequestIndex(self):
+        return self.__requestIndex
+
     def getParser(self):
         return self.__parser
 
@@ -142,7 +145,7 @@ class Request:
                 domain = self.__parser.getPayloadedDomain(requestParameters['Url'])
                 socket.gethostbyname(domain)
             except:
-                raise RequestException('continue', f"Couldn't connect to the host {domain}")
+                raise RequestException('continue', f"Can't resolve hostname {domain}")
         try:
             before = time.time()
             response = Response(requests.request(
@@ -162,10 +165,18 @@ class Request:
                 'stop' if not self.__subdomainFuzzing else 'continue',
                 f"Too many redirects on {requestParameters['Url']}."
             )
-        except requests.exceptions.RequestException as e:
+        except requests.exceptions.SSLError:
             raise RequestException(
                 'stop' if not self.__subdomainFuzzing else 'continue',
-                f"Connection aborted due an error {str(e)}."
+                f"SSL couldn't be validated on {requestParameters['Url']}."
+            )
+        except (
+            requests.exceptions.ConnectionError,
+            requests.exceptions.RequestException
+        ) as e:
+            raise RequestException(
+                'stop' if not self.__subdomainFuzzing else 'continue',
+                f"Failed to establish a new connection, raised by {type(e).__name__}"
             )
         except UnicodeError:
             raise RequestException('continue', f"Invalid domain {domain} for HTTP request")
