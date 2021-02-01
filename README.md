@@ -60,9 +60,10 @@ $ ./FuzzingTool.py -f sqli.txt -u http://mydomainexample.com/controller/user.php
 ```
 
 #### URL Fuzzing
-On this example, you set the payload mode on URL for the fuzzing test. It's based on the variable '$' position.
+You can set the payload mode on URL for the fuzzing test. It's based on the variable '$' position.
 
-For path scanning, added a suffix to the payload:
+For path scanning
+(Added a suffix to the payload on this example):
 ```
 $ ./FuzzingTool.py -f paths.txt -u http://mydomainexample.com/$ --suffix .php
 ```
