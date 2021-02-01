@@ -235,7 +235,7 @@ class Fuzzer:
         if self.__verboseMode:
             if self.__requester.isSubdomainFuzzing():
                 oh.printForSubdomainMode(
-                    f"Host {thisResponse['Payload']} connected, raised a {thisResponse['Status']} status code",
+                    f"Host {thisResponse['Payload']} ({thisResponse['IP']}) connected, raised a {thisResponse['Status']} status code",
                     probablyVulnerable
                 )
             else:
@@ -250,6 +250,14 @@ class Fuzzer:
             )
 
     def __handleRequestException(self, e: RequestException, payload: str):
+        """Handle with the request exceptions based on their types
+           To Do: Save the payloads that thrown an exception on a list
+        
+        @type e: RequestException
+        @param e: The request exception
+        @type payload: str
+        @param payload: The payload used in the request
+        """
         if e.type == 'pause':
             if not self.__paused:
                 self.pause()

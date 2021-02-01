@@ -2,7 +2,7 @@
 
 ## FuzzingTool
 # 
-# Version: 3.4.1
+# Version: 3.5.0
 # Authors:
 #    Vitor Oriel C N Borges <https://github.com/VitorOriel>
 # License: MIT (LICENSE.md)

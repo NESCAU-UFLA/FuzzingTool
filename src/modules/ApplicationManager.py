@@ -21,8 +21,8 @@ import time
 
 APP_VERSION = {
     'MAJOR_VERSION': 3,
-    "MINOR_VERSION": 4,
-    "PATCH": 1
+    "MINOR_VERSION": 5,
+    "PATCH": 0
 }
 
 def version():
@@ -52,11 +52,7 @@ class ApplicationManager:
         startedTime: The time when start the fuzzing test
     """
     def __init__(self):
-        """Class constructor
-
-        @type fuzzer: Fuzzer
-        @param fuzzer: The fuzzer object
-        """
+        """Class constructor"""
         self.__fuzzer = None
         self.__requester = None
         self.__startedTime = 0
@@ -90,7 +86,7 @@ class ApplicationManager:
         cliParser.checkDelay(self.__fuzzer)
         cliParser.checkVerboseMode(self.__fuzzer)
         cliParser.checkNumThreads(self.__fuzzer)
-        cliParser.checkPreffixAndSuffix(self.__requester)
+        cliParser.checkPrefixAndSuffix(self.__requester)
         self.prepare()
         self.start()
 
@@ -150,7 +146,7 @@ class ApplicationManager:
                 oh.infoBox("No redirections")
     
     def __checkProxies(self):
-        """Check for connection status if a proxy is given"""
+        """Check for connection status using a proxy, if a proxy is given"""
         if self.__requester.getProxy():
             oh.infoBox("Testing proxy ...")
             try:
@@ -175,7 +171,7 @@ class ApplicationManager:
             self.__requester.setProxyList(proxyList)
 
     def __showFooter(self):
-        """Show the footer content of the software, after making the fuzzing"""
+        """Show the footer content of the software, after maked the fuzzing"""
         if self.__startedTime:
             oh.infoBox(f"Time taken: {float('%.2f'%(time.time() - self.__startedTime))} seconds")
         output = self.__fuzzer.getOutput()

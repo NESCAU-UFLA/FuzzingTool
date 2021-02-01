@@ -37,7 +37,7 @@ class Response:
             responseLength = len(self.__response.content)
         return (self.__response.elapsed.total_seconds(), responseLength)
 
-    def getResponseData(self, payload: str, timeTaken: float, requestIndex: int):
+    def getResponseData(self, payload: str, timeTaken: float, requestIndex: int, ip: str):
         """Get the response data parsed into a dictionary
 
         @type payload: str
@@ -46,6 +46,8 @@ class Response:
         @param timeTaken: The time taken after make the request
         @type requestIndex: int
         @param requestIndex: The request index
+        @type ip: str
+        @param ip: The target IP
         @returns dict: The response data parsed into a dictionary
         """
         responseTime, responseLength = self.__getResponseTimeAndLength()
@@ -58,4 +60,6 @@ class Response:
             'Length': responseLength,
             'Resp Time': responseTime,
         }
+        if ip:
+            responseData['IP'] = ip
         return responseData

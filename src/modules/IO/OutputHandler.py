@@ -87,9 +87,19 @@ class OutputHandler:
         print('\n'+self.__getTime()+self.__getAbort(msg))
 
     def workedBox(self, msg: str):
+        """Print the message with worked label and a message
+
+        @type msg: str
+        @param msg: The message
+        """
         print(self.__getTime()+self.__getWorked(msg))
 
     def notWorkedBox(self, msg: str):
+        """Print the message with not worked label and a message
+
+        @type msg: str
+        @param msg: The message
+        """
         print(self.__getTime()+self.__getNotWorked(msg))
 
     def askYesNo(self, msg: str):
@@ -107,6 +117,13 @@ class OutputHandler:
             return False
 
     def printForSubdomainMode(self, msg: str, vulnValidator: bool):
+        """Custom output print for the subdomain fuzzing mode
+
+        @type msg: str
+        @param msg: The message sended, exception or not
+        @type vulnValidator: bool
+        @param vulnValidator: Case the output is marked as vulnerable
+        """
         if vulnValidator:
             self.workedBox(msg)
         else:
@@ -210,9 +227,21 @@ class OutputHandler:
         return self.__abord + msg
 
     def __getWorked(self, msg: str):
+        """The worked getter, with a custom message
+
+        @type msg: str
+        @param msg: The custom message
+        @returns str: The message with worked label
+        """
         return self.__worked + msg
     
     def __getNotWorked(self, msg: str):
+        """The not worked getter, with a custom message
+
+        @type msg: str
+        @param msg: The custom message
+        @returns str: The message with not worked label
+        """
         return self.__notWorked + '\u001b[38;5;250m' + msg + '\033[0m'
 
     def __helpTitle(self, numSpaces: int, title: str):
