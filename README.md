@@ -69,7 +69,7 @@ $ ./FuzzingTool.py -f paths.txt -u http://mydomainexample.com/$ --suffix .php
 ```
 For subdomain scanning:
 ```
-$ ./FuzzingTool.py -f paths.txt -u http://$.mydomainexample.com/
+$ ./FuzzingTool.py -f subdomains.txt -u http://$.mydomainexample.com/
 ```
 
 #### Reading request data
