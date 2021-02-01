@@ -1,7 +1,16 @@
-# FuzzingTool
+<h1 align="center">FuzzingTool</h1>
+<p align="center">
+  <a href="https://github.com/NESCAU-UFLA/FuzzingTool/releases/tag/v3.5.0">
+    <img src="https://img.shields.io/static/v1?label=Release&message=v3.5.0&color=darkred" />
+  </a>
+  <img src="https://img.shields.io/static/v1?label=python&message=v3.6.9&color=informational&logo=python" />
+  <a href="https://github.com/NESCAU-UFLA/FuzzingTool/blob/master/LICENSE.md">
+    <img src="https://img.shields.io/static/v1?label=License&message=MIT&color=brightgreen" />
+  </a>
+</p>
+
 FuzzingTool is a web penetration testing tool, that handles with fuzzing. After the test is completed, all possible vulnerable entries (and the response data) are saved on an output file. For examples, see <a href="#usage-examples">Usage Examples</a>.
 <br/><br/>
-This application was made under python v3.6.9.
 
 ## Disclaimer
 We're not responsible for the misuse of this tool. This project was created for educational purposes and should not be used in environments without legal authorization.
