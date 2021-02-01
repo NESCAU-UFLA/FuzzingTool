@@ -48,6 +48,7 @@ First, download the last release or clone this repository. Give read and write p
 | `--suffix` | No | Define the suffix used with payload |  |
 
 ### Usage Examples
+#### Data Fuzzing
 On this example, you set the GET variable 'id' as an entry for the fuzzing test. The parameter values are read from the file 'sqli.txt'.
 ```
 $ ./FuzzingTool.py -u http://mydomainexample.com/post.php?id= -f sqli.txt
@@ -58,17 +59,19 @@ On this example, you set the POST variables 'login' and 'passw' as entries for t
 $ ./FuzzingTool.py -f sqli.txt -u http://mydomainexample.com/controller/user.php --data 'login&passw&user=login'
 ```
 
+#### URL Fuzzing
 On this example, you set the payload mode on URL for the fuzzing test. It's based on the variable '$' position.
 
-For path scanning:
+For path scanning, added a suffix to the payload:
 ```
-$ ./FuzzingTool.py -f paths.txt -u http://mydomainexample.com/$
+$ ./FuzzingTool.py -f paths.txt -u http://mydomainexample.com/$ --suffix .php
 ```
 For subdomain scanning:
 ```
 $ ./FuzzingTool.py -f paths.txt -u http://$.mydomainexample.com/
 ```
 
+#### Reading request data
 On this example, you can read the request content (headers, target, data and method) from a file.
 ```
 $ ./FuzzingTool.py -r data.txt -f sqli.txt -V
