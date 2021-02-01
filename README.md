@@ -44,6 +44,8 @@ First, download the last release or clone this repository. Give read and write p
 | `--cookie` | No | Define the HTTP Cookie header value | |
 | `--delay` | No | Define the delay between each request | 0 |
 | `-t` | No | Define the number of threads used in the tests | 1 |
+| `--prefix` | No | Define the prefix used with payload |  |
+| `--suffix` | No | Define the suffix used with payload |  |
 
 ### Usage Examples
 On this example, you set the GET variable 'id' as an entry for the fuzzing test. The parameter values are read from the file 'sqli.txt'.
@@ -57,8 +59,14 @@ $ ./FuzzingTool.py -f sqli.txt -u http://mydomainexample.com/controller/user.php
 ```
 
 On this example, you set the payload mode on URL for the fuzzing test. It's based on the variable '$' position.
+
+For path scanning:
 ```
 $ ./FuzzingTool.py -f paths.txt -u http://mydomainexample.com/$
+```
+For subdomain scanning:
+```
+$ ./FuzzingTool.py -f paths.txt -u http://$.mydomainexample.com/
 ```
 
 On this example, you can read the request content (headers, target, data and method) from a file.
