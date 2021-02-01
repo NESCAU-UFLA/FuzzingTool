@@ -10,7 +10,7 @@
 </p>
 
 FuzzingTool is a web penetration testing tool, that handles with fuzzing. After the test is completed, all possible vulnerable entries (and the response data) are saved on an output file. For examples, see <a href="#usage-examples">Usage Examples</a>.
-<br/><br/>
+<br/>
 
 ## Disclaimer
 We're not responsible for the misuse of this tool. This project was created for educational purposes and should not be used in environments without legal authorization.
