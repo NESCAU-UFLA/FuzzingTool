@@ -138,6 +138,7 @@ class Request:
             self.__updateProxy()
         self.__parser.setPayload(payload)
         requestParameters = self.__parser.getRequestParameters()
+        targetIp = ''
         try:
             before = time.time()
             response = Response(requests.request(requestParameters['Method'], requestParameters['Url'], data=requestParameters['Data'], params=requestParameters['Data'], headers=requestParameters['Header'], proxies=self.__proxy))
@@ -148,7 +149,13 @@ class Request:
             raise RequestException('stop', "Connection aborted due an error.")
         else:
             self.__requestIndex += 1
-            return response.getResponseData(payload, timeTaken, self.__requestIndex)
+            response.setRequestData(
+                payload,
+                timeTaken,
+                self.__requestIndex,
+                targetIp
+            )
+            return response.getResponseDict()
 
     def hasRedirection(self):
         """Test if the connection will have a redirection"""

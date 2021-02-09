@@ -24,21 +24,23 @@ class Response:
         """
         self.__response = response
 
-    def __getResponseTimeAndLength(self):
-        """Get the response time and length
-
-        @type response: object
-        @param response: The Response object
-        @rtype: tuple(float, int)
-        @returns (responseTime, responseLength): The response time and length
-        """
-        responseLength = self.__response.headers.get('Content-Length')
-        if (responseLength == None):
-            responseLength = len(self.__response.content)
-        return (self.__response.elapsed.total_seconds(), responseLength)
-
-    def getResponseData(self, payload: str, timeTaken: float, requestIndex: int):
-        """Get the response data parsed into a dictionary
+    def getResponseDict(self):
+        """Get the response data parsed into a dictionary"""
+        self.__getResponseHeaders()
+        responseDict = {
+            'Request': str(self.__requestIndex),
+            'Req Time': float('%.6f'%(self.__requestTimeTaken-self.__elapsedTime)),
+            'Payload': self.__payload,
+            'Status': self.__status,
+            'Length': self.__length,
+            'Resp Time': self.__elapsedTime,
+        }
+        if self.__targetIp:
+            responseDict['IP'] = self.__targetIp
+        return responseDict
+    
+    def setRequestData(self, payload: str, timeTaken: float, requestIndex: int, ip: str):
+        """Set the request data to be used into the dictionary
 
         @type payload: str
         @param payload: The payload used in the request
@@ -46,16 +48,19 @@ class Response:
         @param timeTaken: The time taken after make the request
         @type requestIndex: int
         @param requestIndex: The request index
+        @type ip: str
+        @param ip: The target IP
         @returns dict: The response data parsed into a dictionary
         """
-        responseTime, responseLength = self.__getResponseTimeAndLength()
-        responseStatus = self.__response.status_code
-        responseData = {
-            'Request': str(requestIndex),
-            'Req Time': float('%.6f'%(timeTaken-responseTime)),
-            'Payload': payload,
-            'Status': responseStatus,
-            'Length': responseLength,
-            'Resp Time': responseTime,
-        }
-        return responseData
+        self.__payload = payload
+        self.__requestTimeTaken = timeTaken
+        self.__requestIndex = requestIndex
+        self.__targetIp = ip
+    
+    def __getResponseHeaders(self):
+        """Get the response data"""
+        self.__length = self.__response.headers.get('Content-Length')
+        if (self.__length == None):
+            self.__length = len(self.__response.content)
+        self.__elapsedTime = self.__response.elapsed.total_seconds()
+        self.__status = self.__response.status_code
