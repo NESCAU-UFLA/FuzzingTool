@@ -17,6 +17,7 @@ from ..IO.OutputHandler import outputHandler as oh
 from ..IO.FileHandler import fileHandler as fh
 
 import time
+import socket
 try:
     import requests
 except:
@@ -32,8 +33,10 @@ class Request:
         httpHeader: The HTTP header
         proxy: The proxy used in the request
         proxyList: The list with valid proxies gived by a file
+        timeout: The request timeout before raise a TimeoutException
         requestIndex: The request index
         parser: The request parser
+        subdomainFuzzing: A flag to say if the fuzzing will occur on subdomain
     """
     def __init__(self, url: str, method: str, defaultParam: dict, httpHeader: dict):
         """Class constructor
@@ -47,38 +50,52 @@ class Request:
         @type httpHeader: dict
         @param httpHeader: The HTTP header of the request
         """
-        self.__url = {
-            'content': url,
-            'indexToParse': getIndexesToParse(url),
-        }
+        self.__url = url
         self.__method = method
         self.__param = defaultParam
         self.__httpHeader = httpHeader
         self.__proxy = {}
         self.__proxyList = []
+        self.__timeout = None
         self.__requestIndex = 0
         self.__setupHeader()
         self.__parser = RequestParser(self.__url, self.__httpHeader, self.__method, self.__param)
+        self.__subdomainFuzzing = self.__parser.checkForSubdomainFuzz()
     
     def getUrl(self):
         """The url getter
 
         @returns str: The target URL
         """
-        return self.__url['content']
+        return self.__url
 
-    def getUrlIndexToPayload(self):
-        """The urlIndexToPayload getter
+    def isUrlFuzzing(self):
+        """The URL Fuzzing flag getter
         
-        @returns int: The URL index to insert the payload
+        @returns bool: The URL Fuzzing flag
         """
-        return self.__url['indexToParse']
+        return self.__parser.isUrlFuzzing()
 
     def getProxy(self):
+        """The proxy getter
+
+        @returns dict: The proxy
+        """
         return self.__proxy
 
     def getProxyList(self):
+        """The proxies list getter
+
+        @returns list: The proxies list
+        """
         return self.__proxyList
+
+    def getRequestIndex(self):
+        """The request index getter
+
+        @returns int: The request index
+        """
+        return self.__requestIndex
 
     def getParser(self):
         """The request parser getter
@@ -87,12 +104,12 @@ class Request:
         """
         return self.__parser
 
-    def isUrlFuzzing(self):
-        """The URL Fuzzing flag getter
-        
-        @returns bool: The URL Fuzzing flag
+    def isSubdomainFuzzing(self):
+        """The Subdomain Fuzzing flag getter
+
+        @returns bool: The Subdomain Fuzzing flag
         """
-        return self.__parser.isUrlFuzzing()
+        return self.__subdomainFuzzing
 
     def setHeaderContent(self, key: str, value: str):
         """The header content setter
@@ -117,15 +134,42 @@ class Request:
         self.__proxy = proxy
 
     def setProxyList(self, proxyList: list):
+        """The proxy list setter
+
+        @type proxyList: list
+        @param proxyList: The list with the proxies used in the requests
+        """
         self.__proxyList = proxyList
 
     def testConnection(self, proxy: bool = False):
         """Test the connection with the target, and raise an exception if couldn't connect (by status code)"""
         try:
-            response = requests.get(self.__parser.getTargetFromUrl(), proxies=self.__proxy if proxy else {}, headers=self.__parser.getHeader(), timeout=10)
+            target = self.__parser.getTargetFromUrl()
+            response = requests.get(
+                target,
+                proxies=self.__proxy if proxy else {},
+                headers=self.__parser.getHeader(),
+                timeout=self.__timeout
+            )
             response.raise_for_status()
         except:
-            raise RequestException()
+            raise RequestException('', target)
+
+    def hasRedirection(self):
+        """Test if the connection will have a redirection"""
+        self.__parser.setPayload(' ')
+        requestParameters = self.__parser.getRequestParameters()
+        response = requests.request(
+            requestParameters['Method'],
+            requestParameters['Url'],
+            data=requestParameters['Data'],
+            params=requestParameters['Data'],
+            headers=requestParameters['Header'],
+            proxies=self.__proxy
+        )
+        if ('[302]' in str(response.history)):
+            return True
+        return False
 
     def request(self, payload: str):
         """Make a request and get the response
@@ -139,32 +183,68 @@ class Request:
         self.__parser.setPayload(payload)
         requestParameters = self.__parser.getRequestParameters()
         targetIp = ''
+        if self.__subdomainFuzzing:
+            try:
+                hostname = self.__parser.getPayloadedDomain(requestParameters['Url'])
+                targetIp = socket.gethostbyname(hostname)
+            except:
+                raise RequestException('continue', f"Can't resolve hostname {hostname}")
         try:
             before = time.time()
-            response = Response(requests.request(requestParameters['Method'], requestParameters['Url'], data=requestParameters['Data'], params=requestParameters['Data'], headers=requestParameters['Header'], proxies=self.__proxy))
+            response = Response(requests.request(
+                requestParameters['Method'],
+                requestParameters['Url'],
+                data=requestParameters['Data'],
+                params=requestParameters['Data'],
+                headers=requestParameters['Header'],
+                proxies=self.__proxy,
+                timeout=self.__timeout
+            ))
             timeTaken = (time.time() - before)
         except requests.exceptions.ProxyError:
             raise RequestException('pause', "The actual proxy isn't working anymore, removing it ...")
-        except requests.exceptions.RequestException:
-            raise RequestException('stop', "Connection aborted due an error.")
+        except requests.exceptions.TooManyRedirects:
+            raise RequestException(
+                'stop' if not self.__subdomainFuzzing else 'continue',
+                f"Too many redirects on {requestParameters['Url']}"
+            )
+        except requests.exceptions.SSLError:
+            raise RequestException(
+                'stop' if not self.__subdomainFuzzing else 'continue',
+                f"SSL couldn't be validated on {requestParameters['Url']}"
+            )
+        except (
+            requests.exceptions.ConnectionError,
+            requests.exceptions.RequestException
+        ) as e:
+            raise RequestException(
+                'stop' if not self.__subdomainFuzzing else 'continue',
+                f"Failed to establish a new connection to {requestParameters['Url']}, raised by {type(e).__name__}"
+            )
+        except UnicodeError:
+            raise RequestException('continue', f"Invalid hostname {hostname} for HTTP request")
         else:
             self.__requestIndex += 1
             response.setRequestData(
-                payload,
+                payload if not self.__subdomainFuzzing else requestParameters['Url'],
                 timeTaken,
                 self.__requestIndex,
                 targetIp
             )
             return response.getResponseDict()
 
-    def hasRedirection(self):
-        """Test if the connection will have a redirection"""
-        parser = RequestParser(self.__url, self.__httpHeader, self.__method, self.__param)
-        parser.setPayload(' ')
-        requestParameters = parser.getRequestParameters()
-        response = requests.request(requestParameters['Method'], requestParameters['Url'], data=requestParameters['Data'], params=requestParameters['Data'], headers=requestParameters['Header'], proxies=self.__proxy)
-        if ('[302]' in str(response.history)):
-            return True
+    def handleProxyException(self):
+        """Handle with the proxy exception
+           If a proxies list is set remove the current proxy and grab another
+
+        @returns bool: A flag to continue or stop the fuzzing tests
+        """
+        self.__proxy = {}
+        if self.__proxyList:
+            del self.__proxyList[(self.__requestIndex%1000)%len(self.__proxyList)]
+            if self.__proxyList:
+                self.__updateProxy()
+                return True
         return False
 
     def __setupHeader(self):
@@ -179,12 +259,3 @@ class Request:
     def __updateProxy(self):
         """Set the proxy based on request index"""
         self.setProxy(self.__proxyList[(self.__requestIndex%1000)%len(self.__proxyList)])
-
-    def handleProxyException(self):
-        self.__proxy = {}
-        if self.__proxyList:
-            del self.__proxyList[(self.__requestIndex%1000)%len(self.__proxyList)]
-            if self.__proxyList:
-                self.__updateProxy()
-                return True
-        return False

@@ -12,7 +12,8 @@
 
 from .parsers.CLIParser import CLIParser
 from .core.Fuzzer import Fuzzer
-from .conn.Request import Request, RequestException
+from .conn.Request import Request
+from .conn.RequestException import RequestException
 from .IO.OutputHandler import outputHandler as oh
 from .IO.FileHandler import fileHandler as fh
 
@@ -20,8 +21,8 @@ import time
 
 APP_VERSION = {
     'MAJOR_VERSION': 3,
-    "MINOR_VERSION": 4,
-    "PATCH": 1
+    "MINOR_VERSION": 5,
+    "PATCH": 0
 }
 
 def version():
@@ -51,11 +52,7 @@ class ApplicationManager:
         startedTime: The time when start the fuzzing test
     """
     def __init__(self):
-        """Class constructor
-
-        @type fuzzer: Fuzzer
-        @param fuzzer: The fuzzer object
-        """
+        """Class constructor"""
         self.__fuzzer = None
         self.__requester = None
         self.__startedTime = 0
@@ -81,7 +78,8 @@ class ApplicationManager:
         self.__requester = self.__fuzzer.getRequester()
         oh.infoBox(f"Set target: {self.__requester.getUrl()}")
         oh.infoBox(f"Set request method: {method}")
-        oh.infoBox(f"Set request data: {str(requestData)}")
+        if requestData:
+            oh.infoBox(f"Set request data: {str(requestData)}")
         cliParser.checkCookie(self.__requester)
         cliParser.checkProxy(self.__requester)
         cliParser.checkProxies(self.__requester)
@@ -105,7 +103,7 @@ class ApplicationManager:
         oh.infoBox(f"Starting test on '{self.__requester.getUrl()}' ...")
         self.__startedTime = time.time()
         try:
-            if self.__fuzzer.isVerboseMode():
+            if self.__fuzzer.isVerboseMode() and not self.__requester.isSubdomainFuzzing():
                 oh.getHeader()
             self.__fuzzer.start()
         except KeyboardInterrupt:
@@ -114,7 +112,8 @@ class ApplicationManager:
             self.__showFooter()
         else:
             if self.__fuzzer.isVerboseMode():
-                oh.getHeader()
+                if not self.__requester.isSubdomainFuzzing():
+                    oh.getHeader()
             else:
                 print("")
             self.__showFooter()
@@ -124,21 +123,20 @@ class ApplicationManager:
         """Test the connection and redirection to target"""
         # If we'll not fuzzing the url paths, so
         # test the redirections before start the fuzzing
-        if self.__requester.getUrlIndexToPayload():
+        if self.__requester.isUrlFuzzing():
             oh.infoBox("Test mode set to URL Fuzzing")
             try:
                 self.__requester.testConnection()
-            except RequestException:
-                if not oh.askYesNo("Connection to target failed. Continue anyway? "):
+            except RequestException as e:
+                if not oh.askYesNo(f"Connection to {str(e)} failed. Continue anyway? "):
                     exit()
             else:
                 oh.infoBox("Connection status: OK")
-            oh.infoBox("No redirection verifications to target are being tested")
         else:
             try:
                 self.__requester.testConnection()
-            except RequestException:
-                oh.errorBox("Failed to connect to the server")
+            except RequestException as e:
+                oh.errorBox(f"Failed to connect to {str(e)}")
             oh.infoBox("Connection status: OK")
             oh.infoBox("Testing redirections ...")
             if self.__requester.hasRedirection():
@@ -148,7 +146,7 @@ class ApplicationManager:
                 oh.infoBox("No redirections")
     
     def __checkProxies(self):
-        """Check for connection status if a proxy is given"""
+        """Check for connection status using a proxy, if a proxy is given"""
         if self.__requester.getProxy():
             oh.infoBox("Testing proxy ...")
             try:
@@ -173,7 +171,7 @@ class ApplicationManager:
             self.__requester.setProxyList(proxyList)
 
     def __showFooter(self):
-        """Show the footer content of the software, after making the fuzzing"""
+        """Show the footer content of the software, after maked the fuzzing"""
         if self.__startedTime:
             oh.infoBox(f"Time taken: {float('%.2f'%(time.time() - self.__startedTime))} seconds")
         output = self.__fuzzer.getOutput()
