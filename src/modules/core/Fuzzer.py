@@ -102,7 +102,7 @@ class Fuzzer:
             self.__playerHandler.wait()
             """Run the threads"""
             while self.__running and not self.__payloads.empty():
-                payload = self.__payloads.get()
+                payload = self.__requester.getParser().getAjustedPayload(self.__payloads.get())
                 try:
                     self.do(payload)
                     time.sleep(self.__delay)

@@ -136,7 +136,6 @@ class Request:
         """
         if self.__proxyList and self.__requestIndex%1000 == 0:
             self.__updateProxy()
-        payload = self.__parser.getAjustedPayload(payload)
         self.__parser.setPayload(payload)
         requestParameters = self.__parser.getRequestParameters()
         try:
