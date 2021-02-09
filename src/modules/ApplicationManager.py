@@ -88,6 +88,7 @@ class ApplicationManager:
         cliParser.checkDelay(self.__fuzzer)
         cliParser.checkVerboseMode(self.__fuzzer)
         cliParser.checkNumThreads(self.__fuzzer)
+        cliParser.checkPrefixAndSuffix(self.__requester)
         self.prepare()
         self.start()
 
@@ -104,6 +105,8 @@ class ApplicationManager:
         oh.infoBox(f"Starting test on '{self.__requester.getUrl()}' ...")
         self.__startedTime = time.time()
         try:
+            if self.__fuzzer.isVerboseMode():
+                oh.getHeader()
             self.__fuzzer.start()
         except KeyboardInterrupt:
             self.__fuzzer.stop()

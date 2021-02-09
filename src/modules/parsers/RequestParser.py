@@ -66,6 +66,8 @@ class RequestParser:
         self.__param = param
         self.__httpHeader = httpHeader
         self.__payload = ''
+        self.__prefix = ''
+        self.__suffix = ''
         self.__urlFuzzing = True if getIndexesToParse(self.__url['content']) else False
 
     def isUrlFuzzing(self):
@@ -97,13 +99,36 @@ class RequestParser:
         """
         return {} if not self.__param else self.__getAjustedData(self.__payload)
 
+    def getPayload(self):
+        """The payload getter
+
+        @returns str: The payload used in the request
+        """
+        return self.__payload
+
     def setPayload(self, payload: str):
         """The payload setter
 
         @type payload: str
         @param payload: The payload used in the request
         """
-        self.__payload = payload
+        self.__payload = self.__prefix + payload + self.__suffix
+
+    def setPrefix(self, prefix: str):
+        """The prefix setter
+
+        @type prefix: str
+        @param prefix: The prefix used in the payload
+        """
+        self.__prefix = prefix
+    
+    def setSuffix(self, suffix: str):
+        """The suffix setter
+
+        @type suffix: str
+        @param suffix: The suffix used in the payload
+        """
+        self.__suffix = suffix
 
     def getTargetFromUrl(self):
         """Gets the host from an URL

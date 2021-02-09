@@ -135,6 +135,22 @@ class CLIParser:
             fuzzer.setNumThreads(int(numThreads))
             oh.infoBox(f"Set number of threads: {numThreads} thread(s)")
 
+    def checkPrefixAndSuffix(self, requester: Request):
+        """Check if the --prefix argument is present, and set the prefix into request parser
+           Check if the --suffix argument is present, and set the suffix into request parser
+        
+        @type requester: Request
+        @param requester: The object responsible to handle the requests
+        """
+        if '--prefix' in self.__argv:
+            prefix = self.__argv[self.__argv.index('--prefix')+1]
+            requester.getParser().setPrefix(prefix)
+            oh.infoBox(f"Set prefix: {prefix}")
+        if '--suffix' in self.__argv:
+            suffix = self.__argv[self.__argv.index('--suffix')+1]
+            requester.getParser().setSuffix(suffix)
+            oh.infoBox(f"Set suffix: {suffix}")
+
     def __getHeader(self, args: list):
         '''Get the HTTP header
 

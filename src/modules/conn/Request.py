@@ -80,6 +80,13 @@ class Request:
     def getProxyList(self):
         return self.__proxyList
 
+    def getParser(self):
+        """The request parser getter
+
+        @returns RequestParser: The request parser
+        """
+        return self.__parser
+
     def isUrlFuzzing(self):
         """The URL Fuzzing flag getter
         
@@ -141,7 +148,7 @@ class Request:
             raise RequestException('stop', "Connection aborted due an error.")
         else:
             self.__requestIndex += 1
-            return response.getResponseData(payload, timeTaken, self.__requestIndex)
+            return response.getResponseData(self.__parser.getPayload(), timeTaken, self.__requestIndex)
 
     def hasRedirection(self):
         """Test if the connection will have a redirection"""

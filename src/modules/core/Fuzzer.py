@@ -107,9 +107,7 @@ class Fuzzer:
                     self.do(payload)
                     time.sleep(self.__delay)
                 except RequestException as e:
-                    if e.type == 'stop':
-                        self.stop()
-                        oh.abortBox(str(e))
+                    self.__handleRequestException(e, payload)
                 finally:
                     if not self.__playerHandler.isSet():
                         self.__numberOfThreads -= 1
@@ -238,3 +236,35 @@ class Fuzzer:
             oh.printContent([value for key, value in thisResponse.items()], probablyVulnerable)
         else:
             oh.progressStatus(str(int((int(thisResponse['Request'])/self.__numLines)*100)), len(self.__output))
+
+    def __handleRequestException(self, e: RequestException, payload: str):
+        """Handle with the request exceptions based on their types
+           To Do: Save the payloads that thrown an exception on a list
+        
+        @type e: RequestException
+        @param e: The request exception
+        @type payload: str
+        @param payload: The payload used in the request
+        """
+        if e.type == 'pause':
+            if not self.__paused:
+                self.pause()
+                oh.warningBox("Pausing due "+str(e))
+                if 'proxy' in str(e).tolower():
+                    if self.__requester.handleProxyException():
+                        self.resume()
+                    else:
+                        self.stop()
+        elif e.type == 'stop':
+            if self.__running:
+                self.__numberOfThreads = 0
+                self.stop()
+                oh.abortBox(str(e))
+        elif e.type == 'continue':
+            if self.__verboseMode:
+                oh.notWorkedBox(str(e))
+            else:
+                oh.progressStatus(
+                    str(int((int(self.__requester.getRequestIndex())/self.__numLines)*100)),
+                    len(self.__output)
+                )
