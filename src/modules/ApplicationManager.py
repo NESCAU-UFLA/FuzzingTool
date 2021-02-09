@@ -22,7 +22,7 @@ import time
 APP_VERSION = {
     'MAJOR_VERSION': 3,
     "MINOR_VERSION": 5,
-    "PATCH": 0
+    "PATCH": 1
 }
 
 def version():
@@ -125,6 +125,7 @@ class ApplicationManager:
         # test the redirections before start the fuzzing
         if self.__requester.isUrlFuzzing():
             oh.infoBox("Test mode set to URL Fuzzing")
+            oh.infoBox("Testing connection ...")
             try:
                 self.__requester.testConnection()
             except RequestException as e:
@@ -133,6 +134,7 @@ class ApplicationManager:
             else:
                 oh.infoBox("Connection status: OK")
         else:
+            oh.infoBox("Testing connection ...")
             try:
                 self.__requester.testConnection()
             except RequestException as e:

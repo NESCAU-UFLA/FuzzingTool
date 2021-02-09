@@ -38,6 +38,8 @@ class OutputHandler:
         warning: The warning label
         error: The error label
         abort: The abort label
+        worked: The worked label
+        notWorked: The not worked label
     """
     def __init__(self):
         """Class constructor"""
@@ -49,6 +51,135 @@ class OutputHandler:
         self.__warning = '\033[90m['+'\033[33mWARNING'+'\033[90m] \033[0m'
         self.__error = '\033[90m['+'\u001b[31;1mERROR'+'\033[90m] \033[0m'
         self.__abord = '\033[90m['+'\u001b[31;1mABORT'+'\033[90m] \033[0m'
+        self.__worked = '\033[90m['+'\u001b[32;1m+'+'\033[90m] \033[0m'
+        self.__notWorked = '\033[90m['+'\u001b[31;1m-'+'\033[90m] \033[0m'
+
+    def infoBox(self, msg: str):
+        """Print the message with a info label
+
+        @type msg: str
+        @param msg: The message
+        """
+        print(self.__getTime()+self.__getInfo(msg))
+
+    def errorBox(self, msg: str):
+        """End the application with error label and a message
+
+        @type msg: str
+        @param msg: The message
+        """
+        exit(self.__getTime()+self.__getError(msg))
+ 
+    def warningBox(self, msg: str):
+        """Print the message with a warning label
+
+        @type msg: str
+        @param msg: The message
+        """
+        print(self.__getTime()+self.__getWarning(msg))
+
+    def abortBox(self, msg: str):
+        """Print the message with abort label and a message
+
+        @type msg: str
+        @param msg: The message
+        """
+        print('\n'+self.__getTime()+self.__getAbort(msg))
+
+    def workedBox(self, msg: str):
+        """Print the message with worked label and a message
+
+        @type msg: str
+        @param msg: The message
+        """
+        print(self.__getTime()+self.__getWorked(msg))
+
+    def notWorkedBox(self, msg: str):
+        """Print the message with not worked label and a message
+
+        @type msg: str
+        @param msg: The message
+        """
+        print(self.__getTime()+self.__getNotWorked(msg))
+
+    def askYesNo(self, msg: str):
+        """Output an warning message, and ask for the user if wants to continue
+
+        @type msg: str
+        @param msg: The message
+        @returns bool: The answer based on the user's input
+        """
+        print(self.__getTime()+self.__getWarning(msg), end='')
+        action = input()
+        if (action == 'y' or action == 'Y'):
+            return True
+        else:
+            return False
+
+    def printForSubdomainMode(self, msg: str, vulnValidator: bool):
+        """Custom output print for the subdomain fuzzing mode
+
+        @type msg: str
+        @param msg: The message sended, exception or not
+        @type vulnValidator: bool
+        @param vulnValidator: Case the output is marked as vulnerable
+        """
+        if vulnValidator:
+            self.workedBox(msg)
+        else:
+            self.notWorkedBox(msg)
+
+    def getInitOrEnd(self):
+        """Output the initial line of the requests table"""
+        print('  +'+('-'*9)+'+'+('-'*12)+'+'+('-'*32)+'+'+('-'*8)+'+'+('-'*10)+'+'+('-'*12)+'+')
+
+    def getHeader(self):
+        """Output the header of the requests table"""
+        self.getInitOrEnd()
+        self.printContent(['Request','Req Time' , 'Payload', 'Status', 'Length', 'Resp Time'], False)
+        self.getInitOrEnd()
+
+    def printContent(self, args: list, vulnValidator: bool):
+        """Output the content of the requests table
+
+        @type args: list
+        @param args: The arguments used in the table content
+        @type vulnValidator: bool
+        @param vulnValidator: Case the output is marked as vulnerable
+        """
+        if (not vulnValidator):
+            print('  | '+'{:<7}'.format(args[0])+' | '+'{:<10}'.format(args[1])+' | '+'{:<30}'.format(self.fixLineToOutput(args[2]))+' | '+'{:<6}'.format(args[3])+' | '+'{:<8}'.format(args[4])+' | '+'{:<10}'.format(args[5])+' |')
+        else:
+            print('  | '+u'\u001b[32;1m{:<7}'.format(args[0])+'\033[0m | '+'\u001b[32;1m{:<10}'.format(args[1])+'\033[0m | '+'\u001b[32;1m{:<30}'.format(self.fixLineToOutput(args[2]))+'\033[0m | '+'\u001b[32;1m{:<6}'.format(args[3])+'\033[0m | '+'\u001b[32;1m{:<8}'.format(args[4])+'\033[0m | '+'\u001b[32;1m{:<10}'.format(args[5])+'\033[0m |')
+
+    def fixLineToOutput(self, line: str):
+        """Fix the line's size readed by the file
+
+        @type line: str
+        @param line: The line from the file
+        @returns str: The fixed line to output
+        """
+        if (len(line) > 30):
+            output = ""
+            for i in range(27):
+                if line[i] == '	':
+                    output += ' '
+                else:
+                    output += line[i]
+            output += '...'
+            return output.rstrip()
+        else:
+            return line.rstrip()
+
+    def progressStatus(self, status: str, itemsFound: int):
+        """Output the progress status of the fuzzing
+
+        @type status: str
+        @param status: The status progress of the fuzzing (between 0 to 100)
+        @type itemsFound: int
+        @param itemsFound: The number of possible payloads found
+        """
+        print('\r'+self.__getTime()+self.__getInfo("Progress status: "+'{:<4}'.format(status+'%')+f' completed | Found {str(itemsFound)} possible payload(s)'), end='')
 
     def __getTime(self):
         """Get a time label
@@ -95,103 +226,23 @@ class OutputHandler:
         """
         return self.__abord + msg
 
-    def getInitOrEnd(self):
-        """Output the initial line of the requests table"""
-        print('  +'+('-'*9)+'+'+('-'*12)+'+'+('-'*32)+'+'+('-'*8)+'+'+('-'*10)+'+'+('-'*12)+'+')
-
-    def getHeader(self):
-        """Output the header of the requests table"""
-        self.getInitOrEnd()
-        self.printContent(['Request','Req Time' , 'Payload', 'Status', 'Length', 'Resp Time'], False)
-        self.getInitOrEnd()
-
-    def printContent(self, args: list, vulnValidator: bool):
-        """Output the content of the requests table
-
-        @type args: list
-        @param args: The arguments used in the table content
-        @type vulnValidator: bool
-        @param vulnValidator: Case the output is marked as vulnerable
-        """
-        if (not vulnValidator):
-            print('  | '+'{:<7}'.format(args[0])+' | '+'{:<10}'.format(args[1])+' | '+'{:<30}'.format(self.fixLineToOutput(args[2]))+' | '+'{:<6}'.format(args[3])+' | '+'{:<8}'.format(args[4])+' | '+'{:<10}'.format(args[5])+' |')
-        else:
-            print('  | '+u'\u001b[32;1m{:<7}'.format(args[0])+'\033[0m | '+'\u001b[32;1m{:<10}'.format(args[1])+'\033[0m | '+'\u001b[32;1m{:<30}'.format(self.fixLineToOutput(args[2]))+'\033[0m | '+'\u001b[32;1m{:<6}'.format(args[3])+'\033[0m | '+'\u001b[32;1m{:<8}'.format(args[4])+'\033[0m | '+'\u001b[32;1m{:<10}'.format(args[5])+'\033[0m |')
-
-    def askYesNo(self, msg: str):
-        """Output an warning message, and ask for the user if wants to continue
+    def __getWorked(self, msg: str):
+        """The worked getter, with a custom message
 
         @type msg: str
-        @param msg: The message
-        @returns bool: The answer based on the user's input
+        @param msg: The custom message
+        @returns str: The message with worked label
         """
-        print(self.__getTime()+self.__getWarning(msg), end='')
-        action = input()
-        if (action == 'y' or action == 'Y'):
-            return True
-        else:
-            return False
-
-    def infoBox(self, msg: str):
-        """Print the message with a info label
+        return self.__worked + msg
+    
+    def __getNotWorked(self, msg: str):
+        """The not worked getter, with a custom message
 
         @type msg: str
-        @param msg: The message
+        @param msg: The custom message
+        @returns str: The message with not worked label
         """
-        print(self.__getTime()+self.__getInfo(msg))
-
-    def errorBox(self, msg: str):
-        """End the application with error label and a message
-
-        @type msg: str
-        @param msg: The message
-        """
-        exit(self.__getTime()+self.__getError(msg))
- 
-    def warningBox(self, msg: str):
-        """Print the message with a warning label
-
-        @type msg: str
-        @param msg: The message
-        """
-        print(self.__getTime()+self.__getWarning(msg))
-
-    def abortBox(self, msg: str):
-        """Print the message with abort label and a message
-
-        @type msg: str
-        @param msg: The message
-        """
-        print('\n'+self.__getTime()+self.__getAbort(msg))
-
-    def fixLineToOutput(self, line: str):
-        """Fix the line's size readed by the file
-
-        @type line: str
-        @param line: The line from the file
-        @returns str: The fixed line to output
-        """
-        if (len(line) > 30):
-            output = ""
-            for i in range(27):
-                if line[i] == '	':
-                    output += ' '
-                else:
-                    output += line[i]
-            output += '...'
-            return output.rstrip()
-        else:
-            return line.rstrip()
-
-    def progressStatus(self, status: str, itemsFound: int):
-        """Output the progress status of the fuzzing
-
-        @type status: str
-        @param status: The status progress of the fuzzing (between 0 to 100)
-        @type itemsFound: int
-        @param itemsFound: The number of possible payloads found
-        """
-        print('\r'+self.__getTime()+self.__getInfo("Progress status: "+'{:<4}'.format(status+'%')+f' completed | Found {str(itemsFound)} possible payload(s)'), end='')
+        return self.__notWorked + '\u001b[38;5;250m' + msg + '\033[0m'
 
     def __helpTitle(self, numSpaces: int, title: str):
         """Output the help title
@@ -241,10 +292,13 @@ class OutputHandler:
         self.__helpTitle(3, "More options:")
         self.__helpContent(5, "--delay DELAY", "Define the delay between each request (in seconds)")
         self.__helpContent(5, "-t NUMBEROFTHREADS", "Define the number of threads used in the tests")
+        self.__helpContent(5, "--prefix PREFIX", "Define the prefix used with the payload")
+        self.__helpContent(5, "--suffix SUFFIX", "Define the suffix used with the payload")
         self.__helpTitle(0, "Examples:")
         self.__helpContent(3, "./FuzzingTool.py -u http://127.0.0.1/post.php?id= -f sqli.txt", '')
         self.__helpContent(3, "./FuzzingTool.py -f sqli.txt -u http://127.0.0.1/controller/user.php --data 'login&passw&user=login'", '')
-        self.__helpContent(3, "./FuzzingTool.py -f paths.txt -u http://127.0.0.1/$", '')
+        self.__helpContent(3, "./FuzzingTool.py -f paths.txt -u http://127.0.0.1/$ --suffix .php", '')
+        self.__helpContent(3, "./FuzzingTool.py -f subdomains.txt -u http://$.domainexample.com", '')
         self.__helpContent(3, "./FuzzingTool.py -r data.txt -f sqli.txt -V", '')
         exit("")
 

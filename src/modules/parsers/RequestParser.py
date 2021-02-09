@@ -71,14 +71,14 @@ class RequestParser:
         self.__payload = ''
         self.__prefix = ''
         self.__suffix = ''
-        self.__urlFuzzing = True if getIndexesToParse(self.__url) else False
+        self.__urlFuzzing = True if self.__url['indexesToParse'] else False
 
     def getUrl(self):
         """The url getter
         
         @returns str: The target url
         """
-        return self.__url if not self.__urlFuzzing else self.__getAjustedUrl()
+        return self.__url['content'] if not self.__urlFuzzing else self.__getAjustedUrl()
 
     def getHeader(self):
         """The HTTP Header getter
@@ -138,7 +138,7 @@ class RequestParser:
 
         @returns bool: The subdomain fuzzing flag
         """
-        url = self.__url
+        url = self.__url['content']
         if self.__urlFuzzing:
             if '$.' in url:
                 if url.index('$.') < url.index('.'):
@@ -161,11 +161,12 @@ class RequestParser:
 
         @returns str: The target url
         """
+        url = self.__url['content']
         if self.__urlFuzzing:
-            if '$.' in self.__url:
-                return self.__url.replace('$.', '')
-            return self.__url.replace('$', '')
-        return self.__url
+            if '$.' in url:
+                return url.replace('$.', '')
+            return url.replace('$', '')
+        return url
 
     def getRequestParameters(self):
         """Get the request parameters using in the request fields
@@ -188,7 +189,11 @@ class RequestParser:
         """
         if '://' not in url:
             # No schema was defined, default protocol http
-            return 'http://' + url
+            url = 'http://' + url
+        url = {
+            'content': url,
+            'indexesToParse': getIndexesToParse(url)
+        }
         return url
 
     def __getAjustedUrl(self):
@@ -196,13 +201,11 @@ class RequestParser:
 
         @returns str: The ajusted URL
         """
-        ajustedUrl = self.__url
-        for i in range(len(getIndexesToParse(ajustedUrl))):
-            j = ajustedUrl.index('$')
-            head = ajustedUrl[:j]
-            tail = ajustedUrl[(j+1):]
+        ajustedUrl = self.__url['content']
+        for i in self.__url['indexesToParse']:
+            head = ajustedUrl[:i]
+            tail = ajustedUrl[(i+1):]
             ajustedUrl = head + self.__payload + tail
-            i += 1
         return ajustedUrl
 
     def __getAjustedHeader(self):
