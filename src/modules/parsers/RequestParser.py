@@ -99,12 +99,12 @@ class RequestParser:
         """
         return {} if not self.__param else self.__getAjustedData(self.__payload)
 
-    def getPayload(self):
-        """The payload getter
+    def getAjustedPayload(self, payload: str):
+        """The ajusted payload getter
 
         @returns str: The payload used in the request
         """
-        return self.__payload
+        return self.__prefix + payload + self.__suffix
 
     def setPayload(self, payload: str):
         """The payload setter
@@ -112,7 +112,7 @@ class RequestParser:
         @type payload: str
         @param payload: The payload used in the request
         """
-        self.__payload = self.__prefix + payload + self.__suffix
+        self.__payload = payload
 
     def setPrefix(self, prefix: str):
         """The prefix setter
