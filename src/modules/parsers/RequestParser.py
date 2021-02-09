@@ -12,7 +12,7 @@
 
 def getIndexesToParse(paramContent: str):
     """If the fuzzing tests will occur on the given value,
-       so get the list of positions of it to insert the payloads
+        so get the list of positions of it to insert the payloads
     
     @type paramContent: str
     @param paramContent: The parameter content
@@ -48,14 +48,11 @@ class RequestParser:
         param: The parameter of the request
         httpHeader: The HTTP header
         payload: The payload used in the request
-        prefix: The prefix used in the payload
-        suffix: The suffix used in the payload
-        urlFuzzing: The URL Fuzzing flag
     """
-    def __init__(self, url: str, httpHeader: dict, method: str = '', param: dict = {}):
+    def __init__(self, url: dict, httpHeader: dict, method: str = '', param: dict = {}):
         """Class constructor
 
-        @type url: str
+        @type url: dict
         @param url: The target URL
         @type httpHeader: dict
         @param httpHeader: The HTTP header
@@ -64,21 +61,27 @@ class RequestParser:
         @type param: dict
         @param param: The parameter of the request
         """
-        self.__url = self.__setupUrl(url)
+        self.__url = url
         self.__method = method
         self.__param = param
         self.__httpHeader = httpHeader
         self.__payload = ''
-        self.__prefix = ''
-        self.__suffix = ''
-        self.__urlFuzzing = True if getIndexesToParse(self.__url) else False
+        self.__urlFuzzing = True if getIndexesToParse(self.__url['content']) else False
+
+    def isUrlFuzzing(self):
+        """The URL Fuzzing flag getter
+           if the tests will occur on URL return true, else return false
+
+        @returns bool: The URL Fuzzing flag
+        """
+        return self.__urlFuzzing
 
     def getUrl(self):
         """The url getter
         
         @returns str: The target url
         """
-        return self.__url if not self.__urlFuzzing else self.__getAjustedUrl()
+        return self.__url['content'] if not self.__url['indexToParse'] else self.__getAjustedUrl(self.__payload)
 
     def getHeader(self):
         """The HTTP Header getter
@@ -92,22 +95,7 @@ class RequestParser:
 
         @returns dict: The param data of the request
         """
-        return {} if not self.__param else self.__getAjustedData()
-
-    def getPayload(self):
-        """The payload getter
-
-        @returns str: The payload used in the request
-        """
-        return self.__payload
-
-    def isUrlFuzzing(self):
-        """The URL Fuzzing flag getter
-           if the tests will occur on URL return true, else return false
-
-        @returns bool: The URL Fuzzing flag
-        """
-        return self.__urlFuzzing
+        return {} if not self.__param else self.__getAjustedData(self.__payload)
 
     def setPayload(self, payload: str):
         """The payload setter
@@ -115,99 +103,36 @@ class RequestParser:
         @type payload: str
         @param payload: The payload used in the request
         """
-        self.__payload = self.__prefix + payload + self.__suffix
-
-    def setPrefix(self, prefix: str):
-        """The prefix setter
-
-        @type prefix: str
-        @param prefix: The prefix used in the payload
-        """
-        self.__prefix = prefix
-    
-    def setSuffix(self, suffix: str):
-        """The suffix setter
-
-        @type suffix: str
-        @param suffix: The suffix used in the payload
-        """
-        self.__suffix = suffix
-
-    def checkForSubdomainFuzz(self):
-        """Checks if the fuzzing tests will occur on subdomain
-
-        @returns bool: The subdomain fuzzing flag
-        """
-        url = self.__url
-        if self.__urlFuzzing:
-            if '$.' in url:
-                if url.index('$.') < url.index('.'):
-                    return True
-        return False
-
-    def getPayloadedDomain(self, url: str):
-        """Get the target host with a payload
-
-        @returns str: The payloaded target
-        """
-        host = url[(url.index('://')+3):]
-        try:
-            return host[:host.index('/')]
-        except ValueError:
-            return host
+        self.__payload = payload
 
     def getTargetFromUrl(self):
         """Gets the host from an URL
 
         @returns str: The target url
         """
-        if self.__urlFuzzing:
-            if '$.' in self.__url:
-                return self.__url.replace('$.', '')
-            return self.__url.replace('$', '')
-        return self.__url
-
-    def getRequestParameters(self):
-        """Get the request parameters using in the request fields
-
-        @returns dict: The parameters dict of the request
-        """
-        requestParameters = {
-            'Method': self.__method,
-            'Url': self.getUrl(),
-            'Header': self.getHeader(),
-            'Data': self.getData(),
-        }
-        return requestParameters
-
-    def __setupUrl(self, url: str):
-        """The URL setup.
-           Insert an schema if it wasn't present into URL
-
-        @returns str: The target URL
-        """
-        if '://' not in url:
-            # No schema was defined, default protocol http
-            return 'http://' + url
+        url = self.__url['content']
+        if self.__url['indexToParse']:
+            return url[:self.__url['indexToParse'][0]]
         return url
 
-    def __getAjustedUrl(self):
+    def __getAjustedUrl(self, payload: str):
         """Put the payload into the URL requestParameters dictionary
 
+        @type payload: str
+        @param payload: The payload used in the parameter of the request
         @returns str: The ajusted URL
         """
-        ajustedUrl = self.__url
-        for i in range(len(getIndexesToParse(ajustedUrl))):
-            j = ajustedUrl.index('$')
-            head = ajustedUrl[:j]
-            tail = ajustedUrl[(j+1):]
-            ajustedUrl = head + self.__payload + tail
-            i += 1
-        return ajustedUrl
+        url = self.__url['content']
+        i = self.__url['indexToParse'][0]
+        head = url[:i]
+        tail = url[(i+1):]
+        return head+payload+tail
 
     def __getAjustedHeader(self):
         """Put the payload in the header value that contains $
 
+        @type payload: str
+        @param payload: The payload used in the parameter of the request
         @returns dict: The new HTTP Header
         """
         header = {}
@@ -222,9 +147,11 @@ class RequestParser:
             header[key] = result.encode('utf-8')
         return header
 
-    def __getAjustedData(self):
+    def __getAjustedData(self, payload: str):
         """Put the payload into the Data requestParameters dictionary
 
+        @type payload: str
+        @param payload: The payload used in the parameter of the request
         @returns dict: The data dictionary of the request
         """
         data = {}
@@ -232,5 +159,18 @@ class RequestParser:
             if (value != ''):
                 data[key] = value
             else:
-                data[key] = self.__payload
+                data[key] = payload
         return data
+
+    def getRequestParameters(self):
+        """Get the request parameters using in the request fields
+
+        @returns dict: The parameters dict of the request
+        """
+        requestParameters = {
+            'Method': self.__method,
+            'Url': self.getUrl(),
+            'Header': self.getHeader(),
+            'Data': self.getData(),
+        }
+        return requestParameters

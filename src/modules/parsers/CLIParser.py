@@ -74,7 +74,7 @@ class CLIParser:
         @type requester: Request
         @param requester: The object responsible to handle the requests
         """
-        if '--cookie' in self.__argv:
+        if ('--cookie' in self.__argv):
             cookie = self.__argv[self.__argv.index('--cookie')+1]
             requester.setHeaderContent('Cookie', cookie)
             oh.infoBox(f"Set cookie: {cookie}")
@@ -85,7 +85,7 @@ class CLIParser:
         @type requester: Request
         @param requester: The object responsible to handle the requests
         """
-        if '--proxy' in self.__argv:
+        if ('--proxy' in self.__argv):
             proxy = self.__argv[self.__argv.index('--proxy')+1]
             requester.setProxy({
                 'http': 'http://'+proxy,
@@ -99,7 +99,7 @@ class CLIParser:
         @type requester: Request
         @param requester: The object responsible to handle the requests
         """
-        if '--proxies' in self.__argv:
+        if ('--proxies' in self.__argv):
             proxiesFileName = self.__argv[self.__argv.index('--proxies')+1]
             oh.infoBox(f"Loading proxies from file '{proxiesFileName}' ...")
             requester.setProxyList(fh.readProxies(proxiesFileName))
@@ -110,7 +110,7 @@ class CLIParser:
         @type fuzzer: Fuzzer
         @param fuzzer: The Fuzzer object
         """
-        if '--delay' in self.__argv:
+        if ('--delay' in self.__argv):
             delay = self.__argv[self.__argv.index('--delay')+1]
             fuzzer.setDelay(float(delay))
             oh.infoBox(f"Set delay: {delay} second(s)")
@@ -121,7 +121,7 @@ class CLIParser:
         @type fuzzer: Fuzzer
         @param fuzzer: The Fuzzer object
         """
-        if '-V' in self.__argv or '--verbose' in self.__argv:
+        if ('-V' in self.__argv or '--verbose' in self.__argv):
             fuzzer.setVerboseMode(True)
 
     def checkNumThreads(self, fuzzer: Fuzzer):
@@ -130,26 +130,10 @@ class CLIParser:
         @type fuzzer: Fuzzer
         @param fuzzer: The Fuzzer object
         """
-        if '-t' in self.__argv:
+        if ('-t' in self.__argv):
             numThreads = self.__argv[self.__argv.index('-t')+1]
             fuzzer.setNumThreads(int(numThreads))
             oh.infoBox(f"Set number of threads: {numThreads} thread(s)")
-
-    def checkPrefixAndSuffix(self, requester: Request):
-        """Check if the --prefix argument is present, and set the prefix into request parser
-           Check if the --suffix argument is present, and set the suffix into request parser
-        
-        @type requester: Request
-        @param requester: The object responsible to handle the requests
-        """
-        if '--prefix' in self.__argv:
-            prefix = self.__argv[self.__argv.index('--prefix')+1]
-            requester.getParser().setPrefix(prefix)
-            oh.infoBox(f"Set prefix: {prefix}")
-        if '--suffix' in self.__argv:
-            suffix = self.__argv[self.__argv.index('--suffix')+1]
-            requester.getParser().setSuffix(suffix)
-            oh.infoBox(f"Set suffix: {suffix}")
 
     def __getHeader(self, args: list):
         '''Get the HTTP header
@@ -214,7 +198,7 @@ class CLIParser:
         @returns dict: The entries data of the request
         """
         defaultParam = {}
-        if '&' in param:
+        if ('&' in param):
             param = param.split('&', param.count('&'))
             for arg in param:
                 self.__makeDefaultParam(defaultParam, arg)

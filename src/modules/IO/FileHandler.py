@@ -30,6 +30,7 @@ class FileHandler:
     """
     Attributes:
         wordlistFile: The wordlist file
+        proxiesFile: The proxies file
         outputFile: The output file
     """
     def __init__(self):
