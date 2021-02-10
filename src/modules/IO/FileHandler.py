@@ -50,7 +50,7 @@ class FileHandler:
         @returns list: The content into data file
         '''
         try:
-            with open('../input/'+dataFileName, 'r') as dataFile:
+            with open('./input/'+dataFileName, 'r') as dataFile:
                 return [data.rstrip('\n') for data in dataFile]
         except FileNotFoundError:
             oh.errorBox("File '"+dataFileName+"' not found.")
@@ -71,7 +71,7 @@ class FileHandler:
         """
         proxies = []
         try:
-            with open('../input/'+proxiesFileName, 'r') as proxiesFile:
+            with open('./input/'+proxiesFileName, 'r') as proxiesFile:
                 for line in proxiesFile:
                     line = line.rstrip("\n")
                     proxies.append({
@@ -89,7 +89,7 @@ class FileHandler:
         @param wordlistFileName: The name of the wordlist file
         """
         try:
-            self.__wordlistFile = open('../input/'+wordlistFileName, 'r')
+            self.__wordlistFile = open('./input/'+wordlistFileName, 'r')
         except FileNotFoundError:
             oh.errorBox("File '"+wordlistFileName+"' not found. Did you put it in the correct directory?")
 
@@ -130,10 +130,10 @@ class FileHandler:
         now = datetime.now()
         time = now.strftime("%Y-%m-%d_%H:%M")
         try:
-            self.__outputFile = open('../output/'+time+'.txt', 'w')
+            self.__outputFile = open('./output/'+time+'.txt', 'w')
         except FileNotFoundError:
-            os.system('mkdir ../output')
-            self.__outputFile = open('../output/'+time+'.txt', 'w')
+            os.system('mkdir ./output')
+            self.__outputFile = open('./output/'+time+'.txt', 'w')
         finally:
             oh.infoBox(f'Saving results on \'{time}.txt\' ...')
 
