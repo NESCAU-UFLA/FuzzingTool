@@ -149,7 +149,7 @@ class Request:
                 target,
                 proxies=self.__proxy if proxy else {},
                 headers=self.__parser.getHeader(),
-                timeout=self.__timeout
+                timeout=self.__timeout if self.__timeout else 10 # Default 10 seconds to make a request
             )
             response.raise_for_status()
         except:
@@ -202,7 +202,7 @@ class Request:
             ))
             timeTaken = (time.time() - before)
         except requests.exceptions.ProxyError:
-            raise RequestException('pause', "The actual proxy isn't working anymore, removing it ...")
+            raise RequestException('stop', "The actual proxy isn't working anymore.")
         except requests.exceptions.TooManyRedirects:
             raise RequestException(
                 'stop' if not self.__subdomainFuzzing else 'continue',
@@ -212,6 +212,11 @@ class Request:
             raise RequestException(
                 'stop' if not self.__subdomainFuzzing else 'continue',
                 f"SSL couldn't be validated on {requestParameters['Url']}"
+            )
+        except requests.exception.Timeout:
+            raise RequestException(
+                'stop' if not self.__subdomainFuzzing else 'continue',
+                f"Connection to {requestParameters['Url']} timed out"
             )
         except (
             requests.exceptions.ConnectionError,

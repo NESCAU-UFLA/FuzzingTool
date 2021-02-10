@@ -123,19 +123,6 @@ class Fuzzer:
                 thread.start()
             self.__payloads.join()
 
-        def resume():
-            """Handle with threads resume process"""
-            self.__semaphoreHandler.release()
-            self.__playerHandler.set()
-            self.__numberOfThreads = len(self.__threads)
-
-        def pause():
-            """Handle with threads pause"""
-            self.__playerHandler.clear() # Block the threads
-            for thread in self.__threads:
-                if thread.is_alive():
-                    self.__semaphoreHandler.acquire()
-
         def isRunning():
             """Getter for the event handler flag
             
@@ -155,14 +142,12 @@ class Fuzzer:
                 payloads: The queue that contains all payloads inside the wordlist file
                 threads: The list with the threads used in the application
                 running: A flag to say if the application is running or not
-                paused: A flag to say if the application is paused or not
                 playerHandler: The Event object handler - an internal flag manager for the threads
                 semaphoreHandler: The Semaphore object handler - an internal counter manager for the threads
             """
             self.__payloads = Queue()
             self.__threads = []
             self.__running = True
-            self.__paused = False
             for i in range(self.__numberOfThreads):
                 self.__threads.append(Thread(target=run, daemon=True))
             self.__playerHandler = Event()
@@ -174,8 +159,6 @@ class Fuzzer:
         
         if action == 'setup': return setup()
         elif action == 'start': return start()
-        elif action == 'pause': return pause()
-        elif action == 'resume': return resume()
         elif action == 'stop': return stop()
         elif action == 'isRunning': return isRunning()
 
@@ -190,11 +173,10 @@ class Fuzzer:
                 int(firstResponse['Length']),
                 (firstResponse['Req Time']+firstResponse['Resp Time'])
             )
+            if self.__verboseMode:
+                oh.printContent([value for key, value in firstResponse.items()], False)
         else:
             self.__vulnValidator = VulnValidator(urlFuzzing)
-        if self.__verboseMode:
-            if not urlFuzzing:
-                oh.printContent([value for key, value in firstResponse.items()], False)
         self.threadHandle('setup')
         self.threadHandle('start')
 
@@ -203,16 +185,6 @@ class Fuzzer:
         self.threadHandle('stop')
         while self.__numberOfThreads > 1:
             pass
-
-    def resume(self):
-        """Resume the fuzzer application"""
-        self.__paused = False
-        self.threadHandle('resume')
-
-    def pause(self):
-        """Pause the fuzzer application"""
-        self.__paused = True
-        self.threadHandle('pause')
 
     def isRunning(self):
         """Check if the application is running or not
@@ -257,16 +229,7 @@ class Fuzzer:
         @type payload: str
         @param payload: The payload used in the request
         """
-        if e.type == 'pause':
-            if not self.__paused:
-                self.pause()
-                oh.warningBox("Pausing due "+str(e))
-                if 'proxy' in str(e).tolower():
-                    if self.__requester.handleProxyException():
-                        self.resume()
-                    else:
-                        self.stop()
-        elif e.type == 'stop':
+        if e.type == 'stop':
             if self.__running:
                 self.__numberOfThreads = 0
                 self.stop()
