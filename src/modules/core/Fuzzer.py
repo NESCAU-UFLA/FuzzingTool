@@ -91,7 +91,7 @@ class Fuzzer:
         """
         self.__numberOfThreads = numberOfThreads
 
-    def threadHandle(self, action: str = 'setup'):
+    def threadHandle(self, action: str):
         """Function that handle with all of the threads functions and atributes
 
         @type action: str
@@ -103,17 +103,17 @@ class Fuzzer:
             self.__playerHandler.wait()
             while self.__running and not self.__payloads.empty():
                 payload = self.__requester.getParser().getAjustedPayload(self.__payloads.get())
-                try:
-                    self.do(payload)
-                    time.sleep(self.__delay)
-                except RequestException as e:
-                    self.__handleRequestException(e, payload)
-                finally:
-                    self.__payloads.task_done()
-                    if not self.__playerHandler.isSet():
-                        self.__numberOfThreads -= 1
-                        self.__semaphoreHandler.release()
-                        self.__playerHandler.wait()
+                for p in payload:
+                    try:
+                        self.do(p)
+                        time.sleep(self.__delay)
+                    except RequestException as e:
+                        self.__handleRequestException(e, p)
+                self.__payloads.task_done()
+                if not self.__playerHandler.isSet():
+                    self.__numberOfThreads -= 1
+                    self.__semaphoreHandler.release()
+                    self.__playerHandler.wait()
             self.__numberOfThreads -= 1
 
         def start():

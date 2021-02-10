@@ -69,8 +69,8 @@ class RequestParser:
         self.__param = param
         self.__httpHeader = httpHeader
         self.__payload = ''
-        self.__prefix = ''
-        self.__suffix = ''
+        self.__prefix = []
+        self.__suffix = []
         self.__urlFuzzing = True if self.__url['indexesToParse'] else False
 
     def getUrl(self):
@@ -94,12 +94,25 @@ class RequestParser:
         """
         return {} if not self.__param else self.__getAjustedData()
 
+    def isUrlFuzzing(self):
+        """The URL Fuzzing flag getter
+           if the tests will occur on URL return true, else return false
+
+        @returns bool: The URL Fuzzing flag
+        """
+        return self.__urlFuzzing
+
     def getAjustedPayload(self, payload: str):
         """The ajusted payload getter
 
-        @returns str: The payload used in the request
+        @returns list: The payload used in the request
         """
-        return self.__prefix + payload + self.__suffix
+        ajustedPayload = [payload]
+        if self.__prefix:
+            ajustedPayload = [(prefix+payload) for prefix in self.__prefix for payload in ajustedPayload]
+        if self.__suffix:
+            ajustedPayload = [(payload+suffix) for suffix in self.__suffix for payload in ajustedPayload]
+        return ajustedPayload
 
     def setPayload(self, payload: str):
         """The payload setter
@@ -109,26 +122,18 @@ class RequestParser:
         """
         self.__payload = payload
 
-    def isUrlFuzzing(self):
-        """The URL Fuzzing flag getter
-           if the tests will occur on URL return true, else return false
-
-        @returns bool: The URL Fuzzing flag
-        """
-        return self.__urlFuzzing
-
-    def setPrefix(self, prefix: str):
+    def setPrefix(self, prefix: list):
         """The prefix setter
 
-        @type prefix: str
+        @type prefix: list
         @param prefix: The prefix used in the payload
         """
         self.__prefix = prefix
     
-    def setSuffix(self, suffix: str):
+    def setSuffix(self, suffix: list):
         """The suffix setter
 
-        @type suffix: str
+        @type suffix: list
         @param suffix: The suffix used in the payload
         """
         self.__suffix = suffix
@@ -140,9 +145,8 @@ class RequestParser:
         """
         url = self.__url['content']
         if self.__urlFuzzing:
-            if '$.' in url:
-                if url.index('$.') < url.index('.'):
-                    return True
+            if url.index('$') < url.index('.'):
+                return True
         return False
 
     def getPayloadedDomain(self, url: str):

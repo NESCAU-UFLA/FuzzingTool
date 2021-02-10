@@ -144,12 +144,20 @@ class CLIParser:
         """
         if '--prefix' in self.__argv:
             prefix = self.__argv[self.__argv.index('--prefix')+1]
-            requester.getParser().setPrefix(prefix)
-            oh.infoBox(f"Set prefix: {prefix}")
+            if ',' in prefix:
+                prefixes = prefix.split(',')
+            else:
+                prefixes = [prefix]
+            requester.getParser().setPrefix(prefixes)
+            oh.infoBox(f"Set prefix: {str(prefixes)}")
         if '--suffix' in self.__argv:
             suffix = self.__argv[self.__argv.index('--suffix')+1]
-            requester.getParser().setSuffix(suffix)
-            oh.infoBox(f"Set suffix: {suffix}")
+            if ',' in suffix:
+                suffixes = suffix.split(',')
+            else:
+                suffixes = [suffix]
+            requester.getParser().setSuffix(suffixes)
+            oh.infoBox(f"Set suffix: {str(suffixes)}")
 
     def __getHeader(self, args: list):
         '''Get the HTTP header
