@@ -121,7 +121,8 @@ class Fuzzer:
             self.__playerHandler.set() # Awake threads
             for thread in self.__threads:
                 thread.start()
-            self.__payloads.join()
+            for thread in self.__threads:
+                thread.join()
 
         def isRunning():
             """Getter for the event handler flag

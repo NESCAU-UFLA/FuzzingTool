@@ -83,6 +83,7 @@ class ApplicationManager:
         cliParser.checkCookie(self.__requester)
         cliParser.checkProxy(self.__requester)
         cliParser.checkProxies(self.__requester)
+        cliParser.checkTimeout(self.__requester)
         cliParser.checkDelay(self.__fuzzer)
         cliParser.checkVerboseMode(self.__fuzzer)
         cliParser.checkNumThreads(self.__fuzzer)

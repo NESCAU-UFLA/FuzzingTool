@@ -141,6 +141,14 @@ class Request:
         """
         self.__proxyList = proxyList
 
+    def setTimeout(self, timeout: int):
+        """The timeout setter
+
+        @type timeout: int
+        @param timeout: The request timeout
+        """
+        self.__timeout = timeout
+
     def testConnection(self, proxy: bool = False):
         """Test the connection with the target, and raise an exception if couldn't connect (by status code)"""
         try:
@@ -213,7 +221,7 @@ class Request:
                 'stop' if not self.__subdomainFuzzing else 'continue',
                 f"SSL couldn't be validated on {requestParameters['Url']}"
             )
-        except requests.exception.Timeout:
+        except requests.exceptions.Timeout:
             raise RequestException(
                 'stop' if not self.__subdomainFuzzing else 'continue',
                 f"Connection to {requestParameters['Url']} timed out"
