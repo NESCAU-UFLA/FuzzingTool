@@ -145,7 +145,7 @@ class RequestParser:
         """
         url = self.__url['content']
         if self.__urlFuzzing:
-            if url.index('$') < url.index('.'):
+            if '.' in url and url.index('$') < url.index('.'):
                 return True
         return False
 

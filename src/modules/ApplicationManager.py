@@ -88,6 +88,7 @@ class ApplicationManager:
         cliParser.checkVerboseMode(self.__fuzzer)
         cliParser.checkNumThreads(self.__fuzzer)
         cliParser.checkPrefixAndSuffix(self.__requester)
+        cliParser.checkReporter()
         self.prepare()
         self.start()
 

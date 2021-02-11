@@ -170,6 +170,21 @@ class CLIParser:
             requester.getParser().setSuffix(suffixes)
             oh.infoBox(f"Set suffix: {str(suffixes)}")
 
+    def checkReporter(self):
+        """Check if the -o argument is present, and set the report data (name and type)"""
+        if '-o' in self.__argv:
+            report = self.__argv[self.__argv.index('-o')+1]
+            if '.' in report:
+                reportName, reportType = report.split('.')
+            else:
+                reportType = report
+                reportName = ''
+            fh.setReport({
+                'Type': reportType,
+                'Name': reportName
+            })
+            oh.infoBox(f"Set report: {report}")
+
     def __getHeader(self, args: list):
         '''Get the HTTP header
 

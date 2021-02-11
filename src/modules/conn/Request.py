@@ -175,7 +175,7 @@ class Request:
             headers=requestParameters['Header'],
             proxies=self.__proxy
         )
-        if ('[302]' in str(response.history)):
+        if '[302]' in str(response.history):
             return True
         return False
 
@@ -191,74 +191,62 @@ class Request:
         self.__parser.setPayload(payload)
         requestParameters = self.__parser.getRequestParameters()
         targetIp = ''
-        if self.__subdomainFuzzing:
-            try:
-                hostname = self.__parser.getPayloadedDomain(requestParameters['Url'])
-                targetIp = socket.gethostbyname(hostname)
-            except:
-                raise RequestException('continue', f"Can't resolve hostname {hostname}")
         try:
-            before = time.time()
-            response = Response(requests.request(
-                requestParameters['Method'],
-                requestParameters['Url'],
-                data=requestParameters['Data'],
-                params=requestParameters['Data'],
-                headers=requestParameters['Header'],
-                proxies=self.__proxy,
-                timeout=self.__timeout
-            ))
-            timeTaken = (time.time() - before)
-        except requests.exceptions.ProxyError:
-            raise RequestException('stop', "The actual proxy isn't working anymore.")
-        except requests.exceptions.TooManyRedirects:
-            raise RequestException(
-                'stop' if not self.__subdomainFuzzing else 'continue',
-                f"Too many redirects on {requestParameters['Url']}"
-            )
-        except requests.exceptions.SSLError:
-            raise RequestException(
-                'stop' if not self.__subdomainFuzzing else 'continue',
-                f"SSL couldn't be validated on {requestParameters['Url']}"
-            )
-        except requests.exceptions.Timeout:
-            raise RequestException(
-                'stop' if not self.__subdomainFuzzing else 'continue',
-                f"Connection to {requestParameters['Url']} timed out"
-            )
-        except (
-            requests.exceptions.ConnectionError,
-            requests.exceptions.RequestException
-        ) as e:
-            raise RequestException(
-                'stop' if not self.__subdomainFuzzing else 'continue',
-                f"Failed to establish a new connection to {requestParameters['Url']}, raised by {type(e).__name__}"
-            )
-        except UnicodeError:
-            raise RequestException('continue', f"Invalid hostname {hostname} for HTTP request")
-        else:
+            if self.__subdomainFuzzing:
+                try:
+                    hostname = self.__parser.getPayloadedDomain(requestParameters['Url'])
+                    targetIp = socket.gethostbyname(hostname)
+                except:
+                    raise RequestException('continue', f"Can't resolve hostname {hostname}")
+            try:
+                before = time.time()
+                response = Response(requests.request(
+                    requestParameters['Method'],
+                    requestParameters['Url'],
+                    data=requestParameters['Data'],
+                    params=requestParameters['Data'],
+                    headers=requestParameters['Header'],
+                    proxies=self.__proxy,
+                    timeout=self.__timeout
+                ))
+                timeTaken = (time.time() - before)
+            except requests.exceptions.ProxyError:
+                raise RequestException('stop', "The actual proxy isn't working anymore.")
+            except requests.exceptions.TooManyRedirects:
+                raise RequestException(
+                    'stop' if not self.__subdomainFuzzing else 'continue',
+                    f"Too many redirects on {requestParameters['Url']}"
+                )
+            except requests.exceptions.SSLError:
+                raise RequestException(
+                    'stop' if not self.__subdomainFuzzing else 'continue',
+                    f"SSL couldn't be validated on {requestParameters['Url']}"
+                )
+            except requests.exceptions.Timeout:
+                raise RequestException(
+                    'stop' if not self.__subdomainFuzzing else 'continue',
+                    f"Connection to {requestParameters['Url']} timed out"
+                )
+            except (
+                requests.exceptions.ConnectionError,
+                requests.exceptions.RequestException
+            ) as e:
+                raise RequestException(
+                    'stop' if not self.__subdomainFuzzing else 'continue',
+                    f"Failed to establish a new connection to {requestParameters['Url']}, raised by {type(e).__name__}"
+                )
+            except UnicodeError:
+                raise RequestException('continue', f"Invalid hostname {hostname} for HTTP request")
+            else:
+                response.setRequestData(
+                    payload if not self.__subdomainFuzzing else requestParameters['Url'],
+                    timeTaken,
+                    self.__requestIndex,
+                    targetIp
+                )
+                return response.getResponseDict()
+        finally:
             self.__requestIndex += 1
-            response.setRequestData(
-                payload if not self.__subdomainFuzzing else requestParameters['Url'],
-                timeTaken,
-                self.__requestIndex,
-                targetIp
-            )
-            return response.getResponseDict()
-
-    def handleProxyException(self):
-        """Handle with the proxy exception
-           If a proxies list is set remove the current proxy and grab another
-
-        @returns bool: A flag to continue or stop the fuzzing tests
-        """
-        self.__proxy = {}
-        if self.__proxyList:
-            del self.__proxyList[(self.__requestIndex%1000)%len(self.__proxyList)]
-            if self.__proxyList:
-                self.__updateProxy()
-                return True
-        return False
 
     def __setupHeader(self):
         """Setup the HTTP Header"""
