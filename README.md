@@ -1,7 +1,7 @@
 <h1 align="center">FuzzingTool</h1>
 <p align="center">
-  <a href="https://github.com/NESCAU-UFLA/FuzzingTool/releases/tag/v3.5.1">
-    <img src="https://img.shields.io/static/v1?label=Release&message=v3.5.1&color=darkred" />
+  <a href="https://github.com/NESCAU-UFLA/FuzzingTool/releases/tag/v3.6.0">
+    <img src="https://img.shields.io/static/v1?label=Release&message=v3.6.0&color=darkred" />
   </a>
   <img src="https://img.shields.io/static/v1?label=python&message=v3.6.9&color=informational&logo=python" />
   <a href="https://github.com/NESCAU-UFLA/FuzzingTool/blob/master/LICENSE.md">
@@ -9,7 +9,7 @@
   </a>
 </p>
 
-FuzzingTool is a web penetration testing tool, that handles with fuzzing. After the test is completed, all possible vulnerable entries (and the response data) are saved on an output file. For examples, see <a href="#usage-examples">Usage Examples</a>.
+FuzzingTool is a web penetration testing tool, that handles with fuzzing. After the test is completed, all possible vulnerable entries (and the response data) are saved on a report file. For examples, see <a href="#usage-examples">Usage Examples</a>.
 <br/>
 
 ## Disclaimer
@@ -62,7 +62,7 @@ First, download the last release or clone this repository. Give read and write p
 #### Data Fuzzing
 On this example, you set the GET variable 'id' as an entry for the fuzzing test. The parameter values are read from the file 'sqli.txt'.
 ```
-$ ./FuzzingTool.py -u http://mydomainexample.com/post.php?id= -f sqli.txt
+$ ./FuzzingTool.py -u http://mydomainexample.com/post.php?id= -f sqli.txt -o blind_sqli.csv
 ```
 
 On this example, you set the POST variables 'login' and 'passw' as entries for the fuzzing test; and also sets the fixed value 'login' for 'user' variable.
@@ -73,14 +73,13 @@ $ ./FuzzingTool.py -f sqli.txt -u http://mydomainexample.com/controller/user.php
 #### URL Fuzzing
 You can set the payload mode on URL for the fuzzing test. It's based on the variable '$' position.
 
-For path scanning
-(Added suffixes to the payload on this example):
+Example for path scanning (added suffixes to the payload):
 ```
 $ ./FuzzingTool.py -f paths.txt -u http://mydomainexample.com/$ --suffix .php,.html
 ```
-For subdomain scanning:
+Example for subdomain scanning:
 ```
-$ ./FuzzingTool.py -f subdomains.txt -u http://$.mydomainexample.com/
+$ ./FuzzingTool.py -f subdomains.txt -u http://$.mydomainexample.com/ --timeout 4 -V -o subdomains.json
 ```
 
 #### Reading request data
