@@ -182,7 +182,7 @@ class Fuzzer:
                 (firstResponse['Req Time']+firstResponse['Resp Time'])
             )
             if self.__verboseMode:
-                oh.printContent([value for key, value in firstResponse.items()], False)
+                oh.printContent(firstResponse, False)
         self.threadHandle('setup')
         self.threadHandle('start')
 
