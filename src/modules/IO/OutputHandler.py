@@ -131,26 +131,52 @@ class OutputHandler:
 
     def getInitOrEnd(self):
         """Output the initial line of the requests table"""
-        print('  +'+('-'*9)+'+'+('-'*12)+'+'+('-'*32)+'+'+('-'*8)+'+'+('-'*10)+'+'+('-'*12)+'+')
+        print('  +'+('-'*9)+
+              '+'+('-'*32)+
+              '+'+('-'*12)+
+              '+'+('-'*12)+
+              '+'+('-'*6)+
+              '+'+('-'*10)+
+              '+'+('-'*8)+
+              '+'+('-'*7)+
+              '+')
 
     def getHeader(self):
         """Output the header of the requests table"""
         self.getInitOrEnd()
-        self.printContent(['Request','Req Time' , 'Payload', 'Status', 'Length', 'Resp Time'], False)
+        self.printContent({
+            'Request': 'Request',
+            'Payload': 'Payload',
+            'Req Time': 'Req Time',
+            'Resp Time': 'Resp Time',
+            'Status': 'Code',
+            'Length': 'Length',
+            'Words': 'Words',
+            'Lines': 'Lines',
+        }, False)
         self.getInitOrEnd()
 
-    def printContent(self, args: list, vulnValidator: bool):
+    def printContent(self, response: dict, vulnValidator: bool):
         """Output the content of the requests table
 
-        @type args: list
-        @param args: The arguments used in the table content
+        @type response: dict
+        @param response: The response dictionary
         @type vulnValidator: bool
         @param vulnValidator: Case the output is marked as vulnerable
         """
         if (not vulnValidator):
-            print('  | '+'{:<7}'.format(args[0])+' | '+'{:<10}'.format(args[1])+' | '+'{:<30}'.format(self.fixLineToOutput(args[2]))+' | '+'{:<6}'.format(args[3])+' | '+'{:<8}'.format(args[4])+' | '+'{:<10}'.format(args[5])+' |')
+            colorCode = '\033[0m'
         else:
-            print('  | '+u'\u001b[32;1m{:<7}'.format(args[0])+'\033[0m | '+'\u001b[32;1m{:<10}'.format(args[1])+'\033[0m | '+'\u001b[32;1m{:<30}'.format(self.fixLineToOutput(args[2]))+'\033[0m | '+'\u001b[32;1m{:<6}'.format(args[3])+'\033[0m | '+'\u001b[32;1m{:<8}'.format(args[4])+'\033[0m | '+'\u001b[32;1m{:<10}'.format(args[5])+'\033[0m |')
+            colorCode = '\u001b[32;1m'
+        print(f'  | {colorCode}'+'{:<7}'.format(response['Request'])+
+              f'\033[0m | {colorCode}'+'{:<30}'.format(self.fixLineToOutput(response['Payload']))+
+              f'\033[0m | {colorCode}'+'{:<10}'.format(response['Req Time'])+
+              f'\033[0m | {colorCode}'+'{:<10}'.format(response['Resp Time'])+
+              f'\033[0m | {colorCode}'+'{:<4}'.format(response['Status'])+
+              f'\033[0m | {colorCode}'+'{:<8}'.format(response['Length'])+
+              f'\033[0m | {colorCode}'+'{:<6}'.format(response['Words'])+
+              f'\033[0m | {colorCode}'+'{:<5}'.format(response['Lines'])+
+              '\033[0m |')
 
     def fixLineToOutput(self, line: str):
         """Fix the line's size readed by the file
@@ -289,17 +315,19 @@ class OutputHandler:
         self.__helpContent(5, "--proxy IP:PORT", "Define the proxy")
         self.__helpContent(5, "--proxies FILENAME", "Define the file with a list of proxies")
         self.__helpContent(5, "--cookie COOKIE", "Define the HTTP Cookie header value")
+        self.__helpContent(5, "--timeout TIMEOUT", "Define the request timeout (in seconds)")
         self.__helpTitle(3, "More options:")
         self.__helpContent(5, "--delay DELAY", "Define the delay between each request (in seconds)")
         self.__helpContent(5, "-t NUMBEROFTHREADS", "Define the number of threads used in the tests")
-        self.__helpContent(5, "--prefix PREFIX", "Define the prefix used with the payload")
-        self.__helpContent(5, "--suffix SUFFIX", "Define the suffix used with the payload")
+        self.__helpContent(5, "--prefix PREFIX", "Define the prefix(es) used with the payload")
+        self.__helpContent(5, "--suffix SUFFIX", "Define the suffix(es) used with the payload")
+        self.__helpContent(5, "-o REPORT", "Define the report format (accept txt, csv and json)")
         self.__helpTitle(0, "Examples:")
-        self.__helpContent(3, "./FuzzingTool.py -u http://127.0.0.1/post.php?id= -f sqli.txt", '')
+        self.__helpContent(3, "./FuzzingTool.py -u http://127.0.0.1/post.php?id= -f sqli.txt -o fuzzingGet.csv", '')
         self.__helpContent(3, "./FuzzingTool.py -f sqli.txt -u http://127.0.0.1/controller/user.php --data 'login&passw&user=login'", '')
-        self.__helpContent(3, "./FuzzingTool.py -f paths.txt -u http://127.0.0.1/$ --suffix .php", '')
-        self.__helpContent(3, "./FuzzingTool.py -f subdomains.txt -u http://$.domainexample.com", '')
-        self.__helpContent(3, "./FuzzingTool.py -r data.txt -f sqli.txt -V", '')
+        self.__helpContent(3, "./FuzzingTool.py -f paths.txt -u http://127.0.0.1/$ --suffix .php,.html", '')
+        self.__helpContent(3, "./FuzzingTool.py -f subdomains.txt -u http://$.domainexample.com --timeout 5", '')
+        self.__helpContent(3, "./FuzzingTool.py -r data.txt -f sqli.txt -V -o json", '')
         exit("")
 
 outputHandler = OutputHandler.getInstance()

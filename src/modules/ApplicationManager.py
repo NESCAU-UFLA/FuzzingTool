@@ -21,7 +21,7 @@ import time
 
 APP_VERSION = {
     'MAJOR_VERSION': 3,
-    "MINOR_VERSION": 5,
+    "MINOR_VERSION": 6,
     "PATCH": 1
 }
 
@@ -63,12 +63,12 @@ class ApplicationManager:
         @type argv: list
         @param argv: The arguments given in the execution
         """
-        if (len(argv) < 2):
+        if len(argv) < 2:
             oh.print(banner())
             oh.errorBox("Invalid format! Use -h on 2nd parameter to show the help menu.")
-        if (argv[1] == '-h' or argv[1] == '--help'):
+        if argv[1] == '-h' or argv[1] == '--help':
             oh.showHelpMenu()
-        if (argv[1] == '-v' or argv[1] == '--version'):
+        if argv[1] == '-v' or argv[1] == '--version':
             exit("FuzzingTool v"+version())
         oh.print(banner())
         cliParser = CLIParser(argv)
@@ -145,7 +145,7 @@ class ApplicationManager:
             oh.infoBox("Connection status: OK")
             oh.infoBox("Testing redirections ...")
             if self.__requester.hasRedirection():
-                if (not oh.askYesNo("You was redirected to another page. Continue? (y/N): ")):
+                if not oh.askYesNo("You was redirected to another page. Continue? (y/N): "):
                     exit()
             else:
                 oh.infoBox("No redirections")
@@ -184,7 +184,7 @@ class ApplicationManager:
             oh.infoBox(f"Found {len(output)} possible payload(s)")
             oh.getHeader()
             for content in output:
-                oh.printContent([value for key, value in content.items()], True)
+                oh.printContent(content, True)
             oh.getHeader()
             fh.writeOnOutput(output)
         else:

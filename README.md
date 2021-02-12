@@ -51,10 +51,12 @@ First, download the last release or clone this repository. Give read and write p
 | `--proxy` | No | Define the proxy | |
 | `--proxies` | No | Define the file with a list of proxies | |
 | `--cookie` | No | Define the HTTP Cookie header value | |
+| `--timeout` | No | Define the request timeout | None |
 | `--delay` | No | Define the delay between each request | 0 |
 | `-t` | No | Define the number of threads used in the tests | 1 |
 | `--prefix` | No | Define the prefix used with payload |  |
 | `--suffix` | No | Define the suffix used with payload |  |
+| `-o` | No | Define the report format | txt |
 
 ### Usage Examples
 #### Data Fuzzing
@@ -72,9 +74,9 @@ $ ./FuzzingTool.py -f sqli.txt -u http://mydomainexample.com/controller/user.php
 You can set the payload mode on URL for the fuzzing test. It's based on the variable '$' position.
 
 For path scanning
-(Added a suffix to the payload on this example):
+(Added suffixes to the payload on this example):
 ```
-$ ./FuzzingTool.py -f paths.txt -u http://mydomainexample.com/$ --suffix .php
+$ ./FuzzingTool.py -f paths.txt -u http://mydomainexample.com/$ --suffix .php,.html
 ```
 For subdomain scanning:
 ```

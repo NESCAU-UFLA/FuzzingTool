@@ -161,7 +161,6 @@ class CLIParser:
                     self.__getAllowedStatus(status, allowedList, allowedRange)
             else:
                 self.__getAllowedStatus(allowedStatus, allowedList, allowedRange)
-            print(allowedRange)
             allowedStatus = {
                 'List': allowedList,
                 'Range': allowedRange
@@ -202,6 +201,8 @@ class CLIParser:
             else:
                 reportType = report
                 reportName = ''
+            if reportType not in ['txt', 'csv', 'json']:
+                oh.errorBox(f"Unsupported report format for {reportType}! Accepts: txt, csv and json")
             fh.setReport({
                 'Type': reportType,
                 'Name': reportName

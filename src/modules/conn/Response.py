@@ -29,11 +29,13 @@ class Response:
         self.__getResponseHeaders()
         responseDict = {
             'Request': str(self.__requestIndex),
-            'Req Time': float('%.6f'%(self.__requestTimeTaken-self.__elapsedTime)),
             'Payload': self.__payload,
+            'Req Time': float('%.6f'%(self.__requestTimeTaken-self.__elapsedTime)),
+            'Resp Time': self.__elapsedTime,
             'Status': self.__status,
             'Length': self.__length,
-            'Resp Time': self.__elapsedTime,
+            'Words': self.__quantityOfWords,
+            'Lines': self.__quantityOfLines,
         }
         if self.__targetIp:
             responseDict['IP'] = self.__targetIp
@@ -59,8 +61,11 @@ class Response:
     
     def __getResponseHeaders(self):
         """Get the response data"""
+        responseContent = self.__response.content
         self.__length = self.__response.headers.get('Content-Length')
         if (self.__length == None):
-            self.__length = len(self.__response.content)
+            self.__length = len(responseContent)
         self.__elapsedTime = self.__response.elapsed.total_seconds()
         self.__status = self.__response.status_code
+        self.__quantityOfWords = len(responseContent.split())
+        self.__quantityOfLines = responseContent.count(b'\n')

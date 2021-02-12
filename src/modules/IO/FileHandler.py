@@ -110,7 +110,7 @@ class FileHandler:
     def getWordlistContentAndLength(self):
         """Get the wordlist content, into a list, and the number of lines in file
 
-        @returns (wordlist, length): The tuple with the wordlist and the number of lines
+        @returns tuple(list, int): The tuple with the wordlist and the number of lines
         """
         wordlist = []
         length = 0

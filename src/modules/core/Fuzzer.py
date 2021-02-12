@@ -216,10 +216,7 @@ class Fuzzer:
                     probablyVulnerable
                 )
             else:
-                oh.printContent(
-                    [value for key, value in thisResponse.items()],
-                    probablyVulnerable
-                )
+                oh.printContent(thisResponse, probablyVulnerable)
         else:
             oh.progressStatus(
                 str(int((int(thisResponse['Request'])/self.__numLines)*100)),
