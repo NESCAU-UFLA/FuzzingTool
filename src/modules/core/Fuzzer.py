@@ -44,7 +44,7 @@ class Fuzzer:
         self.__numberOfThreads = 1
         self.__output = []
         self.__numLines = 0
-        self.__vulnValidator = None
+        self.__vulnValidator = VulnValidator()
 
     def getRequester(self):
         """The requester getter
@@ -66,6 +66,13 @@ class Fuzzer:
         @returns list: The output content list
         """
         return self.__output
+
+    def getVulnValidator(self):
+        """The vulnerability validator getter
+
+        @returns VulnValidator: A vulnerability validator object
+        """
+        return self.__vulnValidator
 
     def setDelay(self, delay: float):
         """The delay setter
@@ -166,18 +173,16 @@ class Fuzzer:
     def start(self):
         """Starts the fuzzer application"""
         urlFuzzing = self.__requester.isUrlFuzzing()
+        self.__vulnValidator.setUrlFuzzing(urlFuzzing)
         if not urlFuzzing:
             payload = ' '
             firstResponse = self.__requester.request(payload)
-            self.__vulnValidator = VulnValidator(
-                urlFuzzing,
+            self.__vulnValidator.setDefaultComparator(
                 int(firstResponse['Length']),
                 (firstResponse['Req Time']+firstResponse['Resp Time'])
             )
             if self.__verboseMode:
                 oh.printContent([value for key, value in firstResponse.items()], False)
-        else:
-            self.__vulnValidator = VulnValidator(urlFuzzing)
         self.threadHandle('setup')
         self.threadHandle('start')
 

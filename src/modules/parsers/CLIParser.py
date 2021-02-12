@@ -146,6 +146,29 @@ class CLIParser:
             fuzzer.setNumThreads(int(numThreads))
             oh.infoBox(f"Set number of threads: {numThreads} thread(s)")
 
+    def checkAllowedStatus(self, fuzzer: Fuzzer):
+        """Check if the --allowed-status argument is present, and set the alllowed status codes used in the vulnValidator
+
+        @type fuzzer: Fuzzer
+        @param fuzzer: The Fuzzer object
+        """
+        if '--allowed-status' in self.__argv:
+            allowedStatus = self.__argv[self.__argv.index('--allowed-status')+1]
+            allowedList = [200] # Default at least status code 200 is accepted
+            allowedRange = []
+            if ',' in allowedStatus:
+                for status in allowedStatus.split(','):
+                    self.__getAllowedStatus(status, allowedList, allowedRange)
+            else:
+                self.__getAllowedStatus(allowedStatus, allowedList, allowedRange)
+            print(allowedRange)
+            allowedStatus = {
+                'List': allowedList,
+                'Range': allowedRange
+            }
+            fuzzer.getVulnValidator().setAllowedStatus(allowedStatus)
+            oh.infoBox(f"Set the allowed status codes: {str(allowedStatus)}")
+
     def checkPrefixAndSuffix(self, requester: Request):
         """Check if the --prefix argument is present, and set the prefix into request parser
            Check if the --suffix argument is present, and set the suffix into request parser
@@ -255,3 +278,21 @@ class CLIParser:
         else:
             self.__makeDefaultParam(defaultParam, param)
         return defaultParam
+    
+    def __getAllowedStatus(self, status: str, allowedList: list, allowedRange: list):
+        """Get the allowed status code list and range
+
+        @type status: str
+        @param status: The status cod given in the terminal
+        @type allowedList: list
+        @param allowedList: The allowed status codes list
+        @type allowedRange: list
+        @param allowedRange: The range of allowed status codes
+        """
+        if '-' not in status:
+            allowedList.append(int(status))
+        else:
+            codeLeft, codeRight = (int(code) for code in status.split('-', 1))
+            if codeRight < codeLeft:
+                codeLeft, codeRight = codeRight, codeLeft
+            allowedRange[:] = [codeLeft, codeRight]
