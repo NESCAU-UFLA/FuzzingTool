@@ -132,7 +132,7 @@ class ApplicationManager:
             try:
                 self.__requester.testConnection()
             except RequestException as e:
-                if not oh.askYesNo(f"Connection to {str(e)} failed. Continue anyway? "):
+                if not oh.askYesNo(f"Connection to {str(e)} failed. Continue anyway? (y/N) "):
                     exit()
             else:
                 oh.infoBox("Connection status: OK")

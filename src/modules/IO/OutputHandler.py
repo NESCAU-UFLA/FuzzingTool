@@ -290,7 +290,7 @@ class OutputHandler:
         @type desc: str
         @param desc: The description of the command
         """
-        print(' '*numSpaces+("{:<"+str(26-numSpaces)+"}").format(command)+' '+desc)
+        print(' '*numSpaces+("{:<"+str(30-numSpaces)+"}").format(command)+' '+desc)
     
     def print(self, msg: str):
         """Print the message
@@ -327,7 +327,7 @@ class OutputHandler:
         self.__helpContent(3, "./FuzzingTool.py -u http://127.0.0.1/post.php?id= -f sqli.txt -o fuzzingGet.csv", '')
         self.__helpContent(3, "./FuzzingTool.py -f sqli.txt -u http://127.0.0.1/controller/user.php --data 'login&passw&user=login'", '')
         self.__helpContent(3, "./FuzzingTool.py -f paths.txt -u http://127.0.0.1/$ --suffix .php,.html", '')
-        self.__helpContent(3, "./FuzzingTool.py -f subdomains.txt -u http://$.domainexample.com --timeout 5 --allowed-status 302,303,500-600", '')
+        self.__helpContent(3, "./FuzzingTool.py -f subdomains.txt -u http://$.domainexample.com --timeout 5 --allowed-status 200,302,303,500-600", '')
         self.__helpContent(3, "./FuzzingTool.py -r data.txt -f sqli.txt -V -o json", '')
         exit("")
 

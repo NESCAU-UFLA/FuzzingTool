@@ -57,7 +57,7 @@ First, download the last release or clone this repository. Give read and write p
 | `--prefix` | No | Define the prefix used with payload |  |
 | `--suffix` | No | Define the suffix used with payload |  |
 | `-o` | No | Define the report format | txt |
-| `--allowed-status` | No | Define the allowed status codes for responses to be saved on report | Only 200 |
+| `--allowed-status` | No | Define the allowed status codes for responses to be saved on report | 200 |
 
 ### Usage Examples
 #### Data Fuzzing

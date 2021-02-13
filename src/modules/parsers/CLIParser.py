@@ -154,13 +154,16 @@ class CLIParser:
         """
         if '--allowed-status' in self.__argv:
             allowedStatus = self.__argv[self.__argv.index('--allowed-status')+1]
-            allowedList = [200] # Default at least status code 200 is accepted
+            allowedList = []
             allowedRange = []
             if ',' in allowedStatus:
                 for status in allowedStatus.split(','):
                     self.__getAllowedStatus(status, allowedList, allowedRange)
             else:
                 self.__getAllowedStatus(allowedStatus, allowedList, allowedRange)
+            if 200 not in allowedList:
+                if oh.askYesNo("Status code 200 (OK) wasn't included. Do you want to include it to the allowed status codes? (y/N) "):
+                    allowedList.append(200)
             allowedStatus = {
                 'List': allowedList,
                 'Range': allowedRange
