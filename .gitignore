@@ -1,3 +1,4 @@
 src/**/__pycache__/
 src/input/*
-src/output
+src/reports
+src/logs

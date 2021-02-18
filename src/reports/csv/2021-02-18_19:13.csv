@@ -1,5 +1,0 @@
-Request,Payload,Req Time,Resp Time,Status,Length,Words,Lines
-3411,phpinfo.php,0.020549,0.062843,200,24431,5917,1170
-3812,phpmyadmin/,0.013605,0.76852,200,3091,359,25
-3813,phpmyadmin/index.php,0.007201,0.767652,200,3091,359,25
-3871,server-status/,0.008182,0.006946,200,1381,284,93
