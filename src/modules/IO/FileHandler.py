@@ -42,12 +42,18 @@ class FileHandler:
         else:
             FileHandler.__instance = self
         self.__wordlistFile = None
-        self.__outputFile = None
+        self.__reportFile = None
+        self.__logFile = None
         self.__report = {
             'Type': 'txt',
             'Name': ''
         }
     
+    def __del__(self):
+        """Class destructor"""
+        if self.__logFile: # If the logFile is open, closes the file
+            self.__close(self.__logFile)
+
     def readData(self, dataFileName: str):
         '''Reads the default data of the requests.
 
@@ -121,25 +127,47 @@ class FileHandler:
         self.__close(self.__wordlistFile)
         return (wordlist, length)
 
-    def writeOnOutput(self, outputContent: list):
+    def openLog(self):
+        """Open the log file to save the current logs"""
+        now = datetime.now()
+        logFileName = 'log-'+now.strftime("%Y-%m-%d_%H:%M")+'.txt'
+        try:
+            self.__logFile = open(f'./logs/{logFileName}', 'w')
+        except FileNotFoundError:
+            os.system(f'mkdir ./logs')
+            self.__logFile = open(f'./logs/{logFileName}', 'w')
+        finally:
+            oh.infoBox(f'The logs will be saved on \'./logs/{logFileName}\'')
+
+    def writeLog(self, exception: str):
+        """Write the exception on the log file
+
+        @type exception: str
+        @param exception: The exception to be saved on the log file
+        """
+        now = datetime.now()
+        time = now.strftime("%H:%M:%S")
+        self.__logFile.write(time+' | '+exception+'\n')
+
+    def writeReport(self, reportContent: list):
         """Write the vulnerable input and response content into a report
 
         @param type: list
-        @param outputContent: The list with probably vulnerable content
+        @param reportContent: The list with probably vulnerable content
         """
-        if outputContent:
-            self.__openOutput()
+        if reportContent:
+            self.__openReport()
             if self.__report['Type'] == 'txt':
-                self.__txtWriter(outputContent)
+                self.__txtWriter(reportContent)
             elif self.__report['Type'] == 'csv':
-                self.__csvWriter(outputContent)
+                self.__csvWriter(reportContent)
             elif self.__report['Type'] == 'json':
-                self.__jsonWriter(outputContent)
-            self.__close(self.__outputFile)
+                self.__jsonWriter(reportContent)
+            self.__close(self.__reportFile)
             oh.infoBox('Results saved')
 
-    def __openOutput(self):
-        """Opens the output file 
+    def __openReport(self):
+        """Opens the report file 
            for store the probably vulnerable response data
         """
         reportType = self.__report['Type']
@@ -148,14 +176,14 @@ class FileHandler:
             now = datetime.now()
             reportName = now.strftime("%Y-%m-%d_%H:%M")
         try:
-            self.__outputFile = open(f'./output/{reportType}/{reportName}.{reportType}', 'w')
+            self.__reportFile = open(f'./reports/{reportType}/{reportName}.{reportType}', 'w')
         except FileNotFoundError:
-            if not os.path.exists('./output'):
-                os.system('mkdir ./output')
-            os.system(f'mkdir ./output/{reportType}')
-            self.__outputFile = open(f'./output/{reportType}/{reportName}.{reportType}', 'w')
+            if not os.path.exists('./reports'):
+                os.system('mkdir ./reports')
+            os.system(f'mkdir ./reports/{reportType}')
+            self.__reportFile = open(f'./reports/{reportType}/{reportName}.{reportType}', 'w')
         finally:
-            oh.infoBox(f'Saving results on \'./output/{reportType}/{reportName}.{reportType}\' ...')
+            oh.infoBox(f'Saving results on \'./reports/{reportType}/{reportName}.{reportType}\' ...')
 
     def __close(self, file: object):
         """Closes the file
@@ -165,37 +193,37 @@ class FileHandler:
         """
         file.close()
 
-    def __txtWriter(self, outputContent: list):
+    def __txtWriter(self, reportContent: list):
         """The txt report writer
 
         @param type: list
-        @param outputContent: The list with probably vulnerable content
+        @param reportContent: The list with probably vulnerable content
         """
-        for content in outputContent:
+        for content in reportContent:
             for key, value in content.items():
-                self.__outputFile.write(key+': '+str(value)+'\n')
-            self.__outputFile.write('\n')
+                self.__reportFile.write(key+': '+str(value)+'\n')
+            self.__reportFile.write('\n')
     
-    def __csvWriter(self, outputContent: list):
+    def __csvWriter(self, reportContent: list):
         """The csv report writer
 
         @param type: list
-        @param outputContent: The list with probably vulnerable content
+        @param reportContent: The list with probably vulnerable content
         """
         writer = csv.DictWriter(
-            self.__outputFile,
-            fieldnames=[key for key, value in outputContent[0].items()]
+            self.__reportFile,
+            fieldnames=[key for key, value in reportContent[0].items()]
         )
         writer.writeheader()
-        for content in outputContent:
+        for content in reportContent:
             writer.writerow(content)
 
-    def __jsonWriter(self, outputContent: list):
+    def __jsonWriter(self, reportContent: list):
         """The json report writer
 
         @param type: list
-        @param outputContent: The list with probably vulnerable content
+        @param reportContent: The list with probably vulnerable content
         """
-        json.dump(outputContent, self.__outputFile)
+        json.dump(reportContent, self.__reportFile)
 
 fileHandler = FileHandler.getInstance()

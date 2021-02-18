@@ -102,14 +102,20 @@ class OutputHandler:
         """
         print(self.__getTime()+self.__getNotWorked(msg))
 
-    def askYesNo(self, msg: str):
+    def askYesNo(self, askType: str, msg: str):
         """Output an warning message, and ask for the user if wants to continue
 
+        @type askType: str
+        @param askType: The type of the asker
         @type msg: str
         @param msg: The message
         @returns bool: The answer based on the user's input
         """
-        print(self.__getTime()+self.__getWarning(msg), end='')
+        if askType == 'warning':
+            getType = self.__getWarning
+        else:
+            getType = self.__getInfo
+        print(self.__getTime()+getType(msg)+' (y/N) ', end='')
         action = input()
         if (action == 'y' or action == 'Y'):
             return True

@@ -55,7 +55,7 @@ class VulnValidator:
         """
         self.__allowedStatus = allowedStatus
 
-    def isVulnerable(self, thisResponse: dict):
+    def scan(self, thisResponse: dict):
         """Check if the request content has some predefined characteristics based on a payload, it'll be considered as vulnerable
         
         @type thisResponse: dict

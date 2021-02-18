@@ -1,0 +1,110 @@
+Request: 357
+Payload: http://mail3.ufla.br/
+Req Time: 0.002283
+Resp Time: 0.298911
+Status: 200
+Length: 612
+Words: 69
+Lines: 25
+IP: 200.131.250.2
+
+Request: 720
+Payload: http://smtp3.ufla.br/
+Req Time: 0.003261
+Resp Time: 0.387729
+Status: 200
+Length: 612
+Words: 69
+Lines: 25
+IP: 200.131.250.2
+
+Request: 865
+Payload: http://email.ufla.br/
+Req Time: 0.391144
+Resp Time: 0.246153
+Status: 200
+Length: 1273
+Words: 83
+Lines: 31
+IP: 172.217.173.115
+
+Request: 1296
+Payload: http://www.ufla.br/
+Req Time: 0.297611
+Resp Time: 0.737395
+Status: 200
+Length: 10472
+Words: 3066
+Lines: 1056
+IP: 200.131.250.18
+
+Request: 1297
+Payload: http://web.ufla.br/
+Req Time: 0.70541
+Resp Time: 0.264744
+Status: 200
+Length: 62812
+Words: 3514
+Lines: 1505
+IP: 172.217.173.115
+
+Request: 1298
+Payload: http://sites.ufla.br/
+Req Time: 0.749752
+Resp Time: 0.246947
+Status: 200
+Length: 1685
+Words: 83
+Lines: 31
+IP: 172.217.173.115
+
+Request: 1301
+Payload: http://ciencia.ufla.br/
+Req Time: 0.005875
+Resp Time: 1.37066
+Status: 200
+Length: 6385
+Words: 1864
+Lines: 644
+IP: 200.131.250.40
+
+Request: 1304
+Payload: http://site.ufla.br/
+Req Time: 0.481227
+Resp Time: 0.912373
+Status: 200
+Length: 10471
+Words: 3066
+Lines: 1056
+IP: 200.131.250.18
+
+Request: 1307
+Payload: http://ws.ufla.br/
+Req Time: 0.319952
+Resp Time: 1.804844
+Status: 200
+Length: 146
+Words: 25
+Lines: 4
+IP: 200.131.250.140
+
+Request: 1311
+Payload: http://webmail.ufla.br/
+Req Time: 1.318622
+Resp Time: 1.563304
+Status: 200
+Length: 1312
+Words: 287
+Lines: 40
+IP: 200.131.250.2
+
+Request: 1312
+Payload: http://vote.ufla.br/
+Req Time: 1.328733
+Resp Time: 1.714762
+Status: 200
+Length: 4651
+Words: 338
+Lines: 149
+IP: 200.131.250.200
+

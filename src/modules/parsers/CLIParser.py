@@ -11,6 +11,8 @@
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
 from ..core.Fuzzer import Fuzzer
+from ..core.Payloader import Payloader
+from ..core.VulnValidator import VulnValidator
 from ..conn.Request import Request
 from ..IO.OutputHandler import outputHandler as oh
 from ..IO.FileHandler import fileHandler as fh
@@ -112,8 +114,8 @@ class CLIParser:
         """
         if '--timeout' in self.__argv:
             timeout = self.__argv[self.__argv.index('--timeout')+1]
-            oh.infoBox(f"Set request timeout: {timeout} seconds")
             requester.setTimeout(int(timeout))
+            oh.infoBox(f"Set request timeout: {timeout} seconds")
 
     def checkDelay(self, fuzzer: Fuzzer):
         """Check if the --delay argument is present, and set the value into the fuzzer
@@ -146,10 +148,10 @@ class CLIParser:
             fuzzer.setNumThreads(int(numThreads))
             oh.infoBox(f"Set number of threads: {numThreads} thread(s)")
 
-    def checkAllowedStatus(self, fuzzer: Fuzzer):
+    def checkAllowedStatus(self, vulnValidator: VulnValidator):
         """Check if the --allowed-status argument is present, and set the alllowed status codes used in the vulnValidator
 
-        @type fuzzer: Fuzzer
+        @type vulnValidator: VulnValidator
         @param fuzzer: The Fuzzer object
         """
         if '--allowed-status' in self.__argv:
@@ -162,21 +164,21 @@ class CLIParser:
             else:
                 self.__getAllowedStatus(allowedStatus, allowedList, allowedRange)
             if 200 not in allowedList:
-                if oh.askYesNo("Status code 200 (OK) wasn't included. Do you want to include it to the allowed status codes? (y/N) "):
+                if oh.askYesNo('warning', "Status code 200 (OK) wasn't included. Do you want to include it to the allowed status codes?"):
                     allowedList.append(200)
             allowedStatus = {
                 'List': allowedList,
                 'Range': allowedRange
             }
-            fuzzer.getVulnValidator().setAllowedStatus(allowedStatus)
+            vulnValidator.setAllowedStatus(allowedStatus)
             oh.infoBox(f"Set the allowed status codes: {str(allowedStatus)}")
 
-    def checkPrefixAndSuffix(self, requester: Request):
+    def checkPrefixAndSuffix(self, payloader: Payloader):
         """Check if the --prefix argument is present, and set the prefix into request parser
            Check if the --suffix argument is present, and set the suffix into request parser
         
-        @type requester: Request
-        @param requester: The object responsible to handle the requests
+        @type payloader: Payloader
+        @param requester: The object responsible to handle with the payloads
         """
         if '--prefix' in self.__argv:
             prefix = self.__argv[self.__argv.index('--prefix')+1]
@@ -184,7 +186,7 @@ class CLIParser:
                 prefixes = prefix.split(',')
             else:
                 prefixes = [prefix]
-            requester.getParser().setPrefix(prefixes)
+            payloader.setPrefix(prefixes)
             oh.infoBox(f"Set prefix: {str(prefixes)}")
         if '--suffix' in self.__argv:
             suffix = self.__argv[self.__argv.index('--suffix')+1]
@@ -192,7 +194,7 @@ class CLIParser:
                 suffixes = suffix.split(',')
             else:
                 suffixes = [suffix]
-            requester.getParser().setSuffix(suffixes)
+            payloader.setSuffix(suffixes)
             oh.infoBox(f"Set suffix: {str(suffixes)}")
 
     def checkReporter(self):

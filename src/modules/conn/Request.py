@@ -27,6 +27,7 @@ class Request:
     """Class that handle with the requests
     
     Attributes:
+        parser: The request parser
         url: The target URL
         method: The request method
         param: The parameter of the request
@@ -35,7 +36,6 @@ class Request:
         proxyList: The list with valid proxies gived by a file
         timeout: The request timeout before raise a TimeoutException
         requestIndex: The request index
-        parser: The request parser
         subdomainFuzzing: A flag to say if the fuzzing will occur on subdomain
     """
     def __init__(self, url: str, method: str, defaultParam: dict, httpHeader: dict):
@@ -50,7 +50,8 @@ class Request:
         @type httpHeader: dict
         @param httpHeader: The HTTP header of the request
         """
-        self.__url = url
+        self.__parser = RequestParser()
+        self.__url = self.__parser.setupUrl(url)
         self.__method = method
         self.__param = defaultParam
         self.__httpHeader = httpHeader
@@ -59,15 +60,15 @@ class Request:
         self.__timeout = None
         self.__requestIndex = 0
         self.__setupHeader()
-        self.__parser = RequestParser(self.__url, self.__httpHeader, self.__method, self.__param)
-        self.__subdomainFuzzing = self.__parser.checkForSubdomainFuzz()
+        self.__parser.checkForUrlFuzz(self.__url)
+        self.__subdomainFuzzing = self.__parser.checkForSubdomainFuzz(self.__url)
     
     def getUrl(self):
         """The url getter
 
         @returns str: The target URL
         """
-        return self.__url
+        return self.__url['content']
 
     def isUrlFuzzing(self):
         """The URL Fuzzing flag getter
@@ -121,7 +122,7 @@ class Request:
         """
         if '$' in value:
             self.__httpHeader['keysCustom'].append(key)
-            self.__httpHeader['content'][key] = parseHeaderValue(value)
+            self.__httpHeader['content'][key] = self.__parser.parseHeaderValue(value)
         else:
             self.__httpHeader['content'][key] = value
 
@@ -152,11 +153,11 @@ class Request:
     def testConnection(self, proxy: bool = False):
         """Test the connection with the target, and raise an exception if couldn't connect (by status code)"""
         try:
-            target = self.__parser.getTargetFromUrl()
+            target = self.__parser.getTargetFromUrl(self.__url)
             response = requests.get(
                 target,
                 proxies=self.__proxy if proxy else {},
-                headers=self.__parser.getHeader(),
+                headers=self.__parser.getHeader(self.__httpHeader),
                 timeout=self.__timeout if self.__timeout else 10 # Default 10 seconds to make a request
             )
             response.raise_for_status()
@@ -166,7 +167,7 @@ class Request:
     def hasRedirection(self):
         """Test if the connection will have a redirection"""
         self.__parser.setPayload(' ')
-        requestParameters = self.__parser.getRequestParameters()
+        requestParameters = self.__getRequestParameters()
         response = requests.request(
             requestParameters['Method'],
             requestParameters['Url'],
@@ -189,7 +190,7 @@ class Request:
         if self.__proxyList and self.__requestIndex%1000 == 0:
             self.__updateProxy()
         self.__parser.setPayload(payload)
-        requestParameters = self.__parser.getRequestParameters()
+        requestParameters = self.__getRequestParameters()
         targetIp = ''
         try:
             if self.__subdomainFuzzing:
@@ -247,6 +248,19 @@ class Request:
                 return response.getResponseDict()
         finally:
             self.__requestIndex += 1
+
+    def __getRequestParameters(self):
+        """Get the request parameters using in the request fields
+
+        @returns dict: The parameters dict of the request
+        """
+        requestParameters = {
+            'Method': self.__method,
+            'Url': self.__parser.getUrl(self.__url),
+            'Header': self.__parser.getHeader(self.__httpHeader),
+            'Data': self.__parser.getData(self.__param),
+        }
+        return requestParameters
 
     def __setupHeader(self):
         """Setup the HTTP Header"""

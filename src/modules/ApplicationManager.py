@@ -12,6 +12,8 @@
 
 from .parsers.CLIParser import CLIParser
 from .core.Fuzzer import Fuzzer
+from .core.Payloader import Payloader
+from .core.VulnValidator import VulnValidator
 from .conn.Request import Request
 from .conn.RequestException import RequestException
 from .IO.OutputHandler import outputHandler as oh
@@ -87,8 +89,8 @@ class ApplicationManager:
         cliParser.checkDelay(self.__fuzzer)
         cliParser.checkVerboseMode(self.__fuzzer)
         cliParser.checkNumThreads(self.__fuzzer)
-        cliParser.checkAllowedStatus(self.__fuzzer)
-        cliParser.checkPrefixAndSuffix(self.__requester)
+        cliParser.checkAllowedStatus(self.__fuzzer.getVulnValidator())
+        cliParser.checkPrefixAndSuffix(self.__fuzzer.getPayloader())
         cliParser.checkReporter()
         self.prepare()
         self.start()
@@ -98,6 +100,8 @@ class ApplicationManager:
         try:
             self.__checkConnectionAndRedirections()
             self.__checkProxies()
+            if not self.__requester.isSubdomainFuzzing():
+                self.__checkIgnoreErrors()
         except KeyboardInterrupt:
             exit('')
 
@@ -122,6 +126,12 @@ class ApplicationManager:
             self.__showFooter()
             oh.infoBox("Test completed")
 
+    def __checkIgnoreErrors(self):
+        """Check if the user wants to ignore the errors during the tests"""
+        if oh.askYesNo('info', "Do you want to ignore errors during the tests, and save them into a log file?"):
+            self.__fuzzer.setIgnoreErrors(True)
+            fh.openLog()
+
     def __checkConnectionAndRedirections(self):
         """Test the connection and redirection to target"""
         # If we'll not fuzzing the url paths, so
@@ -132,7 +142,7 @@ class ApplicationManager:
             try:
                 self.__requester.testConnection()
             except RequestException as e:
-                if not oh.askYesNo(f"Connection to {str(e)} failed. Continue anyway? (y/N) "):
+                if not oh.askYesNo('warning', f"Connection to {str(e)} failed. Continue anyway?"):
                     exit()
             else:
                 oh.infoBox("Connection status: OK")
@@ -145,7 +155,7 @@ class ApplicationManager:
             oh.infoBox("Connection status: OK")
             oh.infoBox("Testing redirections ...")
             if self.__requester.hasRedirection():
-                if not oh.askYesNo("You was redirected to another page. Continue? (y/N): "):
+                if not oh.askYesNo('warning', "You was redirected to another page. Continue?"):
                     exit()
             else:
                 oh.infoBox("No redirections")
@@ -186,6 +196,6 @@ class ApplicationManager:
             for content in output:
                 oh.printContent(content, True)
             oh.getHeader()
-            fh.writeOnOutput(output)
+            fh.writeReport(output)
         else:
             oh.infoBox("No vulnerable entries was found")

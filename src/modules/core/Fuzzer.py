@@ -11,13 +11,13 @@
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
 from .VulnValidator import VulnValidator
+from .Payloader import Payloader
 from ..conn.Request import Request
 from ..conn.RequestException import RequestException
 from ..IO.OutputHandler import outputHandler as oh
 from ..IO.FileHandler import fileHandler as fh
 
 from threading import Thread, Event, Semaphore
-from queue import Queue
 import time
 
 class Fuzzer:
@@ -31,6 +31,7 @@ class Fuzzer:
         output: The output content to be send to the file
         numLines: The number of payloads in the payload file
         vulnValidator: A vulnerability validator object
+        payloader: The payloader object to handle with the payloads
     """
     def __init__(self, requester: Request):
         """Class constructor
@@ -41,10 +42,12 @@ class Fuzzer:
         self.__requester = requester
         self.__delay = 0
         self.__verboseMode = False
+        self.__ignoreErrors = False
         self.__numberOfThreads = 1
         self.__output = []
         self.__numLines = 0
         self.__vulnValidator = VulnValidator()
+        self.__payloader = Payloader()
 
     def getRequester(self):
         """The requester getter
@@ -74,6 +77,13 @@ class Fuzzer:
         """
         return self.__vulnValidator
 
+    def getPayloader(self):
+        """The payloader getter
+
+        @returns Payloader: The payloader object
+        """
+        return self.__payloader
+
     def setDelay(self, delay: float):
         """The delay setter
 
@@ -89,6 +99,14 @@ class Fuzzer:
         @param verboseMode: The verbose mode flag
         """
         self.__verboseMode = verboseMode
+
+    def setIgnoreErrors(self, ignoreErrors: bool):
+        """The ignoreErrors setter
+
+        @type ignoreErrors: bool
+        @param ignoreErrors: The ignore errors flag
+        """
+        self.__ignoreErrors = ignoreErrors
 
     def setNumThreads(self, numberOfThreads: int):
         """The numberOfThreads setter
@@ -108,15 +126,14 @@ class Fuzzer:
         def run():
             """Run the threads"""
             self.__playerHandler.wait()
-            while self.__running and not self.__payloads.empty():
-                payload = self.__requester.getParser().getAjustedPayload(self.__payloads.get())
+            while self.__running and not self.__payloader.isEmpty():
+                payload = self.__payloader.get()
                 for p in payload:
                     try:
                         self.do(p)
                         time.sleep(self.__delay)
                     except RequestException as e:
                         self.__handleRequestException(e, p)
-                self.__payloads.task_done()
                 if not self.__playerHandler.isSet():
                     self.__numberOfThreads -= 1
                     self.__semaphoreHandler.release()
@@ -147,13 +164,11 @@ class Fuzzer:
             """Handle with threads setup
             
             New Fuzzer Attributes:
-                payloads: The queue that contains all payloads inside the wordlist file
                 threads: The list with the threads used in the application
                 running: A flag to say if the application is running or not
                 playerHandler: The Event object handler - an internal flag manager for the threads
                 semaphoreHandler: The Semaphore object handler - an internal counter manager for the threads
             """
-            self.__payloads = Queue()
             self.__threads = []
             self.__running = True
             for i in range(self.__numberOfThreads):
@@ -161,9 +176,6 @@ class Fuzzer:
             self.__playerHandler = Event()
             self.__semaphoreHandler = Semaphore(0)
             self.__playerHandler.clear() # Not necessary, but force the blocking of the threads
-            wordlist, self.__numLines = fh.getWordlistContentAndLength()
-            for payload in wordlist:
-                self.__payloads.put(payload)
         
         if action == 'setup': return setup()
         elif action == 'start': return start()
@@ -184,10 +196,12 @@ class Fuzzer:
             if self.__verboseMode:
                 oh.printContent(firstResponse, False)
         self.threadHandle('setup')
+        wordlist, self.__numLines = fh.getWordlistContentAndLength()
+        self.__payloader.populatePayloads(wordlist)
         self.threadHandle('start')
 
     def stop(self):
-        """stop the fuzzer application"""
+        """Stop the fuzzer application"""
         self.threadHandle('stop')
         while self.__numberOfThreads > 1:
             pass
@@ -206,7 +220,7 @@ class Fuzzer:
         @param payload: The payload to be used on the request
         """
         thisResponse = self.__requester.request(payload)
-        probablyVulnerable = self.__vulnValidator.isVulnerable(thisResponse)
+        probablyVulnerable = self.__vulnValidator.scan(thisResponse)
         if probablyVulnerable:
             self.__output.append(thisResponse)
         if self.__verboseMode:
@@ -225,19 +239,13 @@ class Fuzzer:
 
     def __handleRequestException(self, e: RequestException, payload: str):
         """Handle with the request exceptions based on their types
-           To Do: Save the payloads that thrown an exception on a list
         
         @type e: RequestException
         @param e: The request exception
         @type payload: str
         @param payload: The payload used in the request
         """
-        if e.type == 'stop':
-            if self.__running:
-                self.__numberOfThreads = 0
-                self.stop()
-                oh.abortBox(str(e))
-        elif e.type == 'continue':
+        if e.type == 'continue':
             if self.__verboseMode:
                 oh.notWorkedBox(str(e))
             else:
@@ -245,3 +253,11 @@ class Fuzzer:
                     str(int((int(self.__requester.getRequestIndex())/self.__numLines)*100)),
                     len(self.__output)
                 )
+        elif e.type == 'stop':
+            if self.__ignoreErrors:
+                fh.writeLog(str(e))
+            else:
+                if self.__running:
+                    self.__numberOfThreads = 0
+                    self.stop()
+                    oh.abortBox(str(e))
