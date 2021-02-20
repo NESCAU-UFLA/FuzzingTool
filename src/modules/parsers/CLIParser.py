@@ -197,6 +197,24 @@ class CLIParser:
             payloader.setSuffix(suffixes)
             oh.infoBox(f"Set suffix: {str(suffixes)}")
 
+    def checkCase(self, payloader: Payloader):
+        """Check if the --upper argument is present, and set the uppercase flag
+           Check if the --lower argument is present, and set the lowercase flag
+           Check if the --capitalize argument is present, and set the capitalize flag
+        
+        @type payloader: Payloader
+        @param requester: The object responsible to handle with the payloads
+        """
+        if '--lower' in self.__argv:
+            payloader.setLowercase(True)
+            oh.infoBox("Set payload case: lowercase")
+        elif '--upper' in self.__argv:
+            payloader.setUppecase(True)
+            oh.infoBox("Set payload case: uppercase")
+        elif '--capitalize' in self.__argv:
+            payloader.setCapitalize(True)
+            oh.infoBox("Set payload case: capitalize")
+
     def checkReporter(self):
         """Check if the -o argument is present, and set the report data (name and type)"""
         if '-o' in self.__argv:

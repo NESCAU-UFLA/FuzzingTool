@@ -33,11 +33,15 @@ class Fuzzer:
         vulnValidator: A vulnerability validator object
         payloader: The payloader object to handle with the payloads
     """
-    def __init__(self, requester: Request):
+    def __init__(self, requester: Request, payloader: Payloader, numLines: int):
         """Class constructor
 
         @type requester: requester
         @param requester: The requester object to deal with the requests
+        @type payloader: Payloader
+        @param payloader: The payloader object to deal with the payload dictionary
+        @type numLines: int
+        @param numLines: The number of payloads in total
         """
         self.__requester = requester
         self.__delay = 0
@@ -45,9 +49,9 @@ class Fuzzer:
         self.__ignoreErrors = False
         self.__numberOfThreads = 1
         self.__output = []
-        self.__numLines = 0
+        self.__numLines = numLines
         self.__vulnValidator = VulnValidator()
-        self.__payloader = Payloader()
+        self.__payloader = payloader
 
     def getRequester(self):
         """The requester getter
@@ -196,8 +200,6 @@ class Fuzzer:
             if self.__verboseMode:
                 oh.printContent(firstResponse, False)
         self.threadHandle('setup')
-        wordlist, self.__numLines = fh.getWordlistContentAndLength()
-        self.__payloader.populatePayloads(wordlist)
         self.threadHandle('start')
 
     def stop(self):

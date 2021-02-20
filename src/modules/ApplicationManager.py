@@ -76,7 +76,13 @@ class ApplicationManager:
         cliParser = CLIParser(argv)
         url, method, requestData, httpHeader = cliParser.getDefaultRequestData()
         cliParser.getWordlistFile()
-        self.__fuzzer = Fuzzer(Request(url, method, requestData, httpHeader))
+        wordlist, numLines = fh.getWordlistContentAndLength()
+        self.__fuzzer = Fuzzer(
+            Request(url, method, requestData, httpHeader),
+            Payloader(wordlist),
+            numLines
+        )
+        del wordlist
         self.__requester = self.__fuzzer.getRequester()
         oh.infoBox(f"Set target: {self.__requester.getUrl()}")
         oh.infoBox(f"Set request method: {method}")
@@ -91,6 +97,7 @@ class ApplicationManager:
         cliParser.checkNumThreads(self.__fuzzer)
         cliParser.checkAllowedStatus(self.__fuzzer.getVulnValidator())
         cliParser.checkPrefixAndSuffix(self.__fuzzer.getPayloader())
+        cliParser.checkCase(self.__fuzzer.getPayloader())
         cliParser.checkReporter()
         self.prepare()
         self.start()
@@ -122,7 +129,7 @@ class ApplicationManager:
                 if not self.__requester.isSubdomainFuzzing():
                     oh.getHeader()
             else:
-                print("")
+                oh.print("")
             self.__showFooter()
             oh.infoBox("Test completed")
 

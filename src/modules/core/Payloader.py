@@ -19,11 +19,23 @@ class Payloader:
         payloads: The queue that contains all payloads inside the wordlist file
         prefix: The prefix used in the payload
         suffix: The suffix used in the payload
+        uppercase: The uppercase payload flag
+        lowercase: The lowercase payload flag
+        capitalize: The capitalize payload flag
     """
-    def __init__(self):
+    def __init__(self, wordlist: list):
+        """Class constructor
+        
+        @type wordlist: list
+        @param wordlist: The wordlist that contains the payloads
+        """
         self.__payloads = Queue()
+        self.__populatePayloads(wordlist)
         self.__prefix = []
         self.__suffix = []
+        self.__uppercase = False
+        self.__lowercase = False
+        self.__capitalize = False
 
     def get(self):
         """The ajusted payload getter
@@ -35,8 +47,21 @@ class Payloader:
             ajustedPayload = [(prefix+payload) for prefix in self.__prefix for payload in ajustedPayload]
         if self.__suffix:
             ajustedPayload = [(payload+suffix) for suffix in self.__suffix for payload in ajustedPayload]
+        if self.__uppercase:
+            ajustedPayload = [payload.upper() for payload in ajustedPayload]
+        elif self.__lowercase:
+            ajustedPayload = [payload.lower() for payload in ajustedPayload]
+        elif self.__capitalize:
+            ajustedPayload = [payload.capitalize() for payload in ajustedPayload]
         return ajustedPayload
     
+    def isEmpty(self):
+        """The payloads empty queue flag getter
+
+        @returns bool: The payloads empty queue flag
+        """
+        return self.__payloads.empty()
+
     def setPrefix(self, prefix: list):
         """The prefix setter
 
@@ -52,8 +77,32 @@ class Payloader:
         @param suffix: The suffix used in the payload
         """
         self.__suffix = suffix
+
+    def setUppecase(self, uppercase: bool):
+        """The uppercase setter
+
+        @type uppercase: bool
+        @param uppercase: The uppercase flag
+        """
+        self.__uppercase = uppercase
     
-    def populatePayloads(self, wordlist: list):
+    def setLowercase(self, lowercase: bool):
+        """The lowercase setter
+
+        @type lowercase: bool
+        @param lowercase: The lowercase flag
+        """
+        self.__lowercase = lowercase
+
+    def setCapitalize(self, capitalize: bool):
+        """The capitalize setter
+
+        @type capitalize: bool
+        @param capitalize: The capitalize flag
+        """
+        self.__capitalize = capitalize
+    
+    def __populatePayloads(self, wordlist: list):
         """Populate the payloads queue with the wordlist content
 
         @type wordlist: list
@@ -61,10 +110,3 @@ class Payloader:
         """
         for payload in wordlist:
             self.__payloads.put(payload)
-    
-    def isEmpty(self):
-        """The payloads empty queue flag getter
-
-        @returns bool: The payloads empty queue flag
-        """
-        return self.__payloads.empty()
