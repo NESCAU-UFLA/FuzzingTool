@@ -12,20 +12,23 @@ if sys.platform.startswith("win"):
 
 setup(
     name = "FuzzingTool",
-    version = "3.6.0",
+    version = "3.6.2",
     author = "Vitor Oriel C N Borges",
     author_email = "vitorwixmix@gmail.com",
     description = ("Software for fuzzing, used on web application pentestings."),
     long_description=read('./README.md'),
+    long_description_content_type='text/markdown',
     license = "MIT",
     keywords = "pentesting-tools python3 fuzzing web-security",
     url = "https://github.com/NESCAU-UFLA/FuzzingTool/",
-    packages=find_packages(where='./src', exclude=['input', 'reports', 'logs']),
+    packages=find_packages(),
+    include_package_data=True,
     install_requires=install_requires,
+    python_requires=">=3.6",
     classifiers=[
-        "Development Status :: 4 - Neta",
+        "Development Status :: 4 - Beta",
         "Natural Language :: English",
-        "License :: MIT License",
+        "License :: OSI Approved :: MIT License",
         "Programming Language :: Python :: 3"
     ],
 )
