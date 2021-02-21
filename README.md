@@ -42,22 +42,26 @@ First, download the last release or clone this repository. Give read and write p
 | Argument | Required | Description | Default |
 | :--- | :---: | :--- | :---: |
 | `-h, --help` | Misc | Show the help menu and exit | |
-| `-V, --verbose` | No | Enable the verbose mode | |
 | `-v, --version` | Misc | Show the current version and exit | |
 | `-r` | Yes/No | Define the file with the request data (including target) | |
+| `--scheme` | No | Define the scheme used in the URL | http |
 | `-u` | Yes/No | Define the target URL | |
-| `-f` | Yes | Define the wordlist file with the payloads | |
 | `--data` | Yes/No | Define the POST data | |
 | `--proxy` | No | Define the proxy | |
 | `--proxies` | No | Define the file with a list of proxies | |
 | `--cookie` | No | Define the HTTP Cookie header value | |
 | `--timeout` | No | Define the request timeout | None |
-| `--delay` | No | Define the delay between each request | 0 |
-| `-t` | No | Define the number of threads used in the tests | 1 |
+| `-f` | Yes | Define the wordlist file with the payloads | |
 | `--prefix` | No | Define the prefix used with payload |  |
 | `--suffix` | No | Define the suffix used with payload |  |
-| `-o` | No | Define the report format | txt |
+| `--upper` | No | Set the uppercase flag for the payloads | |
+| `--lower` | No | Set the lowercase flag for the payloads | |
+| `--capitalize` | No | Set the capitalize flag for the payloads | |
+| `-V, --verbose` | No | Enable the verbose mode | |
+| `--delay` | No | Define the delay between each request | 0 |
+| `-t` | No | Define the number of threads used in the tests | 1 |
 | `--allowed-status` | No | Define the allowed status codes for responses to be saved on report | 200 |
+| `-o` | No | Define the report format | txt |
 
 ### Usage Examples
 #### Data Fuzzing
@@ -83,19 +87,48 @@ Example for subdomain scanning:
 $ ./FuzzingTool.py -f subdomains.txt -u http://$.mydomainexample.com/ --timeout 4 -V -o subdomains.json
 ```
 
-#### Reading request data
+#### Reading raw HTTP request
 On this example, you can read the request content (headers, target, data and method) from a file.
 ```
 $ ./FuzzingTool.py -r data.txt -f sqli.txt -V
 ```
 
-Here we've two examples of request format. The first one is about the Raw data sended to server during the request
+Here we've two examples of request format. The first one is about the raw data sended to server during the request
+```
+POST /controller/user.php HTTP/1.1
+Host: localhost
+User-Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:85.0) Gecko/20100101 Firefox/85.0
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8
+Accept-Language: en-US,en;q=0.5
+Accept-Encoding: gzip, deflate
+Content-Type: application/x-www-form-urlencoded
+Content-Length: 40
+Origin: http://localhost
+Connection: keep-alive
+Referer: http://localhost/index.php
+Cookie: PHPSESSID=agkkekwsukpvurjmfcasaslj61l
+Upgrade-Insecure-Requests: 1
 
-![request-before](https://user-images.githubusercontent.com/43549176/101906085-2ca45600-3b97-11eb-818d-b0170bb27397.png)
+User=Login&Login=usr&Pass=usr
+```
 
 This other is a modified version of the Raw, to be readable for the FuzzingTool. Note that the POST data was changed, and removed the Cookie from the HTTP Header (we don't want to send the Cookie as part of the request on this example).
+```
+POST /controller/user.php HTTP/1.1
+Host: localhost
+User-Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:85.0) Gecko/20100101 Firefox/85.0
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8
+Accept-Language: en-US,en;q=0.5
+Accept-Encoding: gzip, deflate
+Content-Type: application/x-www-form-urlencoded
+Content-Length: 40
+Origin: http://localhost
+Connection: keep-alive
+Referer: http://localhost/index.php
+Upgrade-Insecure-Requests: 1
 
-![request-after](https://user-images.githubusercontent.com/43549176/101906180-53628c80-3b97-11eb-83c3-631115fc420e.png)
+User=Login&Login&Pass
+```
 
 ## Versioning
 We use <a target="_blank" href="https://semver.org/">SemVer</a> for versioning. For the versions available, see the <a target="_blank" href="https://github.com/NESCAU-UFLA/FuzzingTool/releases">tags on this repository</a>.

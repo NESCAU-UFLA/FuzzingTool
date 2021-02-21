@@ -16,6 +16,7 @@ class VulnValidator:
     Attributes:
         urlFuzzing: The URL Fuzzing flag
         defaultComparator: The dictionary with the default entries to be compared with the current request
+        allowedStatus: The dictionary with the allowed status codes (and range)
     """
     def __init__(self):
         """Class constructor"""
