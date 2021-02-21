@@ -39,25 +39,30 @@ class CLIParser:
         except ValueError:
             oh.errorBox("An URL is needed to make the fuzzing.")
 
-    def getDefaultRequestData(self):
-        '''Get the default data of the requests
+    def getDefaultRequest(self):
+        '''Get the raw http of the requests
 
-        @returns tuple(str, str, dict, dict): The default data of the requests
+        @returns tuple(str, str, dict, dict): The default parameters of the requests
         '''
         if '-r' in self.__argv:
-            headerList = deque(fh.readData(self.__argv[self.__argv.index('-r')+1]))
+            headerList = deque(fh.readRaw(self.__argv[self.__argv.index('-r')+1]))
             method, path, httpVer = headerList.popleft().split(' ')
             httpHeader = self.__getHeader(headerList)
             param = ''
             if method == 'GET' and '?' in path:
                 path, param = path.split('?', 1)
-            url = 'http://'+httpHeader['Host']+path
+            # Check if a scheme is specified, otherwise set http as default
+            if '--scheme' in self.__argv:
+                scheme = self.__argv[self.__argv.index('--scheme')+1]
+            else:
+                scheme = 'http'
+            url = f"{scheme}://{httpHeader['Host']}{path}"
             if method == 'POST' and len(headerList) > 0:
                 param = headerList.popleft()
         else:
             url, method, param = self.__getMethodAndArgs(self.getUrl())
             httpHeader = {}
-        requestData = self.__getRequestParams(param) if param != '' else {}
+        requestData = self.__getRequestData(param) if param != '' else {}
         return (url, method, requestData, httpHeader)
 
     def getWordlistFile(self):
@@ -215,8 +220,10 @@ class CLIParser:
             payloader.setCapitalize(True)
             oh.infoBox("Set payload case: capitalize")
 
-    def checkReporter(self):
+    def checkReporter(self, requester: Request):
         """Check if the -o argument is present, and set the report data (name and type)"""
+        targetUrl = requester.getParser().getTargetUrl(requester.getUrl())
+        host = requester.getParser().getHost(targetUrl)
         if '-o' in self.__argv:
             report = self.__argv[self.__argv.index('-o')+1]
             if '.' in report:
@@ -226,18 +233,22 @@ class CLIParser:
                 reportName = ''
             if reportType not in ['txt', 'csv', 'json']:
                 oh.errorBox(f"Unsupported report format for {reportType}! Accepts: txt, csv and json")
-            fh.setReport({
-                'Type': reportType,
-                'Name': reportName
-            })
             oh.infoBox(f"Set report: {report}")
+        else:
+            reportType = 'txt'
+            reportName = ''
+        fh.setReport({
+            'Type': reportType,
+            'Name': reportName,
+            'Dir': host
+        })
 
     def __getHeader(self, args: list):
         '''Get the HTTP header
 
         @tyoe args: list
-        @param args: the list with HTTP header
-        @returns dict: the HTTP header parsed into a dict
+        @param args: The list with HTTP header
+        @returns dict: The HTTP header parsed into a dict
         '''
         httpHeader = {}
         i = 0
@@ -287,7 +298,7 @@ class CLIParser:
                 oh.errorBox("You must set at least GET or POST parameters for the fuzzing test.")
         return (url, method, param)
     
-    def __getRequestParams(self, param: str):
+    def __getRequestData(self, param: str):
         """Split all the request parameters into a list of arguments used in the request
 
         @type param: str

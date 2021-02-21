@@ -32,8 +32,9 @@ class FileHandler:
     """
     Attributes:
         wordlistFile: The wordlist file
-        outputFile: The output file
         report: The report format and name dict
+        reportFile: The report file
+        logFile: The log file
     """
     def __init__(self):
         """Class constructor"""
@@ -42,30 +43,31 @@ class FileHandler:
         else:
             FileHandler.__instance = self
         self.__wordlistFile = None
-        self.__reportFile = None
-        self.__logFile = None
         self.__report = {
             'Type': 'txt',
-            'Name': ''
+            'Name': '',
+            'Dir': ''
         }
+        self.__reportFile = None
+        self.__logFile = None
     
     def __del__(self):
         """Class destructor"""
         if self.__logFile: # If the logFile is open, closes the file
             self.__close(self.__logFile)
 
-    def readData(self, dataFileName: str):
-        '''Reads the default data of the requests.
+    def readRaw(self, rawFileName: str):
+        '''Reads the raw HTTP request.
 
-        @type dataFileName: str
-        @param dataFileName: The filename
+        @type rawFileName: str
+        @param rawFileName: The filename
         @returns list: The content into data file
         '''
         try:
-            with open('./input/'+dataFileName, 'r') as dataFile:
+            with open(f'./input/{rawFileName}', 'r') as dataFile:
                 return [data.rstrip('\n') for data in dataFile]
         except FileNotFoundError:
-            oh.errorBox("File '"+dataFileName+"' not found.")
+            oh.errorBox(f"File '{rawFileName}' not found.")
 
     def getProxiesFile(self):
         """The proxiesFile getter
@@ -83,7 +85,7 @@ class FileHandler:
         """
         proxies = []
         try:
-            with open('./input/'+proxiesFileName, 'r') as proxiesFile:
+            with open(f'./input/{proxiesFileName}', 'r') as proxiesFile:
                 for line in proxiesFile:
                     line = line.rstrip("\n")
                     proxies.append({
@@ -91,7 +93,7 @@ class FileHandler:
                         'https': 'https://'+line
                     })
         except FileNotFoundError:
-            oh.errorBox("File '"+proxiesFileName+"' not found.")
+            oh.errorBox(f"File '{proxiesFileName}' not found")
         return proxies
 
     def openWordlist(self, wordlistFileName: str):
@@ -101,9 +103,9 @@ class FileHandler:
         @param wordlistFileName: The name of the wordlist file
         """
         try:
-            self.__wordlistFile = open('./input/'+wordlistFileName, 'r')
+            self.__wordlistFile = open(f'./input/{wordlistFileName}', 'r')
         except FileNotFoundError:
-            oh.errorBox("File '"+wordlistFileName+"' not found. Did you put it in the correct directory?")
+            oh.errorBox(f"File '{wordlistFileName}' not found. Did you put it in the correct directory?")
 
     def setReport(self, report: dict):
         """The report setter
@@ -130,7 +132,7 @@ class FileHandler:
     def openLog(self):
         """Open the log file to save the current logs"""
         now = datetime.now()
-        logFileName = 'log-'+now.strftime("%Y-%m-%d_%H:%M")+'.txt'
+        logFileName = f'log-{now.strftime("%Y-%m-%d_%H:%M")}.log'
         try:
             self.__logFile = open(f'./logs/{logFileName}', 'w')
         except FileNotFoundError:
@@ -147,7 +149,7 @@ class FileHandler:
         """
         now = datetime.now()
         time = now.strftime("%H:%M:%S")
-        self.__logFile.write(time+' | '+exception+'\n')
+        self.__logFile.write(f'{time} | {exception}\n')
 
     def writeReport(self, reportContent: list):
         """Write the vulnerable input and response content into a report
@@ -172,18 +174,19 @@ class FileHandler:
         """
         reportType = self.__report['Type']
         reportName = self.__report['Name']
+        reportDir = self.__report['Dir']
         if not reportName:
             now = datetime.now()
             reportName = now.strftime("%Y-%m-%d_%H:%M")
         try:
-            self.__reportFile = open(f'./reports/{reportType}/{reportName}.{reportType}', 'w')
+            self.__reportFile = open(f'./reports/{reportDir}/{reportName}.{reportType}', 'w')
         except FileNotFoundError:
             if not os.path.exists('./reports'):
                 os.system('mkdir ./reports')
-            os.system(f'mkdir ./reports/{reportType}')
-            self.__reportFile = open(f'./reports/{reportType}/{reportName}.{reportType}', 'w')
+            os.system(f'mkdir ./reports/{reportDir}')
+            self.__reportFile = open(f'./reports/{reportDir}/{reportName}.{reportType}', 'w')
         finally:
-            oh.infoBox(f'Saving results on \'./reports/{reportType}/{reportName}.{reportType}\' ...')
+            oh.infoBox(f'Saving results on \'./reports/{reportDir}/{reportName}.{reportType}\' ...')
 
     def __close(self, file: object):
         """Closes the file
@@ -201,7 +204,7 @@ class FileHandler:
         """
         for content in reportContent:
             for key, value in content.items():
-                self.__reportFile.write(key+': '+str(value)+'\n')
+                self.__reportFile.write(f'{key}: {str(value)}\n')
             self.__reportFile.write('\n')
     
     def __csvWriter(self, reportContent: list):

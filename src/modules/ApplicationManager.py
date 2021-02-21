@@ -74,7 +74,7 @@ class ApplicationManager:
             exit("FuzzingTool v"+version())
         oh.print(banner())
         cliParser = CLIParser(argv)
-        url, method, requestData, httpHeader = cliParser.getDefaultRequestData()
+        url, method, requestData, httpHeader = cliParser.getDefaultRequest()
         cliParser.getWordlistFile()
         wordlist, numLines = fh.getWordlistContentAndLength()
         self.__fuzzer = Fuzzer(
@@ -98,7 +98,7 @@ class ApplicationManager:
         cliParser.checkAllowedStatus(self.__fuzzer.getVulnValidator())
         cliParser.checkPrefixAndSuffix(self.__fuzzer.getPayloader())
         cliParser.checkCase(self.__fuzzer.getPayloader())
-        cliParser.checkReporter()
+        cliParser.checkReporter(self.__requester)
         self.prepare()
         self.start()
 
@@ -132,12 +132,6 @@ class ApplicationManager:
                 oh.print("")
             self.__showFooter()
             oh.infoBox("Test completed")
-
-    def __checkIgnoreErrors(self):
-        """Check if the user wants to ignore the errors during the tests"""
-        if oh.askYesNo('info', "Do you want to ignore errors during the tests, and save them into a log file?"):
-            self.__fuzzer.setIgnoreErrors(True)
-            fh.openLog()
 
     def __checkConnectionAndRedirections(self):
         """Test the connection and redirection to target"""
@@ -191,6 +185,12 @@ class ApplicationManager:
                     oh.warningBox(f"Proxy {proxy['http']} not worked")
             self.__requester.setProxy({})
             self.__requester.setProxyList(proxyList)
+
+    def __checkIgnoreErrors(self):
+        """Check if the user wants to ignore the errors during the tests"""
+        if oh.askYesNo('info', "Do you want to ignore errors during the tests, and save them into a log file?"):
+            self.__fuzzer.setIgnoreErrors(True)
+            fh.openLog()
 
     def __showFooter(self):
         """Show the footer content of the software, after maked the fuzzing"""

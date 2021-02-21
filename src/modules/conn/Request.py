@@ -153,7 +153,7 @@ class Request:
     def testConnection(self, proxy: bool = False):
         """Test the connection with the target, and raise an exception if couldn't connect (by status code)"""
         try:
-            target = self.__parser.getTargetFromUrl(self.__url)
+            target = self.__parser.getTargetUrl(self.__url['content'])
             response = requests.get(
                 target,
                 proxies=self.__proxy if proxy else {},
@@ -195,7 +195,7 @@ class Request:
         try:
             if self.__subdomainFuzzing:
                 try:
-                    hostname = self.__parser.getPayloadedDomain(requestParameters['Url'])
+                    hostname = self.__parser.getHost(requestParameters['Url'])
                     targetIp = socket.gethostbyname(hostname)
                 except:
                     raise RequestException('continue', f"Can't resolve hostname {hostname}")
@@ -231,10 +231,10 @@ class Request:
             except (
                 requests.exceptions.ConnectionError,
                 requests.exceptions.RequestException
-            ) as e:
+            ):
                 raise RequestException(
                     'stop' if not self.__subdomainFuzzing else 'continue',
-                    f"Failed to establish a new connection to {requestParameters['Url']}, raised by {type(e).__name__}"
+                    f"Failed to establish a connection to {requestParameters['Url']}"
                 )
             except UnicodeError:
                 raise RequestException('continue', f"Invalid hostname {hostname} for HTTP request")

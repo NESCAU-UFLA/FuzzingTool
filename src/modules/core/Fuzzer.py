@@ -29,19 +29,19 @@ class Fuzzer:
         verboseMode: The verbose mode flag
         numberOfThreads: The number of threads used in the application
         output: The output content to be send to the file
-        numLines: The number of payloads in the payload file
+        dictSizeof: The number of payloads in the payload file
         vulnValidator: A vulnerability validator object
         payloader: The payloader object to handle with the payloads
     """
-    def __init__(self, requester: Request, payloader: Payloader, numLines: int):
+    def __init__(self, requester: Request, payloader: Payloader, dictSizeof: int):
         """Class constructor
 
         @type requester: requester
         @param requester: The requester object to deal with the requests
         @type payloader: Payloader
         @param payloader: The payloader object to deal with the payload dictionary
-        @type numLines: int
-        @param numLines: The number of payloads in total
+        @type dictSizeof: int
+        @param dictSizeof: The number of payloads in total
         """
         self.__requester = requester
         self.__delay = 0
@@ -49,7 +49,7 @@ class Fuzzer:
         self.__ignoreErrors = False
         self.__numberOfThreads = 1
         self.__output = []
-        self.__numLines = numLines
+        self.__dictSizeof = dictSizeof
         self.__vulnValidator = VulnValidator()
         self.__payloader = payloader
 
@@ -235,7 +235,7 @@ class Fuzzer:
                 oh.printContent(thisResponse, probablyVulnerable)
         else:
             oh.progressStatus(
-                str(int((int(thisResponse['Request'])/self.__numLines)*100)),
+                str(int((int(thisResponse['Request'])/self.__dictSizeof)*100)),
                 len(self.__output)
             )
 
@@ -252,7 +252,7 @@ class Fuzzer:
                 oh.notWorkedBox(str(e))
             else:
                 oh.progressStatus(
-                    str(int((int(self.__requester.getRequestIndex())/self.__numLines)*100)),
+                    str(int((int(self.__requester.getRequestIndex())/self.__dictSizeof)*100)),
                     len(self.__output)
                 )
         elif e.type == 'stop':

@@ -130,10 +130,10 @@ class OutputHandler:
         @type vulnValidator: bool
         @param vulnValidator: Case the output is marked as vulnerable
         """
-        if vulnValidator:
-            self.workedBox(msg)
-        else:
+        if not vulnValidator:
             self.notWorkedBox(msg)
+        else:
+            self.workedBox(msg)
 
     def getInitOrEnd(self):
         """Output the initial line of the requests table"""
@@ -170,7 +170,7 @@ class OutputHandler:
         @type vulnValidator: bool
         @param vulnValidator: Case the output is marked as vulnerable
         """
-        if (not vulnValidator):
+        if not vulnValidator:
             colorCode = '\033[0m'
         else:
             colorCode = '\u001b[32;1m'
@@ -309,24 +309,29 @@ class OutputHandler:
     def showHelpMenu(self):
         """Creates the Help Menu"""
         self.__helpTitle(0, "Parameters:")
-        self.__helpContent(3, "-h, --help", "Show the help menu and exit")
-        self.__helpContent(3, "-V, --verbose", "Enable the verbose mode")
-        self.__helpContent(3, "-v, --version", "Show the current version and exit")
-        self.__helpTitle(3, "Core:")
-        self.__helpContent(5, "-r FILENAME", "Define the request data (including target)")
-        self.__helpContent(5, "-u URL", "Define the target URL")
-        self.__helpContent(5, "-f FILENAME", "Define the wordlist file with the payloads")
+        self.__helpTitle(3, "Misc:")
+        self.__helpContent(5, "-h, --help", "Show the help menu and exit")
+        self.__helpContent(5, "-v, --version", "Show the current version and exit")
         self.__helpTitle(3, "Request options:")
+        self.__helpContent(5, "-r FILENAME", "Define the file with the raw HTTP request (scheme not specified)")
+        self.__helpContent(5, "--scheme SCHEME", "Define the scheme used in the URL (default http)")
+        self.__helpContent(5, "-u URL", "Define the target URL")
         self.__helpContent(5, "--data DATA", "Define the POST data")
         self.__helpContent(5, "--proxy IP:PORT", "Define the proxy")
         self.__helpContent(5, "--proxies FILENAME", "Define the file with a list of proxies")
         self.__helpContent(5, "--cookie COOKIE", "Define the HTTP Cookie header value")
         self.__helpContent(5, "--timeout TIMEOUT", "Define the request timeout (in seconds)")
-        self.__helpTitle(3, "More options:")
-        self.__helpContent(5, "--delay DELAY", "Define the delay between each request (in seconds)")
-        self.__helpContent(5, "-t NUMBEROFTHREADS", "Define the number of threads used in the tests")
+        self.__helpTitle(3, "Dict options:")
+        self.__helpContent(5, "-f FILENAME", "Define the wordlist file with the payloads")
         self.__helpContent(5, "--prefix PREFIX", "Define the prefix(es) used with the payload")
         self.__helpContent(5, "--suffix SUFFIX", "Define the suffix(es) used with the payload")
+        self.__helpContent(5, "--upper", "Set the uppercase flag for the payloads")
+        self.__helpContent(5, "--lower", "Set the lowercase flag for the payloads")
+        self.__helpContent(5, "--capitalize", "Set the capitalize flag for the payloads")
+        self.__helpTitle(3, "More options:")
+        self.__helpContent(5, "-V, --verbose", "Enable the verbose mode")
+        self.__helpContent(5, "--delay DELAY", "Define the delay between each request (in seconds)")
+        self.__helpContent(5, "-t NUMBEROFTHREADS", "Define the number of threads used in the tests")
         self.__helpContent(5, "--allowed-status STATUS", "Define the allowed status codes for responses to be saved on report")
         self.__helpContent(5, "-o REPORT", "Define the report format (accept txt, csv and json)")
         self.__helpTitle(0, "Examples:")

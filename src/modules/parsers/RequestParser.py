@@ -128,8 +128,8 @@ class RequestParser:
         """
         self.__payload = payload
 
-    def getPayloadedDomain(self, url: str):
-        """Get the target host with a payload
+    def getHost(self, url: str):
+        """Get the target host
 
         @type url: str
         @param url: The target URL
@@ -141,14 +141,13 @@ class RequestParser:
         except ValueError:
             return host
 
-    def getTargetFromUrl(self, url: dict):
-        """Gets the host from an URL
+    def getTargetUrl(self, url: str):
+        """Gets the URL without the $ variable
 
-        @type url: dict
-        @param url: The target URL dictionary
+        @type url: str
+        @param url: The target url
         @returns str: The target url
         """
-        url = url['content']
         if self.__urlFuzzing:
             if '$.' in url:
                 return url.replace('$.', '')
