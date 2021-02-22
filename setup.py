@@ -25,7 +25,7 @@ setup(
     include_package_data=True,
     entry_points = {
         'console_scripts': [
-            'FuzzingTool = FuzzingTool:FuzzingTool.main'
+            'FuzzingTool = src:FuzzingTool.main'
         ]
     },
     install_requires=install_requires,
