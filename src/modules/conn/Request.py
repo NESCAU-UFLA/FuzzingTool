@@ -18,6 +18,7 @@ from ..IO.FileHandler import fileHandler as fh
 
 import time
 import socket
+import urllib3.exceptions
 try:
     import requests
 except:
@@ -236,7 +237,10 @@ class Request:
                     'stop' if not self.__subdomainFuzzing else 'continue',
                     f"Failed to establish a connection to {requestParameters['Url']}"
                 )
-            except UnicodeError:
+            except (
+                UnicodeError,
+                urllib3.exceptions.LocationParseError
+            ) as e:
                 raise RequestException('continue', f"Invalid hostname {hostname} for HTTP request")
             else:
                 response.setRequestData(

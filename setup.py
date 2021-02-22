@@ -12,7 +12,7 @@ if sys.platform.startswith("win"):
 
 setup(
     name = "FuzzingTool",
-    version = "3.6.2",
+    version = "3.7.0",
     author = "Vitor Oriel C N Borges",
     author_email = "vitorwixmix@gmail.com",
     description = ("Software for fuzzing, used on web application pentestings."),
@@ -23,6 +23,11 @@ setup(
     url = "https://github.com/NESCAU-UFLA/FuzzingTool/",
     packages=find_packages(),
     include_package_data=True,
+    entry_points = {
+        'console_scripts': [
+            'FuzzingTool = FuzzingTool:FuzzingTool.main'
+        ]
+    },
     install_requires=install_requires,
     python_requires=">=3.6",
     classifiers=[

@@ -16,6 +16,7 @@ import os
 import csv
 import json
 from datetime import datetime
+from pathlib import Path
 
 class FileHandler:
     """Class that handle with the files
@@ -42,6 +43,7 @@ class FileHandler:
             raise Exception("This class is a singleton!")
         else:
             FileHandler.__instance = self
+        self.__homePath = str(Path.home())
         self.__wordlistFile = None
         self.__report = {
             'Type': 'txt',
@@ -64,7 +66,7 @@ class FileHandler:
         @returns list: The content into data file
         '''
         try:
-            with open(f'./input/{rawFileName}', 'r') as dataFile:
+            with open(f'{self.__homePath}/{rawFileName}', 'r') as dataFile:
                 return [data.rstrip('\n') for data in dataFile]
         except FileNotFoundError:
             oh.errorBox(f"File '{rawFileName}' not found.")
@@ -85,7 +87,7 @@ class FileHandler:
         """
         proxies = []
         try:
-            with open(f'./input/{proxiesFileName}', 'r') as proxiesFile:
+            with open(f'{self.__homePath}/{proxiesFileName}', 'r') as proxiesFile:
                 for line in proxiesFile:
                     line = line.rstrip("\n")
                     proxies.append({
@@ -103,7 +105,7 @@ class FileHandler:
         @param wordlistFileName: The name of the wordlist file
         """
         try:
-            self.__wordlistFile = open(f'./input/{wordlistFileName}', 'r')
+            self.__wordlistFile = open(f'{self.__homePath}/{wordlistFileName}', 'r')
         except FileNotFoundError:
             oh.errorBox(f"File '{wordlistFileName}' not found. Did you put it in the correct directory?")
 
@@ -134,12 +136,12 @@ class FileHandler:
         now = datetime.now()
         logFileName = f'log-{now.strftime("%Y-%m-%d_%H:%M")}.log'
         try:
-            self.__logFile = open(f'./logs/{logFileName}', 'w')
+            self.__logFile = open(f'{self.__homePath}/.FuzzingTool/logs/{logFileName}', 'w')
         except FileNotFoundError:
-            os.system(f'mkdir ./logs')
-            self.__logFile = open(f'./logs/{logFileName}', 'w')
+            Path(f'{self.__homePath}/.FuzzingTool/logs').mkdir(parents=True, exist_ok=True)
+            self.__logFile = open(f'{self.__homePath}/.FuzzingTool/logs/{logFileName}', 'w')
         finally:
-            oh.infoBox(f'The logs will be saved on \'./logs/{logFileName}\'')
+            oh.infoBox(f'The logs will be saved on \'.FuzzingTool/logs/{logFileName}\'')
 
     def writeLog(self, exception: str):
         """Write the exception on the log file
@@ -179,14 +181,12 @@ class FileHandler:
             now = datetime.now()
             reportName = now.strftime("%Y-%m-%d_%H:%M")
         try:
-            self.__reportFile = open(f'./reports/{reportDir}/{reportName}.{reportType}', 'w')
+            self.__reportFile = open(f'{self.__homePath}/.FuzzingTool/reports/{reportDir}/{reportName}.{reportType}', 'w')
         except FileNotFoundError:
-            if not os.path.exists('./reports'):
-                os.system('mkdir ./reports')
-            os.system(f'mkdir ./reports/{reportDir}')
-            self.__reportFile = open(f'./reports/{reportDir}/{reportName}.{reportType}', 'w')
+            Path(f'{self.__homePath}/.FuzzingTool/reports/{reportDir}').mkdir(parents=True, exist_ok=True)
+            self.__reportFile = open(f'{self.__homePath}/.FuzzingTool/reports/{reportDir}/{reportName}.{reportType}', 'w')
         finally:
-            oh.infoBox(f'Saving results on \'./reports/{reportDir}/{reportName}.{reportType}\' ...')
+            oh.infoBox(f'Saving results on \'{self.__homePath}/.FuzzingTool/reports/{reportDir}/{reportName}.{reportType}\' ...')
 
     def __close(self, file: object):
         """Closes the file

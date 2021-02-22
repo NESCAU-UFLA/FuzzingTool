@@ -2,7 +2,7 @@
 
 ## FuzzingTool
 # 
-# Version: 3.6.0
+# Version: 3.7.0
 # Authors:
 #    Vitor Oriel C N Borges <https://github.com/VitorOriel>
 # License: MIT (LICENSE.md)
@@ -17,5 +17,8 @@ from modules.ApplicationManager import ApplicationManager
 
 import sys
 
-if __name__ == "__main__":
+def main():
     ApplicationManager().main(sys.argv)
+
+if __name__ == "__main__":
+    main()
