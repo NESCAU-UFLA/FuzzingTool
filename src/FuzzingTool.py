@@ -2,7 +2,7 @@
 
 ## FuzzingTool
 # 
-# Version: 3.7.0
+# Version: 3.7.1
 # Authors:
 #    Vitor Oriel C N Borges <https://github.com/VitorOriel>
 # License: MIT (LICENSE.md)
@@ -13,10 +13,15 @@
 #
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
-from modules.ApplicationManager import ApplicationManager
+# Pip (import) fix
+try:
+    from .modules.ApplicationManager import ApplicationManager
+except:
+    from modules.ApplicationManager import ApplicationManager
 
 import sys
 
+# Main function to be runnable with pip
 def main():
     ApplicationManager().main(sys.argv)
 

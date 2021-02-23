@@ -58,18 +58,18 @@ class FileHandler:
         if self.__logFile: # If the logFile is open, closes the file
             self.__close(self.__logFile)
 
-    def readRaw(self, rawFileName: str):
+    def readRaw(self, rawFile: str):
         '''Reads the raw HTTP request.
 
-        @type rawFileName: str
-        @param rawFileName: The filename
+        @type rawFile: str
+        @param rawFile: The file path and name
         @returns list: The content into data file
         '''
         try:
-            with open(f'{self.__homePath}/{rawFileName}', 'r') as dataFile:
+            with open(f'{rawFile}', 'r') as dataFile:
                 return [data.rstrip('\n') for data in dataFile]
         except FileNotFoundError:
-            oh.errorBox(f"File '{rawFileName}' not found.")
+            oh.errorBox(f"File '{rawFile}' not found.")
 
     def getProxiesFile(self):
         """The proxiesFile getter
@@ -78,16 +78,16 @@ class FileHandler:
         """
         return self.__proxiesFile
 
-    def readProxies(self, proxiesFileName: str):
+    def readProxies(self, proxiesFile: str):
         """Open the proxies file, and read the proxies
         
-        @type proxiesFileName: str
-        @param proxiesFileName: The name of the proxies file
+        @type proxiesFile: str
+        @param proxiesFile: The proxies file path and name
         @returns list: The list with proxies dictionary
         """
         proxies = []
         try:
-            with open(f'{self.__homePath}/{proxiesFileName}', 'r') as proxiesFile:
+            with open(f'{proxiesFile}', 'r') as proxiesFile:
                 for line in proxiesFile:
                     line = line.rstrip("\n")
                     proxies.append({
@@ -95,19 +95,19 @@ class FileHandler:
                         'https': 'https://'+line
                     })
         except FileNotFoundError:
-            oh.errorBox(f"File '{proxiesFileName}' not found")
+            oh.errorBox(f"File '{proxiesFile}' not found")
         return proxies
 
-    def openWordlist(self, wordlistFileName: str):
+    def openWordlist(self, wordlistFile: str):
         """Open the wordlist file
 
-        @type wordlistFileName: str
-        @param wordlistFileName: The name of the wordlist file
+        @type wordlistFile: str
+        @param wordlistFile: The wordlist file path and name
         """
         try:
-            self.__wordlistFile = open(f'{self.__homePath}/{wordlistFileName}', 'r')
+            self.__wordlistFile = open(f'{wordlistFile}', 'r')
         except FileNotFoundError:
-            oh.errorBox(f"File '{wordlistFileName}' not found. Did you put it in the correct directory?")
+            oh.errorBox(f"File '{wordlistFile}' not found. Did you put it in the correct directory?")
 
     def setReport(self, report: dict):
         """The report setter
@@ -176,17 +176,17 @@ class FileHandler:
         """
         reportType = self.__report['Type']
         reportName = self.__report['Name']
-        reportDir = self.__report['Dir']
+        reportDir = f"{self.__homePath}/.FuzzingTool/reports/{self.__report['Dir']}"
         if not reportName:
             now = datetime.now()
             reportName = now.strftime("%Y-%m-%d_%H:%M")
         try:
-            self.__reportFile = open(f'{self.__homePath}/.FuzzingTool/reports/{reportDir}/{reportName}.{reportType}', 'w')
+            self.__reportFile = open(f'{reportDir}/{reportName}.{reportType}', 'w')
         except FileNotFoundError:
-            Path(f'{self.__homePath}/.FuzzingTool/reports/{reportDir}').mkdir(parents=True, exist_ok=True)
-            self.__reportFile = open(f'{self.__homePath}/.FuzzingTool/reports/{reportDir}/{reportName}.{reportType}', 'w')
+            Path(f'{reportDir}').mkdir(parents=True, exist_ok=True)
+            self.__reportFile = open(f'{reportDir}/{reportName}.{reportType}', 'w')
         finally:
-            oh.infoBox(f'Saving results on \'{self.__homePath}/.FuzzingTool/reports/{reportDir}/{reportName}.{reportType}\' ...')
+            oh.infoBox(f'Saving results on \'{reportDir}/{reportName}.{reportType}\' ...')
 
     def __close(self, file: object):
         """Closes the file
