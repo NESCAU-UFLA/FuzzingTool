@@ -12,6 +12,7 @@
 
 from .OutputHandler import outputHandler as oh
 
+import platform
 import os
 import csv
 import json
@@ -43,7 +44,7 @@ class FileHandler:
             raise Exception("This class is a singleton!")
         else:
             FileHandler.__instance = self
-        self.__homePath = str(Path.home())
+        self.__outputDirectory = self.__getOutputDirectory()
         self.__wordlistFile = None
         self.__report = {
             'Type': 'txt',
@@ -135,13 +136,15 @@ class FileHandler:
         """Open the log file to save the current logs"""
         now = datetime.now()
         logFileName = f'log-{now.strftime("%Y-%m-%d_%H:%M")}.log'
+        logDir = f'{self.__outputDirectory}/logs'
+        logFullPath = f'{logDir}/{logFileName}'
         try:
-            self.__logFile = open(f'{self.__homePath}/.FuzzingTool/logs/{logFileName}', 'w')
+            self.__logFile = open(logFullPath, 'w')
         except FileNotFoundError:
-            Path(f'{self.__homePath}/.FuzzingTool/logs').mkdir(parents=True, exist_ok=True)
-            self.__logFile = open(f'{self.__homePath}/.FuzzingTool/logs/{logFileName}', 'w')
+            Path(logDir).mkdir(parents=True, exist_ok=True)
+            self.__logFile = open(logFullPath, 'w')
         finally:
-            oh.infoBox(f'The logs will be saved on \'.FuzzingTool/logs/{logFileName}\'')
+            oh.infoBox(f'The logs will be saved on \'{logFullPath}\'')
 
     def writeLog(self, exception: str):
         """Write the exception on the log file
@@ -170,23 +173,31 @@ class FileHandler:
             self.__close(self.__reportFile)
             oh.infoBox('Results saved')
 
+    def __getOutputDirectory(self):
+        platformSystem = platform.system().lower()
+        if platformSystem == 'windows':
+            return str(f'{Path.home()}/AppData/Local/.FuzzingTool')
+        else:
+            return str(f'{Path.home()}/.FuzzingTool')
+
     def __openReport(self):
         """Opens the report file 
            for store the probably vulnerable response data
         """
         reportType = self.__report['Type']
         reportName = self.__report['Name']
-        reportDir = f"{self.__homePath}/.FuzzingTool/reports/{self.__report['Dir']}"
+        reportDir = f"{self.__outputDirectory}/reports/{self.__report['Dir']}"
         if not reportName:
             now = datetime.now()
             reportName = now.strftime("%Y-%m-%d_%H:%M")
+        reportFullPath = f'{reportDir}/{reportName}.{reportType}'
         try:
-            self.__reportFile = open(f'{reportDir}/{reportName}.{reportType}', 'w')
+            self.__reportFile = open(reportFullPath, 'w')
         except FileNotFoundError:
-            Path(f'{reportDir}').mkdir(parents=True, exist_ok=True)
-            self.__reportFile = open(f'{reportDir}/{reportName}.{reportType}', 'w')
+            Path(reportDir).mkdir(parents=True, exist_ok=True)
+            self.__reportFile = open(reportFullPath, 'w')
         finally:
-            oh.infoBox(f'Saving results on \'{reportDir}/{reportName}.{reportType}\' ...')
+            oh.infoBox(f'Saving results on \'{reportFullPath}\' ...')
 
     def __close(self, file: object):
         """Closes the file

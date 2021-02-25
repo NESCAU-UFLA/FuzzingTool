@@ -152,13 +152,6 @@ class Fuzzer:
             for thread in self.__threads:
                 thread.join()
 
-        def isRunning():
-            """Getter for the event handler flag
-            
-            @returns bool: A running flag
-            """
-            return self.__playerHandler.isSet()
-
         def stop():
             """Handle with threads stop"""
             self.__running = False
@@ -184,7 +177,6 @@ class Fuzzer:
         if action == 'setup': return setup()
         elif action == 'start': return start()
         elif action == 'stop': return stop()
-        elif action == 'isRunning': return isRunning()
 
     def start(self):
         """Starts the fuzzer application"""
@@ -208,13 +200,6 @@ class Fuzzer:
         while self.__numberOfThreads > 1:
             pass
 
-    def isRunning(self):
-        """Check if the application is running or not
-        
-        @returns bool: A running flag
-        """
-        return self.threadHandle('isRunning')
-
     def do(self, payload: str):
         """Do the fuzzing test with a given payload
         
@@ -226,13 +211,7 @@ class Fuzzer:
         if probablyVulnerable:
             self.__output.append(thisResponse)
         if self.__verboseMode:
-            if self.__requester.isSubdomainFuzzing():
-                oh.printForSubdomainMode(
-                    f"Host {thisResponse['Payload']} ({thisResponse['IP']}) connected, raised a {thisResponse['Status']} status code",
-                    probablyVulnerable
-                )
-            else:
-                oh.printContent(thisResponse, probablyVulnerable)
+            oh.printContent(thisResponse, probablyVulnerable)
         else:
             oh.progressStatus(
                 str(int((int(thisResponse['Request'])/self.__dictSizeof)*100)),

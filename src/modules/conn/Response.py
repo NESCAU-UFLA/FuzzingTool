@@ -30,8 +30,9 @@ class Response:
         responseDict = {
             'Request': str(self.__requestIndex),
             'Payload': self.__payload,
-            'Req Time': float('%.6f'%(self.__requestTimeTaken-self.__elapsedTime)),
-            'Resp Time': self.__elapsedTime,
+            'Time Taken': self.__RTT,
+            'Request Time': float('%.6f'%(self.__RTT-self.__elapsedTime)),
+            'Response Time': self.__elapsedTime,
             'Status': self.__status,
             'Length': self.__length,
             'Words': self.__quantityOfWords,
@@ -55,7 +56,7 @@ class Response:
         @returns dict: The response data parsed into a dictionary
         """
         self.__payload = payload
-        self.__requestTimeTaken = timeTaken
+        self.__RTT = float('%.6f'%(timeTaken))
         self.__requestIndex = requestIndex
         self.__targetIp = ip
     

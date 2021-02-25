@@ -54,6 +54,20 @@ class OutputHandler:
         self.__worked = '\033[90m['+'\u001b[32;1m+'+'\033[90m] \033[0m'
         self.__notWorked = '\033[90m['+'\u001b[31;1m-'+'\033[90m] \033[0m'
 
+    def setPrintContentMode(self, subdomainFuzzing: bool):
+        """Set the print content mode by the Fuzzer responses
+
+        @type subdomainFuzzing: bool
+        @param subdomainFuzzing: The subdomain fuzzing flag
+        """
+        if subdomainFuzzing:
+            self.printContent = self.printForSubdomainMode
+        else:
+            if platform.system().lower() != 'windows':
+                self.printContent = self.printForDefaultMode
+            else:
+                self.printContent = self.printForDefaultModeWindows
+
     def infoBox(self, msg: str):
         """Print the message with a info label
 
@@ -122,24 +136,10 @@ class OutputHandler:
         else:
             return False
 
-    def printForSubdomainMode(self, msg: str, vulnValidator: bool):
-        """Custom output print for the subdomain fuzzing mode
-
-        @type msg: str
-        @param msg: The message sended, exception or not
-        @type vulnValidator: bool
-        @param vulnValidator: Case the output is marked as vulnerable
-        """
-        if not vulnValidator:
-            self.notWorkedBox(msg)
-        else:
-            self.workedBox(msg)
-
     def getInitOrEnd(self):
         """Output the initial line of the requests table"""
         print('  +'+('-'*9)+
               '+'+('-'*32)+
-              '+'+('-'*12)+
               '+'+('-'*12)+
               '+'+('-'*6)+
               '+'+('-'*10)+
@@ -150,11 +150,10 @@ class OutputHandler:
     def getHeader(self):
         """Output the header of the requests table"""
         self.getInitOrEnd()
-        self.printContent({
+        self.printForDefaultMode({
             'Request': 'Request',
             'Payload': 'Payload',
-            'Req Time': 'Req Time',
-            'Resp Time': 'Resp Time',
+            'Time Taken': 'Time Taken',
             'Status': 'Code',
             'Length': 'Length',
             'Words': 'Words',
@@ -162,7 +161,17 @@ class OutputHandler:
         }, False)
         self.getInitOrEnd()
 
-    def printContent(self, response: dict, vulnValidator: bool):
+    def progressStatus(self, status: str, itemsFound: int):
+        """Output the progress status of the fuzzing
+
+        @type status: str
+        @param status: The status progress of the fuzzing (between 0 to 100)
+        @type itemsFound: int
+        @param itemsFound: The number of possible payloads found
+        """
+        print('\r'+self.__getTime()+self.__getInfo("Progress status: "+'{:<4}'.format(status+'%')+f' completed | Found {str(itemsFound)} possible payload(s)'), end='')
+
+    def printForDefaultMode(self, response: dict, vulnValidator: bool):
         """Output the content of the requests table
 
         @type response: dict
@@ -175,16 +184,58 @@ class OutputHandler:
         else:
             colorCode = '\u001b[32;1m'
         print(f'  | {colorCode}'+'{:<7}'.format(response['Request'])+
-              f'\033[0m | {colorCode}'+'{:<30}'.format(self.fixLineToOutput(response['Payload']))+
-              f'\033[0m | {colorCode}'+'{:<10}'.format(response['Req Time'])+
-              f'\033[0m | {colorCode}'+'{:<10}'.format(response['Resp Time'])+
+              f'\033[0m | {colorCode}'+'{:<30}'.format(self.__fixLineToOutput(response['Payload']))+
+              f'\033[0m | {colorCode}'+'{:<10}'.format(response['Time Taken'])+
               f'\033[0m | {colorCode}'+'{:<4}'.format(response['Status'])+
               f'\033[0m | {colorCode}'+'{:<8}'.format(response['Length'])+
               f'\033[0m | {colorCode}'+'{:<6}'.format(response['Words'])+
               f'\033[0m | {colorCode}'+'{:<5}'.format(response['Lines'])+
               '\033[0m |')
 
-    def fixLineToOutput(self, line: str):
+    def printForDefaultMode(self, response: dict, vulnValidator: bool):
+        """Output the content of the requests table in Windows mode
+
+        @type response: dict
+        @param response: The response dictionary
+        @type vulnValidator: bool
+        @param vulnValidator: Case the output is marked as vulnerable
+        """
+        if not vulnValidator:
+            colorCode = '\033[0m'
+            print('\r'+f'  | {colorCode}'+'{:<7}'.format(response['Request'])+
+                f'\033[0m | {colorCode}'+'{:<30}'.format(self.__fixLineToOutput(response['Payload']))+
+                f'\033[0m | {colorCode}'+'{:<10}'.format(response['Time Taken'])+
+                f'\033[0m | {colorCode}'+'{:<4}'.format(response['Status'])+
+                f'\033[0m | {colorCode}'+'{:<8}'.format(response['Length'])+
+                f'\033[0m | {colorCode}'+'{:<6}'.format(response['Words'])+
+                f'\033[0m | {colorCode}'+'{:<5}'.format(response['Lines'])+
+                '\033[0m |', end='')
+        else:
+            colorCode = '\u001b[32;1m'
+            print(f'  | {colorCode}'+'{:<7}'.format(response['Request'])+
+                f'\033[0m | {colorCode}'+'{:<30}'.format(self.__fixLineToOutput(response['Payload']))+
+                f'\033[0m | {colorCode}'+'{:<10}'.format(response['Time Taken'])+
+                f'\033[0m | {colorCode}'+'{:<4}'.format(response['Status'])+
+                f'\033[0m | {colorCode}'+'{:<8}'.format(response['Length'])+
+                f'\033[0m | {colorCode}'+'{:<6}'.format(response['Words'])+
+                f'\033[0m | {colorCode}'+'{:<5}'.format(response['Lines'])+
+                '\033[0m |')
+
+    def printForSubdomainMode(self, response: dict, vulnValidator: bool):
+        """Custom output print for the subdomain fuzzing mode
+
+        @type response: dict
+        @param response: The response dictionary
+        @type vulnValidator: bool
+        @param vulnValidator: Case the output is marked as vulnerable
+        """
+        msg = f"Host {response['Payload']} ({response['IP']}) connected, raised a {response['Status']} status code"
+        if not vulnValidator:
+            self.notWorkedBox(msg)
+        else:
+            self.workedBox(msg)
+
+    def __fixLineToOutput(self, line: str):
         """Fix the line's size readed by the file
 
         @type line: str
@@ -202,16 +253,6 @@ class OutputHandler:
             return output.rstrip()
         else:
             return line.rstrip()
-
-    def progressStatus(self, status: str, itemsFound: int):
-        """Output the progress status of the fuzzing
-
-        @type status: str
-        @param status: The status progress of the fuzzing (between 0 to 100)
-        @type itemsFound: int
-        @param itemsFound: The number of possible payloads found
-        """
-        print('\r'+self.__getTime()+self.__getInfo("Progress status: "+'{:<4}'.format(status+'%')+f' completed | Found {str(itemsFound)} possible payload(s)'), end='')
 
     def __getTime(self):
         """Get a time label

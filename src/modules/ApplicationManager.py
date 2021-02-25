@@ -116,6 +116,7 @@ class ApplicationManager:
         """Starts the application"""
         oh.infoBox(f"Starting test on '{self.__requester.getUrl()}' ...")
         self.__startedTime = time.time()
+        oh.setPrintContentMode(self.__requester.isSubdomainFuzzing())
         try:
             if self.__fuzzer.isVerboseMode() and not self.__requester.isSubdomainFuzzing():
                 oh.getHeader()
@@ -201,7 +202,7 @@ class ApplicationManager:
             oh.infoBox(f"Found {len(output)} possible payload(s)")
             oh.getHeader()
             for content in output:
-                oh.printContent(content, True)
+                oh.printForDefaultMode(content, True)
             oh.getHeader()
             fh.writeReport(output)
         else:
