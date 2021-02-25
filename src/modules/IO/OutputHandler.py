@@ -63,10 +63,10 @@ class OutputHandler:
         if subdomainFuzzing:
             self.printContent = self.printForSubdomainMode
         else:
-            if platform.system().lower() != 'windows':
-                self.printContent = self.printForDefaultMode
-            else:
+            if 'windows' not in platform.system().lower():
                 self.printContent = self.printForDefaultModeWindows
+            else:
+                self.printContent = self.printForDefaultMode
 
     def infoBox(self, msg: str):
         """Print the message with a info label
@@ -183,16 +183,9 @@ class OutputHandler:
             colorCode = '\033[0m'
         else:
             colorCode = '\u001b[32;1m'
-        print(f'  | {colorCode}'+'{:<7}'.format(response['Request'])+
-              f'\033[0m | {colorCode}'+'{:<30}'.format(self.__fixLineToOutput(response['Payload']))+
-              f'\033[0m | {colorCode}'+'{:<10}'.format(response['Time Taken'])+
-              f'\033[0m | {colorCode}'+'{:<4}'.format(response['Status'])+
-              f'\033[0m | {colorCode}'+'{:<8}'.format(response['Length'])+
-              f'\033[0m | {colorCode}'+'{:<6}'.format(response['Words'])+
-              f'\033[0m | {colorCode}'+'{:<5}'.format(response['Lines'])+
-              '\033[0m |')
+        print(self.__getContentStr(colorCode, response))
 
-    def printForDefaultMode(self, response: dict, vulnValidator: bool):
+    def printForDefaultModeWindows(self, response: dict, vulnValidator: bool):
         """Output the content of the requests table in Windows mode
 
         @type response: dict
@@ -201,25 +194,9 @@ class OutputHandler:
         @param vulnValidator: Case the output is marked as vulnerable
         """
         if not vulnValidator:
-            colorCode = '\033[0m'
-            print('\r'+f'  | {colorCode}'+'{:<7}'.format(response['Request'])+
-                f'\033[0m | {colorCode}'+'{:<30}'.format(self.__fixLineToOutput(response['Payload']))+
-                f'\033[0m | {colorCode}'+'{:<10}'.format(response['Time Taken'])+
-                f'\033[0m | {colorCode}'+'{:<4}'.format(response['Status'])+
-                f'\033[0m | {colorCode}'+'{:<8}'.format(response['Length'])+
-                f'\033[0m | {colorCode}'+'{:<6}'.format(response['Words'])+
-                f'\033[0m | {colorCode}'+'{:<5}'.format(response['Lines'])+
-                '\033[0m |', end='')
+            print('\r'+self.__getContentStr('\033[0m', response), end='')
         else:
-            colorCode = '\u001b[32;1m'
-            print(f'  | {colorCode}'+'{:<7}'.format(response['Request'])+
-                f'\033[0m | {colorCode}'+'{:<30}'.format(self.__fixLineToOutput(response['Payload']))+
-                f'\033[0m | {colorCode}'+'{:<10}'.format(response['Time Taken'])+
-                f'\033[0m | {colorCode}'+'{:<4}'.format(response['Status'])+
-                f'\033[0m | {colorCode}'+'{:<8}'.format(response['Length'])+
-                f'\033[0m | {colorCode}'+'{:<6}'.format(response['Words'])+
-                f'\033[0m | {colorCode}'+'{:<5}'.format(response['Lines'])+
-                '\033[0m |')
+            print('\r'+self.__getContentStr('\u001b[32;1m', response))
 
     def printForSubdomainMode(self, response: dict, vulnValidator: bool):
         """Custom output print for the subdomain fuzzing mode
@@ -234,6 +211,16 @@ class OutputHandler:
             self.notWorkedBox(msg)
         else:
             self.workedBox(msg)
+
+    def __getContentStr(self, colorCode: str, response: dict):
+        return (f'  | {colorCode}'+'{:<7}'.format(response['Request'])+
+                f'\033[0m | {colorCode}'+'{:<30}'.format(self.__fixLineToOutput(response['Payload']))+
+                f'\033[0m | {colorCode}'+'{:<10}'.format(response['Time Taken'])+
+                f'\033[0m | {colorCode}'+'{:<4}'.format(response['Status'])+
+                f'\033[0m | {colorCode}'+'{:<8}'.format(response['Length'])+
+                f'\033[0m | {colorCode}'+'{:<6}'.format(response['Words'])+
+                f'\033[0m | {colorCode}'+'{:<5}'.format(response['Lines'])+
+                '\033[0m |')
 
     def __fixLineToOutput(self, line: str):
         """Fix the line's size readed by the file
