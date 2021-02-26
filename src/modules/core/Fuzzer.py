@@ -142,7 +142,6 @@ class Fuzzer:
                     self.__numberOfThreads -= 1
                     self.__semaphoreHandler.release()
                     self.__playerHandler.wait()
-            self.__numberOfThreads -= 1
 
         def start():
             """Handle with threads start"""
@@ -155,7 +154,7 @@ class Fuzzer:
         def stop():
             """Handle with threads stop"""
             self.__running = False
-            self.__playerHandler.set()
+            self.__playerHandler.clear()
 
         def setup():
             """Handle with threads setup
@@ -197,7 +196,7 @@ class Fuzzer:
     def stop(self):
         """Stop the fuzzer application"""
         self.threadHandle('stop')
-        while self.__numberOfThreads > 1:
+        while self.__numberOfThreads > 0:
             pass
 
     def do(self, payload: str):
@@ -239,6 +238,5 @@ class Fuzzer:
                 fh.writeLog(str(e))
             else:
                 if self.__running:
-                    self.__numberOfThreads = 0
                     self.stop()
                     oh.abortBox(str(e))

@@ -63,10 +63,7 @@ class OutputHandler:
         if subdomainFuzzing:
             self.printContent = self.printForSubdomainMode
         else:
-            if 'windows' not in platform.system().lower():
-                self.printContent = self.printForDefaultModeWindows
-            else:
-                self.printContent = self.printForDefaultMode
+            self.printContent = self.printForDefaultMode
 
     def infoBox(self, msg: str):
         """Print the message with a info label
@@ -183,20 +180,14 @@ class OutputHandler:
             colorCode = '\033[0m'
         else:
             colorCode = '\u001b[32;1m'
-        print(self.__getContentStr(colorCode, response))
-
-    def printForDefaultModeWindows(self, response: dict, vulnValidator: bool):
-        """Output the content of the requests table in Windows mode
-
-        @type response: dict
-        @param response: The response dictionary
-        @type vulnValidator: bool
-        @param vulnValidator: Case the output is marked as vulnerable
-        """
-        if not vulnValidator:
-            print('\r'+self.__getContentStr('\033[0m', response), end='')
-        else:
-            print('\r'+self.__getContentStr('\u001b[32;1m', response))
+        print(f'  | {colorCode}'+'{:<7}'.format(response['Request'])+
+              f'\033[0m | {colorCode}'+'{:<30}'.format(self.__fixLineToOutput(response['Payload']))+
+              f'\033[0m | {colorCode}'+'{:<10}'.format(response['Time Taken'])+
+              f'\033[0m | {colorCode}'+'{:<4}'.format(response['Status'])+
+              f'\033[0m | {colorCode}'+'{:<8}'.format(response['Length'])+
+              f'\033[0m | {colorCode}'+'{:<6}'.format(response['Words'])+
+              f'\033[0m | {colorCode}'+'{:<5}'.format(response['Lines'])+
+              '\033[0m |')
 
     def printForSubdomainMode(self, response: dict, vulnValidator: bool):
         """Custom output print for the subdomain fuzzing mode
@@ -211,16 +202,6 @@ class OutputHandler:
             self.notWorkedBox(msg)
         else:
             self.workedBox(msg)
-
-    def __getContentStr(self, colorCode: str, response: dict):
-        return (f'  | {colorCode}'+'{:<7}'.format(response['Request'])+
-                f'\033[0m | {colorCode}'+'{:<30}'.format(self.__fixLineToOutput(response['Payload']))+
-                f'\033[0m | {colorCode}'+'{:<10}'.format(response['Time Taken'])+
-                f'\033[0m | {colorCode}'+'{:<4}'.format(response['Status'])+
-                f'\033[0m | {colorCode}'+'{:<8}'.format(response['Length'])+
-                f'\033[0m | {colorCode}'+'{:<6}'.format(response['Words'])+
-                f'\033[0m | {colorCode}'+'{:<5}'.format(response['Lines'])+
-                '\033[0m |')
 
     def __fixLineToOutput(self, line: str):
         """Fix the line's size readed by the file

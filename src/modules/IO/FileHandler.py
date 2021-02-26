@@ -44,7 +44,7 @@ class FileHandler:
             raise Exception("This class is a singleton!")
         else:
             FileHandler.__instance = self
-        self.__outputDirectory = self.__getOutputDirectory()
+        self.__outputDirectory = f'{Path.home()}/.FuzzingTool'
         self.__wordlistFile = None
         self.__report = {
             'Type': 'txt',
@@ -67,8 +67,8 @@ class FileHandler:
         @returns list: The content into data file
         '''
         try:
-            with open(f'{rawFile}', 'r') as dataFile:
-                return [data.rstrip('\n') for data in dataFile]
+            with open(f'{rawFile}', 'r') as rawFile:
+                return [data.rstrip('\n') for data in rawFile]
         except FileNotFoundError:
             oh.errorBox(f"File '{rawFile}' not found.")
 
@@ -172,13 +172,6 @@ class FileHandler:
                 self.__jsonWriter(reportContent)
             self.__close(self.__reportFile)
             oh.infoBox('Results saved')
-
-    def __getOutputDirectory(self):
-        platformSystem = platform.system().lower()
-        if platformSystem == 'windows':
-            return str(f'{Path.home()}/AppData/Local/.FuzzingTool')
-        else:
-            return str(f'{Path.home()}/.FuzzingTool')
 
     def __openReport(self):
         """Opens the report file 
