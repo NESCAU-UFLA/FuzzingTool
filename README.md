@@ -21,13 +21,6 @@ We're not responsible for the misuse of this tool. This project was created for 
 ## Getting Started
 Before we start the *penetration testings*, take a look at the **installing** and **prerequisites**.
 
-### Supported OS
-| OS | Supported |
-| :--- | :---: |
-| Windows | Yes |
-| Linux | Yes |
-| MacOS | Not tested |
-
 ### Installing
 FuzzingTool is now on Pypi! You can install with:
 ```
@@ -40,10 +33,6 @@ Or if you want to install it manually, download the last release or clone this r
 * Install the requests python package
 ```
 $ pip install requests
-```
-* If you are using Windows, please install the colorama too
-```
-$ pip install colorama
 ```
 
 ### User's Manual

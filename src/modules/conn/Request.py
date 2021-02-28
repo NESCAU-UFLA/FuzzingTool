@@ -58,10 +58,10 @@ class Request:
         self.__httpHeader = httpHeader
         self.__proxy = {}
         self.__proxyList = []
-        self.__timeout = None
+        self.__parser.checkForUrlFuzz(self.__url)
+        self.__timeout = None if not self.__parser.isUrlFuzzing() else 10
         self.__requestIndex = 0
         self.__setupHeader()
-        self.__parser.checkForUrlFuzz(self.__url)
         self.__subdomainFuzzing = self.__parser.checkForSubdomainFuzz(self.__url)
     
     def getUrl(self):

@@ -77,6 +77,8 @@ class RequestParser:
     def checkForSubdomainFuzz(self, url: dict):
         """Checks if the fuzzing tests will occur on subdomain
 
+        @type url: dict
+        @param url: The URL dictionary
         @returns bool: The subdomain fuzzing flag
         """
         url = url['content']
@@ -89,7 +91,7 @@ class RequestParser:
         """The new url getter
         
         @type url: dict
-        @param url: The target URL
+        @param url: The URL dictionary
         @returns str: The new target URL
         """
         return url['content'] if not self.__urlFuzzing else self.__getAjustedUrl(url)
@@ -187,17 +189,17 @@ class RequestParser:
             header[key] = result.encode('utf-8')
         return header
 
-    def __getAjustedData(self, param: dict):
+    def __getAjustedData(self, data: dict):
         """Put the payload into the Data requestParameters dictionary
 
-        @type param: dict
-        @param param: The request parameters
+        @type data: dict
+        @param dara: The request parameters
         @returns dict: The new request parameters
         """
-        data = {}
-        for key, value in param.items():
+        ajustedData = {}
+        for key, value in data.items():
             if (value != ''):
-                data[key] = value
+                ajustedData[key] = value
             else:
-                data[key] = self.__payload
-        return data
+                ajustedData[key] = self.__payload
+        return ajustedData

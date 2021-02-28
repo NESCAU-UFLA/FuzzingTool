@@ -179,17 +179,6 @@ class Fuzzer:
 
     def start(self):
         """Starts the fuzzer application"""
-        urlFuzzing = self.__requester.isUrlFuzzing()
-        self.__vulnValidator.setUrlFuzzing(urlFuzzing)
-        if not urlFuzzing:
-            payload = ' '
-            firstResponse = self.__requester.request(payload)
-            self.__vulnValidator.setDefaultComparator(
-                int(firstResponse['Length']),
-                (firstResponse['Req Time']+firstResponse['Resp Time'])
-            )
-            if self.__verboseMode:
-                oh.printContent(firstResponse, False)
         self.threadHandle('setup')
         self.threadHandle('start')
 

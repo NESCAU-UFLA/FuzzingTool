@@ -15,13 +15,13 @@ class VulnValidator:
 
     Attributes:
         urlFuzzing: The URL Fuzzing flag
-        defaultComparator: The dictionary with the default entries to be compared with the current request
+        comparator: The dictionary with the default entries to be compared with the current request
         allowedStatus: The dictionary with the allowed status codes (and range)
     """
     def __init__(self):
         """Class constructor"""
         self.__urlFuzzing = False
-        self.__defaultComparator = {}
+        self.__comparator = {}
         self.__allowedStatus = {
             'List': [200],
             'Range': [],
@@ -35,18 +35,13 @@ class VulnValidator:
         """
         self.__urlFuzzing = urlFuzzing
 
-    def setDefaultComparator(self, length: int = 0, time: float = 0):
+    def setComparator(self, comparator: dict):
         """The default comparator setter
 
-        @type length: int
-        @param length: The first request length
-        @type time: float
-        @param time: The first request time taken
+        @type comparator: dict
+        @param comparator: The comparator with time and length
         """
-        self.__defaultComparator = {
-            'Length': 300 + length,
-            'Time': 5 + time,
-        }
+        self.__comparator = comparator
 
     def setAllowedStatus(self, allowedStatus: dict):
         """The allowed status setter
@@ -69,8 +64,8 @@ class VulnValidator:
             and thisResponse['Status'] <= self.__allowedStatus['Range'][1]))):
             if self.__urlFuzzing:
                 return True
-            if self.__defaultComparator['Length'] < int(thisResponse['Length']):
+            if self.__comparator['Length'] < int(thisResponse['Length']):
                 return True
-            if self.__defaultComparator['Time'] < (thisResponse['Resp Time']+thisResponse['Req Time']):
+            if self.__comparator['Time'] < thisResponse['Time Taken']:
                 return True
         return False

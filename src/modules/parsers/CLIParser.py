@@ -240,7 +240,7 @@ class CLIParser:
         fh.setReport({
             'Type': reportType,
             'Name': reportName,
-            'Dir': host
+            'Host': host
         })
 
     def __getHeader(self, args: list):

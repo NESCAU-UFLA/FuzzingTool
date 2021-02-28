@@ -76,11 +76,11 @@ class ApplicationManager:
         cliParser = CLIParser(argv)
         url, method, requestData, httpHeader = cliParser.getDefaultRequest()
         cliParser.getWordlistFile()
-        wordlist, numLines = fh.getWordlistContentAndLength()
+        wordlist, dictSizeof = fh.getWordlistContentAndLength()
         self.__fuzzer = Fuzzer(
             Request(url, method, requestData, httpHeader),
             Payloader(wordlist),
-            numLines
+            dictSizeof
         )
         del wordlist
         self.__requester = self.__fuzzer.getRequester()
@@ -105,10 +105,17 @@ class ApplicationManager:
     def prepare(self):
         """Prepares the application"""
         try:
+            oh.setPrintContentMode(self.__requester.isSubdomainFuzzing())
             self.__checkConnectionAndRedirections()
             self.__checkProxies()
-            if not self.__requester.isSubdomainFuzzing():
-                self.__checkIgnoreErrors()
+            vulnValidator = self.__fuzzer.getVulnValidator()
+            if self.__requester.isUrlFuzzing():
+                vulnValidator.setUrlFuzzing(True)
+                if not self.__requester.isSubdomainFuzzing():
+                    self.__checkIgnoreErrors()
+            else:
+                vulnValidator.setUrlFuzzing(False)
+                self.__checkDataComparator()
         except KeyboardInterrupt:
             exit('')
 
@@ -116,7 +123,6 @@ class ApplicationManager:
         """Starts the application"""
         oh.infoBox(f"Starting test on '{self.__requester.getUrl()}' ...")
         self.__startedTime = time.time()
-        oh.setPrintContentMode(self.__requester.isSubdomainFuzzing())
         try:
             if self.__fuzzer.isVerboseMode() and not self.__requester.isSubdomainFuzzing():
                 oh.getHeader()
@@ -192,6 +198,25 @@ class ApplicationManager:
         if oh.askYesNo('info', "Do you want to ignore errors during the tests, and save them into a log file?"):
             self.__fuzzer.setIgnoreErrors(True)
             fh.openLog()
+
+    def __checkDataComparator(self):
+        """Check if the user wants to insert custom data comparator to validate the responses"""
+        payload = ' '
+        oh.infoBox(f"Making first request with '{payload}' as payload ...")
+        firstResponse = self.__requester.request(payload)
+        oh.getHeader()
+        oh.printContent(firstResponse, False)
+        oh.getHeader()
+        length = int(firstResponse['Length'])+300
+        if oh.askYesNo('info', f"Do you want to exclude responses based on custom length (default {length})?"):
+            length = oh.askData("Insert the length")
+        time = firstResponse['Time Taken']+5.0
+        if oh.askYesNo('info', f"Do you want to exclude responses based on custom time (default {time} seconds)?"):
+            time = oh.askData("Insert the time")
+        self.__fuzzer.getVulnValidator().setComparator({
+            'Length': int(length),
+            'Time': float(time)
+        })
 
     def __showFooter(self):
         """Show the footer content of the software, after maked the fuzzing"""

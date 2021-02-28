@@ -49,7 +49,7 @@ class FileHandler:
         self.__report = {
             'Type': 'txt',
             'Name': '',
-            'Dir': ''
+            'Host': ''
         }
         self.__reportFile = None
         self.__logFile = None
@@ -179,7 +179,7 @@ class FileHandler:
         """
         reportType = self.__report['Type']
         reportName = self.__report['Name']
-        reportDir = f"{self.__outputDirectory}/reports/{self.__report['Dir']}"
+        reportDir = f"{self.__outputDirectory}/reports/{self.__report['Host']}"
         if not reportName:
             now = datetime.now()
             reportName = now.strftime("%Y-%m-%d_%H:%M")

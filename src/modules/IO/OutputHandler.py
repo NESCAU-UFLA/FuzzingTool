@@ -114,7 +114,7 @@ class OutputHandler:
         print(self.__getTime()+self.__getNotWorked(msg))
 
     def askYesNo(self, askType: str, msg: str):
-        """Output an warning message, and ask for the user if wants to continue
+        """Ask a question for the user
 
         @type askType: str
         @param askType: The type of the asker
@@ -132,6 +132,16 @@ class OutputHandler:
             return True
         else:
             return False
+
+    def askData(self, msg: str):
+        """Ask data for the user
+
+        @type msg: str
+        @param msg: The message
+        @returns int|float: The data asked
+        """
+        print(self.__getTime()+self.__getInfo(msg)+': ', end='')
+        return input()
 
     def getInitOrEnd(self):
         """Output the initial line of the requests table"""
@@ -187,7 +197,7 @@ class OutputHandler:
               f'\033[0m | {colorCode}'+'{:<8}'.format(response['Length'])+
               f'\033[0m | {colorCode}'+'{:<6}'.format(response['Words'])+
               f'\033[0m | {colorCode}'+'{:<5}'.format(response['Lines'])+
-              '\033[0m |')
+               '\033[0m |')
 
     def printForSubdomainMode(self, response: dict, vulnValidator: bool):
         """Custom output print for the subdomain fuzzing mode
