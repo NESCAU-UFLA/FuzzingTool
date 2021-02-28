@@ -1,7 +1,7 @@
 <h1 align="center">FuzzingTool</h1>
 <p align="center">
-<a href="https://github.com/NESCAU-UFLA/FuzzingTool/releases/tag/v3.7.1">
-<img src="https://img.shields.io/static/v1?label=Release&message=v3.7.1&color=darkred" />
+<a href="https://github.com/NESCAU-UFLA/FuzzingTool/releases/tag/v3.7.2">
+<img src="https://img.shields.io/static/v1?label=Release&message=v3.7.2&color=darkred" />
 </a>
 <img src="https://img.shields.io/static/v1?label=python&message=v3.6.9&color=informational&logo=python" />
 <a href="https://github.com/NESCAU-UFLA/FuzzingTool/blob/master/LICENSE.md">
