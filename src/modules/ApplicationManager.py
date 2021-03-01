@@ -212,7 +212,7 @@ class ApplicationManager:
             length = oh.askData("Insert the length")
         time = firstResponse['Time Taken']+5.0
         if oh.askYesNo('info', f"Do you want to exclude responses based on custom time (default {time} seconds)?"):
-            time = oh.askData("Insert the time")
+            time = oh.askData("Insert the time (in seconds)")
         self.__fuzzer.getVulnValidator().setComparator({
             'Length': int(length),
             'Time': float(time)
