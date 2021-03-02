@@ -129,7 +129,6 @@ class Fuzzer:
         """
         def run():
             """Run the threads"""
-            self.__playerHandler.wait()
             while self.__running and not self.__payloader.isEmpty():
                 payload = self.__payloader.get()
                 for p in payload:
@@ -137,11 +136,10 @@ class Fuzzer:
                         self.do(p)
                         time.sleep(self.__delay)
                     except RequestException as e:
-                        self.__handleRequestException(e, p)
+                        self.__handleRequestException(e)
                 if not self.__playerHandler.isSet():
                     self.__numberOfThreads -= 1
                     self.__semaphoreHandler.release()
-                    self.__playerHandler.wait()
 
         def start():
             """Handle with threads start"""
@@ -185,7 +183,7 @@ class Fuzzer:
     def stop(self):
         """Stop the fuzzer application"""
         self.threadHandle('stop')
-        while self.__numberOfThreads > 0:
+        while self.__numberOfThreads > 1:
             pass
 
     def do(self, payload: str):
@@ -206,13 +204,11 @@ class Fuzzer:
                 len(self.__output)
             )
 
-    def __handleRequestException(self, e: RequestException, payload: str):
+    def __handleRequestException(self, e: RequestException):
         """Handle with the request exceptions based on their types
         
         @type e: RequestException
         @param e: The request exception
-        @type payload: str
-        @param payload: The payload used in the request
         """
         if e.type == 'continue':
             if self.__verboseMode:

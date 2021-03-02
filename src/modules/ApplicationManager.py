@@ -24,7 +24,7 @@ import time
 APP_VERSION = {
     'MAJOR_VERSION': 3,
     "MINOR_VERSION": 7,
-    "PATCH": 2
+    "PATCH": 3
 }
 
 def version():
