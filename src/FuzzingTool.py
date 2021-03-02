@@ -1,8 +1,7 @@
 #!/usr/bin/python3
 
 ## FuzzingTool
-# 
-# Version: 3.7.2
+#
 # Authors:
 #    Vitor Oriel C N Borges <https://github.com/VitorOriel>
 # License: MIT (LICENSE.md)
