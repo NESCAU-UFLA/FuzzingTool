@@ -31,7 +31,7 @@ class Request:
         parser: The request parser
         url: The target URL
         method: The request method
-        param: The parameter of the request
+        data: The parameter data of the request
         httpHeader: The HTTP header
         proxy: The proxy used in the request
         proxyList: The list with valid proxies gived by a file
@@ -39,22 +39,22 @@ class Request:
         requestIndex: The request index
         subdomainFuzzing: A flag to say if the fuzzing will occur on subdomain
     """
-    def __init__(self, url: str, method: str, defaultParam: dict, httpHeader: dict):
+    def __init__(self, url: str, method: str, data: dict, httpHeader: dict):
         """Class constructor
 
         @type url: str
         @param url: The target URL
         @type method: str
         @param method: The request method
-        @type defaultParam: dict
-        @param defaultParam: The parameters of the request, with default values if are given
+        @type data: dict
+        @param data: The parameters of the request, with default values if are given
         @type httpHeader: dict
         @param httpHeader: The HTTP header of the request
         """
         self.__parser = RequestParser()
         self.__url = self.__parser.setupUrl(url)
         self.__method = method
-        self.__param = defaultParam
+        self.__data = data
         self.__httpHeader = httpHeader
         self.__proxy = {}
         self.__proxyList = []
@@ -122,7 +122,7 @@ class Request:
         @param value: The HTTP Header value
         """
         if '$' in value:
-            self.__httpHeader['keysCustom'].append(key)
+            self.__httpHeader['payloadKeys'].append(key)
             self.__httpHeader['content'][key] = self.__parser.parseHeaderValue(value)
         else:
             self.__httpHeader['content'][key] = value
@@ -163,7 +163,7 @@ class Request:
             )
             response.raise_for_status()
         except:
-            raise RequestException('', target)
+            raise RequestException(target)
 
     def hasRedirection(self):
         """Test if the connection will have a redirection"""
@@ -192,19 +192,21 @@ class Request:
             self.__updateProxy()
         self.__parser.setPayload(payload)
         requestParameters = self.__getRequestParameters()
+        targetUrl = requestParameters['Url']
         targetIp = ''
         try:
             if self.__subdomainFuzzing:
                 try:
-                    hostname = self.__parser.getHost(requestParameters['Url'])
+                    hostname = self.__parser.getHost(targetUrl)
                     targetIp = socket.gethostbyname(hostname)
+                    payload = targetUrl
                 except:
-                    raise RequestException('continue', f"Can't resolve hostname {hostname}")
+                    raise RequestException(f"Can't resolve hostname {hostname}")
             try:
                 before = time.time()
                 response = Response(requests.request(
                     requestParameters['Method'],
-                    requestParameters['Url'],
+                    targetUrl,
                     data=requestParameters['Data'],
                     params=requestParameters['Data'],
                     headers=requestParameters['Header'],
@@ -213,42 +215,25 @@ class Request:
                 ))
                 timeTaken = (time.time() - before)
             except requests.exceptions.ProxyError:
-                raise RequestException('stop', "The actual proxy isn't working anymore.")
+                raise RequestException("The actual proxy isn't working anymore.")
             except requests.exceptions.TooManyRedirects:
-                raise RequestException(
-                    'stop' if not self.__subdomainFuzzing else 'continue',
-                    f"Too many redirects on {requestParameters['Url']}"
-                )
+                raise RequestException(f"Too many redirects on {targetUrl}")
             except requests.exceptions.SSLError:
-                raise RequestException(
-                    'stop' if not self.__subdomainFuzzing else 'continue',
-                    f"SSL couldn't be validated on {requestParameters['Url']}"
-                )
+                raise RequestException(f"SSL couldn't be validated on {targetUrl}")
             except requests.exceptions.Timeout:
-                raise RequestException(
-                    'stop' if not self.__subdomainFuzzing else 'continue',
-                    f"Connection to {requestParameters['Url']} timed out"
-                )
+                raise RequestException(f"Connection to {targetUrl} timed out")
             except (
                 requests.exceptions.ConnectionError,
                 requests.exceptions.RequestException
             ):
-                raise RequestException(
-                    'stop' if not self.__subdomainFuzzing else 'continue',
-                    f"Failed to establish a connection to {requestParameters['Url']}"
-                )
+                raise RequestException(f"Failed to establish a connection to {targetUrl}")
             except (
                 UnicodeError,
                 urllib3.exceptions.LocationParseError
             ) as e:
-                raise RequestException('continue', f"Invalid hostname {hostname} for HTTP request")
+                raise RequestException(f"Invalid hostname {hostname} for HTTP request")
             else:
-                response.setRequestData(
-                    payload if not self.__subdomainFuzzing else requestParameters['Url'],
-                    timeTaken,
-                    self.__requestIndex,
-                    targetIp
-                )
+                response.setRequestData(payload, timeTaken, self.__requestIndex, targetIp)
                 return response.getResponseDict()
         finally:
             self.__requestIndex += 1
@@ -262,7 +247,7 @@ class Request:
             'Method': self.__method,
             'Url': self.__parser.getUrl(self.__url),
             'Header': self.__parser.getHeader(self.__httpHeader),
-            'Data': self.__parser.getData(self.__param),
+            'Data': self.__parser.getData(self.__data),
         }
         return requestParameters
 
@@ -270,7 +255,7 @@ class Request:
         """Setup the HTTP Header"""
         self.__httpHeader = {
             'content': self.__httpHeader,
-            'keysCustom': [],
+            'payloadKeys': [],
         }
         for key, value in self.__httpHeader['content'].items():
             self.setHeaderContent(key, value)

@@ -103,7 +103,7 @@ class RequestParser:
         @param httpHeader: The HTTP Header
         @returns dict: The new HTTP Header
         """
-        return httpHeader['content'] if not httpHeader['keysCustom'] else self.__getAjustedHeader(httpHeader)
+        return httpHeader['content'] if not httpHeader['payloadKeys'] else self.__getAjustedHeader(httpHeader)
 
     def getData(self, param: dict):
         """The new param getter
@@ -180,7 +180,7 @@ class RequestParser:
         header = {}
         for key, value in httpHeader['content'].items():
             header[key] = value
-        for key in httpHeader['keysCustom']:
+        for key in httpHeader['payloadKeys']:
             result = ''
             value = header[key]
             for i in range(len(value)-1):
@@ -198,7 +198,7 @@ class RequestParser:
         """
         ajustedData = {}
         for key, value in data.items():
-            if (value != ''):
+            if value:
                 ajustedData[key] = value
             else:
                 ajustedData[key] = self.__payload

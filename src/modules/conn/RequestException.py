@@ -11,6 +11,5 @@
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
 class RequestException(Exception):
-    def __init__(self, exceptType: str = '', msg: str = ''):
+    def __init__(self, msg: str = ''):
         super().__init__(msg)
-        self.type = exceptType

@@ -52,6 +52,7 @@ class Fuzzer:
         self.__dictSizeof = dictSizeof
         self.__vulnValidator = VulnValidator()
         self.__payloader = payloader
+        self.__handleRequestException = self.__handleDefaultException if not self.__requester.isSubdomainFuzzing() else self.__handleSubdomainException
 
     def getRequester(self):
         """The requester getter
@@ -204,24 +205,29 @@ class Fuzzer:
                 len(self.__output)
             )
 
-    def __handleRequestException(self, e: RequestException):
-        """Handle with the request exceptions based on their types
+    def __handleDefaultException(self, e: RequestException):
+        """Handle with the default request exceptions
         
         @type e: RequestException
         @param e: The request exception
         """
-        if e.type == 'continue':
-            if self.__verboseMode:
-                oh.notWorkedBox(str(e))
-            else:
-                oh.progressStatus(
-                    str(int((int(self.__requester.getRequestIndex())/self.__dictSizeof)*100)),
-                    len(self.__output)
-                )
-        elif e.type == 'stop':
-            if self.__ignoreErrors:
-                fh.writeLog(str(e))
-            else:
-                if self.__running:
-                    self.stop()
-                    oh.abortBox(str(e))
+        if self.__ignoreErrors:
+            fh.writeLog(str(e))
+        else:
+            if self.__running:
+                self.stop()
+                oh.abortBox(str(e))
+
+    def __handleSubdomainException(self, e: RequestException):
+        """Handle with the subdomain request exceptions
+        
+        @type e: RequestException
+        @param e: The request exception
+        """
+        if self.__verboseMode:
+            oh.notWorkedBox(str(e))
+        else:
+            oh.progressStatus(
+                str(int((int(self.__requester.getRequestIndex())/self.__dictSizeof)*100)),
+                len(self.__output)
+            )
