@@ -44,5 +44,8 @@ We use <a target="_blank" href="https://semver.org/">SemVer</a> for versioning. 
 ## Authors
 * <b>Vitor Oriel</b> - <a target="_blank" href="https://github.com/VitorOriel">Profile</a>
 
+## Contributors
+* <a target="_blank" href="#"><b>Gabriel Prestes</b></a>: Designed the logo
+
 ## License
 This project is licensed under the MIT License - see the <a target="_blank" href="https://github.com/NESCAU-UFLA/FuzzingTool/blob/master/LICENSE.md">LICENSE.md</a> for details.
