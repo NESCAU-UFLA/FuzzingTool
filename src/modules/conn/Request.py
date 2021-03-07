@@ -230,7 +230,7 @@ class Request:
             except (
                 UnicodeError,
                 urllib3.exceptions.LocationParseError
-            ) as e:
+            ):
                 raise RequestException(f"Invalid hostname {hostname} for HTTP request")
             else:
                 response.setRequestData(payload, timeTaken, self.__requestIndex, targetIp)
