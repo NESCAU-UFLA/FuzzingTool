@@ -1,7 +1,5 @@
 <p align="center">
-<img src="https://user-images.githubusercontent.com/43549176/110254984-525fb200-7f70-11eb-84f0-9afdcab9725a.png" />
-</p>
-<p align="center">
+<img src="https://user-images.githubusercontent.com/43549176/110254984-525fb200-7f70-11eb-84f0-9afdcab9725a.png" height="200" /><br/><br/>
 <a href="https://github.com/NESCAU-UFLA/FuzzingTool/releases/tag/v3.7.3">
 <img src="https://img.shields.io/static/v1?label=Release&message=v3.7.3&color=darkred" />
 </a>
