@@ -1,5 +1,5 @@
 <p align="center">
-<img src="https://user-images.githubusercontent.com/43549176/110254984-525fb200-7f70-11eb-84f0-9afdcab9725a.png" height="200" /><br/><br/>
+<img src="https://user-images.githubusercontent.com/43549176/110254984-525fb200-7f70-11eb-84f0-9afdcab9725a.png" height="200" /><br/>
 <a href="https://github.com/NESCAU-UFLA/FuzzingTool/releases/tag/v3.7.3">
 <img src="https://img.shields.io/static/v1?label=Release&message=v3.7.3&color=darkred" />
 </a>
@@ -43,6 +43,9 @@ We use <a target="_blank" href="https://semver.org/">SemVer</a> for versioning. 
 
 ## Authors
 * <b>Vitor Oriel</b> - <a target="_blank" href="https://github.com/VitorOriel">Profile</a>
+
+## Contributors
+* <a target="_blank" href="#"><b>Gabriel Prestes</b></a>: Designed the logo
 
 ## License
 This project is licensed under the MIT License - see the <a target="_blank" href="https://github.com/NESCAU-UFLA/FuzzingTool/blob/master/LICENSE.md">LICENSE.md</a> for details.
