@@ -105,7 +105,7 @@ class ApplicationManager:
     def prepare(self):
         """Prepares the application"""
         try:
-            oh.setPrintContentMode(self.__requester.isSubdomainFuzzing())
+            oh.setPrintContentMode(self.__requester.isSubdomainFuzzing(), self.__fuzzer.isVerboseMode())
             self.__checkConnectionAndRedirections()
             self.__checkProxies()
             vulnValidator = self.__fuzzer.getVulnValidator()
@@ -205,7 +205,7 @@ class ApplicationManager:
         oh.infoBox(f"Making first request with '{payload}' as payload ...")
         firstResponse = self.__requester.request(payload)
         oh.getHeader()
-        oh.printContent(firstResponse, False)
+        oh.printForTableMode(firstResponse, False)
         oh.getHeader()
         length = int(firstResponse['Length'])+300
         if oh.askYesNo('info', f"Do you want to exclude responses based on custom length (default {length})?"):
@@ -227,7 +227,7 @@ class ApplicationManager:
             oh.infoBox(f"Found {len(output)} possible payload(s)")
             oh.getHeader()
             for content in output:
-                oh.printForDefaultMode(content, True)
+                oh.printForTableMode(content, True)
             oh.getHeader()
             fh.writeReport(output)
         else:

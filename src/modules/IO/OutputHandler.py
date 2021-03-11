@@ -12,6 +12,8 @@
 
 from datetime import datetime
 import platform
+import threading
+import sys
 
 if platform.system() == 'Windows':
     try:
@@ -19,6 +21,17 @@ if platform.system() == 'Windows':
     except:
         exit("Colorama package not installed. Install all dependencies first.")
     init()
+
+class Colors:
+    """Class that handle with the colors"""
+    RESET = '\033[0m'
+    GRAY = '\033[90m'
+    YELLOW = '\033[33m'
+    RED = '\u001b[31;1m'
+    GREEN = '\u001b[32;1m'
+    BLUE_GRAY = '\033[36m'
+    LIGHT_GREEN = '\u001b[38;5;48m'
+    LIGHT_GRAY = '\u001b[38;5;250m'
 
 class OutputHandler:
     """Class that handle with the outputs
@@ -47,23 +60,34 @@ class OutputHandler:
             raise Exception("This class is a singleton!")
         else:
             OutputHandler.__instance = self
-        self.__info = '\033[90m['+'\033[36mINFO'+'\033[90m] \033[0m'
-        self.__warning = '\033[90m['+'\033[33mWARNING'+'\033[90m] \033[0m'
-        self.__error = '\033[90m['+'\u001b[31;1mERROR'+'\033[90m] \033[0m'
-        self.__abord = '\033[90m['+'\u001b[31;1mABORT'+'\033[90m] \033[0m'
-        self.__worked = '\033[90m['+'\u001b[32;1m+'+'\033[90m] \033[0m'
-        self.__notWorked = '\033[90m['+'\u001b[31;1m-'+'\033[90m] \033[0m'
+        self.__lastInline = False
+        self.__lock = threading.Lock()
+        self.__info = f'{Colors.GRAY}[{Colors.BLUE_GRAY}INFO{Colors.GRAY}]{Colors.RESET} '
+        self.__warning = f'{Colors.GRAY}[{Colors.YELLOW}WARNING{Colors.GRAY}]{Colors.RESET} '
+        self.__error = f'{Colors.GRAY}[{Colors.RED}ERROR{Colors.GRAY}]{Colors.RESET} '
+        self.__abord = f'{Colors.GRAY}[{Colors.RED}ABORT{Colors.GRAY}]{Colors.RESET} '
+        self.__worked = f'{Colors.GRAY}[{Colors.GREEN}+{Colors.GRAY}]{Colors.RESET} '
+        self.__notWorked = f'{Colors.GRAY}[{Colors.RED}-{Colors.GRAY}]{Colors.RESET} '
 
-    def setPrintContentMode(self, subdomainFuzzing: bool):
+    def setPrintContentMode(self, subdomainFuzzing: bool, verboseMode: bool):
         """Set the print content mode by the Fuzzer responses
 
         @type subdomainFuzzing: bool
         @param subdomainFuzzing: The subdomain fuzzing flag
+        @type verboseMode: bool
+        @param verboseMode: The verbose mode flag
         """
         if subdomainFuzzing:
-            self.printContent = self.printForSubdomainMode
+            if verboseMode:
+                self.__lock = None
+            self.printContent = self.printForBoxMode
+            self.__getMessage = self.__getSubdomainMessage
         else:
-            self.printContent = self.printForDefaultMode
+            if verboseMode:
+                self.printContent = self.printForTableMode
+            else:
+                self.printContent = self.printForBoxMode
+                self.__getMessage = self.__getDefaultMessage
 
     def infoBox(self, msg: str):
         """Print the message with a info label
@@ -71,7 +95,7 @@ class OutputHandler:
         @type msg: str
         @param msg: The message
         """
-        print(self.__getTime()+self.__getInfo(msg))
+        print(f'{self.__getTime()}{self.__getInfo(msg)}')
 
     def errorBox(self, msg: str):
         """End the application with error label and a message
@@ -79,7 +103,7 @@ class OutputHandler:
         @type msg: str
         @param msg: The message
         """
-        exit(self.__getTime()+self.__getError(msg))
+        exit(f'{self.__getTime()}{self.__getError(msg)}')
  
     def warningBox(self, msg: str):
         """Print the message with a warning label
@@ -87,7 +111,7 @@ class OutputHandler:
         @type msg: str
         @param msg: The message
         """
-        print(self.__getTime()+self.__getWarning(msg))
+        print(f'{self.__getTime()}{self.__getWarning(msg)}')
 
     def abortBox(self, msg: str):
         """Print the message with abort label and a message
@@ -95,7 +119,8 @@ class OutputHandler:
         @type msg: str
         @param msg: The message
         """
-        print('\n'+self.__getTime()+self.__getAbort(msg))
+        with self.__lock:
+            print(f'\n{self.__getTime()}{self.__getAbort(msg)}')
 
     def workedBox(self, msg: str):
         """Print the message with worked label and a message
@@ -103,7 +128,7 @@ class OutputHandler:
         @type msg: str
         @param msg: The message
         """
-        print(self.__getTime()+self.__getWorked(msg))
+        print(f'\r{self.__getTime()}{self.__getWorked(msg)}')
 
     def notWorkedBox(self, msg: str):
         """Print the message with not worked label and a message
@@ -111,7 +136,7 @@ class OutputHandler:
         @type msg: str
         @param msg: The message
         """
-        print(self.__getTime()+self.__getNotWorked(msg))
+        print(f"{self.__getTime()}{self.__getNotWorked(msg)}")
 
     def askYesNo(self, askType: str, msg: str):
         """Ask a question for the user
@@ -126,9 +151,9 @@ class OutputHandler:
             getType = self.__getWarning
         else:
             getType = self.__getInfo
-        print(self.__getTime()+getType(msg)+' (y/N) ', end='')
+        print(f"{self.__getTime()}{getType(msg)} (y/N) ", end='')
         action = input()
-        if (action == 'y' or action == 'Y'):
+        if action == 'y' or action == 'Y':
             return True
         else:
             return False
@@ -157,7 +182,7 @@ class OutputHandler:
     def getHeader(self):
         """Output the header of the requests table"""
         self.getInitOrEnd()
-        self.printForDefaultMode({
+        self.printForTableMode({
             'Request': 'Request',
             'Payload': 'Payload',
             'Time Taken': 'Time Taken',
@@ -176,9 +201,14 @@ class OutputHandler:
         @type itemsFound: int
         @param itemsFound: The number of possible payloads found
         """
-        print('\r'+self.__getTime()+self.__getInfo("Progress status: "+'{:<4}'.format(status+'%')+f' completed | Found {str(itemsFound)} possible payload(s)'), end='')
+        sys.stdout.flush()
+        with self.__lock:
+            if not self.__lastInline:
+                self.__eraseLine()
+                self.__lastInline = True
+            print('\r'+self.__getTime()+self.__getInfo(f"Progress status: {status} completed | Found {str(itemsFound)} possible payload(s)"), end='')
 
-    def printForDefaultMode(self, response: dict, vulnValidator: bool):
+    def printForTableMode(self, response: dict, vulnValidator: bool):
         """Output the content of the requests table
 
         @type response: dict
@@ -187,50 +217,42 @@ class OutputHandler:
         @param vulnValidator: Case the output is marked as vulnerable
         """
         if not vulnValidator:
-            colorCode = '\033[0m'
+            colorCode = Colors.RESET
         else:
-            colorCode = '\u001b[32;1m'
-        print(f'  | {colorCode}'+'{:<7}'.format(response['Request'])+
-              f'\033[0m | {colorCode}'+'{:<30}'.format(self.__fixLineToOutput(response['Payload']))+
-              f'\033[0m | {colorCode}'+'{:<10}'.format(response['Time Taken'])+
-              f'\033[0m | {colorCode}'+'{:<4}'.format(response['Status'])+
-              f'\033[0m | {colorCode}'+'{:<8}'.format(response['Length'])+
-              f'\033[0m | {colorCode}'+'{:<6}'.format(response['Words'])+
-              f'\033[0m | {colorCode}'+'{:<5}'.format(response['Lines'])+
-               '\033[0m |')
+            colorCode = Colors.GREEN
+        response = self.__getFormatedResponse(response)
+        print(
+            f"\r  | {colorCode}{response['Request']}"+
+            f"\033[0m | {colorCode}{response['Payload']}"+
+            f"\033[0m | {colorCode}{response['Time Taken']}"+
+            f"\033[0m | {colorCode}{response['Status']}"+
+            f"\033[0m | {colorCode}{response['Length']}"+
+            f"\033[0m | {colorCode}{response['Words']}"+
+            f"\033[0m | {colorCode}{response['Lines']}"+
+            '\033[0m |'
+        )
 
-    def printForSubdomainMode(self, response: dict, vulnValidator: bool):
-        """Custom output print for the subdomain fuzzing mode
+    def printForBoxMode(self, response: dict, vulnValidator: bool):
+        """Custom output print for box mode
 
         @type response: dict
         @param response: The response dictionary
         @type vulnValidator: bool
         @param vulnValidator: Case the output is marked as vulnerable
         """
-        msg = f"Host {response['Payload']} ({response['IP']}) connected, raised a {response['Status']} status code"
+        msg = self.__getMessage(response)
         if not vulnValidator:
             self.notWorkedBox(msg)
         else:
-            self.workedBox(msg)
-
-    def __fixLineToOutput(self, line: str):
-        """Fix the line's size readed by the file
-
-        @type line: str
-        @param line: The line from the file
-        @returns str: The fixed line to output
-        """
-        if (len(line) > 30):
-            output = ""
-            for i in range(27):
-                if line[i] == '	':
-                    output += ' '
-                else:
-                    output += line[i]
-            output += '...'
-            return output.rstrip()
-        else:
-            return line.rstrip()
+            if self.__lock:
+                sys.stdout.flush()
+                with self.__lock:
+                    if self.__lastInline:
+                        self.__eraseLine()
+                        self.__lastInline = False
+                    self.workedBox(msg)
+            else:
+                self.workedBox(msg)
 
     def __getTime(self):
         """Get a time label
@@ -239,7 +261,7 @@ class OutputHandler:
         """
         now = datetime.now()
         time = now.strftime("%H:%M:%S")
-        return '\033[90m['+'\u001b[38;5;48m'+time+'\033[90m] \033[0m'
+        return f'{Colors.GRAY}[{Colors.LIGHT_GREEN}{time}{Colors.GRAY}]{Colors.RESET} '
 
     def __getInfo(self, msg: str):
         """The info getter, with a custom message
@@ -248,7 +270,7 @@ class OutputHandler:
         @param msg: The custom message
         @returns str: The message with info label
         """
-        return self.__info + msg
+        return f'{self.__info}{msg}'
 
     def __getWarning(self, msg: str):
         """The warning getter, with a custom message
@@ -257,7 +279,7 @@ class OutputHandler:
         @param msg: The custom message
         @returns str: The message with warning label
         """
-        return self.__warning + msg
+        return f'{self.__warning}{msg}'
     
     def __getError(self, msg: str):
         """The error getter, with a custom message
@@ -266,7 +288,7 @@ class OutputHandler:
         @param msg: The custom message
         @returns str: The message with error label
         """
-        return self.__error + msg
+        return f'{self.__error}{msg}'
 
     def __getAbort(self, msg: str):
         """The abort getter, with a custom message
@@ -275,7 +297,7 @@ class OutputHandler:
         @param msg: The custom message
         @returns str: The message with abort label
         """
-        return self.__abord + msg
+        return f'{self.__abord}{msg}'
 
     def __getWorked(self, msg: str):
         """The worked getter, with a custom message
@@ -284,7 +306,7 @@ class OutputHandler:
         @param msg: The custom message
         @returns str: The message with worked label
         """
-        return self.__worked + msg
+        return f'{self.__worked}{msg}'
     
     def __getNotWorked(self, msg: str):
         """The not worked getter, with a custom message
@@ -293,7 +315,81 @@ class OutputHandler:
         @param msg: The custom message
         @returns str: The message with not worked label
         """
-        return self.__notWorked + '\u001b[38;5;250m' + msg + '\033[0m'
+        return f'{self.__notWorked}{Colors.LIGHT_GRAY}{msg}{Colors.RESET}'
+
+    def __getDefaultMessage(self, response: dict):
+        """Get the formated message for default mode
+
+        @type response: dict
+        @param response: The response dict
+        @returns str: The message for default mode
+        """
+        status = response['Status']
+        response = self.__getFormatedResponse(response)
+        return (
+            f"{response['Payload']} {Colors.GRAY}["+
+            f"{Colors.LIGHT_GRAY}RTT{Colors.RESET} {response['Time Taken']} | "+
+            f"{Colors.LIGHT_GRAY}Code{Colors.RESET} {status} | "+
+            f"{Colors.LIGHT_GRAY}Size{Colors.RESET} {response['Length']} | "+
+            f"{Colors.LIGHT_GRAY}Words{Colors.RESET} {response['Words']} | "+
+            f"{Colors.LIGHT_GRAY}Lines{Colors.RESET} {response['Lines']}{Colors.GRAY}]{Colors.RESET}"
+        )
+
+    def __getSubdomainMessage(self, response: dict):
+        """Get the formated message for subdomain mode
+
+        @type response: dict
+        @param response: The response dict
+        @returns str: The message for subdomain mode
+        """
+        return (
+            '{:<30}'.format(self.__fixPayloadToOutput(response['Payload']))+
+            f' {Colors.GRAY}[{Colors.RESET}'+'IP {:>15}'.format(response['IP'])+" | "+
+            f"{Colors.LIGHT_GRAY}Code{Colors.RESET} {response['Status']}{Colors.GRAY}]{Colors.RESET}"
+        )
+
+    def __getFormatedResponse(self, response: dict):
+        """Format the response into a dict of strings
+
+        @type response: dict
+        @param response: The response dict
+        @returns dict: The response formated with strings
+        """
+        return {
+            'Request': '{:<7}'.format(response['Request']),
+            'Payload': '{:<30}'.format(self.__fixPayloadToOutput(response['Payload'])),
+            'Time Taken': '{:>10}'.format(response['Time Taken']),
+            'Status': '{:>4}'.format(response['Status']),
+            'Length': '{:>8}'.format(response['Length']),
+            'Words': '{:>6}'.format(response['Words']),
+            'Lines': '{:>5}'.format(response['Lines'])
+        }
+
+    def __eraseLine(self):
+        """Erases the current line"""
+        sys.stdout.flush()
+        sys.stdout.write("\033[1K")
+        sys.stdout.write("\033[0G")
+        sys.stdout.flush()
+
+    def __fixPayloadToOutput(self, payload: str):
+        """Fix the payload's size
+
+        @type payload: str
+        @param payload: The payload used in the request
+        @returns str: The fixed payload to output
+        """
+        if (len(payload) > 30):
+            output = ""
+            for i in range(27):
+                if payload[i] == '	':
+                    output += ' '
+                else:
+                    output += payload[i]
+            output += '...'
+            return output
+        else:
+            return payload
 
     def __helpTitle(self, numSpaces: int, title: str):
         """Output the help title

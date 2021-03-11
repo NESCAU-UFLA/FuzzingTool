@@ -195,13 +195,16 @@ class Fuzzer:
         """
         thisResponse = self.__requester.request(payload)
         probablyVulnerable = self.__vulnValidator.scan(thisResponse)
-        if probablyVulnerable:
-            self.__output.append(thisResponse)
         if self.__verboseMode:
+            if probablyVulnerable:
+                self.__output.append(thisResponse)
             oh.printContent(thisResponse, probablyVulnerable)
         else:
+            if probablyVulnerable:
+                self.__output.append(thisResponse)
+                oh.printContent(thisResponse, probablyVulnerable)
             oh.progressStatus(
-                str(int((int(thisResponse['Request'])/self.__dictSizeof)*100)),
+                f"[{thisResponse['Request']}/{self.__dictSizeof}] {str(int((int(thisResponse['Request'])/self.__dictSizeof)*100))}%",
                 len(self.__output)
             )
 
@@ -228,6 +231,6 @@ class Fuzzer:
             oh.notWorkedBox(str(e))
         else:
             oh.progressStatus(
-                str(int((int(self.__requester.getRequestIndex())/self.__dictSizeof)*100)),
+                f"[{self.__requester.getRequestIndex()}/{self.__dictSizeof}] {str(int((int(self.__requester.getRequestIndex())/self.__dictSizeof)*100))}%",
                 len(self.__output)
             )
