@@ -119,9 +119,10 @@ class OutputHandler:
         @type msg: str
         @param msg: The message
         """
-        with self.__lock:
-            sys.stdout.flush()
-            print(f'\n{self.__getTime()}{self.__getAbort(msg)}')
+        if self.__lock:
+            with self.__lock:
+                sys.stdout.flush()
+        print(f'\n{self.__getTime()}{self.__getAbort(msg)}')
 
     def workedBox(self, msg: str):
         """Print the message with worked label and a message
@@ -251,9 +252,7 @@ class OutputHandler:
                         self.__eraseLine()
                         self.__lastInline = False
                     sys.stdout.flush()
-                    self.workedBox(msg)
-            else:
-                self.workedBox(msg)
+            self.workedBox(msg)
 
     def __getTime(self):
         """Get a time label

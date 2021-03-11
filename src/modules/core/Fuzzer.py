@@ -216,6 +216,11 @@ class Fuzzer:
         """
         if self.__ignoreErrors:
             fh.writeLog(str(e))
+            if not self.__verboseMode:
+                oh.progressStatus(
+                    f"[{self.__requester.getRequestIndex()}/{self.__dictSizeof}] {str(int((int(self.__requester.getRequestIndex())/self.__dictSizeof)*100))}%",
+                    len(self.__output)
+                )
         else:
             if self.__running:
                 self.stop()

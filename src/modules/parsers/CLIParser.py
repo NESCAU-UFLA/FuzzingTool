@@ -170,7 +170,7 @@ class CLIParser:
                 self.__getAllowedStatus(allowedStatus, allowedList, allowedRange)
             if 200 not in allowedList:
                 if oh.askYesNo('warning', "Status code 200 (OK) wasn't included. Do you want to include it to the allowed status codes?"):
-                    allowedList.append(200)
+                    allowedList = [200] + allowedList
             allowedStatus = {
                 'List': allowedList,
                 'Range': allowedRange
