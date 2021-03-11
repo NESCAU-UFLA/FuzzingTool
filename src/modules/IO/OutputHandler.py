@@ -344,7 +344,7 @@ class OutputHandler:
         """
         return (
             '{:<30}'.format(self.__fixPayloadToOutput(response['Payload']))+
-            f' {Colors.GRAY}[{Colors.RESET}'+'IP {:>15}'.format(response['IP'])+" | "+
+            f' {Colors.GRAY}[{Colors.LIGHT_GRAY}IP{Colors.RESET} '+'{:>15}'.format(response['IP'])+" | "+
             f"{Colors.LIGHT_GRAY}Code{Colors.RESET} {response['Status']}{Colors.GRAY}]{Colors.RESET}"
         )
 
@@ -370,6 +370,7 @@ class OutputHandler:
         sys.stdout.flush()
         sys.stdout.write("\033[1K")
         sys.stdout.write("\033[0G")
+        sys.stdout.flush()
 
     def __fixPayloadToOutput(self, payload: str):
         """Fix the payload's size
