@@ -120,6 +120,7 @@ class OutputHandler:
         @param msg: The message
         """
         with self.__lock:
+            sys.stdout.flush()
             print(f'\n{self.__getTime()}{self.__getAbort(msg)}')
 
     def workedBox(self, msg: str):
@@ -201,11 +202,11 @@ class OutputHandler:
         @type itemsFound: int
         @param itemsFound: The number of possible payloads found
         """
-        sys.stdout.flush()
         with self.__lock:
             if not self.__lastInline:
                 self.__eraseLine()
                 self.__lastInline = True
+            sys.stdout.flush()
             print('\r'+self.__getTime()+self.__getInfo(f"Progress status: {status} completed | Found {str(itemsFound)} possible payload(s)"), end='')
 
     def printForTableMode(self, response: dict, vulnValidator: bool):
@@ -245,11 +246,11 @@ class OutputHandler:
             self.notWorkedBox(msg)
         else:
             if self.__lock:
-                sys.stdout.flush()
                 with self.__lock:
                     if self.__lastInline:
                         self.__eraseLine()
                         self.__lastInline = False
+                    sys.stdout.flush()
                     self.workedBox(msg)
             else:
                 self.workedBox(msg)
@@ -370,7 +371,6 @@ class OutputHandler:
         sys.stdout.flush()
         sys.stdout.write("\033[1K")
         sys.stdout.write("\033[0G")
-        sys.stdout.flush()
 
     def __fixPayloadToOutput(self, payload: str):
         """Fix the payload's size
