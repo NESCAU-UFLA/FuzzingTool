@@ -204,8 +204,7 @@ class Fuzzer:
                 self.__output.append(thisResponse)
                 oh.printContent(thisResponse, probablyVulnerable)
             oh.progressStatus(
-                f"[{thisResponse['Request']}/{self.__dictSizeof}] {str(int((int(thisResponse['Request'])/self.__dictSizeof)*100))}%",
-                len(self.__output)
+                f"[{thisResponse['Request']}/{self.__dictSizeof}] {str(int((int(thisResponse['Request'])/self.__dictSizeof)*100))}%"
             )
 
     def __handleDefaultException(self, e: RequestException):
@@ -218,8 +217,7 @@ class Fuzzer:
             fh.writeLog(str(e))
             if not self.__verboseMode:
                 oh.progressStatus(
-                    f"[{self.__requester.getRequestIndex()}/{self.__dictSizeof}] {str(int((int(self.__requester.getRequestIndex())/self.__dictSizeof)*100))}%",
-                    len(self.__output)
+                    f"[{self.__requester.getRequestIndex()}/{self.__dictSizeof}] {str(int((int(self.__requester.getRequestIndex())/self.__dictSizeof)*100))}%"
                 )
         else:
             if self.__running:
@@ -236,6 +234,5 @@ class Fuzzer:
             oh.notWorkedBox(str(e))
         else:
             oh.progressStatus(
-                f"[{self.__requester.getRequestIndex()}/{self.__dictSizeof}] {str(int((int(self.__requester.getRequestIndex())/self.__dictSizeof)*100))}%",
-                len(self.__output)
+                f"[{self.__requester.getRequestIndex()}/{self.__dictSizeof}] {str(int((int(self.__requester.getRequestIndex())/self.__dictSizeof)*100))}%"
             )

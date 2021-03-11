@@ -195,20 +195,18 @@ class OutputHandler:
         }, False)
         self.getInitOrEnd()
 
-    def progressStatus(self, status: str, itemsFound: int):
+    def progressStatus(self, status: str):
         """Output the progress status of the fuzzing
 
         @type status: str
-        @param status: The status progress of the fuzzing (between 0 to 100)
-        @type itemsFound: int
-        @param itemsFound: The number of possible payloads found
+        @param status: The status progress of the fuzzing (between 0% to 100%)
         """
         with self.__lock:
             if not self.__lastInline:
                 self.__eraseLine()
                 self.__lastInline = True
             sys.stdout.flush()
-            print('\r'+self.__getTime()+self.__getInfo(f"Progress status: {status} completed | Found {str(itemsFound)} possible payload(s)"), end='')
+            print('\r'+self.__getTime()+self.__getInfo(f"Status: {status} completed"), end='')
 
     def printForTableMode(self, response: dict, vulnValidator: bool):
         """Output the content of the requests table
