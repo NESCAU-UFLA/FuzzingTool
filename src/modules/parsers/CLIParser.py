@@ -45,29 +45,16 @@ class CLIParser:
         @returns tuple(str, str, dict, dict): The default parameters of the requests
         '''
         if '-r' in self.__argv:
-            headerList = deque(fh.readRaw(self.__argv[self.__argv.index('-r')+1]))
-            method, path, httpVer = headerList.popleft().split(' ')
-            httpHeader = self.__getHeader(headerList)
-            param = ''
-            if method == 'GET' and '?' in path:
-                path, param = path.split('?', 1)
-            # Check if a scheme is specified, otherwise set http as default
-            if '--scheme' in self.__argv:
-                scheme = self.__argv[self.__argv.index('--scheme')+1]
-            else:
-                scheme = 'http'
-            url = f"{scheme}://{httpHeader['Host']}{path}"
-            if method == 'POST' and len(headerList) > 0:
-                param = headerList.popleft()
+            url, method, param, httpHeader = self.__getRequestFromRawHttp()
         else:
-            url, method, param = self.__getMethodAndArgs(self.getUrl())
+            url, method, param = self.__getRequestFromArgs()
             httpHeader = {}
-        requestData = self.__getRequestData(param) if param != '' else {}
+        requestData = self.__getRequestData(param)
         return (url, method, requestData, httpHeader)
 
     def getWordlistFile(self):
         """Get the fuzzing wordlist filename from -f argument
-           if the argument -f doesn't exists, or the file couldn't be open, an error is thrown and the application exits
+        if the argument -f doesn't exists, or the file couldn't be open, an error is thrown and the application exits
         """
         try:
             wordlistFileName = self.__argv[self.__argv.index('-f')+1]
@@ -180,7 +167,7 @@ class CLIParser:
 
     def checkPrefixAndSuffix(self, payloader: Payloader):
         """Check if the --prefix argument is present, and set the prefix into request parser
-           Check if the --suffix argument is present, and set the suffix into request parser
+        Check if the --suffix argument is present, and set the suffix into request parser
         
         @type payloader: Payloader
         @param requester: The object responsible to handle with the payloads
@@ -204,8 +191,8 @@ class CLIParser:
 
     def checkCase(self, payloader: Payloader):
         """Check if the --upper argument is present, and set the uppercase flag
-           Check if the --lower argument is present, and set the lowercase flag
-           Check if the --capitalize argument is present, and set the capitalize flag
+        Check if the --lower argument is present, and set the lowercase flag
+        Check if the --capitalize argument is present, and set the capitalize flag
         
         @type payloader: Payloader
         @param requester: The object responsible to handle with the payloads
@@ -261,58 +248,89 @@ class CLIParser:
             i += 1
         return httpHeader
 
-    def __makeDefaultParam(self, defaultParam: dict, param: str):
+    def __getRequestFromRawHttp(self):
+        headerList = deque(fh.readRaw(self.__argv[self.__argv.index('-r')+1]))
+        method, path, httpVer = headerList.popleft().split(' ')
+        httpHeader = self.__getHeader(headerList)
+        param = {
+            'GET': '',
+            'POST': ''
+        }
+        if method == 'GET' and '?' in path:
+            path, param['GET'] = path.split('?', 1)
+        # Check if a scheme is specified, otherwise set http as default
+        if '--scheme' in self.__argv:
+            scheme = self.__argv[self.__argv.index('--scheme')+1]
+        else:
+            scheme = 'http'
+        url = f"{scheme}://{httpHeader['Host']}{path}"
+        if method == 'POST' and len(headerList) > 0:
+            param['POST'] = headerList.popleft()
+        return (url, method, param, httpHeader)
+    
+    def __getRequestFromArgs(self):
+        """Get the param method to use ('?' or '$' in URL if GET, or --data) and the request param string
+
+        @returns tuple(str, str, dict): The tuple with the new target URL, the request method and params
+        """
+        url = self.getUrl()
+        param = {
+            'GET': '',
+            'POST': ''
+        }
+        if '?' in url or '$' in url:
+            method = 'GET'
+            if '?' in url:
+                url, param['GET'] = url.split('?', 1)
+        else:
+            method = 'POST'
+            try:
+                param['POST'] = self.__argv[self.__argv.index('--data')+1]
+            except ValueError:
+                oh.errorBox("You must set at least GET or POST parameters for data fuzzing.")
+        return (url, method, param)
+    
+    def __makeParamDict(self, paramDict: dict, param: str):
         """Set the default parameter values if are given
 
-        @type defaultParam: dict
-        @param defaultParam: The entries data of the request
+        @type paramDict: dict
+        @param paramDict: The entries data of the request
         @type param: str
         @param param: The parameter string of the request
         """
         if '=' in param:
             param, value = param.split('=')
             if not '$' in value:
-                defaultParam[param] = value
+                paramDict[param] = value
             else:
-                defaultParam[param] = ''
+                paramDict[param] = ''
         else:
-            defaultParam[param] = ''
-    
-    def __getMethodAndArgs(self, url: str):
-        """Get the param method to use ('?' or '$' in URL if GET, or --data) and the request param string
+            paramDict[param] = ''
 
-        @type url: str
-        @param url: The target URL
-        @returns tuple(str, str, str): The tuple with the new target URL, the request method and params
-        """
-        param = ''
-        if '?' in url or '$' in url:
-            if '?' in url:
-                url, param = url.split('?', 1)
-            method = 'GET'
-        else:
-            method = 'POST'
-            try:
-                param = self.__argv[self.__argv.index('--data')+1]
-            except ValueError:
-                oh.errorBox("You must set at least GET or POST parameters for the fuzzing test.")
-        return (url, method, param)
-    
-    def __getRequestData(self, param: str):
+    def __getRequestData(self, param: dict):
         """Split all the request parameters into a list of arguments used in the request
 
-        @type param: str
-        @param param: The parameter string of the request
+        @type param: dict
+        @param param: The parameters of the request
         @returns dict: The entries data of the request
         """
-        defaultParam = {}
-        if '&' in param:
-            param = param.split('&')
-            for arg in param:
-                self.__makeDefaultParam(defaultParam, arg)
+        paramDict = {
+            'GET': {},
+            'POST': {}
+        }
+        if param['GET']:
+            key = 'GET'
+        elif param['POST']:
+            key = 'POST'
         else:
-            self.__makeDefaultParam(defaultParam, param)
-        return defaultParam
+            return paramDict
+        if '&' in param[key]:
+            param[key] = param[key].split('&')
+            for arg in param[key]:
+                self.__makeParamDict(paramDict[key], arg)
+        else:
+            self.__makeParamDict(paramDict[key], param[key])
+        return paramDict
     
     def __getAllowedStatus(self, status: str, allowedList: list, allowedRange: list):
         """Get the allowed status code list and range

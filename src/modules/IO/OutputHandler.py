@@ -222,7 +222,7 @@ class OutputHandler:
             colorCode = Colors.GREEN
         response = self.__getFormatedResponse(response)
         print(
-            f"\r  | {colorCode}{response['Request']}"+
+            f"  | {colorCode}{response['Request']}"+
             f"\033[0m | {colorCode}{response['Payload']}"+
             f"\033[0m | {colorCode}{response['Time Taken']}"+
             f"\033[0m | {colorCode}{response['Status']}"+

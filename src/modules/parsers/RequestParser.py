@@ -105,14 +105,17 @@ class RequestParser:
         """
         return httpHeader['content'] if not httpHeader['payloadKeys'] else self.__getAjustedHeader(httpHeader)
 
-    def getData(self, param: dict):
-        """The new param getter
+    def getData(self, data: dict):
+        """The new data getter
 
-        @type param: dict
-        @param param: The request parameters
+        @type data: dict
+        @param data: The request parameters
         @returns dict: The new request parameters
         """
-        return {} if not param else self.__getAjustedData(param)
+        return {
+            'GET': {} if data['GET'] else self.__getAjustedData(data['GET']),
+            'POST': {} if data['POST'] else self.__getAjustedData(data['POST'])
+        }
 
     def isUrlFuzzing(self):
         """The URL Fuzzing flag getter

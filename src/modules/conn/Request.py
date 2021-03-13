@@ -172,8 +172,8 @@ class Request:
         response = requests.request(
             requestParameters['Method'],
             requestParameters['Url'],
-            data=requestParameters['Data'],
-            params=requestParameters['Data'],
+            data=requestParameters['Data']['POST'],
+            params=requestParameters['Data']['GET'],
             headers=requestParameters['Header'],
             proxies=self.__proxy
         )
@@ -207,8 +207,8 @@ class Request:
                 response = Response(requests.request(
                     requestParameters['Method'],
                     targetUrl,
-                    data=requestParameters['Data'],
-                    params=requestParameters['Data'],
+                    data=requestParameters['Data']['POST'],
+                    params=requestParameters['Data']['GET'],
                     headers=requestParameters['Header'],
                     proxies=self.__proxy,
                     timeout=self.__timeout
@@ -234,6 +234,7 @@ class Request:
                 raise RequestException(f"Invalid hostname {hostname} for HTTP request")
             else:
                 response.setRequestData(payload, timeTaken, self.__requestIndex, targetIp)
+                response.loadResponseData()
                 return response.getResponseDict()
         finally:
             self.__requestIndex += 1

@@ -26,20 +26,19 @@ class Response:
 
     def getResponseDict(self):
         """Get the response data parsed into a dictionary"""
-        self.__getResponseHeaders()
         responseDict = {
-            'Request': str(self.__requestIndex),
-            'Payload': self.__payload,
-            'Time Taken': self.__RTT,
-            'Request Time': float('%.6f'%(self.__RTT-self.__elapsedTime)),
-            'Response Time': self.__elapsedTime,
-            'Status': self.__status,
-            'Length': self.__length,
-            'Words': self.__quantityOfWords,
-            'Lines': self.__quantityOfLines,
+            'Request': str(self.requestIndex),
+            'Payload': self.payload,
+            'Time Taken': self.RTT,
+            'Request Time': float('%.6f'%(self.RTT-self.elapsedTime)),
+            'Response Time': self.elapsedTime,
+            'Status': self.status,
+            'Length': self.length,
+            'Words': self.quantityOfWords,
+            'Lines': self.quantityOfLines,
         }
-        if self.__targetIp:
-            responseDict['IP'] = self.__targetIp
+        if self.targetIp:
+            responseDict['IP'] = self.targetIp
         return responseDict
     
     def setRequestData(self, payload: str, timeTaken: float, requestIndex: int, ip: str):
@@ -55,18 +54,18 @@ class Response:
         @param ip: The target IP
         @returns dict: The response data parsed into a dictionary
         """
-        self.__payload = payload
-        self.__RTT = float('%.6f'%(timeTaken))
-        self.__requestIndex = requestIndex
-        self.__targetIp = ip
-    
-    def __getResponseHeaders(self):
-        """Get the response data"""
-        responseContent = self.__response.content
-        self.__length = self.__response.headers.get('Content-Length')
-        if (self.__length == None):
-            self.__length = len(responseContent)
-        self.__elapsedTime = self.__response.elapsed.total_seconds()
-        self.__status = self.__response.status_code
-        self.__quantityOfWords = len(responseContent.split())
-        self.__quantityOfLines = responseContent.count(b'\n')
+        self.payload = payload
+        self.RTT = float('%.6f'%(timeTaken))
+        self.requestIndex = requestIndex
+        self.targetIp = ip
+
+    def loadResponseData(self):
+        """Loads the response data"""
+        self.content = self.__response.content
+        self.length = self.__response.headers.get('Content-Length')
+        if self.length == None:
+            self.length = len(self.content)
+        self.elapsedTime = self.__response.elapsed.total_seconds()
+        self.status = self.__response.status_code
+        self.quantityOfWords = len(self.content.split())
+        self.quantityOfLines = self.content.count(b'\n')

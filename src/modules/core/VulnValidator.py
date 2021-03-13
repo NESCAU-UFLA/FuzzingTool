@@ -51,21 +51,21 @@ class VulnValidator:
         """
         self.__allowedStatus = allowedStatus
 
-    def scan(self, thisResponse: dict):
+    def scan(self, response: dict):
         """Check if the request content has some predefined characteristics based on a payload, it'll be considered as vulnerable
         
-        @type thisResponse: dict
-        @param thisResponse: The actual response dictionary
+        @type response: dict
+        @param response: The actual response dictionary
         @returns bool: A vulnerability flag
         """
-        if (thisResponse['Status'] in self.__allowedStatus['List']
+        if (response['Status'] in self.__allowedStatus['List']
             or (self.__allowedStatus['Range']
-            and (self.__allowedStatus['Range'][0] <= thisResponse['Status']
-            and thisResponse['Status'] <= self.__allowedStatus['Range'][1]))):
+            and (self.__allowedStatus['Range'][0] <= response['Status']
+            and response['Status'] <= self.__allowedStatus['Range'][1]))):
             if self.__urlFuzzing:
                 return True
-            if self.__comparator['Length'] < int(thisResponse['Length']):
+            if self.__comparator['Length'] < int(response['Length']):
                 return True
-            if self.__comparator['Time'] < thisResponse['Time Taken']:
+            if self.__comparator['Time'] < response['Time Taken']:
                 return True
         return False
