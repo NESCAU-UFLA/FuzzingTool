@@ -69,25 +69,21 @@ class OutputHandler:
         self.__worked = f'{Colors.GRAY}[{Colors.GREEN}+{Colors.GRAY}]{Colors.RESET} '
         self.__notWorked = f'{Colors.GRAY}[{Colors.RED}-{Colors.GRAY}]{Colors.RESET} '
 
-    def setPrintContentMode(self, subdomainFuzzing: bool, verboseMode: bool):
+    def setPrintContentMode(self, scanner: object, verboseMode: bool):
         """Set the print content mode by the Fuzzer responses
 
-        @type subdomainFuzzing: bool
-        @param subdomainFuzzing: The subdomain fuzzing flag
+        @type scanner: object
+        @param scanner: The subdomain fuzzing flag
         @type verboseMode: bool
         @param verboseMode: The verbose mode flag
         """
-        if subdomainFuzzing:
-            if verboseMode:
-                self.__lock = None
-            self.printContent = self.printForBoxMode
-            self.__getMessage = self.__getSubdomainMessage
-        else:
-            if verboseMode:
-                self.printContent = self.printForTableMode
-            else:
-                self.printContent = self.printForBoxMode
-                self.__getMessage = self.__getDefaultMessage
+        if verboseMode:
+            self.__lock = None
+        self.printContent = self.printForBoxMode
+        try:
+            self.__getMessage = scanner.getMessage
+        except Exception as e:
+            exit(str(e))
 
     def infoBox(self, msg: str):
         """Print the message with a info label
@@ -130,7 +126,7 @@ class OutputHandler:
         @type msg: str
         @param msg: The message
         """
-        print(f'\r{self.__getTime()}{self.__getWorked(msg)}')
+        print(f'{self.__getTime()}{self.__getWorked(msg)}')
 
     def notWorkedBox(self, msg: str):
         """Print the message with not worked label and a message
@@ -220,7 +216,7 @@ class OutputHandler:
             colorCode = Colors.RESET
         else:
             colorCode = Colors.GREEN
-        response = self.__getFormatedResponse(response)
+        response = self.getFormatedResponse(response)
         print(
             f"  | {colorCode}{response['Request']}"+
             f"\033[0m | {colorCode}{response['Payload']}"+
@@ -315,38 +311,7 @@ class OutputHandler:
         """
         return f'{self.__notWorked}{Colors.LIGHT_GRAY}{msg}{Colors.RESET}'
 
-    def __getDefaultMessage(self, response: dict):
-        """Get the formated message for default mode
-
-        @type response: dict
-        @param response: The response dict
-        @returns str: The message for default mode
-        """
-        status = response['Status']
-        response = self.__getFormatedResponse(response)
-        return (
-            f"{response['Payload']} {Colors.GRAY}["+
-            f"{Colors.LIGHT_GRAY}RTT{Colors.RESET} {response['Time Taken']} | "+
-            f"{Colors.LIGHT_GRAY}Code{Colors.RESET} {status} | "+
-            f"{Colors.LIGHT_GRAY}Size{Colors.RESET} {response['Length']} | "+
-            f"{Colors.LIGHT_GRAY}Words{Colors.RESET} {response['Words']} | "+
-            f"{Colors.LIGHT_GRAY}Lines{Colors.RESET} {response['Lines']}{Colors.GRAY}]{Colors.RESET}"
-        )
-
-    def __getSubdomainMessage(self, response: dict):
-        """Get the formated message for subdomain mode
-
-        @type response: dict
-        @param response: The response dict
-        @returns str: The message for subdomain mode
-        """
-        return (
-            '{:<30}'.format(self.__fixPayloadToOutput(response['Payload']))+
-            f' {Colors.GRAY}[{Colors.LIGHT_GRAY}IP{Colors.RESET} '+'{:>15}'.format(response['IP'])+" | "+
-            f"{Colors.LIGHT_GRAY}Code{Colors.RESET} {response['Status']}{Colors.GRAY}]{Colors.RESET}"
-        )
-
-    def __getFormatedResponse(self, response: dict):
+    def getFormatedResponse(self, response: dict):
         """Format the response into a dict of strings
 
         @type response: dict
@@ -355,7 +320,7 @@ class OutputHandler:
         """
         return {
             'Request': '{:<7}'.format(response['Request']),
-            'Payload': '{:<30}'.format(self.__fixPayloadToOutput(response['Payload'])),
+            'Payload': '{:<30}'.format(self.fixPayloadToOutput(response['Payload'])),
             'Time Taken': '{:>10}'.format(response['Time Taken']),
             'Status': '{:>4}'.format(response['Status']),
             'Length': '{:>8}'.format(response['Length']),
@@ -370,7 +335,7 @@ class OutputHandler:
         sys.stdout.write("\033[0G")
         sys.stdout.flush()
 
-    def __fixPayloadToOutput(self, payload: str):
+    def fixPayloadToOutput(self, payload: str):
         """Fix the payload's size
 
         @type payload: str
@@ -441,11 +406,14 @@ class OutputHandler:
         self.__helpContent(5, "--upper", "Set the uppercase flag for the payloads")
         self.__helpContent(5, "--lower", "Set the lowercase flag for the payloads")
         self.__helpContent(5, "--capitalize", "Set the capitalize flag for the payloads")
+        self.__helpTitle(3, "Match options:")
+        self.__helpContent(5, "-Xc STATUS", "Allow responses based on their status codes")
+        self.__helpContent(5, "-Xs SIZE", "Allow responses based on their length (in bytes)")
+        self.__helpContent(5, "-Xt TIME", "Allow responses based on their elapsed time (in seconds)")
         self.__helpTitle(3, "More options:")
         self.__helpContent(5, "-V, --verbose", "Enable the verbose mode")
         self.__helpContent(5, "--delay DELAY", "Define the delay between each request (in seconds)")
         self.__helpContent(5, "-t NUMBEROFTHREADS", "Define the number of threads used in the tests")
-        self.__helpContent(5, "--allowed-status STATUS", "Define the allowed status codes for responses to be saved on report")
         self.__helpContent(5, "-o REPORT", "Define the report format (accept txt, csv and json)")
         self.__helpTitle(0, "Examples:")
         self.__helpContent(3, "./FuzzingTool.py -u http://127.0.0.1/post.php?id= -f /path/to/wordlist/sqli.txt -o fuzzingGet.csv", '')

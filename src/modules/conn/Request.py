@@ -11,7 +11,7 @@
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
 from .Response import Response
-from .RequestException import RequestException
+from .RequestException import RequestException, InvalidHostname
 from ..parsers.RequestParser import *
 from ..IO.OutputHandler import outputHandler as oh
 from ..IO.FileHandler import fileHandler as fh
@@ -201,7 +201,7 @@ class Request:
                     targetIp = socket.gethostbyname(hostname)
                     payload = targetUrl
                 except:
-                    raise RequestException(f"Can't resolve hostname {hostname}")
+                    raise InvalidHostname(f"Can't resolve hostname {hostname}")
             try:
                 before = time.time()
                 response = Response(requests.request(
@@ -234,8 +234,7 @@ class Request:
                 raise RequestException(f"Invalid hostname {hostname} for HTTP request")
             else:
                 response.setRequestData(payload, timeTaken, self.__requestIndex, targetIp)
-                response.loadResponseData()
-                return response.getResponseDict()
+                return response
         finally:
             self.__requestIndex += 1
 

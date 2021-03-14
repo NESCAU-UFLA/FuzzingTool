@@ -12,7 +12,7 @@ if sys.platform.startswith("win"):
 
 setup(
     name = "FuzzingTool",
-    version = "3.8.0",
+    version = "3.8.1",
     author = "Vitor Oriel C N Borges",
     author_email = "vitorwixmix@gmail.com",
     description = ("Software for fuzzing, used on web application pentestings."),

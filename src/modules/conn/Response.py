@@ -23,23 +23,6 @@ class Response:
         @param response: The response of a request
         """
         self.__response = response
-
-    def getResponseDict(self):
-        """Get the response data parsed into a dictionary"""
-        responseDict = {
-            'Request': str(self.requestIndex),
-            'Payload': self.payload,
-            'Time Taken': self.RTT,
-            'Request Time': float('%.6f'%(self.RTT-self.elapsedTime)),
-            'Response Time': self.elapsedTime,
-            'Status': self.status,
-            'Length': self.length,
-            'Words': self.quantityOfWords,
-            'Lines': self.quantityOfLines,
-        }
-        if self.targetIp:
-            responseDict['IP'] = self.targetIp
-        return responseDict
     
     def setRequestData(self, payload: str, timeTaken: float, requestIndex: int, ip: str):
         """Set the request data to be used into the dictionary

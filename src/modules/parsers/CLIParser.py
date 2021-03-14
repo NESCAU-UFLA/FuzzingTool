@@ -11,8 +11,8 @@
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
 from ..core.Fuzzer import Fuzzer
+from ..core.Matcher import Matcher
 from ..core.Payloader import Payloader
-from ..core.VulnValidator import VulnValidator
 from ..conn.Request import Request
 from ..IO.OutputHandler import outputHandler as oh
 from ..IO.FileHandler import fileHandler as fh
@@ -140,31 +140,6 @@ class CLIParser:
             fuzzer.setNumThreads(int(numThreads))
             oh.infoBox(f"Set number of threads: {numThreads} thread(s)")
 
-    def checkAllowedStatus(self, vulnValidator: VulnValidator):
-        """Check if the --allowed-status argument is present, and set the alllowed status codes used in the vulnValidator
-
-        @type vulnValidator: VulnValidator
-        @param fuzzer: The Fuzzer object
-        """
-        if '--allowed-status' in self.__argv:
-            allowedStatus = self.__argv[self.__argv.index('--allowed-status')+1]
-            allowedList = []
-            allowedRange = []
-            if ',' in allowedStatus:
-                for status in allowedStatus.split(','):
-                    self.__getAllowedStatus(status, allowedList, allowedRange)
-            else:
-                self.__getAllowedStatus(allowedStatus, allowedList, allowedRange)
-            if 200 not in allowedList:
-                if oh.askYesNo('warning', "Status code 200 (OK) wasn't included. Do you want to include it to the allowed status codes?"):
-                    allowedList = [200] + allowedList
-            allowedStatus = {
-                'List': allowedList,
-                'Range': allowedRange
-            }
-            vulnValidator.setAllowedStatus(allowedStatus)
-            oh.infoBox(f"Set the allowed status codes: {str(allowedStatus)}")
-
     def checkPrefixAndSuffix(self, payloader: Payloader):
         """Check if the --prefix argument is present, and set the prefix into request parser
         Check if the --suffix argument is present, and set the suffix into request parser
@@ -229,6 +204,49 @@ class CLIParser:
             'Name': reportName,
             'Host': host
         })
+
+    def checkPlugins(self, fuzzer: Fuzzer, requester: Request):
+        if requester.isSubdomainFuzzing():
+            from ..plugins.scanners.SubdomainScanner import SubdomainScanner
+            fuzzer.setScanner(SubdomainScanner())
+
+    def checkMatcher(self, matcher: Matcher):
+        """Check if the --allowed-status argument is present, and set the alllowed status codes used in the Matcher
+
+        @type matcher: Matcher
+        @param matcher: The matcher object
+        """
+        if '-Xc' in self.__argv:
+            allowedStatus = self.__argv[self.__argv.index('-Xc')+1]
+            allowedList = []
+            allowedRange = []
+            if ',' in allowedStatus:
+                for status in allowedStatus.split(','):
+                    self.__getAllowedStatus(status, allowedList, allowedRange)
+            else:
+                self.__getAllowedStatus(allowedStatus, allowedList, allowedRange)
+            if 200 not in allowedList:
+                if oh.askYesNo('warning', "Status code 200 (OK) wasn't included. Do you want to include it to the allowed status codes?"):
+                    allowedList = [200] + allowedList
+            allowedStatus = {
+                'List': allowedList,
+                'Range': allowedRange
+            }
+            matcher.setAllowedStatus(allowedStatus)
+            oh.infoBox(f"Set the allowed status codes: {str(allowedStatus)}")
+        comparator = {
+            'Length': None,
+            'Time': None
+        }
+        if '-Xs' in self.__argv:
+            length = self.__argv[self.__argv.index('-Xs')+1]
+            comparator['Length'] = int(length)
+            oh.infoBox(f"Exclude by length: {length} bytes")
+        if '-Xt' in self.__argv:
+            time = self.__argv[self.__argv.index('-Xt')+1]
+            comparator['Time'] = float(time)
+            oh.infoBox(f"Exclude by time: {time} seconds")
+        matcher.setComparator(comparator)
 
     def __getHeader(self, args: list):
         '''Get the HTTP header

@@ -13,7 +13,6 @@
 from .parsers.CLIParser import CLIParser
 from .core.Fuzzer import Fuzzer
 from .core.Payloader import Payloader
-from .core.VulnValidator import VulnValidator
 from .conn.Request import Request
 from .conn.RequestException import RequestException
 from .IO.OutputHandler import outputHandler as oh
@@ -24,7 +23,7 @@ import time
 APP_VERSION = {
     'MAJOR_VERSION': 3,
     "MINOR_VERSION": 8,
-    "PATCH": 0
+    "PATCH": 1
 }
 
 def version():
@@ -95,26 +94,22 @@ class ApplicationManager:
         cliParser.checkDelay(self.__fuzzer)
         cliParser.checkVerboseMode(self.__fuzzer)
         cliParser.checkNumThreads(self.__fuzzer)
-        cliParser.checkAllowedStatus(self.__fuzzer.getVulnValidator())
         cliParser.checkPrefixAndSuffix(self.__fuzzer.getPayloader())
         cliParser.checkCase(self.__fuzzer.getPayloader())
         cliParser.checkReporter(self.__requester)
+        cliParser.checkPlugins(self.__fuzzer, self.__requester)
+        cliParser.checkMatcher(self.__fuzzer.getScanner())
         self.prepare()
         self.start()
 
     def prepare(self):
         """Prepares the application"""
         try:
-            oh.setPrintContentMode(self.__requester.isSubdomainFuzzing(), self.__fuzzer.isVerboseMode())
+            oh.setPrintContentMode(self.__fuzzer.getScanner(), self.__fuzzer.isVerboseMode())
             self.__checkConnectionAndRedirections()
             self.__checkProxies()
-            vulnValidator = self.__fuzzer.getVulnValidator()
-            if self.__requester.isUrlFuzzing():
-                vulnValidator.setUrlFuzzing(True)
-                if not self.__requester.isSubdomainFuzzing():
-                    self.__checkIgnoreErrors()
-            else:
-                vulnValidator.setUrlFuzzing(False)
+            self.__checkIgnoreErrors()
+            if not self.__requester.isUrlFuzzing() and not self.__fuzzer.getScanner().comparatorIsSet():
                 self.__checkDataComparator()
         except KeyboardInterrupt:
             exit('')
@@ -124,18 +119,13 @@ class ApplicationManager:
         oh.infoBox(f"Starting test on '{self.__requester.getUrl()}' ...")
         self.__startedTime = time.time()
         try:
-            if self.__fuzzer.isVerboseMode() and not self.__requester.isSubdomainFuzzing():
-                oh.getHeader()
             self.__fuzzer.start()
         except KeyboardInterrupt:
             self.__fuzzer.stop()
             oh.abortBox("Test aborted")
             self.__showFooter()
         else:
-            if self.__fuzzer.isVerboseMode():
-                if not self.__requester.isSubdomainFuzzing():
-                    oh.getHeader()
-            else:
+            if not self.__fuzzer.isVerboseMode():
                 oh.print("")
             self.__showFooter()
             oh.infoBox("Test completed")
@@ -195,15 +185,21 @@ class ApplicationManager:
 
     def __checkIgnoreErrors(self):
         """Check if the user wants to ignore the errors during the tests"""
-        if oh.askYesNo('info', "Do you want to ignore errors during the tests, and save them into a log file?"):
+        if self.__requester.isUrlFuzzing():
             self.__fuzzer.setIgnoreErrors(True)
             fh.openLog()
+        else:
+            if oh.askYesNo('info', "Do you want to ignore errors during the tests, and save them into a log file?"):
+                self.__fuzzer.setIgnoreErrors(True)
+                fh.openLog()
 
     def __checkDataComparator(self):
         """Check if the user wants to insert custom data comparator to validate the responses"""
         payload = ' '
         oh.infoBox(f"Making first request with '{payload}' as payload ...")
-        firstResponse = self.__requester.request(payload)
+        firstResponse = self.__fuzzer.getScanner().getResponseDict(
+            self.__requester.request(payload)
+        )
         oh.getHeader()
         oh.printForTableMode(firstResponse, False)
         oh.getHeader()
@@ -213,7 +209,7 @@ class ApplicationManager:
         time = firstResponse['Time Taken']+5.0
         if oh.askYesNo('info', f"Do you want to exclude responses based on custom time (default {time} seconds)?"):
             time = oh.askData("Insert the time (in seconds)")
-        self.__fuzzer.getVulnValidator().setComparator({
+        self.__fuzzer.getScanner().setComparator({
             'Length': int(length),
             'Time': float(time)
         })

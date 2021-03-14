@@ -10,12 +10,13 @@
 #
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
-from .VulnValidator import VulnValidator
 from .Payloader import Payloader
+from .Matcher import Matcher
 from ..conn.Request import Request
-from ..conn.RequestException import RequestException
+from ..conn.RequestException import RequestException, InvalidHostname
 from ..IO.OutputHandler import outputHandler as oh
 from ..IO.FileHandler import fileHandler as fh
+from ..plugins import *
 
 from threading import Thread, Event, Semaphore
 import time
@@ -30,7 +31,7 @@ class Fuzzer:
         numberOfThreads: The number of threads used in the application
         output: The output content to be send to the file
         dictSizeof: The number of payloads in the payload file
-        vulnValidator: A vulnerability validator object
+        Matcher: A vulnerability validator object
         payloader: The payloader object to handle with the payloads
     """
     def __init__(self, requester: Request, payloader: Payloader, dictSizeof: int):
@@ -50,9 +51,8 @@ class Fuzzer:
         self.__numberOfThreads = 1
         self.__output = []
         self.__dictSizeof = dictSizeof
-        self.__vulnValidator = VulnValidator()
+        self.__scanner = NoScanner()
         self.__payloader = payloader
-        self.__handleRequestException = self.__handleDefaultException if not self.__requester.isSubdomainFuzzing() else self.__handleSubdomainException
 
     def getRequester(self):
         """The requester getter
@@ -75,12 +75,12 @@ class Fuzzer:
         """
         return self.__output
 
-    def getVulnValidator(self):
+    def getScanner(self):
         """The vulnerability validator getter
 
-        @returns VulnValidator: A vulnerability validator object
+        @returns Scanner: A vulnerability validator object
         """
-        return self.__vulnValidator
+        return self.__scanner
 
     def getPayloader(self):
         """The payloader getter
@@ -121,6 +121,9 @@ class Fuzzer:
         """
         self.__numberOfThreads = numberOfThreads
 
+    def setScanner(self, scanner: BaseScanner):
+        self.__scanner = scanner
+
     def threadHandle(self, action: str):
         """Function that handle with all of the threads functions and atributes
 
@@ -136,6 +139,8 @@ class Fuzzer:
                     try:
                         self.do(p)
                         time.sleep(self.__delay)
+                    except InvalidHostname as e:
+                        self.__haandleInvalidHostname(e)
                     except RequestException as e:
                         self.__handleRequestException(e)
                 if not self.__playerHandler.isSet():
@@ -193,42 +198,46 @@ class Fuzzer:
         @type payload: str
         @param payload: The payload to be used on the request
         """
-        thisResponse = self.__requester.request(payload)
-        probablyVulnerable = self.__vulnValidator.scan(thisResponse)
+        response = self.__scanner.getResponseDict(
+            self.__requester.request(payload)
+        )
+        probablyVulnerable = self.__scanner.scan(response)
         if self.__verboseMode:
             if probablyVulnerable:
-                self.__output.append(thisResponse)
-            oh.printContent(thisResponse, probablyVulnerable)
+                self.__output.append(response)
+            oh.printContent(response, probablyVulnerable)
         else:
             if probablyVulnerable:
-                self.__output.append(thisResponse)
-                oh.printContent(thisResponse, probablyVulnerable)
+                self.__output.append(response)
+                oh.printContent(response, probablyVulnerable)
             oh.progressStatus(
-                f"[{thisResponse['Request']}/{self.__dictSizeof}] {str(int((int(thisResponse['Request'])/self.__dictSizeof)*100))}%"
+                f"[{response['Request']}/{self.__dictSizeof}] {str(int((int(response['Request'])/self.__dictSizeof)*100))}%"
             )
 
-    def __handleDefaultException(self, e: RequestException):
-        """Handle with the default request exceptions
+    def __handleRequestException(self, e: RequestException):
+        """Handle with the request exceptions
         
         @type e: RequestException
         @param e: The request exception
         """
         if self.__ignoreErrors:
-            fh.writeLog(str(e))
             if not self.__verboseMode:
                 oh.progressStatus(
                     f"[{self.__requester.getRequestIndex()}/{self.__dictSizeof}] {str(int((int(self.__requester.getRequestIndex())/self.__dictSizeof)*100))}%"
                 )
+            else:
+                oh.notWorkedBox(str(e))
+            fh.writeLog(str(e))
         else:
             if self.__running:
                 self.stop()
                 oh.abortBox(str(e))
 
-    def __handleSubdomainException(self, e: RequestException):
+    def __haandleInvalidHostname(self, e: InvalidHostname):
         """Handle with the subdomain request exceptions
         
-        @type e: RequestException
-        @param e: The request exception
+        @type e: InvalidHostname
+        @param e: The invalid hostname exception
         """
         if self.__verboseMode:
             oh.notWorkedBox(str(e))

@@ -10,8 +10,8 @@
 #
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
-class VulnValidator:
-    """A vulnerability validator
+class Matcher:
+    """A matcher validator
 
     Attributes:
         urlFuzzing: The URL Fuzzing flag
@@ -20,20 +20,17 @@ class VulnValidator:
     """
     def __init__(self):
         """Class constructor"""
-        self.__urlFuzzing = False
-        self.__comparator = {}
-        self.__allowedStatus = {
+        self._comparator = {
+            'Length': None,
+            'Time': None
+        }
+        self._allowedStatus = {
             'List': [200],
             'Range': [],
         }
-    
-    def setUrlFuzzing(self, urlFuzzing: bool):
-        """The URL Fuzzing flag setter
 
-        @type urlFuzzing: bool
-        @param urlFuzzing: The URL Fuzzing flag
-        """
-        self.__urlFuzzing = urlFuzzing
+    def comparatorIsSet(self):
+        return self._comparator['Length'] or self._comparator['Time']
 
     def setComparator(self, comparator: dict):
         """The default comparator setter
@@ -41,7 +38,7 @@ class VulnValidator:
         @type comparator: dict
         @param comparator: The comparator with time and length
         """
-        self.__comparator = comparator
+        self._comparator = comparator
 
     def setAllowedStatus(self, allowedStatus: dict):
         """The allowed status setter
@@ -49,23 +46,25 @@ class VulnValidator:
         @type allowedStatus: dict
         @param allowedStatus: The allowed status dict
         """
-        self.__allowedStatus = allowedStatus
+        self._allowedStatus = allowedStatus
 
-    def scan(self, response: dict):
+    def match(self, response: dict):
         """Check if the request content has some predefined characteristics based on a payload, it'll be considered as vulnerable
         
         @type response: dict
         @param response: The actual response dictionary
         @returns bool: A vulnerability flag
         """
-        if (response['Status'] in self.__allowedStatus['List']
-            or (self.__allowedStatus['Range']
-            and (self.__allowedStatus['Range'][0] <= response['Status']
-            and response['Status'] <= self.__allowedStatus['Range'][1]))):
-            if self.__urlFuzzing:
-                return True
-            if self.__comparator['Length'] < int(response['Length']):
-                return True
-            if self.__comparator['Time'] < response['Time Taken']:
-                return True
+        if self._matchStatus(response['Status']):
+            if self._comparator['Length']:
+                return self._comparator['Length'] < int(response['Length'])
+            if self._comparator['Time']:
+                return self._comparator['Time'] < response['Time Taken']
+            return True
         return False
+    
+    def _matchStatus(self, status: int):
+        return (status in self._allowedStatus['List']
+                or (self._allowedStatus['Range']
+                and (self._allowedStatus['Range'][0] <= status
+                and status <= self._allowedStatus['Range'][1])))

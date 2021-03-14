@@ -10,10 +10,28 @@
 #
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
-class RequestException(Exception):
-    def __init__(self, msg: str = ''):
-        super().__init__(msg)
+from ...core.Matcher import Matcher
+from ...conn.Response import Response
 
-class InvalidHostname(Exception):
-    def __init__(self, msg: str = ''):
-        super().__init__(msg)
+class BaseScanner(Matcher):
+    def getResponseDict(self, response: Response):
+        """Get the response data parsed into a dictionary"""
+        response.loadResponseData()
+        responseDict = {
+            'Request': str(response.requestIndex),
+            'Payload': response.payload,
+            'Time Taken': response.RTT,
+            'Request Time': float('%.6f'%(response.RTT-response.elapsedTime)),
+            'Response Time': response.elapsedTime,
+            'Status': response.status,
+            'Length': response.length,
+            'Words': response.quantityOfWords,
+            'Lines': response.quantityOfLines,
+        }
+        return responseDict
+
+    def scan(self, response: dict):
+        raise Exception("Not Implemented Exception")
+
+    def getMessage(self, response: dict):
+        raise Exception("Not Implemented Exception")
