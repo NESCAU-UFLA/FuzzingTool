@@ -113,8 +113,8 @@ class RequestParser:
         @returns dict: The new request parameters
         """
         return {
-            'GET': {} if data['GET'] else self.__getAjustedData(data['GET']),
-            'POST': {} if data['POST'] else self.__getAjustedData(data['POST'])
+            'GET': {} if not data['GET'] else self.__getAjustedData(data['GET']),
+            'POST': {} if not data['POST'] else self.__getAjustedData(data['POST'])
         }
 
     def isUrlFuzzing(self):
