@@ -10,36 +10,28 @@
 #
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
-from ..templates.BaseScanner import BaseScanner
-from ...core.Matcher import Matcher
+from .BaseScanner import BaseScanner
+from .Matcher import Matcher
 from ...conn.Response import Response
-from ...IO.OutputHandler import Colors, outputHandler as oh
+from ...IO.OutputHandler import fixPayloadToOutput, Colors
 
-class NoScanner(BaseScanner):
-    __name__ = "NoScanner"
+class SubdomainScanner(BaseScanner):
+    __name__ = "Subdomain Scanner"
     __author__ = "Vitor Oriel C N Borges"
 
-    def getResponseDict(self, response: Response):
-        """Get the response data parsed into a dictionary"""
-        return super().getResponseDict(response)
+    def getResult(self, response: Response):
+        result = super().getResult(response)
+        result['IP'] = response.targetIp
+        return result
 
-    def scan(self, response: dict):
-        return self.match(response)
-    
-    def getMessage(self, response: dict):
-        """Get the formated message for default mode
+    def scan(self, result: dict):
+        return self.match(result)
 
-        @type response: dict
-        @param response: The response dict
-        @returns str: The message for default mode
-        """
-        status = response['Status']
-        response = oh.getFormatedResponse(response)
+    def getMessage(self, result: dict):
+        payload = '{:<30}'.format(fixPayloadToOutput(result['Payload']))
+        ip = '{:>15}'.format(result['IP'])
         return (
-            f"{response['Payload']} {Colors.GRAY}["+
-            f"{Colors.LIGHT_GRAY}RTT{Colors.RESET} {response['Time Taken']} | "+
-            f"{Colors.LIGHT_GRAY}Code{Colors.RESET} {status} | "+
-            f"{Colors.LIGHT_GRAY}Size{Colors.RESET} {response['Length']} | "+
-            f"{Colors.LIGHT_GRAY}Words{Colors.RESET} {response['Words']} | "+
-            f"{Colors.LIGHT_GRAY}Lines{Colors.RESET} {response['Lines']}{Colors.GRAY}]{Colors.RESET}"
+            f"{payload} {Colors.GRAY}["+
+            f'{Colors.LIGHT_GRAY}IP{Colors.RESET} {ip}'" | "+
+            f"{Colors.LIGHT_GRAY}Code{Colors.RESET} {result['Status']}{Colors.GRAY}]{Colors.RESET}"
         )

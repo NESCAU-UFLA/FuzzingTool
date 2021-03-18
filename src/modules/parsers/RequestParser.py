@@ -17,7 +17,7 @@ def getIndexesToParse(paramContent: str):
     @type paramContent: str
     @param paramContent: The parameter content
     @returns list: The positions indexes to insert the payload.
-                    Returns an empty list if the tests'll not occur
+                   Returns an empty list if the tests'll not occur
     """
     return [i for i, char in enumerate(paramContent) if char == '$']
 

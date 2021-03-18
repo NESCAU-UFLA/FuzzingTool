@@ -22,6 +22,42 @@ if platform.system() == 'Windows':
         exit("Colorama package not installed. Install all dependencies first.")
     init()
 
+def fixPayloadToOutput(payload: str):
+    """Fix the payload's size
+
+    @type payload: str
+    @param payload: The payload used in the request
+    @returns str: The fixed payload to output
+    """
+    if (len(payload) > 30):
+        output = ""
+        for i in range(27):
+            if payload[i] == '	':
+                output += ' '
+            else:
+                output += payload[i]
+        output += '...'
+        return output
+    else:
+        return payload
+
+def getFormatedResult(result: dict):
+    """Format the result into a dict of strings
+
+    @type result: dict
+    @param result: The result dict
+    @returns dict: The result formated with strings
+    """
+    return {
+        'Request': '{:<7}'.format(result['Request']),
+        'Payload': '{:<30}'.format(fixPayloadToOutput(result['Payload'])),
+        'Time Taken': '{:>10}'.format(result['Time Taken']),
+        'Status': '{:>4}'.format(result['Status']),
+        'Length': '{:>8}'.format(result['Length']),
+        'Words': '{:>6}'.format(result['Words']),
+        'Lines': '{:>5}'.format(result['Lines'])
+    }
+
 class Colors:
     """Class that handle with the colors"""
     RESET = '\033[0m'
@@ -30,8 +66,10 @@ class Colors:
     RED = '\u001b[31;1m'
     GREEN = '\u001b[32;1m'
     BLUE_GRAY = '\033[36m'
-    LIGHT_GREEN = '\u001b[38;5;48m'
     LIGHT_GRAY = '\u001b[38;5;250m'
+    LIGHT_YELLOW = '\u001b[33;1m'
+    LIGHT_GREEN = '\u001b[38;5;48m'
+    BOLD = '\033[1m'
 
 class OutputHandler:
     """Class that handle with the outputs
@@ -47,6 +85,8 @@ class OutputHandler:
 
     """
     Attributes:
+        lastInline: A flag to say if the last output was inline or not
+        lock: The threads locker
         info: The info label
         warning: The warning label
         error: The error label
@@ -166,31 +206,6 @@ class OutputHandler:
         print(self.__getTime()+self.__getInfo(msg)+': ', end='')
         return input()
 
-    def getInitOrEnd(self):
-        """Output the initial line of the requests table"""
-        print('  +'+('-'*9)+
-              '+'+('-'*32)+
-              '+'+('-'*12)+
-              '+'+('-'*6)+
-              '+'+('-'*10)+
-              '+'+('-'*8)+
-              '+'+('-'*7)+
-              '+')
-
-    def getHeader(self):
-        """Output the header of the requests table"""
-        self.getInitOrEnd()
-        self.printForTableMode({
-            'Request': 'Request',
-            'Payload': 'Payload',
-            'Time Taken': 'Time Taken',
-            'Status': 'Code',
-            'Length': 'Length',
-            'Words': 'Words',
-            'Lines': 'Lines',
-        }, False)
-        self.getInitOrEnd()
-
     def progressStatus(self, status: str):
         """Output the progress status of the fuzzing
 
@@ -204,39 +219,15 @@ class OutputHandler:
             sys.stdout.flush()
             print('\r'+self.__getTime()+self.__getInfo(f"Status: {status} completed"), end='')
 
-    def printForTableMode(self, response: dict, vulnValidator: bool):
-        """Output the content of the requests table
-
-        @type response: dict
-        @param response: The response dictionary
-        @type vulnValidator: bool
-        @param vulnValidator: Case the output is marked as vulnerable
-        """
-        if not vulnValidator:
-            colorCode = Colors.RESET
-        else:
-            colorCode = Colors.GREEN
-        response = self.getFormatedResponse(response)
-        print(
-            f"  | {colorCode}{response['Request']}"+
-            f"\033[0m | {colorCode}{response['Payload']}"+
-            f"\033[0m | {colorCode}{response['Time Taken']}"+
-            f"\033[0m | {colorCode}{response['Status']}"+
-            f"\033[0m | {colorCode}{response['Length']}"+
-            f"\033[0m | {colorCode}{response['Words']}"+
-            f"\033[0m | {colorCode}{response['Lines']}"+
-            '\033[0m |'
-        )
-
-    def printForBoxMode(self, response: dict, vulnValidator: bool):
+    def printForBoxMode(self, result: dict, vulnValidator: bool):
         """Custom output print for box mode
 
-        @type response: dict
-        @param response: The response dictionary
+        @type result: dict
+        @param result: The result dictionary
         @type vulnValidator: bool
         @param vulnValidator: Case the output is marked as vulnerable
         """
-        msg = self.__getMessage(response)
+        msg = self.__getMessage(result)
         if not vulnValidator:
             self.notWorkedBox(msg)
         else:
@@ -311,48 +302,12 @@ class OutputHandler:
         """
         return f'{self.__notWorked}{Colors.LIGHT_GRAY}{msg}{Colors.RESET}'
 
-    def getFormatedResponse(self, response: dict):
-        """Format the response into a dict of strings
-
-        @type response: dict
-        @param response: The response dict
-        @returns dict: The response formated with strings
-        """
-        return {
-            'Request': '{:<7}'.format(response['Request']),
-            'Payload': '{:<30}'.format(self.fixPayloadToOutput(response['Payload'])),
-            'Time Taken': '{:>10}'.format(response['Time Taken']),
-            'Status': '{:>4}'.format(response['Status']),
-            'Length': '{:>8}'.format(response['Length']),
-            'Words': '{:>6}'.format(response['Words']),
-            'Lines': '{:>5}'.format(response['Lines'])
-        }
-
     def __eraseLine(self):
         """Erases the current line"""
         sys.stdout.flush()
         sys.stdout.write("\033[1K")
         sys.stdout.write("\033[0G")
         sys.stdout.flush()
-
-    def fixPayloadToOutput(self, payload: str):
-        """Fix the payload's size
-
-        @type payload: str
-        @param payload: The payload used in the request
-        @returns str: The fixed payload to output
-        """
-        if (len(payload) > 30):
-            output = ""
-            for i in range(27):
-                if payload[i] == '	':
-                    output += ' '
-                else:
-                    output += payload[i]
-            output += '...'
-            return output
-        else:
-            return payload
 
     def __helpTitle(self, numSpaces: int, title: str):
         """Output the help title
@@ -374,7 +329,7 @@ class OutputHandler:
         @type desc: str
         @param desc: The description of the command
         """
-        print(' '*numSpaces+("{:<"+str(30-numSpaces)+"}").format(command)+' '+desc)
+        print(' '*numSpaces+("{:<"+str(27-numSpaces)+"}").format(command)+' '+desc)
     
     def print(self, msg: str):
         """Print the message
@@ -399,6 +354,7 @@ class OutputHandler:
         self.__helpContent(5, "--proxies FILE", "Define the file with a list of proxies")
         self.__helpContent(5, "--cookie COOKIE", "Define the HTTP Cookie header value")
         self.__helpContent(5, "--timeout TIMEOUT", "Define the request timeout (in seconds)")
+        self.__helpContent(5, "--unfollow-redirects", "Stop to follow redirections")
         self.__helpTitle(3, "Dict options:")
         self.__helpContent(5, "-f FILE", "Define the wordlist file with the payloads")
         self.__helpContent(5, "--prefix PREFIX", "Define the prefix(es) used with the payload")
@@ -411,7 +367,7 @@ class OutputHandler:
         self.__helpContent(5, "-Xs SIZE", "Allow responses based on their length (in bytes)")
         self.__helpContent(5, "-Xt TIME", "Allow responses based on their elapsed time (in seconds)")
         self.__helpTitle(3, "More options:")
-        self.__helpContent(5, "-V, --verbose", "Enable the verbose mode")
+        self.__helpContent(5, "(-V, -V1) | -V2", "Enable the verbose mode (common or full verbose)")
         self.__helpContent(5, "--delay DELAY", "Define the delay between each request (in seconds)")
         self.__helpContent(5, "-t NUMBEROFTHREADS", "Define the number of threads used in the tests")
         self.__helpContent(5, "-o REPORT", "Define the report format (accept txt, csv and json)")
@@ -419,7 +375,7 @@ class OutputHandler:
         self.__helpContent(3, "./FuzzingTool.py -u http://127.0.0.1/post.php?id= -f /path/to/wordlist/sqli.txt -o fuzzingGet.csv", '')
         self.__helpContent(3, "./FuzzingTool.py -f /path/to/wordlist/sqli.txt -u http://127.0.0.1/controller/user.php --data 'login&passw&user=login'", '')
         self.__helpContent(3, "./FuzzingTool.py -f /path/to/wordlist/paths.txt -u http://127.0.0.1/$ --suffix .php,.html", '')
-        self.__helpContent(3, "./FuzzingTool.py -f /path/to/wordlist/subdomains.txt -u http://$.domainexample.com --timeout 5 --allowed-status 200,302,303,500-600", '')
+        self.__helpContent(3, "./FuzzingTool.py -f /path/to/wordlist/subdomains.txt -u http://$.domainexample.com --timeout 5 -Xc 200,302,303,500-600", '')
         self.__helpContent(3, "./FuzzingTool.py -r /path/to/wordlist/raw-http.txt -f /path/to/wordlist/sqli.txt -V -o json", '')
         exit("")
 

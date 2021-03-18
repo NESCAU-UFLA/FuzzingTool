@@ -36,6 +36,7 @@ class Request:
         proxy: The proxy used in the request
         proxyList: The list with valid proxies gived by a file
         timeout: The request timeout before raise a TimeoutException
+        followRedirects: The follow redirections flag
         requestIndex: The request index
         subdomainFuzzing: A flag to say if the fuzzing will occur on subdomain
     """
@@ -60,6 +61,7 @@ class Request:
         self.__proxyList = []
         self.__parser.checkForUrlFuzz(self.__url)
         self.__timeout = None if not self.__parser.isUrlFuzzing() else 10
+        self.__followRedirects = True
         self.__requestIndex = 0
         self.__setupHeader()
         self.__subdomainFuzzing = self.__parser.checkForSubdomainFuzz(self.__url)
@@ -151,6 +153,14 @@ class Request:
         """
         self.__timeout = timeout
 
+    def setFollowRedirects(self, followRedirects: bool):
+        """The follow redirects setter
+
+        @type followRedirects: bool
+        @param followRedirects: The follow redirects flag
+        """
+        self.__followRedirects = followRedirects
+
     def testConnection(self, proxy: bool = False):
         """Test the connection with the target, and raise an exception if couldn't connect (by status code)"""
         try:
@@ -159,7 +169,7 @@ class Request:
                 target,
                 proxies=self.__proxy if proxy else {},
                 headers=self.__parser.getHeader(self.__httpHeader),
-                timeout=self.__timeout if self.__timeout else 10 # Default 10 seconds to make a request
+                timeout=self.__timeout if self.__timeout else 10, # Default 10 seconds to make a request
             )
             response.raise_for_status()
         except:
@@ -175,9 +185,9 @@ class Request:
             data=requestParameters['Data']['POST'],
             params=requestParameters['Data']['GET'],
             headers=requestParameters['Header'],
-            proxies=self.__proxy
+            proxies=self.__proxy,
         )
-        if '[302]' in str(response.history):
+        if '302' in str(response.history):
             return True
         return False
 
@@ -211,7 +221,8 @@ class Request:
                     params=requestParameters['Data']['GET'],
                     headers=requestParameters['Header'],
                     proxies=self.__proxy,
-                    timeout=self.__timeout
+                    timeout=self.__timeout,
+                    allow_redirects=self.__followRedirects,
                 ))
                 timeTaken = (time.time() - before)
             except requests.exceptions.ProxyError:

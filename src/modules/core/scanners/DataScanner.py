@@ -10,5 +10,29 @@
 #
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
-from .NoScanner import NoScanner
-from .SubdomainScanner import SubdomainScanner
+from .BaseScanner import BaseScanner
+from .Matcher import Matcher
+from ...conn.Response import Response
+from ...IO.OutputHandler import getFormatedResult, Colors, outputHandler as oh
+
+class DataScanner(BaseScanner):
+    __name__ = "DataScanner"
+    __author__ = "Vitor Oriel C N Borges"
+
+    def getResult(self, response: Response):
+        return super().getResult(response)
+
+    def scan(self, response: dict):
+        return self.match(response)
+    
+    def getMessage(self, result: dict):
+        status = result['Status']
+        result = getFormatedResult(result)
+        return (
+            f"{result['Payload']} {Colors.GRAY}["+
+            f"{Colors.LIGHT_GRAY}RTT{Colors.RESET} {result['Time Taken']} | "+
+            f"{Colors.LIGHT_GRAY}Code{Colors.RESET} {status} | "+
+            f"{Colors.LIGHT_GRAY}Size{Colors.RESET} {result['Length']} | "+
+            f"{Colors.LIGHT_GRAY}Words{Colors.RESET} {result['Words']} | "+
+            f"{Colors.LIGHT_GRAY}Lines{Colors.RESET} {result['Lines']}{Colors.GRAY}]{Colors.RESET}"
+        )

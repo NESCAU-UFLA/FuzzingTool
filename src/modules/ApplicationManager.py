@@ -72,6 +72,16 @@ class ApplicationManager:
         if argv[1] == '-v' or argv[1] == '--version':
             exit("FuzzingTool v"+version())
         oh.print(banner())
+        self.init(argv)
+        self.prepare()
+        self.start()
+
+    def init(self, argv: list):
+        """The initialization function
+
+        @type argv: list
+        @param argv: The arguments given in the execution
+        """
         cliParser = CLIParser(argv)
         url, method, requestData, httpHeader = cliParser.getDefaultRequest()
         cliParser.getWordlistFile()
@@ -91,16 +101,15 @@ class ApplicationManager:
         cliParser.checkProxy(self.__requester)
         cliParser.checkProxies(self.__requester)
         cliParser.checkTimeout(self.__requester)
+        cliParser.checkUnfollowRedirects(self.__requester)
         cliParser.checkDelay(self.__fuzzer)
         cliParser.checkVerboseMode(self.__fuzzer)
         cliParser.checkNumThreads(self.__fuzzer)
         cliParser.checkPrefixAndSuffix(self.__fuzzer.getPayloader())
         cliParser.checkCase(self.__fuzzer.getPayloader())
         cliParser.checkReporter(self.__requester)
-        cliParser.checkPlugins(self.__fuzzer, self.__requester)
+        self.__checkScanners()
         cliParser.checkMatcher(self.__fuzzer.getScanner())
-        self.prepare()
-        self.start()
 
     def prepare(self):
         """Prepares the application"""
@@ -129,6 +138,20 @@ class ApplicationManager:
                 oh.print("")
             self.__showFooter()
             oh.infoBox("Test completed")
+
+    def __checkScanners(self):
+        """Check what's the scanners that will be used on Fuzzer"""
+        if self.__requester.isUrlFuzzing():
+            if self.__requester.isSubdomainFuzzing():
+                from .core.scanners.SubdomainScanner import SubdomainScanner
+                scanner = SubdomainScanner()
+            else:
+                from .core.scanners.PathScanner import PathScanner
+                scanner = PathScanner()
+        else:
+            from .core.scanners.DataScanner import DataScanner
+            scanner = DataScanner()
+        self.__fuzzer.setScanner(scanner)
 
     def __checkConnectionAndRedirections(self):
         """Test the connection and redirection to target"""
@@ -197,12 +220,10 @@ class ApplicationManager:
         """Check if the user wants to insert custom data comparator to validate the responses"""
         payload = ' '
         oh.infoBox(f"Making first request with '{payload}' as payload ...")
-        firstResponse = self.__fuzzer.getScanner().getResponseDict(
+        firstResponse = self.__fuzzer.getScanner().getResult(
             self.__requester.request(payload)
         )
-        oh.getHeader()
-        oh.printForTableMode(firstResponse, False)
-        oh.getHeader()
+        oh.printContent(firstResponse, False)
         length = int(firstResponse['Length'])+300
         if oh.askYesNo('info', f"Do you want to exclude responses based on custom length (default {length})?"):
             length = oh.askData("Insert the length")
@@ -221,10 +242,9 @@ class ApplicationManager:
         output = self.__fuzzer.getOutput()
         if output:
             oh.infoBox(f"Found {len(output)} possible payload(s)")
-            oh.getHeader()
-            for content in output:
-                oh.printForTableMode(content, True)
-            oh.getHeader()
+            if self.__fuzzer.isVerboseMode():
+                for content in output:
+                    oh.printContent(content, True)
             fh.writeReport(output)
         else:
             oh.infoBox("No vulnerable entries was found")

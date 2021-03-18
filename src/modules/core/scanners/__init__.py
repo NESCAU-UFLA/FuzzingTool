@@ -10,33 +10,7 @@
 #
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
-from ..templates.BaseScanner import BaseScanner
-from ...core.Matcher import Matcher
-from ...conn.Response import Response
-from ...IO.OutputHandler import Colors, outputHandler as oh
-
-class SubdomainScanner(BaseScanner):
-    __name__ = "Subdomain Scanner"
-    __author__ = "Vitor Oriel C N Borges"
-
-    def getResponseDict(self, response: Response):
-        """Get the response data parsed into a dictionary"""
-        responseDict = super().getResponseDict(response)
-        responseDict['IP'] = response.targetIp
-        return responseDict
-
-    def scan(self, response: dict):
-        return self.match(response)
-
-    def getMessage(self, response: dict):
-        """Get the formated message for subdomain mode
-
-        @type response: dict
-        @param response: The response dict
-        @returns str: The message for subdomain mode
-        """
-        return (
-            '{:<30}'.format(oh.fixPayloadToOutput(response['Payload']))+
-            f' {Colors.GRAY}[{Colors.LIGHT_GRAY}IP{Colors.RESET} '+'{:>15}'.format(response['IP'])+" | "+
-            f"{Colors.LIGHT_GRAY}Code{Colors.RESET} {response['Status']}{Colors.GRAY}]{Colors.RESET}"
-        )
+from .Matcher import Matcher
+from .DataScanner import DataScanner
+from .PathScanner import PathScanner
+from .SubdomainScanner import SubdomainScanner

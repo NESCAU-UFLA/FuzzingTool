@@ -30,6 +30,10 @@ class Matcher:
         }
 
     def comparatorIsSet(self):
+        """Check if any of the comparators are seted
+
+        @returns bool: if any of the comparators are seted returns True, else False
+        """
         return self._comparator['Length'] or self._comparator['Time']
 
     def setComparator(self, comparator: dict):
@@ -48,22 +52,28 @@ class Matcher:
         """
         self._allowedStatus = allowedStatus
 
-    def match(self, response: dict):
+    def match(self, result: dict):
         """Check if the request content has some predefined characteristics based on a payload, it'll be considered as vulnerable
         
-        @type response: dict
-        @param response: The actual response dictionary
+        @type result: dict
+        @param result: The actual result dictionary
         @returns bool: A vulnerability flag
         """
-        if self._matchStatus(response['Status']):
+        if self._matchStatus(result['Status']):
             if self._comparator['Length']:
-                return self._comparator['Length'] < int(response['Length'])
+                return self._comparator['Length'] < int(result['Length'])
             if self._comparator['Time']:
-                return self._comparator['Time'] < response['Time Taken']
+                return self._comparator['Time'] < result['Time Taken']
             return True
         return False
     
     def _matchStatus(self, status: int):
+        """Check if the result status match with the allowed status dict
+
+        @type status: int
+        @param status: The result status code
+        @returns bool: if match returns True else False
+        """
         return (status in self._allowedStatus['List']
                 or (self._allowedStatus['Range']
                 and (self._allowedStatus['Range'][0] <= status

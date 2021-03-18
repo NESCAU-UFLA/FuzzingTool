@@ -10,14 +10,19 @@
 #
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
-from ...core.Matcher import Matcher
+from .Matcher import Matcher
 from ...conn.Response import Response
 
 class BaseScanner(Matcher):
-    def getResponseDict(self, response: Response):
-        """Get the response data parsed into a dictionary"""
+    def getResult(self, response: Response):
+        """Get the response data parsed into a dictionary
+        
+        @type response: Response
+        @param response: The response given in the reuest
+        @returns dict: The formated result into a dictionary
+        """
         response.loadResponseData()
-        responseDict = {
+        result = {
             'Request': str(response.requestIndex),
             'Payload': response.payload,
             'Time Taken': response.RTT,
@@ -28,10 +33,22 @@ class BaseScanner(Matcher):
             'Words': response.quantityOfWords,
             'Lines': response.quantityOfLines,
         }
-        return responseDict
+        return result
 
-    def scan(self, response: dict):
+    def scan(self, result: dict):
+        """Scan the result
+
+        @type result: dict
+        @param result: The result dict
+        @reeturns bool: A match flag
+        """
         raise Exception("Not Implemented Exception")
 
-    def getMessage(self, response: dict):
+    def getMessage(self, result: dict):
+        """Get the formated message to be used on output
+
+        @type result: dict
+        @param result: The result dict
+        @returns str: The message
+        """
         raise Exception("Not Implemented Exception")

@@ -11,12 +11,11 @@
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
 from .Payloader import Payloader
-from .Matcher import Matcher
+from .scanners import *
 from ..conn.Request import Request
 from ..conn.RequestException import RequestException, InvalidHostname
 from ..IO.OutputHandler import outputHandler as oh
 from ..IO.FileHandler import fileHandler as fh
-from ..plugins import *
 
 from threading import Thread, Event, Semaphore
 import time
@@ -31,7 +30,7 @@ class Fuzzer:
         numberOfThreads: The number of threads used in the application
         output: The output content to be send to the file
         dictSizeof: The number of payloads in the payload file
-        Matcher: A vulnerability validator object
+        scanner: A scanner object, used to validate the results
         payloader: The payloader object to handle with the payloads
     """
     def __init__(self, requester: Request, payloader: Payloader, dictSizeof: int):
@@ -46,12 +45,12 @@ class Fuzzer:
         """
         self.__requester = requester
         self.__delay = 0
-        self.__verboseMode = False
+        self.__verboseMode = [False, False]
         self.__ignoreErrors = False
         self.__numberOfThreads = 1
         self.__output = []
         self.__dictSizeof = dictSizeof
-        self.__scanner = NoScanner()
+        self.__scanner = None
         self.__payloader = payloader
 
     def getRequester(self):
@@ -66,7 +65,7 @@ class Fuzzer:
 
         @returns bool: The verbose mode flag
         """
-        return self.__verboseMode
+        return self.__verboseMode[0]
     
     def getOutput(self):
         """The output content getter
@@ -97,10 +96,10 @@ class Fuzzer:
         """
         self.__delay = delay
     
-    def setVerboseMode(self, verboseMode: bool):
+    def setVerboseMode(self, verboseMode: list):
         """The verboseMode setter
 
-        @type verboseMode: bool
+        @type verboseMode: list
         @param verboseMode: The verbose mode flag
         """
         self.__verboseMode = verboseMode
@@ -122,6 +121,11 @@ class Fuzzer:
         self.__numberOfThreads = numberOfThreads
 
     def setScanner(self, scanner: BaseScanner):
+        """The scanner setter
+
+        @type scanner: BaseScanner
+        @param scanner: The scanner used to validate the results
+        """
         self.__scanner = scanner
 
     def threadHandle(self, action: str):
@@ -189,7 +193,7 @@ class Fuzzer:
     def stop(self):
         """Stop the fuzzer application"""
         self.threadHandle('stop')
-        while self.__numberOfThreads > 1:
+        while self.__numberOfThreads > 0:
             pass
 
     def do(self, payload: str):
@@ -198,20 +202,20 @@ class Fuzzer:
         @type payload: str
         @param payload: The payload to be used on the request
         """
-        response = self.__scanner.getResponseDict(
-            self.__requester.request(payload)
+        result = self.__scanner.getResult(
+            response=self.__requester.request(payload)
         )
-        probablyVulnerable = self.__scanner.scan(response)
-        if self.__verboseMode:
+        probablyVulnerable = self.__scanner.scan(result)
+        if self.__verboseMode[0]:
             if probablyVulnerable:
-                self.__output.append(response)
-            oh.printContent(response, probablyVulnerable)
+                self.__output.append(result)
+            oh.printContent(result, probablyVulnerable)
         else:
             if probablyVulnerable:
-                self.__output.append(response)
-                oh.printContent(response, probablyVulnerable)
+                self.__output.append(result)
+                oh.printContent(result, probablyVulnerable)
             oh.progressStatus(
-                f"[{response['Request']}/{self.__dictSizeof}] {str(int((int(response['Request'])/self.__dictSizeof)*100))}%"
+                f"[{result['Request']}/{self.__dictSizeof}] {str(int((int(result['Request'])/self.__dictSizeof)*100))}%"
             )
 
     def __handleRequestException(self, e: RequestException):
@@ -221,12 +225,13 @@ class Fuzzer:
         @param e: The request exception
         """
         if self.__ignoreErrors:
-            if not self.__verboseMode:
+            if not self.__verboseMode[0]:
                 oh.progressStatus(
                     f"[{self.__requester.getRequestIndex()}/{self.__dictSizeof}] {str(int((int(self.__requester.getRequestIndex())/self.__dictSizeof)*100))}%"
                 )
             else:
-                oh.notWorkedBox(str(e))
+                if self.__verboseMode[1]:
+                    oh.notWorkedBox(str(e))
             fh.writeLog(str(e))
         else:
             if self.__running:
@@ -239,8 +244,9 @@ class Fuzzer:
         @type e: InvalidHostname
         @param e: The invalid hostname exception
         """
-        if self.__verboseMode:
-            oh.notWorkedBox(str(e))
+        if self.__verboseMode[0]:
+            if self.__verboseMode[1]:
+                oh.notWorkedBox(str(e))
         else:
             oh.progressStatus(
                 f"[{self.__requester.getRequestIndex()}/{self.__dictSizeof}] {str(int((int(self.__requester.getRequestIndex())/self.__dictSizeof)*100))}%"

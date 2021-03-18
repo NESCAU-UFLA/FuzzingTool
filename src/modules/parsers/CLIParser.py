@@ -11,8 +11,8 @@
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
 from ..core.Fuzzer import Fuzzer
-from ..core.Matcher import Matcher
 from ..core.Payloader import Payloader
+from ..core.scanners import *
 from ..conn.Request import Request
 from ..IO.OutputHandler import outputHandler as oh
 from ..IO.FileHandler import fileHandler as fh
@@ -45,16 +45,16 @@ class CLIParser:
         @returns tuple(str, str, dict, dict): The default parameters of the requests
         '''
         if '-r' in self.__argv:
-            url, method, param, httpHeader = self.__getRequestFromRawHttp()
+            url, method, data, httpHeader = self.__getRequestFromRawHttp()
         else:
-            url, method, param = self.__getRequestFromArgs()
+            url, method, data = self.__getRequestFromArgs()
             httpHeader = {}
-        requestData = self.__getRequestData(param)
+        requestData = self.__getRequestData(data)
         return (url, method, requestData, httpHeader)
 
     def getWordlistFile(self):
         """Get the fuzzing wordlist filename from -f argument
-        if the argument -f doesn't exists, or the file couldn't be open, an error is thrown and the application exits
+           dif the argument -f doesn't exists, or the file couldn't be open, an error is thrown and the application exits
         """
         try:
             wordlistFileName = self.__argv[self.__argv.index('-f')+1]
@@ -109,6 +109,15 @@ class CLIParser:
             requester.setTimeout(int(timeout))
             oh.infoBox(f"Set request timeout: {timeout} seconds")
 
+    def checkUnfollowRedirects(self, requester: Request):
+        """Check if the --follow-redirects argument is present, and set the follow redirects flag
+
+        @type requester: Request
+        @param requester: The object responsible to handle the requests
+        """
+        if '--unfollow-redirects' in self.__argv:
+            requester.setFollowRedirects(False)
+
     def checkDelay(self, fuzzer: Fuzzer):
         """Check if the --delay argument is present, and set the value into the fuzzer
 
@@ -126,8 +135,10 @@ class CLIParser:
         @type fuzzer: Fuzzer
         @param fuzzer: The Fuzzer object
         """
-        if '-V' in self.__argv or '--verbose' in self.__argv:
-            fuzzer.setVerboseMode(True)
+        if '-V' in self.__argv or '-V1' in self.__argv:
+            fuzzer.setVerboseMode([True, False])
+        elif '-V2' in self.__argv:
+            fuzzer.setVerboseMode([True, True])
 
     def checkNumThreads(self, fuzzer: Fuzzer):
         """Check if the -t argument is present, and set the number of threads in the fuzzer
@@ -166,8 +177,8 @@ class CLIParser:
 
     def checkCase(self, payloader: Payloader):
         """Check if the --upper argument is present, and set the uppercase flag
-        Check if the --lower argument is present, and set the lowercase flag
-        Check if the --capitalize argument is present, and set the capitalize flag
+           Check if the --lower argument is present, and set the lowercase flag
+           Check if the --capitalize argument is present, and set the capitalize flag
         
         @type payloader: Payloader
         @param requester: The object responsible to handle with the payloads
@@ -204,11 +215,6 @@ class CLIParser:
             'Name': reportName,
             'Host': host
         })
-
-    def checkPlugins(self, fuzzer: Fuzzer, requester: Request):
-        if requester.isSubdomainFuzzing():
-            from ..plugins.scanners.SubdomainScanner import SubdomainScanner
-            fuzzer.setScanner(SubdomainScanner())
 
     def checkMatcher(self, matcher: Matcher):
         """Check if the --allowed-status argument is present, and set the alllowed status codes used in the Matcher

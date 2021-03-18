@@ -24,6 +24,13 @@ class Response:
         """
         self.__response = response
     
+    def getResponse(self):
+        """The response (requests object) getter
+
+        @returns object: The response object
+        """
+        return self.__response
+
     def setRequestData(self, payload: str, timeTaken: float, requestIndex: int, ip: str):
         """Set the request data to be used into the dictionary
 
