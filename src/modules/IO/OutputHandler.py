@@ -29,13 +29,12 @@ def fixPayloadToOutput(payload: str):
     @param payload: The payload used in the request
     @returns str: The fixed payload to output
     """
-    if (len(payload) > 30):
+    if '	' in payload:
+        payload = payload.replace('	', ' ')
+    if len(payload) > 30:
         output = ""
         for i in range(27):
-            if payload[i] == '	':
-                output += ' '
-            else:
-                output += payload[i]
+            output += payload[i]
         output += '...'
         return output
     else:

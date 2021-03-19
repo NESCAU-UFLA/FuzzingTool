@@ -10,10 +10,10 @@
 #
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
-from .BaseScanner import BaseScanner
-from .Matcher import Matcher
-from ...conn.Response import Response
-from ...IO.OutputHandler import fixPayloadToOutput, Colors
+from ..BaseScanner import BaseScanner
+from ..Matcher import Matcher
+from ....conn.Response import Response
+from ....IO.OutputHandler import fixPayloadToOutput, Colors
 
 class PathScanner(BaseScanner):
     __name__ = "Path Scanner"

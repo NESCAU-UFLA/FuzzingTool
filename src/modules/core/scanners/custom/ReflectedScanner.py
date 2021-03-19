@@ -10,44 +10,23 @@
 #
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
-from .Matcher import Matcher
-from ...conn.Response import Response
+from ..default.DataScanner import DataScanner
+from ....conn.Response import Response
 
-class BaseScanner(Matcher):
+class ReflectedScanner(DataScanner):
+    __name__ = "Reflected Scanner"
+    __author__ = "Vitor Oriel C N Borges"
+    __desc__ = "Lookup if the payload was reflected in the response content"
+
     def getResult(self, response: Response):
-        """Get the response data parsed into a dictionary
-        
-        @type response: Response
-        @param response: The response given in the reuest
-        @returns dict: The formated result into a dictionary
-        """
-        result = {
-            'Request': str(response.requestIndex),
-            'Payload': response.payload,
-            'Time Taken': response.RTT,
-            'Request Time': float('%.6f'%(response.RTT-response.elapsedTime)),
-            'Response Time': response.elapsedTime,
-            'Status': response.status,
-            'Length': response.length,
-            'Words': response.quantityOfWords,
-            'Lines': response.quantityOfLines,
-        }
+        result = super().getResult(response)
+        result['Reflected'] = result['Payload'] in str(response.content, "utf-8")
         return result
 
     def scan(self, result: dict):
-        """Scan the result
-
-        @type result: dict
-        @param result: The result dict
-        @reeturns bool: A match flag
-        """
-        raise Exception("Not Implemented Exception")
-
+        if super().scan(result):
+            return result['Reflected']
+        return False
+    
     def getMessage(self, result: dict):
-        """Get the formated message to be used on output
-
-        @type result: dict
-        @param result: The result dict
-        @returns str: The message
-        """
-        raise Exception("Not Implemented Exception")
+        return super().getMessage(result)

@@ -10,6 +10,6 @@
 #
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
-from .Matcher import Matcher
-from .default import *
-from .custom import *
+from .DataScanner import DataScanner
+from .PathScanner import PathScanner
+from .SubdomainScanner import SubdomainScanner

@@ -12,7 +12,7 @@
 
 from .Response import Response
 from .RequestException import RequestException, InvalidHostname
-from ..parsers.RequestParser import *
+from ..parsers.RequestParser import requestParser as parser
 from ..IO.OutputHandler import outputHandler as oh
 from ..IO.FileHandler import fileHandler as fh
 
@@ -28,7 +28,6 @@ class Request:
     """Class that handle with the requests
     
     Attributes:
-        parser: The request parser
         url: The target URL
         method: The request method
         data: The parameter data of the request
@@ -52,19 +51,17 @@ class Request:
         @type httpHeader: dict
         @param httpHeader: The HTTP header of the request
         """
-        self.__parser = RequestParser()
-        self.__url = self.__parser.setupUrl(url)
+        self.__url = parser.setupUrl(url)
         self.__method = method
         self.__data = data
         self.__httpHeader = httpHeader
         self.__proxy = {}
         self.__proxyList = []
-        self.__parser.checkForUrlFuzz(self.__url)
-        self.__timeout = None if not self.__parser.isUrlFuzzing() else 10
+        self.__timeout = None if not parser.isUrlFuzzing(self.__url) else 10
         self.__followRedirects = True
         self.__requestIndex = 0
         self.__setupHeader()
-        self.__subdomainFuzzing = self.__parser.checkForSubdomainFuzz(self.__url)
+        self.__subdomainFuzzing = parser.checkForSubdomainFuzz(self.__url)
     
     def getUrl(self):
         """The url getter
@@ -73,12 +70,15 @@ class Request:
         """
         return self.__url['content']
 
+    def getUrlDict(self):
+        return self.__url
+
     def isUrlFuzzing(self):
         """The URL Fuzzing flag getter
         
         @returns bool: The URL Fuzzing flag
         """
-        return self.__parser.isUrlFuzzing()
+        return parser.isUrlFuzzing(self.__url)
 
     def getProxy(self):
         """The proxy getter
@@ -106,7 +106,7 @@ class Request:
 
         @returns RequestParser: The request parser
         """
-        return self.__parser
+        return parser
 
     def isSubdomainFuzzing(self):
         """The Subdomain Fuzzing flag getter
@@ -125,7 +125,7 @@ class Request:
         """
         if '$' in value:
             self.__httpHeader['payloadKeys'].append(key)
-            self.__httpHeader['content'][key] = self.__parser.parseHeaderValue(value)
+            self.__httpHeader['content'][key] = parser.parseHeaderValue(value)
         else:
             self.__httpHeader['content'][key] = value
 
@@ -164,11 +164,11 @@ class Request:
     def testConnection(self, proxy: bool = False):
         """Test the connection with the target, and raise an exception if couldn't connect (by status code)"""
         try:
-            target = self.__parser.getTargetUrl(self.__url['content'])
+            target = parser.getTargetUrl(self.__url)
             response = requests.get(
                 target,
                 proxies=self.__proxy if proxy else {},
-                headers=self.__parser.getHeader(self.__httpHeader),
+                headers=parser.getHeader(self.__httpHeader),
                 timeout=self.__timeout if self.__timeout else 10, # Default 10 seconds to make a request
             )
             response.raise_for_status()
@@ -177,17 +177,9 @@ class Request:
 
     def hasRedirection(self):
         """Test if the connection will have a redirection"""
-        self.__parser.setPayload(' ')
-        requestParameters = self.__getRequestParameters()
-        response = requests.request(
-            requestParameters['Method'],
-            requestParameters['Url'],
-            data=requestParameters['Data']['POST'],
-            params=requestParameters['Data']['GET'],
-            headers=requestParameters['Header'],
-            proxies=self.__proxy,
-        )
-        if '302' in str(response.history):
+        response = self.request(' ')
+        self.__requestIndex -= 1
+        if '302' in str(response.getResponse().history):
             return True
         return False
 
@@ -200,14 +192,14 @@ class Request:
         """
         if self.__proxyList and self.__requestIndex%1000 == 0:
             self.__updateProxy()
-        self.__parser.setPayload(payload)
+        parser.setPayload(payload)
         requestParameters = self.__getRequestParameters()
         targetUrl = requestParameters['Url']
         targetIp = ''
         try:
             if self.__subdomainFuzzing:
                 try:
-                    hostname = self.__parser.getHost(targetUrl)
+                    hostname = parser.getHost(targetUrl)
                     targetIp = socket.gethostbyname(hostname)
                     payload = targetUrl
                 except:
@@ -219,7 +211,7 @@ class Request:
                     targetUrl,
                     data=requestParameters['Data']['POST'],
                     params=requestParameters['Data']['GET'],
-                    headers=requestParameters['Header'],
+                    headers=requestParameters['Headers'],
                     proxies=self.__proxy,
                     timeout=self.__timeout,
                     allow_redirects=self.__followRedirects,
@@ -233,6 +225,10 @@ class Request:
                 raise RequestException(f"SSL couldn't be validated on {targetUrl}")
             except requests.exceptions.Timeout:
                 raise RequestException(f"Connection to {targetUrl} timed out")
+            except requests.exceptions.InvalidHeader as e:
+                e = str(e)
+                invalidHeader = e[e.rindex(': ')+2:]
+                raise RequestException(f"Invalid header {invalidHeader}: {requestParameters['Headers'][invalidHeader].decode('utf-8')}")
             except (
                 requests.exceptions.ConnectionError,
                 requests.exceptions.RequestException
@@ -242,6 +238,10 @@ class Request:
                 UnicodeError,
                 urllib3.exceptions.LocationParseError
             ):
+                try:
+                    hostname
+                except:
+                    hostname = targetUrl
                 raise RequestException(f"Invalid hostname {hostname} for HTTP request")
             else:
                 response.setRequestData(payload, timeTaken, self.__requestIndex, targetIp)
@@ -256,9 +256,9 @@ class Request:
         """
         requestParameters = {
             'Method': self.__method,
-            'Url': self.__parser.getUrl(self.__url),
-            'Header': self.__parser.getHeader(self.__httpHeader),
-            'Data': self.__parser.getData(self.__data),
+            'Url': parser.getUrl(self.__url),
+            'Headers': parser.getHeader(self.__httpHeader),
+            'Data': parser.getData(self.__data),
         }
         return requestParameters
 
@@ -270,6 +270,11 @@ class Request:
         }
         for key, value in self.__httpHeader['content'].items():
             self.setHeaderContent(key, value)
+        if not self.__httpHeader['content']:
+            self.__httpHeader['content']['User-Agent'] = 'FuzzingTool Requester Agent'
+        else:
+            if 'Content-Length' in self.__httpHeader['content'].keys():
+                del self.__httpHeader['content']['Content-Length']
 
     def __updateProxy(self):
         """Set the proxy based on request index"""

@@ -10,44 +10,28 @@
 #
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
-from .Matcher import Matcher
-from ...conn.Response import Response
+from ..BaseScanner import BaseScanner
+from ..Matcher import Matcher
+from ....conn.Response import Response
+from ....IO.OutputHandler import fixPayloadToOutput, Colors
 
-class BaseScanner(Matcher):
+class SubdomainScanner(BaseScanner):
+    __name__ = "Subdomain Scanner"
+    __author__ = "Vitor Oriel C N Borges"
+
     def getResult(self, response: Response):
-        """Get the response data parsed into a dictionary
-        
-        @type response: Response
-        @param response: The response given in the reuest
-        @returns dict: The formated result into a dictionary
-        """
-        result = {
-            'Request': str(response.requestIndex),
-            'Payload': response.payload,
-            'Time Taken': response.RTT,
-            'Request Time': float('%.6f'%(response.RTT-response.elapsedTime)),
-            'Response Time': response.elapsedTime,
-            'Status': response.status,
-            'Length': response.length,
-            'Words': response.quantityOfWords,
-            'Lines': response.quantityOfLines,
-        }
+        result = super().getResult(response)
+        result['IP'] = response.targetIp
         return result
 
     def scan(self, result: dict):
-        """Scan the result
-
-        @type result: dict
-        @param result: The result dict
-        @reeturns bool: A match flag
-        """
-        raise Exception("Not Implemented Exception")
+        return self.match(result)
 
     def getMessage(self, result: dict):
-        """Get the formated message to be used on output
-
-        @type result: dict
-        @param result: The result dict
-        @returns str: The message
-        """
-        raise Exception("Not Implemented Exception")
+        payload = '{:<30}'.format(fixPayloadToOutput(result['Payload']))
+        ip = '{:>15}'.format(result['IP'])
+        return (
+            f"{payload} {Colors.GRAY}["+
+            f'{Colors.LIGHT_GRAY}IP{Colors.RESET} {ip}'" | "+
+            f"{Colors.LIGHT_GRAY}Code{Colors.RESET} {result['Status']}{Colors.GRAY}]{Colors.RESET}"
+        )

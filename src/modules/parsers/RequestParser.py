@@ -10,28 +10,26 @@
 #
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
-def getIndexesToParse(paramContent: str):
+def getIndexesToParse(content: str):
     """If the fuzzing tests will occur on the given value,
        so get the list of positions of it to insert the payloads
     
-    @type paramContent: str
-    @param paramContent: The parameter content
+    @type content: str
+    @param content: The parameter content
     @returns list: The positions indexes to insert the payload.
                    Returns an empty list if the tests'll not occur
     """
-    return [i for i, char in enumerate(paramContent) if char == '$']
+    return [i for i, char in enumerate(content) if char == '$']
 
 class RequestParser:
     """Class that handle with request arguments parsing
     
     Attributes:
         payload: The payload used in the request
-        urlFuzzing: The URL Fuzzing flag
     """
     def __init__(self):
         """Class constructor"""
         self.__payload = ''
-        self.__urlFuzzing = False
 
     def setupUrl(self, url: str):
         """The URL setup.
@@ -44,7 +42,7 @@ class RequestParser:
             url = 'http://' + url
         url = {
             'content': url,
-            'indexesToParse': getIndexesToParse(url)
+            'fuzzingIndexes': getIndexesToParse(url)
         }
         return url
 
@@ -66,14 +64,6 @@ class RequestParser:
             headerValue.append(value[lastIndex:len(value)])
         return headerValue
 
-    def checkForUrlFuzz(self, url: dict):
-        """Checks if the fuzzing tests will occur on URL
-
-        @type url: dict
-        @param url: The URL dictionary
-        """
-        self.__urlFuzzing = True if url['indexesToParse'] else False
-
     def checkForSubdomainFuzz(self, url: dict):
         """Checks if the fuzzing tests will occur on subdomain
 
@@ -81,8 +71,8 @@ class RequestParser:
         @param url: The URL dictionary
         @returns bool: The subdomain fuzzing flag
         """
-        url = url['content']
-        if self.__urlFuzzing:
+        if url['fuzzingIndexes']:
+            url = url['content']
             if '.' in url and url.index('$') < url.index('.'):
                 return True
         return False
@@ -94,7 +84,7 @@ class RequestParser:
         @param url: The URL dictionary
         @returns str: The new target URL
         """
-        return url['content'] if not self.__urlFuzzing else self.__getAjustedUrl(url)
+        return url['content'] if not url['fuzzingIndexes'] else self.__getAjustedUrl(url)
 
     def getHeader(self, httpHeader: dict):
         """The new HTTP Header getter
@@ -117,13 +107,15 @@ class RequestParser:
             'POST': {} if not data['POST'] else self.__getAjustedData(data['POST'])
         }
 
-    def isUrlFuzzing(self):
+    def isUrlFuzzing(self, url: dict):
         """The URL Fuzzing flag getter
            if the tests will occur on URL return true, else return false
 
+        @type url: dict
+        @param url: The target URL dictionary
         @returns bool: The URL Fuzzing flag
         """
-        return self.__urlFuzzing
+        return False if not url['fuzzingIndexes'] else True
 
     def setPayload(self, payload: str):
         """The payload setter
@@ -146,18 +138,18 @@ class RequestParser:
         except ValueError:
             return host
 
-    def getTargetUrl(self, url: str):
+    def getTargetUrl(self, url: dict):
         """Gets the URL without the $ variable
 
-        @type url: str
+        @type url: dict
         @param url: The target url
         @returns str: The target url
         """
-        if self.__urlFuzzing:
-            if '$.' in url:
-                return url.replace('$.', '')
-            return url.replace('$', '')
-        return url
+        if url['fuzzingIndexes']:
+            if '$.' in url['content']:
+                return url['content'].replace('$.', '')
+            return url['content'].replace('$', '')
+        return url['content']
 
     def __getAjustedUrl(self, url: dict):
         """Put the payload into the URL requestParameters dictionary
@@ -167,7 +159,7 @@ class RequestParser:
         @returns str: The new URL
         """
         ajustedUrl = url['content']
-        for i in url['indexesToParse']:
+        for i in url['fuzzingIndexes']:
             head = ajustedUrl[:i]
             tail = ajustedUrl[(i+1):]
             ajustedUrl = head + self.__payload + tail
@@ -206,3 +198,5 @@ class RequestParser:
             else:
                 ajustedData[key] = self.__payload
         return ajustedData
+
+requestParser = RequestParser()

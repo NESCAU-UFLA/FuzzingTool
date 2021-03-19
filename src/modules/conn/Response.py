@@ -23,6 +23,7 @@ class Response:
         @param response: The response of a request
         """
         self.__response = response
+        self.__loadResponseData()
     
     def getResponse(self):
         """The response (requests object) getter
@@ -48,8 +49,8 @@ class Response:
         self.RTT = float('%.6f'%(timeTaken))
         self.requestIndex = requestIndex
         self.targetIp = ip
-
-    def loadResponseData(self):
+    
+    def __loadResponseData(self):
         """Loads the response data"""
         self.content = self.__response.content
         self.length = self.__response.headers.get('Content-Length')

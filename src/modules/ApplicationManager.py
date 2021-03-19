@@ -109,6 +109,7 @@ class ApplicationManager:
         cliParser.checkCase(self.__fuzzer.getPayloader())
         cliParser.checkReporter(self.__requester)
         self.__checkScanners()
+        cliParser.checkScanner(self.__fuzzer)
         cliParser.checkMatcher(self.__fuzzer.getScanner())
 
     def prepare(self):
@@ -143,13 +144,13 @@ class ApplicationManager:
         """Check what's the scanners that will be used on Fuzzer"""
         if self.__requester.isUrlFuzzing():
             if self.__requester.isSubdomainFuzzing():
-                from .core.scanners.SubdomainScanner import SubdomainScanner
+                from .core.scanners.default.SubdomainScanner import SubdomainScanner
                 scanner = SubdomainScanner()
             else:
-                from .core.scanners.PathScanner import PathScanner
+                from .core.scanners.default.PathScanner import PathScanner
                 scanner = PathScanner()
         else:
-            from .core.scanners.DataScanner import DataScanner
+            from .core.scanners.default.DataScanner import DataScanner
             scanner = DataScanner()
         self.__fuzzer.setScanner(scanner)
 
@@ -175,11 +176,14 @@ class ApplicationManager:
                 oh.errorBox(f"Failed to connect to {str(e)}")
             oh.infoBox("Connection status: OK")
             oh.infoBox("Testing redirections ...")
-            if self.__requester.hasRedirection():
-                if not oh.askYesNo('warning', "You was redirected to another page. Continue?"):
-                    exit()
-            else:
-                oh.infoBox("No redirections")
+            try:
+                if self.__requester.hasRedirection():
+                    if not oh.askYesNo('warning', "You was redirected to another page. Continue?"):
+                        exit()
+                else:
+                    oh.infoBox("No redirections")
+            except RequestException as e:
+                oh.errorBox(str(e))
     
     def __checkProxies(self):
         """Check for connection status using a proxy, if a proxy is given"""
@@ -218,22 +222,29 @@ class ApplicationManager:
 
     def __checkDataComparator(self):
         """Check if the user wants to insert custom data comparator to validate the responses"""
+        comparator = {
+            'Length': None,
+            'Time': None,
+        }
         payload = ' '
         oh.infoBox(f"Making first request with '{payload}' as payload ...")
         firstResponse = self.__fuzzer.getScanner().getResult(
             self.__requester.request(payload)
         )
         oh.printContent(firstResponse, False)
-        length = int(firstResponse['Length'])+300
-        if oh.askYesNo('info', f"Do you want to exclude responses based on custom length (default {length})?"):
-            length = oh.askData("Insert the length")
-        time = firstResponse['Time Taken']+5.0
-        if oh.askYesNo('info', f"Do you want to exclude responses based on custom time (default {time} seconds)?"):
-            time = oh.askData("Insert the time (in seconds)")
-        self.__fuzzer.getScanner().setComparator({
-            'Length': int(length),
-            'Time': float(time)
-        })
+        defaultLength = int(firstResponse['Length'])+300
+        if oh.askYesNo('info', "Do you want to exclude responses based on custom length?"):
+            length = oh.askData(f"Insert the length (default {defaultLength})")
+            if not length:
+                length = defaultLength
+            comparator['Length'] = length
+        defaultTime = firstResponse['Time Taken']+5.0
+        if oh.askYesNo('info', "Do you want to exclude responses based on custom time?"):
+            time = oh.askData(f"Insert the time (in seconds, default {defaultTime} seconds)")
+            if not time:
+                time = defaultTime
+            comparator['Time'] = time
+        self.__fuzzer.getScanner().setComparator(comparator)
 
     def __showFooter(self):
         """Show the footer content of the software, after maked the fuzzing"""

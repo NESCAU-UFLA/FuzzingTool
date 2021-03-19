@@ -193,8 +193,9 @@ class Fuzzer:
     def stop(self):
         """Stop the fuzzer application"""
         self.threadHandle('stop')
-        while self.__numberOfThreads > 0:
+        while self.__numberOfThreads > 1:
             pass
+        time.sleep(0.1)
 
     def do(self, payload: str):
         """Do the fuzzing test with a given payload

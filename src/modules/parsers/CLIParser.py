@@ -40,10 +40,10 @@ class CLIParser:
             oh.errorBox("An URL is needed to make the fuzzing.")
 
     def getDefaultRequest(self):
-        '''Get the raw http of the requests
+        """Get request headers and data, by raw file or cli input
 
         @returns tuple(str, str, dict, dict): The default parameters of the requests
-        '''
+        """
         if '-r' in self.__argv:
             url, method, data, httpHeader = self.__getRequestFromRawHttp()
         else:
@@ -54,7 +54,7 @@ class CLIParser:
 
     def getWordlistFile(self):
         """Get the fuzzing wordlist filename from -f argument
-           dif the argument -f doesn't exists, or the file couldn't be open, an error is thrown and the application exits
+           If the argument -f doesn't exists, or the file couldn't be open, an error is thrown and the application exits
         """
         try:
             wordlistFileName = self.__argv[self.__argv.index('-f')+1]
@@ -153,10 +153,10 @@ class CLIParser:
 
     def checkPrefixAndSuffix(self, payloader: Payloader):
         """Check if the --prefix argument is present, and set the prefix into request parser
-        Check if the --suffix argument is present, and set the suffix into request parser
+           Check if the --suffix argument is present, and set the suffix into request parser
         
         @type payloader: Payloader
-        @param requester: The object responsible to handle with the payloads
+        @param payloader: The object responsible to handle with the payloads
         """
         if '--prefix' in self.__argv:
             prefix = self.__argv[self.__argv.index('--prefix')+1]
@@ -181,7 +181,7 @@ class CLIParser:
            Check if the --capitalize argument is present, and set the capitalize flag
         
         @type payloader: Payloader
-        @param requester: The object responsible to handle with the payloads
+        @param payloader: The object responsible to handle with the payloads
         """
         if '--lower' in self.__argv:
             payloader.setLowercase(True)
@@ -194,8 +194,12 @@ class CLIParser:
             oh.infoBox("Set payload case: capitalize")
 
     def checkReporter(self, requester: Request):
-        """Check if the -o argument is present, and set the report data (name and type)"""
-        targetUrl = requester.getParser().getTargetUrl(requester.getUrl())
+        """Check if the -o argument is present, and set the report data (name and type)
+        
+        @type requester: Request
+        @param requester: The object responsible to handle the requests
+        """
+        targetUrl = requester.getParser().getTargetUrl(requester.getUrlDict())
         host = requester.getParser().getHost(targetUrl)
         if '-o' in self.__argv:
             report = self.__argv[self.__argv.index('-o')+1]
@@ -215,6 +219,16 @@ class CLIParser:
             'Name': reportName,
             'Host': host
         })
+
+    def checkScanner(self, fuzzer: Fuzzer):
+        if '--scanner' in self.__argv:
+            scanner = self.__argv[self.__argv.index('--scanner')+1]
+            if 'reflected' in scanner:
+                from ..core.scanners.custom.ReflectedScanner import ReflectedScanner
+                fuzzer.setScanner(ReflectedScanner())
+            else:
+                oh.errorBox(f"Scanner {scanner} not available!")
+            oh.infoBox(f"Set scanner: {scanner}")
 
     def checkMatcher(self, matcher: Matcher):
         """Check if the --allowed-status argument is present, and set the alllowed status codes used in the Matcher
@@ -255,12 +269,12 @@ class CLIParser:
         matcher.setComparator(comparator)
 
     def __getHeader(self, args: list):
-        '''Get the HTTP header
+        """Get the HTTP header
 
         @tyoe args: list
         @param args: The list with HTTP header
         @returns dict: The HTTP header parsed into a dict
-        '''
+        """
         httpHeader = {}
         i = 0
         thisArg = args.popleft()
@@ -273,6 +287,10 @@ class CLIParser:
         return httpHeader
 
     def __getRequestFromRawHttp(self):
+        """Get the raw http of the requests
+
+        @returns tuple(str, str, dict, dict): The default parameters of the requests
+        """
         headerList = deque(fh.readRaw(self.__argv[self.__argv.index('-r')+1]))
         method, path, httpVer = headerList.popleft().split(' ')
         httpHeader = self.__getHeader(headerList)
@@ -280,7 +298,7 @@ class CLIParser:
             'GET': '',
             'POST': ''
         }
-        if method == 'GET' and '?' in path:
+        if '?' in path:
             path, param['GET'] = path.split('?', 1)
         # Check if a scheme is specified, otherwise set http as default
         if '--scheme' in self.__argv:
@@ -342,18 +360,20 @@ class CLIParser:
             'GET': {},
             'POST': {}
         }
+        keys = []
         if param['GET']:
-            key = 'GET'
-        elif param['POST']:
-            key = 'POST'
-        else:
+            keys.append('GET')
+        if param['POST']:
+            keys.append('POST')
+        if not keys:
             return paramDict
-        if '&' in param[key]:
-            param[key] = param[key].split('&')
-            for arg in param[key]:
-                self.__makeParamDict(paramDict[key], arg)
-        else:
-            self.__makeParamDict(paramDict[key], param[key])
+        for key in keys:
+            if '&' in param[key]:
+                param[key] = param[key].split('&')
+                for arg in param[key]:
+                    self.__makeParamDict(paramDict[key], arg)
+            else:
+                self.__makeParamDict(paramDict[key], param[key])
         return paramDict
     
     def __getAllowedStatus(self, status: str, allowedList: list, allowedRange: list):
