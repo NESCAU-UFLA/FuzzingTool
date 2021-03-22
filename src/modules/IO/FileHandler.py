@@ -60,12 +60,12 @@ class FileHandler:
             self.__close(self.__logFile)
 
     def readRaw(self, rawFile: str):
-        '''Reads the raw HTTP request.
+        """Reads the raw HTTP request.
 
         @type rawFile: str
         @param rawFile: The file path and name
         @returns list: The content into data file
-        '''
+        """
         try:
             with open(f'{rawFile}', 'r') as rawFile:
                 return [data.rstrip('\n') for data in rawFile]
@@ -219,7 +219,7 @@ class FileHandler:
         """
         writer = csv.DictWriter(
             self.__reportFile,
-            fieldnames=[key for key, value in reportContent[0].items()]
+            fieldnames=[key for key in reportContent[0].keys()]
         )
         writer.writeheader()
         for content in reportContent:

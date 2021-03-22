@@ -14,7 +14,6 @@ class Matcher:
     """A matcher validator
 
     Attributes:
-        urlFuzzing: The URL Fuzzing flag
         comparator: The dictionary with the default entries to be compared with the current request
         allowedStatus: The dictionary with the allowed status codes (and range)
     """
@@ -61,9 +60,9 @@ class Matcher:
         """
         if self._matchStatus(result['Status']):
             if self._comparator['Length']:
-                return self._comparator['Length'] < int(result['Length'])
+                return self._matchLength(int(result['Length']))
             if self._comparator['Time']:
-                return self._comparator['Time'] < result['Time Taken']
+                return self._matchTime(result['Time Taken'])
             return True
         return False
     
@@ -78,3 +77,21 @@ class Matcher:
                 or (self._allowedStatus['Range']
                 and (self._allowedStatus['Range'][0] <= status
                 and status <= self._allowedStatus['Range'][1])))
+    
+    def _matchLength(self, length: int):
+        """Check if the result length match with the comparator dict
+
+        @type length: int
+        @param length: The result length
+        @returns bool: if match returns True else False
+        """
+        return self._comparator['Length'] < length
+    
+    def _matchTime(self, time: float):
+        """Check if the result time match with the comparator dict
+
+        @type time: int
+        @param time: The result time
+        @returns bool: if match returns True else False
+        """
+        return self._comparator['Time'] < time

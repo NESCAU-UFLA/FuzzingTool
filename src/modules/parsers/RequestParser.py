@@ -32,14 +32,16 @@ class RequestParser:
         self.__payload = ''
 
     def setupUrl(self, url: str):
-        """The URL setup.
-           Insert an schema if it wasn't present into URL
+        """The URL setup
 
-        @returns str: The target URL
+        @returns dict: The target URL dictionary
         """
         if '://' not in url:
             # No schema was defined, default protocol http
-            url = 'http://' + url
+            url = f'http://{url}'
+        if '/' not in self.getUrlWithoutScheme(url):
+            # Insert a base path if wasn't specified
+            url += '/'
         url = {
             'content': url,
             'fuzzingIndexes': getIndexesToParse(url)
@@ -126,17 +128,24 @@ class RequestParser:
         self.__payload = payload
 
     def getHost(self, url: str):
-        """Get the target host
+        """Get the target host from url
 
         @type url: str
         @param url: The target URL
         @returns str: The payloaded target
         """
-        host = url[(url.index('://')+3):]
-        try:
-            return host[:host.index('/')]
-        except ValueError:
-            return host
+        url = self.getUrlWithoutScheme(url)
+        return url[:url.index('/')]
+
+    def getPath(self, url: str):
+        """Get the target path from url
+
+        @type url: str
+        @param url: The target URL
+        @returns str: The payloaded path
+        """
+        url = self.getUrlWithoutScheme(url)
+        return url[url.index('/'):]
 
     def getTargetUrl(self, url: dict):
         """Gets the URL without the $ variable
@@ -150,6 +159,15 @@ class RequestParser:
                 return url['content'].replace('$.', '')
             return url['content'].replace('$', '')
         return url['content']
+
+    def getUrlWithoutScheme(self, url: str):
+        """Get the target url without scheme
+
+        @type url: str
+        @param url: The target URL
+        @returns str: The url without scheme
+        """
+        return url[(url.index('://')+3):]
 
     def __getAjustedUrl(self, url: dict):
         """Put the payload into the URL requestParameters dictionary
@@ -165,24 +183,24 @@ class RequestParser:
             ajustedUrl = head + self.__payload + tail
         return ajustedUrl
 
-    def __getAjustedHeader(self, httpHeader: dict):
+    def __getAjustedHeader(self, header: dict):
         """Put the payload in the header value that contains $
 
-        @type httpHeader: dict
-        @param httpHeader: The HTTP Header dictionary
+        @type header: dict
+        @param header: The HTTP Header dictionary
         @returns dict: The new HTTP Header
         """
-        header = {}
-        for key, value in httpHeader['content'].items():
-            header[key] = value
-        for key in httpHeader['payloadKeys']:
+        ajustedHeader = {}
+        for key, value in header['content'].items():
+            ajustedHeader[key] = value
+        for key in header['payloadKeys']:
             result = ''
-            value = header[key]
+            value = ajustedHeader[key]
             for i in range(len(value)-1):
                 result += value[i] + self.__payload
             result += value[len(value)-1]
-            header[key] = result.encode('utf-8')
-        return header
+            ajustedHeader[key] = result.encode('utf-8')
+        return ajustedHeader
 
     def __getAjustedData(self, data: dict):
         """Put the payload into the Data requestParameters dictionary

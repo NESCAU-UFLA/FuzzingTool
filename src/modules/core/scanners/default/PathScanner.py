@@ -13,6 +13,7 @@
 from ..BaseScanner import BaseScanner
 from ..Matcher import Matcher
 from ....conn.Response import Response
+from ....parsers.RequestParser import requestParser
 from ....IO.OutputHandler import fixPayloadToOutput, Colors
 
 class PathScanner(BaseScanner):
@@ -21,8 +22,9 @@ class PathScanner(BaseScanner):
 
     def getResult(self, response: Response):
         result = super().getResult(response)
-        result['Redirected'] = ''
         response = response.getResponse()
+        result['Payload'] = requestParser.getPath(response.request.url)
+        result['Redirected'] = ''
         if '301' in str(response.history) or '302' in str(response.history):
             result['Redirected'] = response.url
         return result

@@ -11,9 +11,7 @@
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
 class RequestException(Exception):
-    def __init__(self, msg: str = ''):
-        super().__init__(msg)
+    pass
 
 class InvalidHostname(Exception):
-    def __init__(self, msg: str = ''):
-        super().__init__(msg)
+    pass

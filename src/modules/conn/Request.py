@@ -13,8 +13,6 @@
 from .Response import Response
 from .RequestException import RequestException, InvalidHostname
 from ..parsers.RequestParser import requestParser as parser
-from ..IO.OutputHandler import outputHandler as oh
-from ..IO.FileHandler import fileHandler as fh
 
 import time
 import socket
@@ -64,13 +62,17 @@ class Request:
         self.__subdomainFuzzing = parser.checkForSubdomainFuzz(self.__url)
     
     def getUrl(self):
-        """The url getter
+        """The url content getter
 
         @returns str: The target URL
         """
         return self.__url['content']
 
     def getUrlDict(self):
+        """The url getter
+
+        @returns dict: The target URL dictionary
+        """
         return self.__url
 
     def isUrlFuzzing(self):
