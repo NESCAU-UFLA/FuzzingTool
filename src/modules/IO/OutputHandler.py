@@ -51,7 +51,7 @@ def getFormatedResult(result: dict):
         'Request': '{:<7}'.format(result['Request']),
         'Payload': '{:<30}'.format(fixPayloadToOutput(result['Payload'])),
         'Time Taken': '{:>10}'.format(result['Time Taken']),
-        'Status': '{:>4}'.format(result['Status']),
+        'Status': result['Status'],
         'Length': '{:>8}'.format(result['Length']),
         'Words': '{:>6}'.format(result['Words']),
         'Lines': '{:>5}'.format(result['Lines'])

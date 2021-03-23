@@ -52,7 +52,9 @@ class Response:
     
     def __loadResponseData(self):
         """Loads the response data"""
+        self.headers = self.__response.headers
         self.content = self.__response.content
+        self.text = self.__response.text
         self.length = self.__response.headers.get('Content-Length')
         if self.length == None:
             self.length = len(self.content)

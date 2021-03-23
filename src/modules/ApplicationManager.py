@@ -14,6 +14,7 @@ from .parsers.CLIParser import CLIParser
 from .core.Fuzzer import Fuzzer
 from .core.Payloader import Payloader
 from .conn.Request import Request
+from .conn.Response import Response
 from .conn.RequestException import RequestException
 from .IO.OutputHandler import outputHandler as oh
 from .IO.FileHandler import fileHandler as fh
@@ -118,9 +119,9 @@ class ApplicationManager:
             oh.setPrintContentMode(self.__fuzzer.getScanner(), self.__fuzzer.isVerboseMode())
             self.__checkConnectionAndRedirections()
             self.__checkProxies()
-            self.__checkIgnoreErrors()
             if not self.__requester.isUrlFuzzing() and not self.__fuzzer.getScanner().comparatorIsSet():
                 self.__checkDataComparator()
+            self.__checkIgnoreErrors()
         except KeyboardInterrupt:
             exit('')
 
@@ -228,17 +229,21 @@ class ApplicationManager:
         }
         payload = ' '
         oh.infoBox(f"Making first request with '{payload}' as payload ...")
-        firstResponse = self.__fuzzer.getScanner().getResult(
-            self.__requester.request(payload)
+        try:
+            response = self.__requester.request(payload)
+        except RequestException as e:
+            oh.errorBox(f"{str(e)}")
+        firstResult = self.__fuzzer.getScanner().getResult(
+            response=response
         )
-        oh.printContent(firstResponse, False)
-        defaultLength = int(firstResponse['Length'])+300
+        oh.printContent(firstResult, False)
+        defaultLength = int(firstResult['Length'])+300
         if oh.askYesNo('info', "Do you want to exclude responses based on custom length?"):
             length = oh.askData(f"Insert the length (default {defaultLength})")
             if not length:
                 length = defaultLength
             comparator['Length'] = length
-        defaultTime = firstResponse['Time Taken']+5.0
+        defaultTime = firstResult['Time Taken']+5.0
         if oh.askYesNo('info', "Do you want to exclude responses based on custom time?"):
             time = oh.askData(f"Insert the time (in seconds, default {defaultTime} seconds)")
             if not time:

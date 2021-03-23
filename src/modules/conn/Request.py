@@ -277,6 +277,7 @@ class Request:
         else:
             if 'Content-Length' in self.__httpHeader['content'].keys():
                 del self.__httpHeader['content']['Content-Length']
+        self.__httpHeader['content']['Accept-Encoding'] = 'gzip, deflate'
 
     def __updateProxy(self):
         """Set the proxy based on request index"""

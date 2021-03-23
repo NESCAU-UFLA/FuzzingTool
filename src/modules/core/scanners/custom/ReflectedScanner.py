@@ -12,6 +12,9 @@
 
 from ..default.DataScanner import DataScanner
 from ....conn.Response import Response
+from ....IO.OutputHandler import getFormatedResult, Colors
+
+import html
 
 class ReflectedScanner(DataScanner):
     __name__ = "Reflected Scanner"
@@ -20,13 +23,30 @@ class ReflectedScanner(DataScanner):
 
     def getResult(self, response: Response):
         result = super().getResult(response)
-        result['Reflected'] = result['Payload'] in str(response.content, "utf-8")
+        result['Body'] = response.text
         return result
 
     def scan(self, result: dict):
         if super().scan(result):
+            result['Reflected'] = result['Payload'] in result['Body']
+            if not result['Reflected']:
+                result['Escaped'] = result['Payload'] in html.unescape(result['Body'])
             return result['Reflected']
+        result['Escaped'] = False
         return False
     
     def getMessage(self, result: dict):
-        return super().getMessage(result)
+        escaped = ''
+        if result['Escaped']:
+            escaped = f" | {Colors.LIGHT_YELLOW}Reflected with HTML entities escaping"
+        del result['Escaped']
+        result = getFormatedResult(result)
+        return (
+            f"{result['Payload']} {Colors.GRAY}["+
+            f"{Colors.LIGHT_GRAY}RTT{Colors.RESET} {result['Time Taken']} | "+
+            f"{Colors.LIGHT_GRAY}Code{Colors.RESET} {result['Status']} | "+
+            f"{Colors.LIGHT_GRAY}Size{Colors.RESET} {result['Length']} | "+
+            f"{Colors.LIGHT_GRAY}Words{Colors.RESET} {result['Words']} | "+
+            f"{Colors.LIGHT_GRAY}Lines{Colors.RESET} {result['Lines']}"+
+            f"{escaped}{Colors.GRAY}]{Colors.RESET}"
+        )
