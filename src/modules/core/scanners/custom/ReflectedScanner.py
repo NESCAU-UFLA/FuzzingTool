@@ -21,25 +21,28 @@ class ReflectedScanner(DataScanner):
     __author__ = "Vitor Oriel C N Borges"
     __desc__ = "Lookup if the payload was reflected in the response content"
 
+    def __init__(self):
+        super().__init__()
+        self.__escaped = {}
+
     def getResult(self, response: Response):
-        result = super().getResult(response)
-        result['Body'] = response.text
-        return result
+        return super().getResult(response)
 
     def scan(self, result: dict):
+        self.__escaped[result['Request']] = False
         if super().scan(result):
-            result['Reflected'] = result['Payload'] in result['Body']
-            if not result['Reflected']:
-                result['Escaped'] = result['Payload'] in html.unescape(result['Body'])
-            return result['Reflected']
-        result['Escaped'] = False
+            reflected = result['Payload'] in result['Body']
+            if not reflected:
+                self.__escaped[result['Request']] = result['Payload'] in html.unescape(result['Body'])
+            return reflected
         return False
     
     def getMessage(self, result: dict):
         escaped = ''
-        if result['Escaped']:
-            escaped = f" | {Colors.LIGHT_YELLOW}Reflected with HTML entities escaping"
-        del result['Escaped']
+        if self.__escaped:
+            if self.__escaped[result['Request']]:
+                escaped = f" | {Colors.LIGHT_YELLOW}Reflected with HTML entities escaping"
+            del self.__escaped[result['Request']]
         result = getFormatedResult(result)
         return (
             f"{result['Payload']} {Colors.GRAY}["+

@@ -20,7 +20,9 @@ class DataScanner(BaseScanner):
     __author__ = "Vitor Oriel C N Borges"
 
     def getResult(self, response: Response):
-        return super().getResult(response)
+        result = super().getResult(response)
+        result['Body'] = response.text
+        return result
 
     def scan(self, response: dict):
         return self.match(response)
