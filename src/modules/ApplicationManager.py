@@ -96,7 +96,7 @@ class ApplicationManager:
         self.__requester = self.__fuzzer.getRequester()
         oh.infoBox(f"Set target: {self.__requester.getUrl()}")
         oh.infoBox(f"Set request method: {method}")
-        if requestData:
+        if requestData['GET'] or requestData['POST']:
             oh.infoBox(f"Set request data: {str(requestData)}")
         cliParser.checkCookie(self.__requester)
         cliParser.checkProxy(self.__requester)
@@ -165,7 +165,7 @@ class ApplicationManager:
             try:
                 self.__requester.testConnection()
             except RequestException as e:
-                if not oh.askYesNo('warning', f"Connection to {str(e)} failed. Continue anyway?"):
+                if not oh.askYesNo('warning', f"{str(e)}. Continue anyway?"):
                     exit()
             else:
                 oh.infoBox("Connection status: OK")
@@ -174,7 +174,7 @@ class ApplicationManager:
             try:
                 self.__requester.testConnection()
             except RequestException as e:
-                oh.errorBox(f"Failed to connect to {str(e)}")
+                oh.errorBox(f"{str(e)}.")
             oh.infoBox("Connection status: OK")
             oh.infoBox("Testing redirections ...")
             try:

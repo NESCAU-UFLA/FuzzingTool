@@ -117,6 +117,14 @@ class Request:
         """
         return self.__subdomainFuzzing
 
+    def setUrl(self, url: str):
+        """The url content setter
+
+        @type url: str
+        @param url: The target URL
+        """
+        self.__url = parser.setupUrl(url)
+
     def setHeaderContent(self, key: str, value: str):
         """The header content setter
 
@@ -164,7 +172,11 @@ class Request:
         self.__followRedirects = followRedirects
 
     def testConnection(self, proxy: bool = False):
-        """Test the connection with the target, and raise an exception if couldn't connect (by status code)"""
+        """Test the connection with the target, and raise an exception if couldn't connect
+        
+        @type proxy: bool
+        @param proxy: A flag to enable or disable the use of the proxy
+        """
         try:
             target = parser.getTargetUrl(self.__url)
             response = requests.get(
@@ -174,8 +186,23 @@ class Request:
                 timeout=self.__timeout if self.__timeout else 10, # Default 10 seconds to make a request
             )
             response.raise_for_status()
-        except:
-            raise RequestException(target)
+        except requests.exceptions.HTTPError:
+            raise RequestException(f"Connected to {target}, but raised a 404 status code on that direcory")
+        except requests.exceptions.ProxyError:
+            raise RequestException()
+        except requests.exceptions.SSLError:
+            raise RequestException(f"SSL couldn't be validated on {target}")
+        except requests.exceptions.Timeout:
+            raise RequestException(f"Connection to {target} timed out")
+        except requests.exceptions.InvalidHeader as e:
+            e = str(e)
+            invalidHeader = e[e.rindex(': ')+2:]
+            raise RequestException(f"Invalid header {invalidHeader}: {requestParameters['Headers'][invalidHeader].decode('utf-8')}")
+        except (
+            requests.exceptions.ConnectionError,
+            requests.exceptions.RequestException
+        ):
+            raise RequestException(f"Failed to establish a connection to {target}")
 
     def hasRedirection(self):
         """Test if the connection will have a redirection"""
