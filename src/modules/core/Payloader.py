@@ -23,14 +23,13 @@ class Payloader:
         lowercase: The lowercase payload flag
         capitalize: The capitalize payload flag
     """
-    def __init__(self, wordlist: list):
+    def __init__(self):
         """Class constructor
         
         @type wordlist: list
         @param wordlist: The wordlist that contains the payloads
         """
         self.__payloads = Queue()
-        self.__populatePayloads(wordlist)
         self.__prefix = []
         self.__suffix = []
         self.__uppercase = False
@@ -102,11 +101,12 @@ class Payloader:
         """
         self.__capitalize = capitalize
     
-    def __populatePayloads(self, wordlist: list):
+    def populatePayloads(self, wordlist: list):
         """Populate the payloads queue with the wordlist content
 
         @type wordlist: list
         @param wordlist: The list that contains the payloads to be used on the fuzzing tests
         """
+        self.__payloads = Queue()
         for payload in wordlist:
             self.__payloads.put(payload)

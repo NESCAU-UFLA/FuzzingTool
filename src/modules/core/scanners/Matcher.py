@@ -28,6 +28,10 @@ class Matcher:
             'Range': [],
         }
 
+    def update(self, matcher):
+        self._comparator = matcher._comparator
+        self._allowedStatus = matcher._allowedStatus
+
     def comparatorIsSet(self):
         """Check if any of the comparators are seted
 

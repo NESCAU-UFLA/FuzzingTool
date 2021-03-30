@@ -19,6 +19,136 @@ import json
 from datetime import datetime
 from pathlib import Path
 
+OUTPUT_DIRECTORY = f'{Path.home()}/.FuzzingTool'
+
+class Logger:
+    def __init__(self):
+        """Class constructor"""
+        self.__file = None
+
+    def __del__(self):
+        """Class destructor"""
+        self.close()
+
+    def open(self, host: str):
+        """Open the log file to save the current logs
+        
+        @type host: str
+        @param host: The target hostname
+        """
+        now = datetime.now()
+        logFileName = f'log-{now.strftime("%Y-%m-%d_%H:%M")}.log'
+        logDir = f'{OUTPUT_DIRECTORY}/{host}/logs'
+        logFullPath = f'{logDir}/{logFileName}'
+        try:
+            self.__file = open(logFullPath, 'w')
+        except FileNotFoundError:
+            Path(logDir).mkdir(parents=True, exist_ok=True)
+            self.__file = open(logFullPath, 'w')
+        finally:
+            oh.infoBox(f'The logs will be saved on \'{logFullPath}\'')
+
+    def write(self, exception: str):
+        """Write the exception on the log file
+
+        @type exception: str
+        @param exception: The exception to be saved on the log file
+        """
+        now = datetime.now()
+        time = now.strftime("%H:%M:%S")
+        self.__file.write(f'{time} | {exception}\n')
+    
+    def close(self):
+        """Closes the log file if it's open"""
+        if self.__file:
+            self.__file.close()
+
+class Reporter:
+    def __init__(self):
+        self.__metadata = {
+            'Type': 'txt',
+            'Name': '',
+        }
+        self.__file = None
+    
+    def setMetadata(self, report: dict):
+        """The report setter
+
+        @type report: dict
+        @param report: The report format and name dict
+        """
+        self.__metadata = report
+    
+    def open(self, host: str):
+        """Opens the report file 
+           for store the probably vulnerable response data
+        
+        @type host: str
+        @param host: The target hostname
+        """
+        reportType = self.__metadata['Type']
+        reportName = self.__metadata['Name']
+        reportDir = f"{OUTPUT_DIRECTORY}/{host}/reports"
+        if not reportName:
+            now = datetime.now()
+            reportName = now.strftime("%Y-%m-%d_%H:%M")
+        reportFullPath = f'{reportDir}/{reportName}.{reportType}'
+        try:
+            self.__file = open(reportFullPath, 'w')
+        except FileNotFoundError:
+            Path(reportDir).mkdir(parents=True, exist_ok=True)
+            self.__file = open(reportFullPath, 'w')
+        finally:
+            oh.infoBox(f'Saving results for {host} on \'{reportFullPath}\' ...')
+
+    def write(self, results: dict):
+        """Write the vulnerable input and response content into a report
+
+        @param type: dict
+        @param results: The list with probably vulnerable content
+        """
+        if self.__metadata['Type'] == 'txt':
+            self.__txtWriter(results)
+        elif self.__metadata['Type'] == 'csv':
+            self.__csvWriter(results)
+        elif self.__metadata['Type'] == 'json':
+            self.__jsonWriter(results)
+        self.__file.close()
+        oh.infoBox('Results saved')
+
+    def __txtWriter(self, reportContent: list):
+        """The txt report writer
+
+        @param type: list
+        @param reportContent: The list with probably vulnerable content
+        """
+        for content in reportContent:
+            for key, value in content.items():
+                self.__file.write(f'{key}: {str(value)}\n')
+            self.__file.write('\n')
+    
+    def __csvWriter(self, reportContent: list):
+        """The csv report writer
+
+        @param type: list
+        @param reportContent: The list with probably vulnerable content
+        """
+        writer = csv.DictWriter(
+            self.__file,
+            fieldnames=[key for key in reportContent[0].keys()]
+        )
+        writer.writeheader()
+        for content in reportContent:
+            writer.writerow(content)
+
+    def __jsonWriter(self, reportContent: list):
+        """The json report writer
+
+        @param type: list
+        @param reportContent: The list with probably vulnerable content
+        """
+        json.dump(reportContent, self.__file)
+
 class FileHandler:
     """Class that handle with the files
        Singleton Class
@@ -44,20 +174,9 @@ class FileHandler:
             raise Exception("This class is a singleton!")
         else:
             FileHandler.__instance = self
-        self.__outputDirectory = f'{Path.home()}/.FuzzingTool'
+        self.logger = Logger()
+        self.reporter = Reporter()
         self.__wordlistFile = None
-        self.__report = {
-            'Type': 'txt',
-            'Name': '',
-            'Host': ''
-        }
-        self.__reportFile = None
-        self.__logFile = None
-    
-    def __del__(self):
-        """Class destructor"""
-        if self.__logFile: # If the logFile is open, closes the file
-            self.__close(self.__logFile)
 
     def readRaw(self, rawFile: str):
         """Reads the raw HTTP request.
@@ -110,14 +229,6 @@ class FileHandler:
         except FileNotFoundError:
             oh.errorBox(f"File '{wordlistFile}' not found. Did you put it in the correct directory?")
 
-    def setReport(self, report: dict):
-        """The report setter
-
-        @type report: dict
-        @param report: The report format and name dict
-        """
-        self.__report = report
-
     def getWordlistContentAndLength(self):
         """Get the wordlist content, into a list, and the number of lines in file
 
@@ -129,108 +240,7 @@ class FileHandler:
             line = line.rstrip("\n")
             wordlist.append(line)
             length += 1
-        self.__close(self.__wordlistFile)
+        self.__wordlistFile.close()
         return (wordlist, length)
-
-    def openLog(self):
-        """Open the log file to save the current logs"""
-        now = datetime.now()
-        logFileName = f'log-{now.strftime("%Y-%m-%d_%H:%M")}.log'
-        logDir = f'{self.__outputDirectory}/logs'
-        logFullPath = f'{logDir}/{logFileName}'
-        try:
-            self.__logFile = open(logFullPath, 'w')
-        except FileNotFoundError:
-            Path(logDir).mkdir(parents=True, exist_ok=True)
-            self.__logFile = open(logFullPath, 'w')
-        finally:
-            oh.infoBox(f'The logs will be saved on \'{logFullPath}\'')
-
-    def writeLog(self, exception: str):
-        """Write the exception on the log file
-
-        @type exception: str
-        @param exception: The exception to be saved on the log file
-        """
-        now = datetime.now()
-        time = now.strftime("%H:%M:%S")
-        self.__logFile.write(f'{time} | {exception}\n')
-
-    def writeReport(self, reportContent: list):
-        """Write the vulnerable input and response content into a report
-
-        @param type: list
-        @param reportContent: The list with probably vulnerable content
-        """
-        if reportContent:
-            self.__openReport()
-            if self.__report['Type'] == 'txt':
-                self.__txtWriter(reportContent)
-            elif self.__report['Type'] == 'csv':
-                self.__csvWriter(reportContent)
-            elif self.__report['Type'] == 'json':
-                self.__jsonWriter(reportContent)
-            self.__close(self.__reportFile)
-            oh.infoBox('Results saved')
-
-    def __openReport(self):
-        """Opens the report file 
-           for store the probably vulnerable response data
-        """
-        reportType = self.__report['Type']
-        reportName = self.__report['Name']
-        reportDir = f"{self.__outputDirectory}/reports/{self.__report['Host']}"
-        if not reportName:
-            now = datetime.now()
-            reportName = now.strftime("%Y-%m-%d_%H:%M")
-        reportFullPath = f'{reportDir}/{reportName}.{reportType}'
-        try:
-            self.__reportFile = open(reportFullPath, 'w')
-        except FileNotFoundError:
-            Path(reportDir).mkdir(parents=True, exist_ok=True)
-            self.__reportFile = open(reportFullPath, 'w')
-        finally:
-            oh.infoBox(f'Saving results on \'{reportFullPath}\' ...')
-
-    def __close(self, file: object):
-        """Closes the file
-
-        @type file: object
-        @param file: The file
-        """
-        file.close()
-
-    def __txtWriter(self, reportContent: list):
-        """The txt report writer
-
-        @param type: list
-        @param reportContent: The list with probably vulnerable content
-        """
-        for content in reportContent:
-            for key, value in content.items():
-                self.__reportFile.write(f'{key}: {str(value)}\n')
-            self.__reportFile.write('\n')
-    
-    def __csvWriter(self, reportContent: list):
-        """The csv report writer
-
-        @param type: list
-        @param reportContent: The list with probably vulnerable content
-        """
-        writer = csv.DictWriter(
-            self.__reportFile,
-            fieldnames=[key for key in reportContent[0].keys()]
-        )
-        writer.writeheader()
-        for content in reportContent:
-            writer.writerow(content)
-
-    def __jsonWriter(self, reportContent: list):
-        """The json report writer
-
-        @param type: list
-        @param reportContent: The list with probably vulnerable content
-        """
-        json.dump(reportContent, self.__reportFile)
 
 fileHandler = FileHandler.getInstance()

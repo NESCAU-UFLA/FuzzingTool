@@ -11,8 +11,8 @@
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
 from .Response import Response
-from .RequestException import RequestException, InvalidHostname
-from ..parsers.RequestParser import requestParser as parser
+from ..parsers.RequestParser import getHost, getTargetUrl, requestParser as parser
+from ..exceptions.RequestExceptions import RequestException, InvalidHostname
 
 import time
 import socket
@@ -37,7 +37,12 @@ class Request:
         requestIndex: The request index
         subdomainFuzzing: A flag to say if the fuzzing will occur on subdomain
     """
-    def __init__(self, url: str, method: str, data: dict, httpHeader: dict):
+    def __init__(self,
+        url: str,
+        methods: list,
+        data: dict,
+        httpHeader: dict,
+    ):
         """Class constructor
 
         @type url: str
@@ -50,7 +55,7 @@ class Request:
         @param httpHeader: The HTTP header of the request
         """
         self.__url = parser.setupUrl(url)
-        self.__method = method
+        self.__method = 'GET'
         self.__data = data
         self.__httpHeader = httpHeader
         self.__proxy = {}
@@ -60,6 +65,7 @@ class Request:
         self.__requestIndex = 0
         self.__setupHeader()
         self.__subdomainFuzzing = parser.checkForSubdomainFuzz(self.__url)
+        self.methods = methods
     
     def getUrl(self):
         """The url content getter
@@ -103,13 +109,6 @@ class Request:
         """
         return self.__requestIndex
 
-    def getParser(self):
-        """The request parser getter
-
-        @returns RequestParser: The request parser
-        """
-        return parser
-
     def isSubdomainFuzzing(self):
         """The Subdomain Fuzzing flag getter
 
@@ -117,13 +116,13 @@ class Request:
         """
         return self.__subdomainFuzzing
 
-    def setUrl(self, url: str):
-        """The url content setter
+    def setMethod(self, method: str):
+        """The request method setter
 
-        @type url: str
-        @param url: The target URL
+        @type method: str
+        @param method: The request method
         """
-        self.__url = parser.setupUrl(url)
+        self.__method = method
 
     def setHeaderContent(self, key: str, value: str):
         """The header content setter
@@ -171,6 +170,10 @@ class Request:
         """
         self.__followRedirects = followRedirects
 
+    def resetRequestIndex(self):
+        """Resets the request index to 0"""
+        self.__requestIndex = 0
+
     def testConnection(self, proxy: bool = False):
         """Test the connection with the target, and raise an exception if couldn't connect
         
@@ -178,7 +181,7 @@ class Request:
         @param proxy: A flag to enable or disable the use of the proxy
         """
         try:
-            target = parser.getTargetUrl(self.__url)
+            target = getTargetUrl(self.__url)
             response = requests.get(
                 target,
                 proxies=self.__proxy if proxy else {},
@@ -228,7 +231,7 @@ class Request:
         try:
             if self.__subdomainFuzzing:
                 try:
-                    hostname = parser.getHost(targetUrl)
+                    hostname = getHost(targetUrl)
                     targetIp = socket.gethostbyname(hostname)
                     payload = targetUrl
                 except:
@@ -238,8 +241,8 @@ class Request:
                 response = Response(requests.request(
                     requestParameters['Method'],
                     targetUrl,
-                    data=requestParameters['Data']['POST'],
-                    params=requestParameters['Data']['GET'],
+                    data=requestParameters['Data']['BODY'],
+                    params=requestParameters['Data']['PARAM'],
                     headers=requestParameters['Headers'],
                     proxies=self.__proxy,
                     timeout=self.__timeout,
@@ -273,7 +276,7 @@ class Request:
                     hostname = targetUrl
                 raise RequestException(f"Invalid hostname {hostname} for HTTP request")
             else:
-                response.setRequestData(payload, timeTaken, self.__requestIndex, targetIp)
+                response.setRequestData(requestParameters['Method'], payload, timeTaken, self.__requestIndex, targetIp)
                 return response
         finally:
             self.__requestIndex += 1

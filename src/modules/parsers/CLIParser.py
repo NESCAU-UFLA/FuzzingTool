@@ -10,6 +10,7 @@
 #
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
+from .RequestParser import getHost, getTargetUrl
 from ..core.Fuzzer import Fuzzer
 from ..core.Payloader import Payloader
 from ..core.scanners import *
@@ -29,28 +30,42 @@ class CLIParser:
         """
         self.__argv = argv
 
-    def getUrl(self):
-        """Get the target URL
+    def getTargets(self):
+        """Get the targets for the fuzzing tests
 
-        @returns str: The target URL
+        @returns list: The targets into a list
         """
-        try:
-            return self.__argv[self.__argv.index('-u')+1]
-        except ValueError:
-            oh.errorBox("An URL is needed to make the fuzzing.")
-
-    def getDefaultRequest(self):
-        """Get request headers and data, by raw file or cli input
-
-        @returns tuple(str, str, dict, dict): The default parameters of the requests
-        """
+        targets = []
         if '-r' in self.__argv:
-            url, method, data, httpHeader = self.__getRequestFromRawHttp()
+            rawIndexes = [i for i, char in enumerate(self.__argv) if char == '-r']
+            for i in rawIndexes:
+                url, methods, data, httpHeader = self.__getRequestFromRawHttp(i+1)
+                targets.append({
+                    'url': url,
+                    'methods': methods,
+                    'data': self.__getRequestData(data),
+                    'header': httpHeader,
+                })
         else:
-            url, method, data = self.__getRequestFromArgs()
-            httpHeader = {}
-        requestData = self.__getRequestData(data)
-        return (url, method, requestData, httpHeader)
+            urlIndexes = [i for i, char in enumerate(self.__argv) if char == '-u']
+            if not urlIndexes:
+                oh.errorBox("At least a target URL is needed to make the fuzzing.")
+            if '--method' in self.__argv:
+                method = self.__argv[self.__argv.index('--method')+1]
+                customMethods = [method]
+                if ',' in method:
+                    customMethods = method.split(',')
+            else:
+                customMethods = []
+            for i in urlIndexes:
+                url, methods, data = self.__getRequestFromArgs(i+1, customMethods)
+                targets.append({
+                    'url': url,
+                    'methods': methods,
+                    'data': self.__getRequestData(data),
+                    'header': {},
+                })
+        return targets
 
     def getWordlistFile(self):
         """Get the fuzzing wordlist filename from -f argument
@@ -62,94 +77,94 @@ class CLIParser:
         except ValueError:
             oh.errorBox("An file is needed to make the fuzzing")
 
-    def checkCookie(self, requester: Request):
+    def checkCookie(self):
         """Check if the --cookie argument is present, and set the value into the requester
 
-        @type requester: Request
-        @param requester: The object responsible to handle the requests
+        @returns str: The cookie used in the request
         """
         if '--cookie' in self.__argv:
             cookie = self.__argv[self.__argv.index('--cookie')+1]
-            requester.setHeaderContent('Cookie', cookie)
             oh.infoBox(f"Set cookie: {cookie}")
+            return cookie
+        return ''
 
-    def checkProxy(self, requester: Request):
+    def checkProxy(self):
         """Check if the --proxy argument is present, and set the value into the requester
 
-        @type requester: Request
-        @param requester: The object responsible to handle the requests
+        @returns dict: The proxy dictionary used in the request
         """
         if '--proxy' in self.__argv:
             proxy = self.__argv[self.__argv.index('--proxy')+1]
-            requester.setProxy({
+            oh.infoBox(f"Set proxy: {proxy}")
+            return {
                 'http': 'http://'+proxy,
                 'https': 'https://'+proxy
-            })
-            oh.infoBox(f"Set proxy: {proxy}")
+            }
+        return {}
 
-    def checkProxies(self, requester: Request):
+    def checkProxies(self):
         """Check if the --proxies argument is present, and open a file
         
-        @type requester: Request
-        @param requester: The object responsible to handle the requests
+        @returns list: THe proxies list used in the request
         """
         if '--proxies' in self.__argv:
             proxiesFileName = self.__argv[self.__argv.index('--proxies')+1]
             oh.infoBox(f"Loading proxies from file '{proxiesFileName}' ...")
-            requester.setProxyList(fh.readProxies(proxiesFileName))
+            return fh.readProxies(proxiesFileName)
+        return []
 
-    def checkTimeout(self, requester: Request):
+    def checkTimeout(self):
         """Check if the --timeout argument is present, and set the request timeout
 
-        @type requester: Request
-        @param requester: The object responsible to handle the requests
+        @returns None|int: The request timeout
         """
         if '--timeout' in self.__argv:
             timeout = self.__argv[self.__argv.index('--timeout')+1]
-            requester.setTimeout(int(timeout))
             oh.infoBox(f"Set request timeout: {timeout} seconds")
+            return int(timeout)
+        return None
 
-    def checkUnfollowRedirects(self, requester: Request):
+    def checkUnfollowRedirects(self):
         """Check if the --follow-redirects argument is present, and set the follow redirects flag
 
-        @type requester: Request
-        @param requester: The object responsible to handle the requests
+        @returns bool: The follow redirections flag used in the request
         """
         if '--unfollow-redirects' in self.__argv:
-            requester.setFollowRedirects(False)
+            return False
+        return True
 
-    def checkDelay(self, fuzzer: Fuzzer):
+    def checkDelay(self):
         """Check if the --delay argument is present, and set the value into the fuzzer
 
-        @type fuzzer: Fuzzer
-        @param fuzzer: The Fuzzer object
+        @returns float: The delay between each request
         """
         if '--delay' in self.__argv:
             delay = self.__argv[self.__argv.index('--delay')+1]
-            fuzzer.setDelay(float(delay))
             oh.infoBox(f"Set delay: {delay} second(s)")
+            return float(delay)
+        return 0
 
-    def checkVerboseMode(self, fuzzer: Fuzzer):
+    def checkVerboseMode(self):
         """Check if the -V or --verbose argument is present, and set the verbose mode
 
-        @type fuzzer: Fuzzer
-        @param fuzzer: The Fuzzer object
+        @returns list: The verbosity mode list
         """
         if '-V' in self.__argv or '-V1' in self.__argv:
-            fuzzer.setVerboseMode([True, False])
+            return [True, False]
         elif '-V2' in self.__argv:
-            fuzzer.setVerboseMode([True, True])
+            return [True, True]
+        return [False, False]
 
-    def checkNumThreads(self, fuzzer: Fuzzer):
+    def checkNumThreads(self):
         """Check if the -t argument is present, and set the number of threads in the fuzzer
 
-        @type fuzzer: Fuzzer
-        @param fuzzer: The Fuzzer object
+        @returns int: The number of threads used in the fuzzer
         """
         if '-t' in self.__argv:
             numThreads = self.__argv[self.__argv.index('-t')+1]
-            fuzzer.setNumThreads(int(numThreads))
             oh.infoBox(f"Set number of threads: {numThreads} thread(s)")
+            return int(numThreads)
+        return 1
 
     def checkPrefixAndSuffix(self, payloader: Payloader):
         """Check if the --prefix argument is present, and set the prefix into request parser
@@ -193,14 +208,12 @@ class CLIParser:
             payloader.setCapitalize(True)
             oh.infoBox("Set payload case: capitalize")
 
-    def checkReporter(self, requester: Request):
+    def checkReporter(self):
         """Check if the -o argument is present, and set the report data (name and type)
         
         @type requester: Request
         @param requester: The object responsible to handle the requests
         """
-        targetUrl = requester.getParser().getTargetUrl(requester.getUrlDict())
-        host = requester.getParser().getHost(targetUrl)
         if '-o' in self.__argv:
             report = self.__argv[self.__argv.index('-o')+1]
             if '.' in report:
@@ -214,28 +227,34 @@ class CLIParser:
         else:
             reportType = 'txt'
             reportName = ''
-        fh.setReport({
+        fh.reporter.setMetadata({
             'Type': reportType,
-            'Name': reportName,
-            'Host': host
+            'Name': reportName
         })
 
-    def checkScanner(self, fuzzer: Fuzzer):
+    def checkGlobalScanner(self):
+        """Check if the --scanner argument is present, and return the asked scanner by the user
+
+        @returns None|BaseScanner: The scanner used in the fuzzer
+        """
         if '--scanner' in self.__argv:
             scanner = self.__argv[self.__argv.index('--scanner')+1]
             if 'reflected' in scanner:
                 from ..core.scanners.custom.ReflectedScanner import ReflectedScanner
-                fuzzer.setScanner(ReflectedScanner())
+                scanner = ReflectedScanner()
             else:
                 oh.errorBox(f"Scanner {scanner} not available!")
             oh.infoBox(f"Set scanner: {scanner}")
+        else:
+            scanner = None
+        return scanner
 
-    def checkMatcher(self, matcher: Matcher):
-        """Check if the --allowed-status argument is present, and set the alllowed status codes used in the Matcher
-
-        @type matcher: Matcher
-        @param matcher: The matcher object
+    def checkMatcher(self):
+        """Check for the Matcher arguments
+        
+        @returns Matcher: The global matcher for the scanners
         """
+        matcher = Matcher()
         if '-Xc' in self.__argv:
             allowedStatus = self.__argv[self.__argv.index('-Xc')+1]
             allowedList = []
@@ -267,6 +286,7 @@ class CLIParser:
             comparator['Time'] = float(time)
             oh.infoBox(f"Exclude by time: {time} seconds")
         matcher.setComparator(comparator)
+        return matcher
 
     def __getHeader(self, args: list):
         """Get the HTTP header
@@ -286,95 +306,107 @@ class CLIParser:
             i += 1
         return httpHeader
 
-    def __getRequestFromRawHttp(self):
+    def __getRequestFromRawHttp(self, i: int):
         """Get the raw http of the requests
 
-        @returns tuple(str, str, dict, dict): The default parameters of the requests
+        @type i: int
+        @param i: The index of the raw filename on terminal
+        @returns tuple(str, list, dict, dict): The default parameters of the requests
         """
-        headerList = deque(fh.readRaw(self.__argv[self.__argv.index('-r')+1]))
+        headerList = deque(fh.readRaw(self.__argv[i]))
         method, path, httpVer = headerList.popleft().split(' ')
+        if ',' in method:
+            methods = method.split(',')
+        else:
+            methods = [method]
         httpHeader = self.__getHeader(headerList)
         param = {
-            'GET': '',
-            'POST': ''
+            'PARAM': '',
+            'BODY': ''
         }
         if '?' in path:
-            path, param['GET'] = path.split('?', 1)
+            path, param['PARAM'] = path.split('?', 1)
         # Check if a scheme is specified, otherwise set http as default
         if '--scheme' in self.__argv:
             scheme = self.__argv[self.__argv.index('--scheme')+1]
         else:
             scheme = 'http'
         url = f"{scheme}://{httpHeader['Host']}{path}"
-        if method == 'POST' and len(headerList) > 0:
-            param['POST'] = headerList.popleft()
-        return (url, method, param, httpHeader)
+        if method == 'BODY' and len(headerList) > 0:
+            param['BODY'] = headerList.popleft()
+        return (url, methods, param, httpHeader)
     
-    def __getRequestFromArgs(self):
-        """Get the param method to use ('?' or '$' in URL if GET, or --data) and the request param string
+    def __getRequestFromArgs(self, i: int, methods: list):
+        """Get the param method to use ('?' or '$' in URL if GET, or --data) and the request paralisting
 
-        @returns tuple(str, str, dict): The tuple with the new target URL, the request method and params
+        @type i: int
+        @param i: The index of the target url in terminal
+        @type method: list
+        @param method: The request methods
+        @returns tuple(str, list, dict): The tuple with the new target URL, the request method and params
         """
-        url = self.getUrl()
-        param = {
-            'GET': '',
-            'POST': ''
+        url = self.__argv[i]
+        data = {
+            'PARAM': '',
+            'BODY': ''
         }
         if '?' in url or '$' in url:
-            method = 'GET'
+            if not methods:
+                methods = ['GET']
             if '?' in url:
-                url, param['GET'] = url.split('?', 1)
+                url, data['PARAM'] = url.split('?', 1)
         else:
-            method = 'POST'
+            if not methods:
+                methods = ['POST']
             try:
-                param['POST'] = self.__argv[self.__argv.index('--data')+1]
+                data['BODY'] = self.__argv[self.__argv.index('--data')+1]
             except ValueError:
                 oh.errorBox("You must set at least GET or POST parameters for data fuzzing.")
-        return (url, method, param)
+        return (url, methods, data)
     
-    def __makeParamDict(self, paramDict: dict, param: str):
+    def __makeDataDict(self, dataDict: dict, key: str):
         """Set the default parameter values if are given
 
-        @type paramDict: dict
-        @param paramDict: The entries data of the request
-        @type param: str
-        @param param: The parameter string of the request
+        @type data: dict
+        @param data: The entries data of the request
+        @type key: str
+        @param key: The parameter key of the request
         """
-        if '=' in param:
-            param, value = param.split('=')
+        if '=' in key:
+            key, value = key.split('=')
             if not '$' in value:
-                paramDict[param] = value
+                dataDict[key] = value
             else:
-                paramDict[param] = ''
+                dataDict[key] = ''
         else:
-            paramDict[param] = ''
+            dataDict[key] = ''
 
-    def __getRequestData(self, param: dict):
+    def __getRequestData(self, data: dict):
         """Split all the request parameters into a list of arguments used in the request
 
-        @type param: dict
-        @param param: The parameters of the request
+        @type data: dict
+        @param data: The parameters of the request
         @returns dict: The entries data of the request
         """
-        paramDict = {
-            'GET': {},
-            'POST': {}
+        dataDict = {
+            'PARAM': {},
+            'BODY': {}
         }
         keys = []
-        if param['GET']:
-            keys.append('GET')
-        if param['POST']:
-            keys.append('POST')
+        if data['PARAM']:
+            keys.append('PARAM')
+        if data['BODY']:
+            keys.append('BODY')
         if not keys:
-            return paramDict
+            return dataDict
         for key in keys:
-            if '&' in param[key]:
-                param[key] = param[key].split('&')
-                for arg in param[key]:
-                    self.__makeParamDict(paramDict[key], arg)
+            if '&' in data[key]:
+                data[key] = data[key].split('&')
+                for arg in data[key]:
+                    self.__makeDataDict(dataDict[key], arg)
             else:
-                self.__makeParamDict(paramDict[key], param[key])
-        return paramDict
+                self.__makeDataDict(dataDict[key], data[key])
+        return dataDict
     
     def __getAllowedStatus(self, status: str, allowedList: list, allowedRange: list):
         """Get the allowed status code list and range

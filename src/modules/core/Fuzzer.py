@@ -13,9 +13,9 @@
 from .Payloader import Payloader
 from .scanners import *
 from ..conn.Request import Request
-from ..conn.RequestException import RequestException, InvalidHostname
 from ..IO.OutputHandler import outputHandler as oh
 from ..IO.FileHandler import fileHandler as fh
+from ..exceptions.RequestExceptions import RequestException, InvalidHostname
 
 from threading import Thread, Event, Semaphore
 import time
@@ -33,100 +33,36 @@ class Fuzzer:
         scanner: A scanner object, used to validate the results
         payloader: The payloader object to handle with the payloads
     """
-    def __init__(self, requester: Request, payloader: Payloader, dictSizeof: int):
+    def __init__(self,
+        requester: Request,
+        payloader: Payloader,
+        scanner: BaseScanner,
+        delay: float,
+        numberOfThreads: int,
+        resultCallback,
+        errorCallbacks: list
+    ):
         """Class constructor
 
         @type requester: requester
         @param requester: The requester object to deal with the requests
         @type payloader: Payloader
         @param payloader: The payloader object to deal with the payload dictionary
-        @type dictSizeof: int
-        @param dictSizeof: The number of payloads in total
         """
         self.__requester = requester
-        self.__delay = 0
-        self.__verboseMode = [False, False]
-        self.__ignoreErrors = False
-        self.__numberOfThreads = 1
-        self.__output = []
-        self.__dictSizeof = dictSizeof
-        self.__scanner = None
-        self.__payloader = payloader
-
-    def getRequester(self):
-        """The requester getter
-
-        @returns object: The requester object
-        """
-        return self.__requester
-
-    def isVerboseMode(self):
-        """The verboseMode getter
-
-        @returns bool: The verbose mode flag
-        """
-        return self.__verboseMode[0]
-    
-    def getOutput(self):
-        """The output content getter
-
-        @returns list: The output content list
-        """
-        return self.__output
-
-    def getScanner(self):
-        """The vulnerability validator getter
-
-        @returns Scanner: A vulnerability validator object
-        """
-        return self.__scanner
-
-    def getPayloader(self):
-        """The payloader getter
-
-        @returns Payloader: The payloader object
-        """
-        return self.__payloader
-
-    def setDelay(self, delay: float):
-        """The delay setter
-
-        @type delay: float
-        @param delay: The delay used between each request
-        """
         self.__delay = delay
-    
-    def setVerboseMode(self, verboseMode: list):
-        """The verboseMode setter
-
-        @type verboseMode: list
-        @param verboseMode: The verbose mode flag
-        """
-        self.__verboseMode = verboseMode
-
-    def setIgnoreErrors(self, ignoreErrors: bool):
-        """The ignoreErrors setter
-
-        @type ignoreErrors: bool
-        @param ignoreErrors: The ignore errors flag
-        """
-        self.__ignoreErrors = ignoreErrors
-
-    def setNumThreads(self, numberOfThreads: int):
-        """The numberOfThreads setter
-
-        @type numberOfThreads: int
-        @param numberOfThreads: The number of threads
-        """
         self.__numberOfThreads = numberOfThreads
-
-    def setScanner(self, scanner: BaseScanner):
-        """The scanner setter
-
-        @type scanner: BaseScanner
-        @param scanner: The scanner used to validate the results
-        """
         self.__scanner = scanner
+        self.__payloader = payloader
+        self.resultCallback = resultCallback
+        self.errorCallbacks = errorCallbacks
+
+    def isRunning(self):
+        """The running flag getter
+
+        @returns bool: The running flag
+        """
+        return self.__running
 
     def threadHandle(self, action: str):
         """Function that handle with all of the threads functions and atributes
@@ -139,17 +75,22 @@ class Fuzzer:
             """Run the threads"""
             while self.__running and not self.__payloader.isEmpty():
                 payload = self.__payloader.get()
-                for p in payload:
-                    try:
-                        self.do(p)
-                        time.sleep(self.__delay)
-                    except InvalidHostname as e:
-                        self.__haandleInvalidHostname(e)
-                    except RequestException as e:
-                        self.__handleRequestException(e)
-                if not self.__playerHandler.isSet():
-                    self.__numberOfThreads -= 1
-                    self.__semaphoreHandler.release()
+                try:
+                    for p in payload:
+                        try:
+                            result = self.__scanner.getResult(
+                                response=self.__requester.request(p)
+                            )
+                            self.resultCallback(result, self.__scanner.scan(result))
+                            time.sleep(self.__delay)
+                        except InvalidHostname as e:
+                            self.errorCallbacks[0](e)
+                        except RequestException as e:
+                            self.errorCallbacks[1](e)
+                finally:
+                    if not self.__playerHandler.isSet():
+                        self.__numberOfThreads -= 1
+                        self.__semaphoreHandler.release()
 
         def start():
             """Handle with threads start"""
@@ -196,59 +137,3 @@ class Fuzzer:
         while self.__numberOfThreads > 1:
             pass
         time.sleep(0.1)
-
-    def do(self, payload: str):
-        """Do the fuzzing test with a given payload
-        
-        @type payload: str
-        @param payload: The payload to be used on the request
-        """
-        result = self.__scanner.getResult(
-            response=self.__requester.request(payload)
-        )
-        probablyVulnerable = self.__scanner.scan(result)
-        if self.__verboseMode[0]:
-            if probablyVulnerable:
-                self.__output.append(result)
-            oh.printContent(result, probablyVulnerable)
-        else:
-            if probablyVulnerable:
-                self.__output.append(result)
-                oh.printContent(result, probablyVulnerable)
-            oh.progressStatus(
-                f"[{result['Request']}/{self.__dictSizeof}] {str(int((int(result['Request'])/self.__dictSizeof)*100))}%"
-            )
-
-    def __handleRequestException(self, e: RequestException):
-        """Handle with the request exceptions
-        
-        @type e: RequestException
-        @param e: The request exception
-        """
-        if self.__ignoreErrors:
-            if not self.__verboseMode[0]:
-                oh.progressStatus(
-                    f"[{self.__requester.getRequestIndex()}/{self.__dictSizeof}] {str(int((int(self.__requester.getRequestIndex())/self.__dictSizeof)*100))}%"
-                )
-            else:
-                if self.__verboseMode[1]:
-                    oh.notWorkedBox(str(e))
-            fh.writeLog(str(e))
-        else:
-            if self.__running:
-                self.stop()
-                oh.abortBox(str(e))
-
-    def __haandleInvalidHostname(self, e: InvalidHostname):
-        """Handle with the subdomain request exceptions
-        
-        @type e: InvalidHostname
-        @param e: The invalid hostname exception
-        """
-        if self.__verboseMode[0]:
-            if self.__verboseMode[1]:
-                oh.notWorkedBox(str(e))
-        else:
-            oh.progressStatus(
-                f"[{self.__requester.getRequestIndex()}/{self.__dictSizeof}] {str(int((int(self.__requester.getRequestIndex())/self.__dictSizeof)*100))}%"
-            )

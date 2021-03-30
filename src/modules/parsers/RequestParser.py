@@ -21,6 +21,48 @@ def getIndexesToParse(content: str):
     """
     return [i for i, char in enumerate(content) if char == '$']
 
+def getHost(url: str):
+    """Get the target host from url
+
+    @type url: str
+    @param url: The target URL
+    @returns str: The payloaded target
+    """
+    url = getUrlWithoutScheme(url)
+    return url[:url.index('/')]
+
+def getPath(url: str):
+    """Get the target path from url
+
+    @type url: str
+    @param url: The target URL
+    @returns str: The payloaded path
+    """
+    url = getUrlWithoutScheme(url)
+    return url[url.index('/'):]
+
+def getTargetUrl(url: dict):
+    """Gets the URL without the $ variable
+
+    @type url: dict
+    @param url: The target url
+    @returns str: The target url
+    """
+    if url['fuzzingIndexes']:
+        if '$.' in url['content']:
+            return url['content'].replace('$.', '')
+        return url['content'].replace('$', '')
+    return url['content']
+
+def getUrlWithoutScheme(url: str):
+    """Get the target url without scheme
+
+    @type url: str
+    @param url: The target URL
+    @returns str: The url without scheme
+    """
+    return url[(url.index('://')+3):]
+
 class RequestParser:
     """Class that handle with request arguments parsing
     
@@ -39,7 +81,7 @@ class RequestParser:
         if '://' not in url:
             # No schema was defined, default protocol http
             url = f'http://{url}'
-        if '/' not in self.getUrlWithoutScheme(url):
+        if '/' not in getUrlWithoutScheme(url):
             # Insert a base path if wasn't specified
             url += '/'
         url = {
@@ -105,8 +147,8 @@ class RequestParser:
         @returns dict: The new request parameters
         """
         return {
-            'GET': {} if not data['GET'] else self.__getAjustedData(data['GET']),
-            'POST': {} if not data['POST'] else self.__getAjustedData(data['POST'])
+            'PARAM': {} if not data['PARAM'] else self.__getAjustedData(data['PARAM']),
+            'BODY': {} if not data['BODY'] else self.__getAjustedData(data['BODY'])
         }
 
     def isUrlFuzzing(self, url: dict):
@@ -126,48 +168,6 @@ class RequestParser:
         @param payload: The payload used in the request
         """
         self.__payload = payload
-
-    def getHost(self, url: str):
-        """Get the target host from url
-
-        @type url: str
-        @param url: The target URL
-        @returns str: The payloaded target
-        """
-        url = self.getUrlWithoutScheme(url)
-        return url[:url.index('/')]
-
-    def getPath(self, url: str):
-        """Get the target path from url
-
-        @type url: str
-        @param url: The target URL
-        @returns str: The payloaded path
-        """
-        url = self.getUrlWithoutScheme(url)
-        return url[url.index('/'):]
-
-    def getTargetUrl(self, url: dict):
-        """Gets the URL without the $ variable
-
-        @type url: dict
-        @param url: The target url
-        @returns str: The target url
-        """
-        if url['fuzzingIndexes']:
-            if '$.' in url['content']:
-                return url['content'].replace('$.', '')
-            return url['content'].replace('$', '')
-        return url['content']
-
-    def getUrlWithoutScheme(self, url: str):
-        """Get the target url without scheme
-
-        @type url: str
-        @param url: The target URL
-        @returns str: The url without scheme
-        """
-        return url[(url.index('://')+3):]
 
     def __getAjustedUrl(self, url: dict):
         """Put the payload into the URL requestParameters dictionary

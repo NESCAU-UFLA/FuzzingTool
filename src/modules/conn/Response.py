@@ -32,7 +32,7 @@ class Response:
         """
         return self.__response
 
-    def setRequestData(self, payload: str, timeTaken: float, requestIndex: int, ip: str):
+    def setRequestData(self, method: str, payload: str, timeTaken: float, requestIndex: int, ip: str):
         """Set the request data to be used into the dictionary
 
         @type payload: str
@@ -45,6 +45,7 @@ class Response:
         @param ip: The target IP
         @returns dict: The response data parsed into a dictionary
         """
+        self.method = method
         self.payload = payload
         self.RTT = float('%.6f'%(timeTaken))
         self.requestIndex = requestIndex
