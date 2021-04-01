@@ -13,7 +13,7 @@
 from .parsers.CLIParser import CLIParser
 from .parsers.RequestParser import getTargetUrl, getHost
 from .core.Fuzzer import Fuzzer
-from .core.Payloader import Payloader
+from .core.dictionaries.Payloader import Payloader
 from .core.scanners.Matcher import Matcher
 from .conn.Request import Request
 from .conn.Response import Response
@@ -62,7 +62,7 @@ class ApplicationManager:
         self.requesters = []
         self.startedTime = 0
         self.allResults = {}
-        self.payloader = Payloader()
+        self.dict = Payloader()
 
     def isVerboseMode(self):
         """The verboseMode getter
@@ -96,8 +96,8 @@ class ApplicationManager:
         @param argv: The arguments given in the execution
         """
         cliParser = CLIParser(argv)
-        cliParser.getWordlistFile()
-        self.wordlist, self.dictSizeof = fh.getWordlistContentAndLength()
+        self.dict = cliParser.getDictionary()
+        self.dictSizeof = len(self.dict)
         cookie = cliParser.checkCookie()
         proxy = cliParser.checkProxy()
         proxies = cliParser.checkProxies()
@@ -126,8 +126,8 @@ class ApplicationManager:
         self.delay = cliParser.checkDelay()
         self.verbose = cliParser.checkVerboseMode()
         self.numberOfThreads = cliParser.checkNumThreads()
-        cliParser.checkPrefixAndSuffix(self.payloader)
-        cliParser.checkCase(self.payloader)
+        cliParser.checkPrefixAndSuffix(self.dict)
+        cliParser.checkCase(self.dict)
         self.globalScanner = cliParser.checkGlobalScanner()
         self.matcher = cliParser.checkMatcher()
         cliParser.checkReporter()
@@ -135,6 +135,7 @@ class ApplicationManager:
     def start(self):
         """Starts the application"""
         self.startedTime = time.time()
+        self.fuzzer = None
         try:
             for requester in self.requesters:
                 self.prepareTarget(requester)
@@ -151,9 +152,9 @@ class ApplicationManager:
                 except SkipTargetException as e:
                     if self.fuzzer.isRunning():
                         self.fuzzer.stop()
-                    oh.abortBox(f"{str(e)}. SKipping target")
+                    oh.abortBox(f"{str(e)}. Skipping target")
         except KeyboardInterrupt:
-            if self.fuzzer.isRunning():
+            if self.fuzzer and self.fuzzer.isRunning():
                 self.fuzzer.stop()
             oh.abortBox("Test aborted by the user")
         finally:
@@ -172,21 +173,21 @@ class ApplicationManager:
         else:
             self.scanner = self.globalScanner
         self.scanner.update(self.matcher)
-        oh.setPrintContentMode(self.scanner, self.isVerboseMode())
+        oh.setPrintResultMode(self.scanner, self.isVerboseMode())
         if not self.requester.isUrlFuzzing() and not self.matcher.comparatorIsSet():
             self.scanner.setComparator(self.getDataComparator())
 
     def prepareFuzzer(self):
         """Prepare the fuzzer for the fuzzing tests"""
-        self.payloader.populatePayloads(self.wordlist)
+        self.dict.reload()
         self.fuzzer = Fuzzer(
             requester=self.requester,
-            payloader=self.payloader,
+            dictionary=self.dict,
             scanner=self.scanner,
             delay=self.delay,
             numberOfThreads=self.numberOfThreads,
             resultCallback=self.resultCallback,
-            errorCallbacks=[self.invalidHostnameCallback, self.requestExceptionCallback],
+            exceptionCallbacks=[self.invalidHostnameCallback, self.requestExceptionCallback],
         )
 
     def resultCallback(self, result: dict, validate: bool):
@@ -200,11 +201,11 @@ class ApplicationManager:
         if self.verbose[0]:
             if validate:
                 self.results.append(result)
-            oh.printContent(result, validate)
+            oh.printResult(result, validate)
         else:
             if validate:
                 self.results.append(result)
-                oh.printContent(result, validate)
+                oh.printResult(result, validate)
             oh.progressStatus(
                 f"[{result['Request']}/{self.dictSizeof}] {str(int((int(result['Request'])/self.dictSizeof)*100))}%"
             )
@@ -338,7 +339,7 @@ class ApplicationManager:
         firstResult = self.scanner.getResult(
             response=response
         )
-        oh.printContent(firstResult, False)
+        oh.printResult(firstResult, False)
         defaultLength = int(firstResult['Length'])+300
         if oh.askYesNo('info', "Do you want to exclude responses based on custom length?"):
             length = oh.askData(f"Insert the length (default {defaultLength})")
@@ -362,7 +363,7 @@ class ApplicationManager:
                 oh.infoBox(f"Found {len(value)} possible payload(s) on target {key}:")
                 if self.isVerboseMode():
                     for result in value:
-                        oh.printContent(result, True)
+                        oh.printResult(result, True)
                 fh.reporter.open(key)
                 fh.reporter.write(value)
             else:

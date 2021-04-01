@@ -36,19 +36,20 @@ class Request:
         followRedirects: The follow redirections flag
         requestIndex: The request index
         subdomainFuzzing: A flag to say if the fuzzing will occur on subdomain
+        methods: The methods list to be used on fuzzing
     """
     def __init__(self,
         url: str,
-        methods: list,
-        data: dict,
-        httpHeader: dict,
+        methods: list = [],
+        data: dict = {},
+        httpHeader: dict = {},
     ):
         """Class constructor
 
         @type url: str
         @param url: The target URL
-        @type method: str
-        @param method: The request method
+        @type methods: list
+        @param methods: The request methods list
         @type data: dict
         @param data: The parameters of the request, with default values if are given
         @type httpHeader: dict

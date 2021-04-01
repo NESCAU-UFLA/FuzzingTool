@@ -10,8 +10,12 @@
 #
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
-class SkipTargetException(Exception):
-    pass
+from ..BaseDictionary import BaseDictionary
+from ....IO.FileHandler import fileHandler as fh
 
-class MissingParameter(Exception):
-    pass
+class FileDictionary(BaseDictionary):
+    def __init__(self):
+        super().__init__()
+
+    def setWordlist(self, sourceParam: str):
+        self._wordlist = fh.read(sourceParam)

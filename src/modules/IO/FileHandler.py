@@ -178,69 +178,17 @@ class FileHandler:
         self.reporter = Reporter()
         self.__wordlistFile = None
 
-    def readRaw(self, rawFile: str):
-        """Reads the raw HTTP request.
+    def read(self, fileName: str):
+        """Reads content of a file.
 
-        @type rawFile: str
-        @param rawFile: The file path and name
-        @returns list: The content into data file
+        @type fileName: str
+        @param fileName: The file path and name
+        @returns list: The content into the file
         """
         try:
-            with open(f'{rawFile}', 'r') as rawFile:
-                return [data.rstrip('\n') for data in rawFile]
+            with open(f'{fileName}', 'r') as thisFile:
+                return [data.rstrip('\n') for data in thisFile]
         except FileNotFoundError:
-            oh.errorBox(f"File '{rawFile}' not found.")
-
-    def getProxiesFile(self):
-        """The proxiesFile getter
-
-        @returns file: The proxies file
-        """
-        return self.__proxiesFile
-
-    def readProxies(self, proxiesFile: str):
-        """Open the proxies file, and read the proxies
-        
-        @type proxiesFile: str
-        @param proxiesFile: The proxies file path and name
-        @returns list: The list with proxies dictionary
-        """
-        proxies = []
-        try:
-            with open(f'{proxiesFile}', 'r') as proxiesFile:
-                for line in proxiesFile:
-                    line = line.rstrip("\n")
-                    proxies.append({
-                        'http': 'http://'+line,
-                        'https': 'https://'+line
-                    })
-        except FileNotFoundError:
-            oh.errorBox(f"File '{proxiesFile}' not found")
-        return proxies
-
-    def openWordlist(self, wordlistFile: str):
-        """Open the wordlist file
-
-        @type wordlistFile: str
-        @param wordlistFile: The wordlist file path and name
-        """
-        try:
-            self.__wordlistFile = open(f'{wordlistFile}', 'r')
-        except FileNotFoundError:
-            oh.errorBox(f"File '{wordlistFile}' not found. Did you put it in the correct directory?")
-
-    def getWordlistContentAndLength(self):
-        """Get the wordlist content, into a list, and the number of lines in file
-
-        @returns tuple(list, int): The tuple with the wordlist and the number of lines
-        """
-        wordlist = []
-        length = 0
-        for line in self.__wordlistFile:
-            line = line.rstrip("\n")
-            wordlist.append(line)
-            length += 1
-        self.__wordlistFile.close()
-        return (wordlist, length)
+            oh.errorBox(f"File '{fileName}' not found.")
 
 fileHandler = FileHandler.getInstance()

@@ -12,13 +12,16 @@
 
 from .RequestParser import getHost, getTargetUrl
 from ..core.Fuzzer import Fuzzer
-from ..core.Payloader import Payloader
+from ..core.dictionaries.Payloader import Payloader
 from ..core.scanners import *
 from ..conn.Request import Request
 from ..IO.OutputHandler import outputHandler as oh
 from ..IO.FileHandler import fileHandler as fh
+from ..exceptions.MainExceptions import MissingParameter
 
 from collections import deque
+from os import walk
+from importlib import import_module
 
 class CLIParser:
     """Class that handle with the sys argument parsing"""
@@ -67,26 +70,54 @@ class CLIParser:
                 })
         return targets
 
-    def getWordlistFile(self):
-        """Get the fuzzing wordlist filename from -f argument
-           If the argument -f doesn't exists, or the file couldn't be open, an error is thrown and the application exits
-        """
+    def getDictionary(self):
+        """Get the fuzzing dictionary"""
         try:
-            wordlistFileName = self.__argv[self.__argv.index('-f')+1]
-            fh.openWordlist(wordlistFileName)
+            wordlistSource = self.__argv[self.__argv.index('-w')+1]
         except ValueError:
-            oh.errorBox("An file is needed to make the fuzzing")
+            oh.errorBox("An wordlist is needed to make the fuzzing")
+        _, _, customDictionaries = next(walk("./modules/core/dictionaries/custom/"))
+        customDictionaries = [dictionaryFile.split('.')[0] for dictionaryFile in customDictionaries]
+        if '=' in wordlistSource:
+            dictionary, sourceParam = wordlistSource.split('=')
+        else:
+            dictionary = wordlistSource
+            sourceParam = ''
+        if dictionary in customDictionaries:
+            try:
+                customImported = import_module(
+                    f".modules.core.dictionaries.custom.{dictionary}",
+                    package=f"{dictionary}"
+                )
+            except:
+                customImported = import_module(
+                    f"modules.core.dictionaries.custom.{dictionary}",
+                    package=f"{dictionary}"
+                )
+            dictionary = getattr(customImported, dictionary)()
+        else:
+            # For default, read the wordlist from a file
+            from ..core.dictionaries.default.FileDictionary import FileDictionary
+            dictionary = FileDictionary()
+            sourceParam = wordlistSource
+        oh.infoBox("Building dictionary ...")
+        try:
+            dictionary.setWordlist(sourceParam)
+        except MissingParameter as e:
+            oh.errorBox(f"{wordlistSource} missing parameter: {str(e)}")
+        oh.infoBox("Dictionary is done")
+        return dictionary
 
     def checkCookie(self):
         """Check if the --cookie argument is present, and set the value into the requester
 
         @returns str: The cookie used in the request
         """
+        cookie = ''
         if '--cookie' in self.__argv:
             cookie = self.__argv[self.__argv.index('--cookie')+1]
             oh.infoBox(f"Set cookie: {cookie}")
-            return cookie
-        return ''
+        return cookie
 
     def checkProxy(self):
         """Check if the --proxy argument is present, and set the value into the requester
@@ -97,8 +128,8 @@ class CLIParser:
             proxy = self.__argv[self.__argv.index('--proxy')+1]
             oh.infoBox(f"Set proxy: {proxy}")
             return {
-                'http': 'http://'+proxy,
-                'https': 'https://'+proxy
+                'http': f"http://{proxy}",
+                'https': f"https://{proxy}"
             }
         return {}
 
@@ -110,7 +141,11 @@ class CLIParser:
         if '--proxies' in self.__argv:
             proxiesFileName = self.__argv[self.__argv.index('--proxies')+1]
             oh.infoBox(f"Loading proxies from file '{proxiesFileName}' ...")
-            return fh.readProxies(proxiesFileName)
+            proxies = fh.read(proxiesFileName)
+            return [{
+                'http': f"http://{proxy}",
+                'https': f"https://{proxy}",
+            } for proxy in proxies]
         return []
 
     def checkTimeout(self):
@@ -221,6 +256,7 @@ class CLIParser:
             else:
                 reportType = report
                 reportName = ''
+            reportType = reportType.lower()
             if reportType not in ['txt', 'csv', 'json']:
                 oh.errorBox(f"Unsupported report format for {reportType}! Accepts: txt, csv and json")
             oh.infoBox(f"Set report: {report}")
@@ -320,21 +356,21 @@ class CLIParser:
         else:
             methods = [method]
         httpHeader = self.__getHeader(headerList)
-        param = {
+        data = {
             'PARAM': '',
             'BODY': ''
         }
         if '?' in path:
-            path, param['PARAM'] = path.split('?', 1)
+            path, data['PARAM'] = path.split('?', 1)
         # Check if a scheme is specified, otherwise set http as default
         if '--scheme' in self.__argv:
             scheme = self.__argv[self.__argv.index('--scheme')+1]
         else:
             scheme = 'http'
         url = f"{scheme}://{httpHeader['Host']}{path}"
-        if method == 'BODY' and len(headerList) > 0:
-            param['BODY'] = headerList.popleft()
-        return (url, methods, param, httpHeader)
+        if len(headerList) > 0:
+            data['BODY'] = headerList.popleft()
+        return (url, methods, data, httpHeader)
     
     def __getRequestFromArgs(self, i: int, methods: list):
         """Get the param method to use ('?' or '$' in URL if GET, or --data) and the request paralisting

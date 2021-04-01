@@ -10,7 +10,7 @@
 #
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
-from .Payloader import Payloader
+from .dictionaries.BaseDictionary import BaseDictionary
 from .scanners import *
 from ..conn.Request import Request
 from ..IO.OutputHandler import outputHandler as oh
@@ -19,6 +19,7 @@ from ..exceptions.RequestExceptions import RequestException, InvalidHostname
 
 from threading import Thread, Event, Semaphore
 import time
+from typing import Callable
 
 class Fuzzer:
     """Fuzzer class, the core of the software
@@ -26,36 +27,43 @@ class Fuzzer:
     Attributes:
         requester: The requester object to deal with the requests
         delay: The delay between each test
-        verboseMode: The verbose mode flag
         numberOfThreads: The number of threads used in the application
-        output: The output content to be send to the file
-        dictSizeof: The number of payloads in the payload file
         scanner: A scanner object, used to validate the results
-        payloader: The payloader object to handle with the payloads
+        dict: The dictionary object to handle with the payloads
     """
     def __init__(self,
         requester: Request,
-        payloader: Payloader,
+        dictionary: BaseDictionary,
         scanner: BaseScanner,
         delay: float,
         numberOfThreads: int,
-        resultCallback,
-        errorCallbacks: list
+        resultCallback: Callable[[dict, bool], None],
+        exceptionCallbacks: list, # Callback list
     ):
         """Class constructor
 
         @type requester: requester
         @param requester: The requester object to deal with the requests
-        @type payloader: Payloader
-        @param payloader: The payloader object to deal with the payload dictionary
+        @type dict: BaseDictionary
+        @param dict: The dicttionary object to deal with the payload dictionary
+        @type scanner: BaseScanner
+        @param scanner: The fuzzing results scanner
+        @type delay: float
+        @param delay: The delay between each request
+        @type numberOfThreads: int
+        @param numberOfThreads: The number of threads used in the fuzzing tests
+        @type resultCallback: Callback Fuction
+        @param resultCallback: The callback function for the results
+        @type exceptionCallbacks: list[invalidHostnameCallback, requestExceptionCallback]
+        @param exceptionCallbacks: The list that handles with exception callbacks
         """
         self.__requester = requester
         self.__delay = delay
         self.__numberOfThreads = numberOfThreads
         self.__scanner = scanner
-        self.__payloader = payloader
-        self.resultCallback = resultCallback
-        self.errorCallbacks = errorCallbacks
+        self.__dict = dictionary
+        self.__resultsCallback = resultCallback
+        self.__exceptionCallbacks = exceptionCallbacks
 
     def isRunning(self):
         """The running flag getter
@@ -73,20 +81,20 @@ class Fuzzer:
         """
         def run():
             """Run the threads"""
-            while self.__running and not self.__payloader.isEmpty():
-                payload = self.__payloader.get()
+            while self.__running and not self.__dict.isEmpty():
+                payload = next(self.__dict)
                 try:
                     for p in payload:
                         try:
                             result = self.__scanner.getResult(
                                 response=self.__requester.request(p)
                             )
-                            self.resultCallback(result, self.__scanner.scan(result))
+                            self.__resultsCallback(result, self.__scanner.scan(result))
                             time.sleep(self.__delay)
                         except InvalidHostname as e:
-                            self.errorCallbacks[0](e)
+                            self.__exceptionCallbacks[0](e)
                         except RequestException as e:
-                            self.errorCallbacks[1](e)
+                            self.__exceptionCallbacks[1](e)
                 finally:
                     if not self.__playerHandler.isSet():
                         self.__numberOfThreads -= 1

@@ -42,7 +42,7 @@ class BaseScanner(Matcher):
         @param result: The result dict
         @reeturns bool: A match flag
         """
-        raise Exception("Not Implemented Exception")
+        raise NotImplementedError("scan method should be overrided")
 
     def getMessage(self, result: dict):
         """Get the formated message to be used on output
@@ -51,4 +51,4 @@ class BaseScanner(Matcher):
         @param result: The result dict
         @returns str: The message
         """
-        raise Exception("Not Implemented Exception")
+        raise NotImplementedError("getMessage method should be overrided")

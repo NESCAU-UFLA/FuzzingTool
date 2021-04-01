@@ -108,7 +108,7 @@ class OutputHandler:
         self.__worked = f'{Colors.GRAY}[{Colors.GREEN}+{Colors.GRAY}]{Colors.RESET} '
         self.__notWorked = f'{Colors.GRAY}[{Colors.RED}-{Colors.GRAY}]{Colors.RESET} '
 
-    def setPrintContentMode(self, scanner: object, verboseMode: bool):
+    def setPrintResultMode(self, scanner: object, verboseMode: bool):
         """Set the print content mode by the Fuzzer responses
 
         @type scanner: object
@@ -118,10 +118,10 @@ class OutputHandler:
         """
         if verboseMode:
             self.__lock = None
-        self.printContent = self.printForBoxMode
+        self.printResult = self.printForBoxMode
         try:
             self.__getMessage = scanner.getMessage
-        except Exception as e:
+        except NotImplementedError as e:
             exit(str(e))
 
     def infoBox(self, msg: str):
@@ -348,7 +348,7 @@ class OutputHandler:
         self.__helpContent(5, "-r FILE", "Define the file with the raw HTTP request (scheme not specified)")
         self.__helpContent(5, "--scheme SCHEME", "Define the scheme used in the URL (default http)")
         self.__helpContent(5, "-u URL", "Define the target URL")
-        self.__helpContent(5, "--data DATA", "Define the POST data")
+        self.__helpContent(5, "--data DATA", "Define the request body data")
         self.__helpContent(5, "--proxy IP:PORT", "Define the proxy")
         self.__helpContent(5, "--proxies FILE", "Define the file with a list of proxies")
         self.__helpContent(5, "--cookie COOKIE", "Define the HTTP Cookie header value")
