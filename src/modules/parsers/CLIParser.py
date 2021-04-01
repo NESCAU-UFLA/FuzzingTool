@@ -146,14 +146,14 @@ class CLIParser:
             return int(timeout)
         return None
 
-    def checkUnfollowRedirects(self):
+    def checkFollowRedirects(self):
         """Check if the --follow-redirects argument is present, and set the follow redirects flag
 
         @returns bool: The follow redirections flag used in the request
         """
-        if '--unfollow-redirects' in self.__argv:
-            return False
-        return True
+        if '--follow-redirects' in self.__argv:
+            return True
+        return False
 
     def checkDelay(self):
         """Check if the --delay argument is present, and set the value into the fuzzer

@@ -31,7 +31,7 @@ class Request:
         data: The parameter data of the request
         httpHeader: The HTTP header
         proxy: The proxy used in the request
-        proxyList: The list with valid proxies gived by a file
+        proxies: The list with valid proxies gived by a file
         timeout: The request timeout before raise a TimeoutException
         followRedirects: The follow redirections flag
         requestIndex: The request index
@@ -43,6 +43,9 @@ class Request:
         methods: list = [],
         data: dict = {},
         httpHeader: dict = {},
+        followRedirects: bool = False,
+        proxy: dict = {},
+        proxies: list = [],
     ):
         """Class constructor
 
@@ -54,15 +57,21 @@ class Request:
         @param data: The parameters of the request, with default values if are given
         @type httpHeader: dict
         @param httpHeader: The HTTP header of the request
+        @type followRedirects: bool
+        @param followRedirects: The follow redirects flag
+        @type proxy: dict
+        @param proxy: The proxy used in the request
+        @type proxies: list
+        @param proxies: The list with the proxies used in the requests
         """
         self.__url = parser.setupUrl(url)
         self.__method = 'GET'
         self.__data = data
         self.__httpHeader = httpHeader
-        self.__proxy = {}
-        self.__proxyList = []
+        self.__proxy = proxy
+        self.__proxies = proxies
         self.__timeout = None if not parser.isUrlFuzzing(self.__url) else 10
-        self.__followRedirects = True
+        self.__followRedirects = followRedirects
         self.__requestIndex = 0
         self.__setupHeader()
         self.__subdomainFuzzing = parser.checkForSubdomainFuzz(self.__url)
@@ -96,12 +105,12 @@ class Request:
         """
         return self.__proxy
 
-    def getProxyList(self):
+    def getProxies(self):
         """The proxies list getter
 
         @returns list: The proxies list
         """
-        return self.__proxyList
+        return self.__proxies
 
     def getRequestIndex(self):
         """The request index getter
@@ -139,22 +148,6 @@ class Request:
         else:
             self.__httpHeader['content'][key] = value
 
-    def setProxy(self, proxy: dict):
-        """The proxy setter
-
-        @type proxy: dict
-        @param proxy: The proxy used in the request
-        """
-        self.__proxy = proxy
-
-    def setProxyList(self, proxyList: list):
-        """The proxy list setter
-
-        @type proxyList: list
-        @param proxyList: The list with the proxies used in the requests
-        """
-        self.__proxyList = proxyList
-
     def setTimeout(self, timeout: int):
         """The timeout setter
 
@@ -162,14 +155,6 @@ class Request:
         @param timeout: The request timeout
         """
         self.__timeout = timeout
-
-    def setFollowRedirects(self, followRedirects: bool):
-        """The follow redirects setter
-
-        @type followRedirects: bool
-        @param followRedirects: The follow redirects flag
-        """
-        self.__followRedirects = followRedirects
 
     def resetRequestIndex(self):
         """Resets the request index to 0"""
@@ -223,7 +208,7 @@ class Request:
         @param payload: The payload used in the request
         @returns dict: The response data dictionary
         """
-        if self.__proxyList and self.__requestIndex%1000 == 0:
+        if self.__proxies and self.__requestIndex%1000 == 0:
             self.__updateProxy()
         parser.setPayload(payload)
         requestParameters = self.__getRequestParameters()
@@ -312,4 +297,4 @@ class Request:
 
     def __updateProxy(self):
         """Set the proxy based on request index"""
-        self.setProxy(self.__proxyList[(self.__requestIndex%1000)%len(self.__proxyList)])
+        self.setProxy(self.__proxies[(self.__requestIndex%1000)%len(self.__proxies)])

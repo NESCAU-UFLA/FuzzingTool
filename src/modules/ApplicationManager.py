@@ -104,9 +104,9 @@ def showScannersHelp():
     oh.helpContent(4, "PathScanner", "Scanner for the path URL fuzzing")
     oh.helpContent(4, "SubdomainScanner", "Scanner for the subdomain URL fuzzing")
     oh.helpTitle(2, "Custom: --scaner SCANNER - Set the custom scanner\n")
-    for customDictionary in getCustomPackages('scanners'):
-        dictionary = importCustomPackage('scanners', customDictionary)
-        oh.helpContent(4, dictionary.__name__, dictionary.__desc__)
+    for customScanner in getCustomPackages('scanners'):
+        scanner = importCustomPackage('scanners', customScanner)
+        oh.helpContent(4, scanner.__name__, scanner.__desc__)
 
 class ApplicationManager:
     """Class that handle with the entire application
@@ -166,7 +166,7 @@ class ApplicationManager:
         proxy = cliParser.checkProxy()
         proxies = cliParser.checkProxies()
         timeout = cliParser.checkTimeout()
-        followRedirects = cliParser.checkUnfollowRedirects()
+        followRedirects = cliParser.checkFollowRedirects()
         targets = cliParser.getTargets()
         for target in targets:
             oh.infoBox(f"Set target: {target['url']}")
@@ -178,14 +178,14 @@ class ApplicationManager:
                 methods=target['methods'],
                 data=target['data'],
                 httpHeader=target['header'],
+                followRedirects=followRedirects,
+                proxy=proxy,
+                proxies=proxies,
             )
             if cookie:
                 requester.setHeaderContent('Cookie', cookie)
-            requester.setProxy(proxy)
-            requester.setProxyList(proxies)
             if timeout:
                 requester.setTimeout(timeout)
-            requester.setFollowRedirects(followRedirects)
             self.requesters.append(requester)
         self.dict = cliParser.getDictionary()
         self.dictSizeof = len(self.dict)

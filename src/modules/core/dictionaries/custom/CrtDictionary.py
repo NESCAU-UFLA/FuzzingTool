@@ -58,6 +58,8 @@ class CrtDictionary(BaseDictionary):
             response = requester.request("")
         except RequestException as e:
             oh.errorBox(str(e))
+        if 'None found' in response.text:
+            oh.errorBox(f"No certified domains was found for '{sourceParam}'")
         oh.infoBox("Parsing the content into the wordlist ...")
         contentList = [element.string for element in BeautifulSoup(response.text, "lxml")('td')]
         regex = r"([a-zA-Z0-9]+\.)*[a-zA-Z0-9]+"
