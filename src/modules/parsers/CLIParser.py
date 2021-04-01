@@ -92,7 +92,7 @@ class CLIParser:
             dictionary.setWordlist(sourceParam)
         except MissingParameter as e:
             oh.errorBox(f"{wordlistSource} missing parameter: {str(e)}")
-        oh.infoBox("Dictionary is done")
+        oh.infoBox(f"Dictionary is done, loaded {len(dictionary)} payloads")
         return dictionary
 
     def checkCookie(self):
@@ -262,12 +262,11 @@ class CLIParser:
         """
         if '--scanner' in self.__argv:
             scanner = self.__argv[self.__argv.index('--scanner')+1]
-            if 'reflected' in scanner:
-                from ..core.scanners.custom.ReflectedScanner import ReflectedScanner
-                scanner = ReflectedScanner()
+            if scanner in getCustomPackages('scanners'):
+                scanner = importCustomPackage('scanners', scanner)()
             else:
                 oh.errorBox(f"Scanner {scanner} not available!")
-            oh.infoBox(f"Set scanner: {scanner}")
+            oh.infoBox(f"Set scanner: {scanner.__name__}")
         else:
             scanner = None
         return scanner
@@ -336,7 +335,7 @@ class CLIParser:
         @param i: The index of the raw filename on terminal
         @returns tuple(str, list, dict, dict): The default parameters of the requests
         """
-        headerList = deque(fh.readRaw(self.__argv[i]))
+        headerList = deque(fh.read(self.__argv[i]))
         method, path, httpVer = headerList.popleft().split(' ')
         if ',' in method:
             methods = method.split(',')

@@ -18,4 +18,4 @@ class FileDictionary(BaseDictionary):
         super().__init__()
 
     def setWordlist(self, sourceParam: str):
-        self._wordlist = fh.read(sourceParam)
+        self._wordlist = set(fh.read(sourceParam))

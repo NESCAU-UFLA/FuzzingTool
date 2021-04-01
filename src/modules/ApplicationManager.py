@@ -334,7 +334,7 @@ class ApplicationManager:
         # If we'll not fuzzing the url paths, so
         # test the redirections before start the fuzzing
         for requester in self.requesters:
-            oh.infoBox(f"Checking {requester.getUrl()} ...")
+            oh.infoBox(f"Checking connection and redirections on {requester.getUrl()} ...")
             if requester.isUrlFuzzing():
                 oh.infoBox("Test mode set for URL fuzzing")
                 oh.infoBox("Testing connection ...")
@@ -369,7 +369,7 @@ class ApplicationManager:
         """
         oh.infoBox("Testing redirections ...")
         for method in requester.methods:
-            oh.infoBox(f"Testing with {method} method")
+            oh.infoBox(f"Testing with {method} method ...")
             requester.setMethod(method)
             try:
                 if requester.hasRedirection():
