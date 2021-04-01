@@ -11,6 +11,7 @@
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
 from .RequestParser import getHost, getTargetUrl
+from ..utils.utils import getIndexesToParse, getCustomPackages, importCustomPackage
 from ..core.Fuzzer import Fuzzer
 from ..core.dictionaries.Payloader import Payloader
 from ..core.scanners import *
@@ -20,8 +21,6 @@ from ..IO.FileHandler import fileHandler as fh
 from ..exceptions.MainExceptions import MissingParameter
 
 from collections import deque
-from os import walk
-from importlib import import_module
 
 class CLIParser:
     """Class that handle with the sys argument parsing"""
@@ -40,7 +39,7 @@ class CLIParser:
         """
         targets = []
         if '-r' in self.__argv:
-            rawIndexes = [i for i, char in enumerate(self.__argv) if char == '-r']
+            rawIndexes = getIndexesToParse(self.__argv, '-r')
             for i in rawIndexes:
                 url, methods, data, httpHeader = self.__getRequestFromRawHttp(i+1)
                 targets.append({
@@ -50,9 +49,9 @@ class CLIParser:
                     'header': httpHeader,
                 })
         else:
-            urlIndexes = [i for i, char in enumerate(self.__argv) if char == '-u']
+            urlIndexes = getIndexesToParse(self.__argv, '-u')
             if not urlIndexes:
-                oh.errorBox("At least a target URL is needed to make the fuzzing.")
+                oh.errorBox("At least a target URL is needed to make the fuzzing")
             if '--method' in self.__argv:
                 method = self.__argv[self.__argv.index('--method')+1]
                 customMethods = [method]
@@ -76,25 +75,13 @@ class CLIParser:
             wordlistSource = self.__argv[self.__argv.index('-w')+1]
         except ValueError:
             oh.errorBox("An wordlist is needed to make the fuzzing")
-        _, _, customDictionaries = next(walk("./modules/core/dictionaries/custom/"))
-        customDictionaries = [dictionaryFile.split('.')[0] for dictionaryFile in customDictionaries]
         if '=' in wordlistSource:
             dictionary, sourceParam = wordlistSource.split('=')
         else:
             dictionary = wordlistSource
             sourceParam = ''
-        if dictionary in customDictionaries:
-            try:
-                customImported = import_module(
-                    f".modules.core.dictionaries.custom.{dictionary}",
-                    package=f"{dictionary}"
-                )
-            except:
-                customImported = import_module(
-                    f"modules.core.dictionaries.custom.{dictionary}",
-                    package=f"{dictionary}"
-                )
-            dictionary = getattr(customImported, dictionary)()
+        if dictionary in getCustomPackages('dictionaries'):
+            dictionary = importCustomPackage('dictionaries', dictionary)()
         else:
             # For default, read the wordlist from a file
             from ..core.dictionaries.default.FileDictionary import FileDictionary
@@ -397,7 +384,7 @@ class CLIParser:
             try:
                 data['BODY'] = self.__argv[self.__argv.index('--data')+1]
             except ValueError:
-                oh.errorBox("You must set at least GET or POST parameters for data fuzzing.")
+                oh.errorBox("You must set at least PARAM or BODY datas for data fuzzing")
         return (url, methods, data)
     
     def __makeDataDict(self, dataDict: dict, key: str):

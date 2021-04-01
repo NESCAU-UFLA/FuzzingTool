@@ -15,7 +15,7 @@ from .Payloader import Payloader
 from queue import Queue
 
 class BaseDictionary(Payloader):
-    """Class that handles with the program dictionary
+    """Base dictionary
 
     Attributes:
         payloads: The queue that contains all payloads inside the wordlist
@@ -28,22 +28,11 @@ class BaseDictionary(Payloader):
         self._wordlist = []
 
     def __next__(self):
-        """Gets the payload list ajusted with the console options
+        """Gets the next payload to be processed
 
         @returns list: The payloads used in the request
         """
-        ajustedPayload = [self.__payloads.get()]
-        if self._prefix:
-            ajustedPayload = [(prefix+payload) for prefix in self._prefix for payload in ajustedPayload]
-        if self._suffix:
-            ajustedPayload = [(payload+suffix) for suffix in self._suffix for payload in ajustedPayload]
-        if self._uppercase:
-            ajustedPayload = [payload.upper() for payload in ajustedPayload]
-        elif self._lowercase:
-            ajustedPayload = [payload.lower() for payload in ajustedPayload]
-        elif self._capitalize:
-            ajustedPayload = [payload.capitalize() for payload in ajustedPayload]
-        return ajustedPayload
+        return self._getCustomizedPayload(self.__payloads.get())
     
     def __len__(self):
         """Gets the wordlist length

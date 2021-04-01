@@ -16,7 +16,7 @@ from ....conn.Response import Response
 from ....IO.OutputHandler import fixPayloadToOutput, Colors
 
 class SubdomainScanner(BaseScanner):
-    __name__ = "Subdomain Scanner"
+    __name__ = "SubdomainScanner"
     __author__ = "Vitor Oriel C N Borges"
 
     def getResult(self, response: Response):

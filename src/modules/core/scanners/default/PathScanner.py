@@ -17,7 +17,7 @@ from ....parsers.RequestParser import getPath
 from ....IO.OutputHandler import fixPayloadToOutput, Colors
 
 class PathScanner(BaseScanner):
-    __name__ = "Path Scanner"
+    __name__ = "PathScanner"
     __author__ = "Vitor Oriel C N Borges"
 
     def getResult(self, response: Response):

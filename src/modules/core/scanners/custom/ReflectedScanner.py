@@ -17,9 +17,10 @@ from ....IO.OutputHandler import getFormatedResult, Colors
 import html
 
 class ReflectedScanner(DataScanner):
-    __name__ = "Reflected Scanner"
+    __name__ = "ReflectedScanner"
     __author__ = "Vitor Oriel C N Borges"
     __desc__ = "Lookup if the payload was reflected in the response content"
+    __type__ = "DataFuzzing"
 
     def __init__(self):
         super().__init__()

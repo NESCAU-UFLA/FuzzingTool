@@ -10,16 +10,7 @@
 #
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
-def getIndexesToParse(content: str):
-    """If the fuzzing tests will occur on the given value,
-       so get the list of positions of it to insert the payloads
-    
-    @type content: str
-    @param content: The parameter content
-    @returns list: The positions indexes to insert the payload.
-                   Returns an empty list if the tests'll not occur
-    """
-    return [i for i, char in enumerate(content) if char == '$']
+from ..utils.utils import getIndexesToParse
 
 def getHost(url: str):
     """Get the target host from url

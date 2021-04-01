@@ -10,4 +10,4 @@
 #
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
-from .CrtDictionary import CrtDictionary
+from .FileDictionary import FileDictionary

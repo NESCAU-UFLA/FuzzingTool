@@ -14,6 +14,10 @@ from .Matcher import Matcher
 from ...conn.Response import Response
 
 class BaseScanner(Matcher):
+    """Base scanner"""
+    def __init__(self):
+        super().__init__()
+
     def getResult(self, response: Response):
         """Get the response data parsed into a dictionary
         

@@ -22,11 +22,11 @@ class Payloader:
     """
     def __init__(self):
         """Class constructor"""
-        self._prefix = []
-        self._suffix = []
-        self._uppercase = False
-        self._lowercase = False
-        self._capitalize = False
+        self.__prefix = []
+        self.__suffix = []
+        self.__uppercase = False
+        self.__lowercase = False
+        self.__capitalize = False
 
     def setPrefix(self, prefix: list):
         """The prefix setter
@@ -34,7 +34,7 @@ class Payloader:
         @type prefix: list
         @param prefix: The prefix used in the payload
         """
-        self._prefix = prefix
+        self.__prefix = prefix
     
     def setSuffix(self, suffix: list):
         """The suffix setter
@@ -42,7 +42,7 @@ class Payloader:
         @type suffix: list
         @param suffix: The suffix used in the payload
         """
-        self._suffix = suffix
+        self.__suffix = suffix
 
     def setUppecase(self, uppercase: bool):
         """The uppercase setter
@@ -50,7 +50,7 @@ class Payloader:
         @type uppercase: bool
         @param uppercase: The uppercase flag
         """
-        self._uppercase = uppercase
+        self.__uppercase = uppercase
     
     def setLowercase(self, lowercase: bool):
         """The lowercase setter
@@ -58,7 +58,7 @@ class Payloader:
         @type lowercase: bool
         @param lowercase: The lowercase flag
         """
-        self._lowercase = lowercase
+        self.__lowercase = lowercase
 
     def setCapitalize(self, capitalize: bool):
         """The capitalize setter
@@ -66,4 +66,24 @@ class Payloader:
         @type capitalize: bool
         @param capitalize: The capitalize flag
         """
-        self._capitalize = capitalize
+        self.__capitalize = capitalize
+    
+    def _getCustomizedPayload(self, payload: str):
+        """Gets the payload list ajusted with the console options
+
+        @type payload: str
+        @param payload: The string payload gived by the payloads queue
+        @returns list: The payloads used in the request
+        """
+        ajustedPayload = [payload]
+        if self.__prefix:
+            ajustedPayload = [(prefix+payload) for prefix in self.__prefix for payload in ajustedPayload]
+        if self.__suffix:
+            ajustedPayload = [(payload+suffix) for suffix in self.__suffix for payload in ajustedPayload]
+        if self.__uppercase:
+            ajustedPayload = [payload.upper() for payload in ajustedPayload]
+        elif self.__lowercase:
+            ajustedPayload = [payload.lower() for payload in ajustedPayload]
+        elif self.__capitalize:
+            ajustedPayload = [payload.capitalize() for payload in ajustedPayload]
+        return ajustedPayload

@@ -308,7 +308,7 @@ class OutputHandler:
         sys.stdout.write("\033[0G")
         sys.stdout.flush()
 
-    def __helpTitle(self, numSpaces: int, title: str):
+    def helpTitle(self, numSpaces: int, title: str):
         """Output the help title
 
         @type numSpaces: int
@@ -318,7 +318,7 @@ class OutputHandler:
         """
         print("\n"+' '*numSpaces+title)
 
-    def __helpContent(self, numSpaces: int, command: str, desc: str):
+    def helpContent(self, numSpaces: int, command: str, desc: str):
         """Output the help content
 
         @type numSpaces: int
@@ -328,7 +328,12 @@ class OutputHandler:
         @type desc: str
         @param desc: The description of the command
         """
-        print(' '*numSpaces+("{:<"+str(27-numSpaces)+"}").format(command)+' '+desc)
+        maxCommandSizeWithSpace = 27
+        if (len(command)+numSpaces) <= maxCommandSizeWithSpace:
+            print(' '*numSpaces+("{:<"+str(maxCommandSizeWithSpace-numSpaces)+"}").format(command)+' '+desc)
+        else:
+            print(' '*numSpaces+("{:<"+str(maxCommandSizeWithSpace-numSpaces)+"}").format(command))
+            print(' '*(maxCommandSizeWithSpace)+' '+desc)
     
     def print(self, msg: str):
         """Print the message
@@ -337,45 +342,5 @@ class OutputHandler:
         @param msg: The message
         """
         print(msg)
-
-    def showHelpMenu(self):
-        """Creates the Help Menu"""
-        self.__helpTitle(0, "Parameters:")
-        self.__helpTitle(3, "Misc:")
-        self.__helpContent(5, "-h, --help", "Show the help menu and exit")
-        self.__helpContent(5, "-v, --version", "Show the current version and exit")
-        self.__helpTitle(3, "Request options:")
-        self.__helpContent(5, "-r FILE", "Define the file with the raw HTTP request (scheme not specified)")
-        self.__helpContent(5, "--scheme SCHEME", "Define the scheme used in the URL (default http)")
-        self.__helpContent(5, "-u URL", "Define the target URL")
-        self.__helpContent(5, "--data DATA", "Define the request body data")
-        self.__helpContent(5, "--proxy IP:PORT", "Define the proxy")
-        self.__helpContent(5, "--proxies FILE", "Define the file with a list of proxies")
-        self.__helpContent(5, "--cookie COOKIE", "Define the HTTP Cookie header value")
-        self.__helpContent(5, "--timeout TIMEOUT", "Define the request timeout (in seconds)")
-        self.__helpContent(5, "--unfollow-redirects", "Stop to follow redirections")
-        self.__helpTitle(3, "Dict options:")
-        self.__helpContent(5, "-f FILE", "Define the wordlist file with the payloads")
-        self.__helpContent(5, "--prefix PREFIX", "Define the prefix(es) used with the payload")
-        self.__helpContent(5, "--suffix SUFFIX", "Define the suffix(es) used with the payload")
-        self.__helpContent(5, "--upper", "Set the uppercase flag for the payloads")
-        self.__helpContent(5, "--lower", "Set the lowercase flag for the payloads")
-        self.__helpContent(5, "--capitalize", "Set the capitalize flag for the payloads")
-        self.__helpTitle(3, "Match options:")
-        self.__helpContent(5, "-Xc STATUS", "Allow responses based on their status codes")
-        self.__helpContent(5, "-Xs SIZE", "Allow responses based on their length (in bytes)")
-        self.__helpContent(5, "-Xt TIME", "Allow responses based on their elapsed time (in seconds)")
-        self.__helpTitle(3, "More options:")
-        self.__helpContent(5, "(-V, -V1) | -V2", "Enable the verbose mode (common or full verbose)")
-        self.__helpContent(5, "--delay DELAY", "Define the delay between each request (in seconds)")
-        self.__helpContent(5, "-t NUMBEROFTHREADS", "Define the number of threads used in the tests")
-        self.__helpContent(5, "-o REPORT", "Define the report format (accept txt, csv and json)")
-        self.__helpTitle(0, "Examples:")
-        self.__helpContent(3, "./FuzzingTool.py -u http://127.0.0.1/post.php?id= -f /path/to/wordlist/sqli.txt -o fuzzingGet.csv", '')
-        self.__helpContent(3, "./FuzzingTool.py -f /path/to/wordlist/sqli.txt -u http://127.0.0.1/controller/user.php --data 'login&passw&user=login'", '')
-        self.__helpContent(3, "./FuzzingTool.py -f /path/to/wordlist/paths.txt -u http://127.0.0.1/$ --suffix .php,.html", '')
-        self.__helpContent(3, "./FuzzingTool.py -f /path/to/wordlist/subdomains.txt -u http://$.domainexample.com --timeout 5 -Xc 200,302,303,500-600", '')
-        self.__helpContent(3, "./FuzzingTool.py -r /path/to/wordlist/raw-http.txt -f /path/to/wordlist/sqli.txt -V -o json", '')
-        exit("")
 
 outputHandler = OutputHandler.getInstance()

@@ -20,7 +20,13 @@ from ....exceptions.MainExceptions import MissingParameter
 from bs4 import BeautifulSoup
 import re
 
-class CrtShDictionary(BaseDictionary):
+class CrtDictionary(BaseDictionary):
+    __name__ = "CrtDictionary"
+    __author__ = "Vitor Oriel C N Borges"
+    __params__ = "DOMAIN"
+    __desc__ = "Build the wordlist based on the content of the site crt.sh"
+    __type__ = "SubdomainFuzzing"
+
     def __init__(self):
         super().__init__()
 
@@ -57,6 +63,6 @@ class CrtShDictionary(BaseDictionary):
         regex = r"([a-zA-Z0-9]+\.)*[a-zA-Z0-9]+"
         for splited in sourceParam.split('.'):
             regex += r"\."+splited
-        r = re.compile(regex)
-        domainList = sorted(set([element for element in contentList if r.match(str(element))]))
+        regexer = re.compile(regex)
+        domainList = sorted(set([element for element in contentList if regexer.match(str(element))]))
         self._wordlist = [domain.split(f'.{sourceParam}')[0] for domain in domainList]

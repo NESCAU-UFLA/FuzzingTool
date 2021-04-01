@@ -10,4 +10,6 @@
 #
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
-from .CrtDictionary import CrtDictionary
+from .Payloader import Payloader
+from .default import *
+from .custom import *
