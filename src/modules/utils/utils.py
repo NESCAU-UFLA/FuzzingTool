@@ -17,8 +17,7 @@ def getIndexesToParse(content: str, searchFor: str = '$'):
     @param content: The parameter content
     @type searchFor: str
     @param searchFor: The substring to be searched indexes on the given content
-    @returns list: The positions indexes of the searched substring.
-                   Returns an empty list if the tests'll not occur
+    @returns list: The positions indexes of the searched substring
     """
     return [i for i, char in enumerate(content) if char == searchFor]
 
@@ -30,7 +29,12 @@ def getCustomPackages(module: str):
     @returns list: The list with the custom packages filenames
     """
     from os import walk
-    _, _, customPackages = next(walk(f"./modules/core/{module}/custom/"))
+    try:
+        _, _, customPackages = next(walk(f"./modules/core/{module}/custom/"))
+    except:
+        from os.path import dirname, abspath
+        modulesPath = dirname(dirname(abspath(__file__)))
+        _, _, customPackages = next(walk(f"{modulesPath}/core/{module}/custom/"))
     if '__init__.py' in customPackages:
         customPackages.remove('__init__.py')
     return [packageFile.split('.')[0] for packageFile in customPackages]
