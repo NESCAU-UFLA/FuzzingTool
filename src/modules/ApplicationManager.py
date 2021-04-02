@@ -215,9 +215,9 @@ class ApplicationManager:
         self.fuzzer = None
         try:
             for requester in self.requesters:
-                self.prepareTarget(requester)
-                oh.infoBox(f"Starting test on '{self.requester.getUrl()}' ...")
                 try:
+                    self.prepareTarget(requester)
+                    oh.infoBox(f"Starting test on '{self.requester.getUrl()}' ...")
                     for method in self.requester.methods:
                         self.requester.resetRequestIndex()
                         self.requester.setMethod(method)
@@ -246,7 +246,9 @@ class ApplicationManager:
         """
         self.requester = requester
         targetHost = getHost(getTargetUrl(requester.getUrlDict()))
+        before = time.time()
         self.checkIgnoreErrors(targetHost)
+        self.startedTime -= before
         self.results = []
         self.allResults[targetHost] = self.results
         if not self.globalScanner:
@@ -255,6 +257,11 @@ class ApplicationManager:
             self.scanner = self.globalScanner
         self.scanner.update(self.matcher)
         oh.setPrintResultMode(self.scanner, self.isVerboseMode())
+        if ((not self.requester.isUrlFuzzing() and not self.requester.hasMethodFuzzing())
+            and not self.matcher.comparatorIsSet()):
+            before = time.time()
+            self.scanner.setComparator(self.getDataComparator())
+            self.startedTime -= before
 
     def prepareFuzzer(self):
         """Prepare the fuzzer for the fuzzing tests"""
@@ -410,6 +417,39 @@ class ApplicationManager:
                 fh.logger.open(host)
             else:
                 self.ignoreErrors = False
+
+    def getDataComparator(self):
+        """Check if the user wants to insert custom data comparator to validate the responses
+        
+        @returns dict: The data comparator dictionary
+        """
+        comparator = {
+            'Length': None,
+            'Time': None,
+        }
+        payload = ' '
+        oh.infoBox(f"Making first request with '{payload}' as payload ...")
+        try:
+            response = self.requester.request(payload)
+        except RequestException as e:
+            raise SkipTargetException(f"{str(e)}")
+        firstResult = self.scanner.getResult(
+            response=response
+        )
+        oh.printResult(firstResult, False)
+        defaultLength = int(firstResult['Length'])+300
+        if oh.askYesNo('info', "Do you want to exclude responses based on custom length?"):
+            length = oh.askData(f"Insert the length (default {defaultLength})")
+            if not length:
+                length = defaultLength
+            comparator['Length'] = int(length)
+        defaultTime = firstResult['Time Taken']+5.0
+        if oh.askYesNo('info', "Do you want to exclude responses based on custom time?"):
+            time = oh.askData(f"Insert the time (in seconds, default {defaultTime} seconds)")
+            if not time:
+                time = defaultTime
+            comparator['Time'] = float(time)
+        return comparator
 
     def showFooter(self):
         """Show the footer content of the software, after maked the fuzzing"""
