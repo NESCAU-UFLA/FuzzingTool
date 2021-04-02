@@ -29,7 +29,7 @@ class Request:
         url: The target URL
         method: The request method
         data: The parameter data of the request
-        httpHeader: The HTTP header
+        headers: The HTTP header
         proxy: The proxy used in the request
         proxies: The list with valid proxies gived by a file
         timeout: The request timeout before raise a TimeoutException
@@ -40,10 +40,11 @@ class Request:
     """
     def __init__(self,
         url: str,
+        method: str = 'GET',
         methods: list = [],
         data: dict = {},
-        httpHeader: dict = {},
-        followRedirects: bool = False,
+        headers: dict = {},
+        followRedirects: bool = True,
         proxy: dict = {},
         proxies: list = [],
     ):
@@ -51,12 +52,14 @@ class Request:
 
         @type url: str
         @param url: The target URL
+        @type method: str
+        @param method: The request http verb (method)
         @type methods: list
         @param methods: The request methods list
         @type data: dict
         @param data: The parameters of the request, with default values if are given
-        @type httpHeader: dict
-        @param httpHeader: The HTTP header of the request
+        @type headers: dict
+        @param headers: The HTTP header of the request
         @type followRedirects: bool
         @param followRedirects: The follow redirects flag
         @type proxy: dict
@@ -65,12 +68,12 @@ class Request:
         @param proxies: The list with the proxies used in the requests
         """
         self.__url = parser.setupUrl(url)
-        self.__method = 'GET'
+        self.__method = parser.setupMethod(method)
         self.__data = data
-        self.__httpHeader = httpHeader
+        self.__headers = headers
         self.__proxy = proxy
         self.__proxies = proxies
-        self.__timeout = None if not parser.isUrlFuzzing(self.__url) else 10
+        self.__timeout = None if not self.isUrlFuzzing() else 10
         self.__followRedirects = followRedirects
         self.__requestIndex = 0
         self.__setupHeader()
@@ -92,11 +95,18 @@ class Request:
         return self.__url
 
     def isUrlFuzzing(self):
-        """The URL Fuzzing flag getter
+        """The URL fuzzing flag getter
         
         @returns bool: The URL Fuzzing flag
         """
-        return parser.isUrlFuzzing(self.__url)
+        return False if not self.__url['fuzzingIndexes'] else True
+
+    def hasMethodFuzzing(self):
+        """The method fuzzing flag getter
+
+        @returns bool: The method fuzzing flag
+        """
+        return False if not self.__method['fuzzingIndexes'] else True
 
     def getProxy(self):
         """The proxy getter
@@ -132,7 +142,7 @@ class Request:
         @type method: str
         @param method: The request method
         """
-        self.__method = method
+        self.__method = parser.setupMethod(method)
 
     def setHeaderContent(self, key: str, value: str):
         """The header content setter
@@ -142,11 +152,7 @@ class Request:
         @type value: str
         @param value: The HTTP Header value
         """
-        if '$' in value:
-            self.__httpHeader['payloadKeys'].append(key)
-            self.__httpHeader['content'][key] = parser.parseHeaderValue(value)
-        else:
-            self.__httpHeader['content'][key] = value
+        parser.setHeaderContent(self.__headers, key, value)
 
     def setTimeout(self, timeout: int):
         """The timeout setter
@@ -171,7 +177,7 @@ class Request:
             response = requests.get(
                 target,
                 proxies=self.__proxy if proxy else {},
-                headers=parser.getHeader(self.__httpHeader),
+                headers=parser.getHeader(self.__headers),
                 timeout=self.__timeout if self.__timeout else 10, # Default 10 seconds to make a request
             )
             response.raise_for_status()
@@ -261,6 +267,8 @@ class Request:
                 except:
                     hostname = targetUrl
                 raise RequestException(f"Invalid hostname {hostname} for HTTP request")
+            except ValueError:
+                raise RequestException(f"Invalid method format for {requestParameters['Method']}")
             else:
                 response.setRequestData(requestParameters['Method'], payload, timeTaken, self.__requestIndex, targetIp)
                 return response
@@ -273,27 +281,22 @@ class Request:
         @returns dict: The parameters dict of the request
         """
         requestParameters = {
-            'Method': self.__method,
+            'Method': parser.getMethod(self.__method),
             'Url': parser.getUrl(self.__url),
-            'Headers': parser.getHeader(self.__httpHeader),
+            'Headers': parser.getHeader(self.__headers),
             'Data': parser.getData(self.__data),
         }
         return requestParameters
 
     def __setupHeader(self):
         """Setup the HTTP Header"""
-        self.__httpHeader = {
-            'content': self.__httpHeader,
-            'payloadKeys': [],
-        }
-        for key, value in self.__httpHeader['content'].items():
-            self.setHeaderContent(key, value)
-        if not self.__httpHeader['content']:
-            self.__httpHeader['content']['User-Agent'] = 'FuzzingTool Requester Agent'
+        self.__headers = parser.setupHeader(self.__headers)
+        if not self.__headers['content']:
+            self.__headers['content']['User-Agent'] = 'FuzzingTool Requester Agent'
         else:
-            if 'Content-Length' in self.__httpHeader['content'].keys():
-                del self.__httpHeader['content']['Content-Length']
-        self.__httpHeader['content']['Accept-Encoding'] = 'gzip, deflate'
+            if 'Content-Length' in self.__headers['content'].keys():
+                del self.__headers['content']['Content-Length']
+        self.__headers['content']['Accept-Encoding'] = 'gzip, deflate'
 
     def __updateProxy(self):
         """Set the proxy based on request index"""

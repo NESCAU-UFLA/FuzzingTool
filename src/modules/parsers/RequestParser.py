@@ -81,6 +81,47 @@ class RequestParser:
         }
         return url
 
+    def setupMethod(self, method: str):
+        """The method setup
+
+        @returns dict: The target method dictionary
+        """
+        return {
+            'content': method,
+            'fuzzingIndexes': getIndexesToParse(method)
+        }
+
+    def setupHeader(self, header: dict):
+        """Setup the HTTP Header
+        
+        @type header: dict
+        @param header: The HTTP header dictionary
+        @returns dict: The HTTP header dictionary
+        """
+        header = {
+            'content': header,
+            'payloadKeys': [],
+        }
+        for key, value in header['content'].items():
+            self.setHeaderContent(header, key, value)
+        return header
+
+    def setHeaderContent(self, header: dict, key: str, value: str):
+        """The header content setter
+
+        @type header: dict
+        @param header: The HTTP header dictionary
+        @type key: str
+        @param key: The HTTP header key
+        @type value: str
+        @param value: The HTTP header value
+        """
+        if '$' in value:
+            header['payloadKeys'].append(key)
+            header['content'][key] = self.parseHeaderValue(value)
+        else:
+            header['content'][key] = value
+
     def parseHeaderValue(self, value: str):
         """Parse the header value into a list
 
@@ -112,6 +153,15 @@ class RequestParser:
                 return True
         return False
 
+    def getMethod(self, method: dict):
+        """The new method getter
+        
+        @type method: dict
+        @param method: The method dictionary
+        @returns str: The new target method
+        """
+        return method['content'] if not method['fuzzingIndexes'] else self.__getAjustedContentByIndexes(method)
+
     def getUrl(self, url: dict):
         """The new url getter
         
@@ -119,16 +169,16 @@ class RequestParser:
         @param url: The URL dictionary
         @returns str: The new target URL
         """
-        return url['content'] if not url['fuzzingIndexes'] else self.__getAjustedUrl(url)
+        return url['content'] if not url['fuzzingIndexes'] else self.__getAjustedContentByIndexes(url)
 
-    def getHeader(self, httpHeader: dict):
+    def getHeader(self, headers: dict):
         """The new HTTP Header getter
         
         @type httpHeder: dict
-        @param httpHeader: The HTTP Header
+        @param headers: The HTTP Header
         @returns dict: The new HTTP Header
         """
-        return httpHeader['content'] if not httpHeader['payloadKeys'] else self.__getAjustedHeader(httpHeader)
+        return headers['content'] if not headers['payloadKeys'] else self.__getAjustedHeader(headers)
 
     def getData(self, data: dict):
         """The new data getter
@@ -142,16 +192,6 @@ class RequestParser:
             'BODY': {} if not data['BODY'] else self.__getAjustedData(data['BODY'])
         }
 
-    def isUrlFuzzing(self, url: dict):
-        """The URL Fuzzing flag getter
-           if the tests will occur on URL return true, else return false
-
-        @type url: dict
-        @param url: The target URL dictionary
-        @returns bool: The URL Fuzzing flag
-        """
-        return False if not url['fuzzingIndexes'] else True
-
     def setPayload(self, payload: str):
         """The payload setter
 
@@ -160,19 +200,19 @@ class RequestParser:
         """
         self.__payload = payload
 
-    def __getAjustedUrl(self, url: dict):
-        """Put the payload into the URL requestParameters dictionary
+    def __getAjustedContentByIndexes(self, content: dict):
+        """Put the payload into the given content
 
-        @type url: dict
-        @param url: The target URL dictionary
-        @returns str: The new URL
+        @type content: dict
+        @param content: The target content dictionary
+        @returns str: The new content
         """
-        ajustedUrl = url['content']
-        for i in url['fuzzingIndexes']:
-            head = ajustedUrl[:i]
-            tail = ajustedUrl[(i+1):]
-            ajustedUrl = head + self.__payload + tail
-        return ajustedUrl
+        ajustedContent = content['content']
+        for i in content['fuzzingIndexes']:
+            head = ajustedContent[:i]
+            tail = ajustedContent[(i+1):]
+            ajustedContent = head + self.__payload + tail
+        return ajustedContent
 
     def __getAjustedHeader(self, header: dict):
         """Put the payload in the header value that contains $

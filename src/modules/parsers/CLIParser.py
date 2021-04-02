@@ -41,19 +41,19 @@ class CLIParser:
         if '-r' in self.__argv:
             rawIndexes = getIndexesToParse(self.__argv, '-r')
             for i in rawIndexes:
-                url, methods, data, httpHeader = self.__getRequestFromRawHttp(i+1)
+                url, methods, data, headers = self.__getRequestFromRawHttp(i+1)
                 targets.append({
                     'url': url,
                     'methods': methods,
                     'data': self.__getRequestData(data),
-                    'header': httpHeader,
+                    'header': headers,
                 })
         else:
             urlIndexes = getIndexesToParse(self.__argv, '-u')
             if not urlIndexes:
                 oh.errorBox("At least a target URL is needed to make the fuzzing")
-            if '--method' in self.__argv:
-                method = self.__argv[self.__argv.index('--method')+1]
+            if '-X' in self.__argv:
+                method = self.__argv[self.__argv.index('-X')+1]
                 customMethods = [method]
                 if ',' in method:
                     customMethods = method.split(',')
@@ -147,13 +147,13 @@ class CLIParser:
         return None
 
     def checkFollowRedirects(self):
-        """Check if the --follow-redirects argument is present, and set the follow redirects flag
+        """Check if the --unfollow-redirects argument is present, and set the follow redirects flag
 
         @returns bool: The follow redirections flag used in the request
         """
-        if '--follow-redirects' in self.__argv:
-            return True
-        return False
+        if '--unfollow-redirects' in self.__argv:
+            return False
+        return True
 
     def checkDelay(self):
         """Check if the --delay argument is present, and set the value into the fuzzer
@@ -277,8 +277,8 @@ class CLIParser:
         @returns Matcher: The global matcher for the scanners
         """
         matcher = Matcher()
-        if '-Xc' in self.__argv:
-            allowedStatus = self.__argv[self.__argv.index('-Xc')+1]
+        if '-Mc' in self.__argv:
+            allowedStatus = self.__argv[self.__argv.index('-Mc')+1]
             allowedList = []
             allowedRange = []
             if ',' in allowedStatus:
@@ -299,12 +299,12 @@ class CLIParser:
             'Length': None,
             'Time': None
         }
-        if '-Xs' in self.__argv:
-            length = self.__argv[self.__argv.index('-Xs')+1]
+        if '-Ms' in self.__argv:
+            length = self.__argv[self.__argv.index('-Ms')+1]
             comparator['Length'] = int(length)
             oh.infoBox(f"Exclude by length: {length} bytes")
-        if '-Xt' in self.__argv:
-            time = self.__argv[self.__argv.index('-Xt')+1]
+        if '-Mt' in self.__argv:
+            time = self.__argv[self.__argv.index('-Mt')+1]
             comparator['Time'] = float(time)
             oh.infoBox(f"Exclude by time: {time} seconds")
         matcher.setComparator(comparator)
@@ -317,16 +317,16 @@ class CLIParser:
         @param args: The list with HTTP header
         @returns dict: The HTTP header parsed into a dict
         """
-        httpHeader = {}
+        headers = {}
         i = 0
         thisArg = args.popleft()
         argsLength = len(args)
         while i < argsLength and thisArg != '':
             key, value = thisArg.split(': ', 1)
-            httpHeader[key] = value
+            headers[key] = value
             thisArg = args.popleft()
             i += 1
-        return httpHeader
+        return headers
 
     def __getRequestFromRawHttp(self, i: int):
         """Get the raw http of the requests
@@ -341,7 +341,7 @@ class CLIParser:
             methods = method.split(',')
         else:
             methods = [method]
-        httpHeader = self.__getHeader(headerList)
+        headers = self.__getHeader(headerList)
         data = {
             'PARAM': '',
             'BODY': ''
@@ -353,13 +353,13 @@ class CLIParser:
             scheme = self.__argv[self.__argv.index('--scheme')+1]
         else:
             scheme = 'http'
-        url = f"{scheme}://{httpHeader['Host']}{path}"
+        url = f"{scheme}://{headers['Host']}{path}"
         if len(headerList) > 0:
             data['BODY'] = headerList.popleft()
-        return (url, methods, data, httpHeader)
+        return (url, methods, data, headers)
     
     def __getRequestFromArgs(self, i: int, methods: list):
-        """Get the param method to use ('?' or '$' in URL if GET, or --data) and the request paralisting
+        """Get the param method to use ('?' or '$' in URL if GET, or -d) and the request paralisting
 
         @type i: int
         @param i: The index of the target url in terminal
@@ -380,10 +380,8 @@ class CLIParser:
         else:
             if not methods:
                 methods = ['POST']
-            try:
-                data['BODY'] = self.__argv[self.__argv.index('--data')+1]
-            except ValueError:
-                oh.errorBox("You must set at least PARAM or BODY datas for data fuzzing")
+        if '-d' in self.__argv:
+            data['BODY'] = self.__argv[self.__argv.index('-d')+1]
         return (url, methods, data)
     
     def __makeDataDict(self, dataDict: dict, key: str):
