@@ -227,7 +227,7 @@ class ApplicationManager:
                         if not self.isVerboseMode():
                             oh.print("")
                 except SkipTargetException as e:
-                    if self.fuzzer.isRunning():
+                    if self.fuzzer and self.fuzzer.isRunning():
                         self.fuzzer.stop()
                     oh.abortBox(f"{str(e)}. Skipping target")
         except KeyboardInterrupt:
@@ -257,8 +257,8 @@ class ApplicationManager:
             self.scanner = self.globalScanner
         self.scanner.update(self.matcher)
         oh.setPrintResultMode(self.scanner, self.isVerboseMode())
-        if ((not self.requester.isUrlFuzzing() and not self.requester.hasMethodFuzzing())
-            and not self.matcher.comparatorIsSet()):
+        if (not self.matcher.comparatorIsSet()
+            and (not self.requester.isUrlFuzzing() and not self.requester.hasMethodFuzzing())):
             before = time.time()
             self.scanner.setComparator(self.getDataComparator())
             self.startedTime -= before
@@ -412,7 +412,7 @@ class ApplicationManager:
             self.ignoreErrors = True
             fh.logger.open(host)
         else:
-            if oh.askYesNo('info', "Do you want to ignore errors during the tests, and save them into a log file?"):
+            if oh.askYesNo('info', "Do you want to ignore errors on this target, and save them into a log file?"):
                 self.ignoreErrors = True
                 fh.logger.open(host)
             else:
