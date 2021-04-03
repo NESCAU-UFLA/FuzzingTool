@@ -35,6 +35,7 @@ class CrtDictionary(BaseDictionary):
             raise MissingParameter("target host")
         requester = Request(
             url="https://crt.sh/",
+            method='GET',
             data={
                 'PARAM': {
                     'q': sourceParam,
@@ -53,14 +54,12 @@ class CrtDictionary(BaseDictionary):
                 'TE': "Trailers",
             },
         )
-        oh.infoBox("Making the request to 'https://crt.sh/' ...")
         try:
             response = requester.request("")
         except RequestException as e:
-            oh.errorBox(str(e))
+            raise Exception(str(e))
         if 'None found' in response.text:
-            oh.errorBox(f"No certified domains was found for '{sourceParam}'")
-        oh.infoBox("Parsing the content into the wordlist ...")
+            raise Exception(f"No certified domains was found for '{sourceParam}'")
         contentList = [element.string for element in BeautifulSoup(response.text, "lxml")('td')]
         regex = r"([a-zA-Z0-9]+\.)*[a-zA-Z0-9]+"
         for splited in sourceParam.split('.'):

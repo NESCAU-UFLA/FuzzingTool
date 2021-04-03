@@ -12,46 +12,35 @@
 
 from ..default.DataScanner import DataScanner
 from ....conn.Response import Response
-from ....IO.OutputHandler import getFormatedResult, Colors
+from ....IO.OutputHandler import outputHandler as oh
+from ....exceptions.MainExceptions import MissingParameter
 
-import html
+import re
 
-class ReflectedScanner(DataScanner):
-    __name__ = "ReflectedScanner"
+class GrepScanner(DataScanner):
+    __name__ = "GrepScanner"
     __author__ = "Vitor Oriel C N Borges"
-    __params__ = ""
-    __desc__ = "Lookup if the payload was reflected in the response content"
+    __params__ = "REGEX"
+    __desc__ = "Filter responses based on a regex"
     __type__ = "DataFuzzing"
 
-    def __init__(self):
+    def __init__(self, regex: str):
+        if not regex:
+            raise MissingParameter("regex")
         super().__init__()
-        self.__escaped = {}
+        try:
+            self.__regexer = re.compile(regex)
+            oh.infoBox(f"Regex used: {regex}")
+        except re.error:
+            raise Exception("Invalid regex format")
 
     def getResult(self, response: Response):
         return super().getResult(response)
 
     def scan(self, result: dict):
-        self.__escaped[result['Request']] = False
         if super().scan(result):
-            reflected = result['Payload'] in result['Body']
-            if not reflected:
-                self.__escaped[result['Request']] = result['Payload'] in html.unescape(result['Body'])
-            return reflected
+            return True if self.__regexer.search(result['Body']) else False
         return False
     
     def getMessage(self, result: dict):
-        escaped = ''
-        if self.__escaped:
-            if self.__escaped[result['Request']]:
-                escaped = f" | {Colors.LIGHT_YELLOW}Reflected with HTML entities escaping"
-            del self.__escaped[result['Request']]
-        result = getFormatedResult(result)
-        return (
-            f"{result['Payload']} {Colors.GRAY}["+
-            f"{Colors.LIGHT_GRAY}RTT{Colors.RESET} {result['Time Taken']} | "+
-            f"{Colors.LIGHT_GRAY}Code{Colors.RESET} {result['Status']} | "+
-            f"{Colors.LIGHT_GRAY}Size{Colors.RESET} {result['Length']} | "+
-            f"{Colors.LIGHT_GRAY}Words{Colors.RESET} {result['Words']} | "+
-            f"{Colors.LIGHT_GRAY}Lines{Colors.RESET} {result['Lines']}"+
-            f"{escaped}{Colors.GRAY}]{Colors.RESET}"
-        )
+        return super().getMessage(result)

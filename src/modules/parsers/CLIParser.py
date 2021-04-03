@@ -83,15 +83,21 @@ class CLIParser:
         if dictionary in getCustomPackages('dictionaries'):
             dictionary = importCustomPackage('dictionaries', dictionary)()
         else:
-            # For default, read the wordlist from a file
-            from ..core.dictionaries.default.FileDictionary import FileDictionary
-            dictionary = FileDictionary()
+            if dictionary.startswith('[') and dictionary.endswith(']'):
+                from ..core.dictionaries.default.ListDictionary import ListDictionary
+                dictionary = ListDictionary()
+            else:
+                # For default, read the wordlist from a file
+                from ..core.dictionaries.default.FileDictionary import FileDictionary
+                dictionary = FileDictionary()
             sourceParam = wordlistSource
         oh.infoBox("Building dictionary ...")
         try:
             dictionary.setWordlist(sourceParam)
         except MissingParameter as e:
             oh.errorBox(f"{wordlistSource} missing parameter: {str(e)}")
+        except Exception as e:
+            oh.errorBox(str(e))
         oh.infoBox(f"Dictionary is done, loaded {len(dictionary)} payloads")
         return dictionary
 
@@ -261,11 +267,24 @@ class CLIParser:
         @returns None|BaseScanner: The scanner used in the fuzzer
         """
         if '--scanner' in self.__argv:
-            scanner = self.__argv[self.__argv.index('--scanner')+1]
-            if scanner in getCustomPackages('scanners'):
-                scanner = importCustomPackage('scanners', scanner)()
+            scannerName = self.__argv[self.__argv.index('--scanner')+1]
+            if '=' in scannerName:
+                scannerName, params = scannerName.split('=', 1)
             else:
-                oh.errorBox(f"Scanner {scanner} not available!")
+                params = ''
+            if scannerName in getCustomPackages('scanners'):
+                scanner = importCustomPackage('scanners', scannerName)
+                try:
+                    if not params:
+                        scanner = scanner()
+                    else:
+                        scanner = scanner(params)
+                except MissingParameter as e:
+                    oh.errorBox(f"Scanner {scannerName} missing parameter: {str(e)}")
+                except Exception as e:
+                    oh.errorBox(f"Bad scanner argument format: {str(e)}")
+            else:
+                oh.errorBox(f"Scanner {scannerName} not available!")
             oh.infoBox(f"Set scanner: {scanner.__name__}")
         else:
             scanner = None

@@ -14,6 +14,7 @@ from .Response import Response
 from ..parsers.RequestParser import getHost, getTargetUrl, requestParser as parser
 from ..exceptions.RequestExceptions import RequestException, InvalidHostname
 
+import random
 import time
 import socket
 import urllib3.exceptions
@@ -101,12 +102,34 @@ class Request:
         """
         return False if not self.__url['fuzzingIndexes'] else True
 
-    def hasMethodFuzzing(self):
+    def isSubdomainFuzzing(self):
+        """The Subdomain Fuzzing flag getter
+
+        @returns bool: The Subdomain Fuzzing flag
+        """
+        return self.__subdomainFuzzing
+
+    def isMethodFuzzing(self):
         """The method fuzzing flag getter
 
         @returns bool: The method fuzzing flag
         """
         return False if not self.__method['fuzzingIndexes'] else True
+
+    def isDataFuzzing(self):
+        """The data fuzzing flag getter
+
+        @returns bool: The data fuzzing flag
+        """
+        for key, value in self.__data['PARAM'].items():
+            if not value:
+                return True
+        for key, value in self.__data['BODY'].items():
+            if not value:
+                return True
+        if self.__headers['payloadKeys']:
+            return True
+        return False
 
     def getProxy(self):
         """The proxy getter
@@ -128,13 +151,6 @@ class Request:
         @returns int: The request index
         """
         return self.__requestIndex
-
-    def isSubdomainFuzzing(self):
-        """The Subdomain Fuzzing flag getter
-
-        @returns bool: The Subdomain Fuzzing flag
-        """
-        return self.__subdomainFuzzing
 
     def setMethod(self, method: str):
         """The request method setter
@@ -214,8 +230,8 @@ class Request:
         @param payload: The payload used in the request
         @returns dict: The response data dictionary
         """
-        if self.__proxies and self.__requestIndex%1000 == 0:
-            self.__updateProxy()
+        if self.__proxies:
+            self.__proxy = random.choice(self.__proxies)
         parser.setPayload(payload)
         requestParameters = self.__getRequestParameters()
         targetUrl = requestParameters['Url']
@@ -228,6 +244,8 @@ class Request:
                     payload = targetUrl
                 except:
                     raise InvalidHostname(f"Can't resolve hostname {hostname}")
+            else:
+                hostname = targetUrl
             try:
                 before = time.time()
                 response = Response(requests.request(
@@ -262,13 +280,9 @@ class Request:
                 UnicodeError,
                 urllib3.exceptions.LocationParseError
             ):
-                try:
-                    hostname
-                except:
-                    hostname = targetUrl
                 raise RequestException(f"Invalid hostname {hostname} for HTTP request")
-            except ValueError:
-                raise RequestException(f"Invalid method format for {requestParameters['Method']}")
+            except ValueError as e:
+                raise RequestException(str(e))
             else:
                 response.setRequestData(requestParameters['Method'], payload, timeTaken, self.__requestIndex, targetIp)
                 return response
@@ -297,7 +311,3 @@ class Request:
             if 'Content-Length' in self.__headers['content'].keys():
                 del self.__headers['content']['Content-Length']
         self.__headers['content']['Accept-Encoding'] = 'gzip, deflate'
-
-    def __updateProxy(self):
-        """Set the proxy based on request index"""
-        self.setProxy(self.__proxies[(self.__requestIndex%1000)%len(self.__proxies)])
