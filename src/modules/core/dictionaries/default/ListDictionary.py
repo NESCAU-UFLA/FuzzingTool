@@ -24,7 +24,7 @@ class ListDictionary(BaseDictionary):
     def setWordlist(self, sourceParam: str):
         sourceParam = sourceParam[1:len(sourceParam)-1]
         if not sourceParam:
-            raise MissingParameter("list")
+            raise MissingParameter("list of elements")
         if ',' in sourceParam:
             buildedList = []
             for param in sourceParam.split(','):
