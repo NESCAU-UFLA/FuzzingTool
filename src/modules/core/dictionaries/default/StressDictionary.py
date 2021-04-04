@@ -11,11 +11,10 @@
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
 from ..BaseDictionary import BaseDictionary
-from ....utils.utils import checkRangeList
 from ....exceptions.MainExceptions import MissingParameter
 
-class ListDictionary(BaseDictionary):
-    __name__ = "ListDictionary"
+class StressDictionary(BaseDictionary):
+    __name__ = "StressDictionary"
     __author__ = "Vitor Oriel C N Borges"
 
     def __init__(self):
@@ -24,11 +23,14 @@ class ListDictionary(BaseDictionary):
     def setWordlist(self, sourceParam: str):
         sourceParam = sourceParam[1:len(sourceParam)-1]
         if not sourceParam:
-            raise MissingParameter("list")
-        if ',' in sourceParam:
-            buildedList = []
-            for param in sourceParam.split(','):
-                buildedList.extend(checkRangeList(param))
-        else:
-            buildedList = checkRangeList(sourceParam)
-        self._wordlist = buildedList
+            raise MissingParameter("quantity of payloads")
+        try:
+            if ',' in sourceParam:
+                quantityOfPayloads, payload = sourceParam.split(',', 1)
+                quantityOfPayloads = int(quantityOfPayloads)
+            else:
+                quantityOfPayloads = int(sourceParam)
+                payload = ''
+        except:
+            raise Exception("quantity of payloads must be integer")
+        self._wordlist = [payload*i for i in range(quantityOfPayloads)]

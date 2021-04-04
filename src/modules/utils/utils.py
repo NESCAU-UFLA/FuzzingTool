@@ -21,8 +21,8 @@ def getIndexesToParse(content: str, searchFor: str = '$'):
     """
     return [i for i, char in enumerate(content) if char == searchFor]
 
-def getCustomPackages(module: str):
-    """Gets the custom packages
+def getCustomPackageNames(module: str):
+    """Gets the custom package names (inside /core/module/custom/)
 
     @type module: str
     @param module: The module to search for the custom packages
@@ -60,3 +60,98 @@ def importCustomPackage(module: str, package: str):
             package=f"{package}"
         )
     return getattr(customImported, package)
+
+def checkRangeList(content: str):
+    """Checks if the given content has a range list,
+       and make a list of the range specified
+    
+    @type content: str
+    @param content: The string content to check for range
+    @returns list: The list with the compiled content
+    """
+    def getNumberRange(left: str, right: str):
+        """Get the number range list
+        
+        @type left: str
+        @param left: The left string of the division mark
+        @type right: str
+        @param right: The right string of the division mark
+        @returns list: The list with the range
+        """
+        isNumber = True
+        i = len(left)
+        while isNumber and i > 0:
+            try:
+                int(left[i-1])
+            except:
+                isNumber = False
+            else:
+                i -= 1
+        leftDigit, leftStr = int(left[i:]), left[:i]
+        isNumber = True
+        i = 0
+        while isNumber and i < (len(right)-1):
+            try:
+                int(right[i+1])
+            except Exception as e:
+                isNumber = False
+            else:
+                i += 1
+        rightDigit, rightStr = int(right[:(i+1)]), right[(i+1):]
+        compiledList = []
+        if leftDigit < rightDigit:
+            while leftDigit <= rightDigit:
+                compiledList.append(
+                    f"{leftStr}{str(leftDigit)}{rightStr}"
+                )
+                leftDigit += 1
+        else:
+            while rightDigit <= leftDigit:
+                compiledList.append(
+                    f"{leftStr}{str(leftDigit)}{rightStr}"
+                )
+                leftDigit -= 1
+        return compiledList
+
+    def getLetterRange(left: str, right: str):
+        """Get the alphabet range list [a-z] [A-Z] [z-a] [Z-A]
+        
+        @type left: str
+        @param left: The left string of the division mark
+        @type right: str
+        @param right: The right string of the division mark
+        @returns list: The list with the range
+        """
+        leftDigit, leftStr = left[len(left)-1], left[:len(left)-1]
+        rightDigit, rightStr = right[0], right[1:]
+        compiledList = []
+        if ord(leftDigit) <= ord(rightDigit):
+            orderLeftDigit = ord(leftDigit)
+            orderRightDigit = ord(rightDigit)
+            while orderLeftDigit <= orderRightDigit:
+                compiledList.append(
+                    f"{leftStr}{chr(orderLeftDigit)}{rightStr}"
+                )
+                orderLeftDigit += 1
+        else:
+            orderLeftDigit = ord(leftDigit)
+            orderRightDigit = ord(rightDigit)
+            while orderLeftDigit >= orderRightDigit:
+                compiledList.append(
+                    f"{leftStr}{chr(orderLeftDigit)}{rightStr}"
+                )
+                orderLeftDigit -= 1
+        return compiledList
+
+    if '\-' in content:
+        content = content.replace('\-', '-')
+    elif '-' in content:
+        left, right = content.split('-', 1)
+        try:
+            # Checks if the left and right digits from the mark are integers
+            int(left[len(left)-1])
+            int(right[0])
+            return getNumberRange(left, right)
+        except:
+            return getLetterRange(left, right)
+    return [content]

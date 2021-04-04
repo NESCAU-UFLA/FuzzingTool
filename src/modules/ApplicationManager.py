@@ -10,7 +10,7 @@
 #
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
-from .utils.utils import getCustomPackages, importCustomPackage
+from .utils.utils import getCustomPackageNames, importCustomPackage
 from .parsers.CLIParser import CLIParser
 from .parsers.RequestParser import getTargetUrl, getHost
 from .core.Fuzzer import Fuzzer
@@ -96,7 +96,7 @@ def showDictionariesHelp():
     oh.helpContent(5, "FILEPATH", "Set the path of the wordlist file")
     oh.helpContent(5, "[PAYLOAD1,PAYLOAD2,]", "Set the payloads list to be used as wordlist")
     oh.helpTitle(2, "Custom (Dictionary=PARAM): Set the custom dictionary and his parameter")
-    for customDictionary in getCustomPackages('dictionaries'):
+    for customDictionary in getCustomPackageNames('dictionaries'):
         dictionary = importCustomPackage('dictionaries', customDictionary)
         if not dictionary.__type__:
             typeFuzzing = ''
@@ -115,7 +115,7 @@ def showScannersHelp():
     oh.helpContent(5, "PathScanner", "Scanner for the path URL fuzzing")
     oh.helpContent(5, "SubdomainScanner", "Scanner for the subdomain URL fuzzing")
     oh.helpTitle(2, "Custom (--scaner SCANNER): Set the custom scanner")
-    for customScanner in getCustomPackages('scanners'):
+    for customScanner in getCustomPackageNames('scanners'):
         scanner = importCustomPackage('scanners', customScanner)
         if not scanner.__type__:
             typeFuzzing = ''

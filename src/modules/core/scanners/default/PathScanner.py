@@ -36,10 +36,11 @@ class PathScanner(BaseScanner):
     def getMessage(self, result: dict):
         status = result['Status']
         statusColor = ''
-        if status == 200:
-            statusColor = f'{Colors.BOLD}{Colors.GREEN}'
-        elif self._matchStatus(status):
-            statusColor = f'{Colors.BOLD}{Colors.LIGHT_YELLOW}'
+        if self._matchStatus(status):
+            if status == 200:
+                statusColor = f'{Colors.BOLD}{Colors.GREEN}'
+            else:
+                statusColor = f'{Colors.BOLD}{Colors.LIGHT_YELLOW}'
         redirected = result['Redirected']
         if redirected:
             redirected = f" | {Colors.LIGHT_GRAY}Redirected{Colors.RESET} {Colors.LIGHT_YELLOW}{redirected}"

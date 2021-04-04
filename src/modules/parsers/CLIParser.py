@@ -11,9 +11,9 @@
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
 from .RequestParser import getHost, getTargetUrl
-from ..utils.utils import getIndexesToParse, getCustomPackages, importCustomPackage
+from ..utils.utils import getIndexesToParse, getCustomPackageNames, importCustomPackage
 from ..core.Fuzzer import Fuzzer
-from ..core.dictionaries.Payloader import Payloader
+from ..core.dictionaries import *
 from ..core.scanners import *
 from ..conn.Request import Request
 from ..IO.OutputHandler import outputHandler as oh
@@ -80,12 +80,15 @@ class CLIParser:
         else:
             dictionary = wordlistSource
             sourceParam = ''
-        if dictionary in getCustomPackages('dictionaries'):
+        if dictionary in getCustomPackageNames('dictionaries'):
             dictionary = importCustomPackage('dictionaries', dictionary)()
         else:
             if dictionary.startswith('[') and dictionary.endswith(']'):
                 from ..core.dictionaries.default.ListDictionary import ListDictionary
                 dictionary = ListDictionary()
+            elif dictionary.startswith('(') and dictionary.endswith(')'):
+                from ..core.dictionaries.default.StressDictionary import StressDictionary
+                dictionary = StressDictionary()
             else:
                 # For default, read the wordlist from a file
                 from ..core.dictionaries.default.FileDictionary import FileDictionary
@@ -122,7 +125,7 @@ class CLIParser:
             oh.infoBox(f"Set proxy: {proxy}")
             return {
                 'http': f"http://{proxy}",
-                'https': f"https://{proxy}"
+                'https': f"https://{proxy}",
             }
         return {}
 
@@ -258,7 +261,7 @@ class CLIParser:
             reportName = ''
         fh.reporter.setMetadata({
             'Type': reportType,
-            'Name': reportName
+            'Name': reportName,
         })
 
     def checkGlobalScanner(self):
@@ -272,7 +275,7 @@ class CLIParser:
                 scannerName, params = scannerName.split('=', 1)
             else:
                 params = ''
-            if scannerName in getCustomPackages('scanners'):
+            if scannerName in getCustomPackageNames('scanners'):
                 scanner = importCustomPackage('scanners', scannerName)
                 try:
                     scanner = scanner(params)
@@ -309,13 +312,13 @@ class CLIParser:
                     allowedList = [200] + allowedList
             allowedStatus = {
                 'List': allowedList,
-                'Range': allowedRange
+                'Range': allowedRange,
             }
             matcher.setAllowedStatus(allowedStatus)
             oh.infoBox(f"Set the allowed status codes: {str(allowedStatus)}")
         comparator = {
             'Length': None,
-            'Time': None
+            'Time': None,
         }
         if '-Ms' in self.__argv:
             length = self.__argv[self.__argv.index('-Ms')+1]
@@ -362,7 +365,7 @@ class CLIParser:
         headers = self.__getHeader(headerList)
         data = {
             'PARAM': '',
-            'BODY': ''
+            'BODY': '',
         }
         if '?' in path:
             path, data['PARAM'] = path.split('?', 1)
@@ -388,7 +391,7 @@ class CLIParser:
         url = self.__argv[i]
         data = {
             'PARAM': '',
-            'BODY': ''
+            'BODY': '',
         }
         if '?' in url or '$' in url:
             if not methods:
@@ -428,7 +431,7 @@ class CLIParser:
         """
         dataDict = {
             'PARAM': {},
-            'BODY': {}
+            'BODY': {},
         }
         keys = []
         if data['PARAM']:
