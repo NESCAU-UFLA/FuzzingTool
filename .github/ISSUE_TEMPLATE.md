@@ -4,7 +4,7 @@
 
 ### Context
  * FuzzingTool version (output of FuzzingTool --version);
- * Python version (python3 --version);
+ * Python version (output of python3 --version);
  * Operating System;
 
 ### Report
