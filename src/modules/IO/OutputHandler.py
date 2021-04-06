@@ -29,8 +29,11 @@ def fixPayloadToOutput(payload: str):
     @param payload: The payload used in the request
     @returns str: The fixed payload to output
     """
-    if '	' in payload:
-        payload = payload.replace('	', ' ')
+    try:
+        if '	' in payload:
+            payload = payload.replace('	', ' ')
+    except:
+        payload = f"b'{payload.decode('utf-8')}'"
     if len(payload) > 30:
         output = ""
         for i in range(27):

@@ -21,6 +21,7 @@ class DataScanner(BaseScanner):
 
     def getResult(self, response: Response):
         result = super().getResult(response)
+        result['Payload Length'] = len(result['Payload'])
         result['Body'] = response.text
         return result
 

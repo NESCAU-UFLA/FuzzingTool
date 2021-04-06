@@ -67,12 +67,15 @@ def showHelpMenu():
     oh.helpContent(5, "--timeout TIMEOUT", "Define the request timeout (in seconds)")
     oh.helpContent(5, "--unfollow-redirects", "Stop to follow redirects")
     oh.helpTitle(3, "Payload options:")
-    oh.helpContent(5, "-w", "Define the wordlist dictionary (--help=dictionaries for more info)")
+    oh.helpContent(5, "-w WORDLIST", "Define the wordlist dictionary (--help=dictionaries for more info)")
     oh.helpContent(5, "--prefix PREFIX", "Define the prefix(es) used with the payload")
     oh.helpContent(5, "--suffix SUFFIX", "Define the suffix(es) used with the payload")
-    oh.helpContent(5, "--upper", "Set the uppercase flag for the payloads")
-    oh.helpContent(5, "--lower", "Set the lowercase flag for the payloads")
-    oh.helpContent(5, "--capitalize", "Set the capitalize flag for the payloads")
+    oh.helpContent(5, "--upper", "Set the uppercase case for the payloads")
+    oh.helpContent(5, "--lower", "Set the lowercase case for the payloads")
+    oh.helpContent(5, "--capitalize", "Set the capitalize case for the payloads")
+    oh.helpContent(5, "--bin", "Set the binary encode for the payloads")
+    oh.helpContent(5, "--hex", "Set the hexadecimal encode for the payloads")
+    oh.helpContent(5, "--htmlentity", "Set the html entities escape for the payloads")
     oh.helpTitle(3, "Match options:")
     oh.helpContent(5, "-Mc STATUS", "Match responses based on their status codes")
     oh.helpContent(5, "-Ms SIZE", "Match responses based on their length (in bytes)")
@@ -88,42 +91,47 @@ def showHelpMenu():
     oh.print("FuzzingTool -w /path/to/wordlist/sqli.txt -u http://127.0.0.1/controller/user.php -d 'login&passw&user=login' -Ms 1200\n")
     oh.print("FuzzingTool -w /path/to/wordlist/paths.txt -u http://127.0.0.1/$ -u http://192.168.0.133/$ --suffix .php,.html --unfollow-redirects -Mc 200,302,303\n")
     oh.print("FuzzingTool -w /path/to/wordlist/subdomains.txt -u https://$.domainexample.com/ -t 100 -Ms 1500 --timeout 5\n")
-    oh.print("FuzzingTool -r /path/to/raw-http1.txt -r /path/to/raw-http2.txt --scheme https -w /path/to/wordlist/sqli.txt -V -o json")
+    oh.print("FuzzingTool -r /path/to/raw-http1.txt -r /path/to/raw-http2.txt --scheme https -w /path/to/wordlist/sqli.txt -V -o json\n")
 
 def showDictionariesHelp():
     oh.helpTitle(0, "Dictionary options: (-w)")
-    oh.helpTitle(2, "Default: The default dictionaries are selected by default when no custom are choiced")
+    oh.helpTitle(2, "Default: The default dictionaries are selected by default when no custom are choiced\n")
     oh.helpContent(5, "FILEPATH", "Set the path of the wordlist file")
     oh.helpContent(5, "[PAYLOAD1,PAYLOAD2,]", "Set the payloads list to be used as wordlist")
-    oh.helpTitle(2, "Custom (Dictionary=PARAM): Set the custom dictionary and his parameter")
+    oh.helpTitle(2, "Custom (Dictionary=PARAM): Set the custom dictionary and his parameter\n")
     for customDictionary in getCustomPackageNames('dictionaries'):
         dictionary = importCustomPackage('dictionaries', customDictionary)
         if not dictionary.__type__:
             typeFuzzing = ''
         else:
-            typeFuzzing = f" ({dictionary.__type__} only)"
-        oh.helpContent(5, f"{dictionary.__name__}={dictionary.__params__}", (dictionary.__desc__+typeFuzzing))
+            typeFuzzing = f" (Recomended for {dictionary.__type__})"
+        oh.helpContent(5, f"{dictionary.__name__}={dictionary.__params__}", f"{dictionary.__desc__}{typeFuzzing}\n")
     oh.helpTitle(0, "Examples:\n")
     oh.print("FuzzingTool -u https://$.domainexample.com/ -w /path/to/wordlist/subdomains.txt -t 30 --timeout 5 -V2\n")
     oh.print("FuzzingTool -u https://$.domainexample.com/ -w [wp-admin,admin,webmail,www,cpanel] -t 30 --timeout 5 -V2\n")
-    oh.print("FuzzingTool -u https://$.domainexample.com/ -w CrtDictionary=domainexample.com -t 30 --timeout 5 -V2")
+    oh.print("FuzzingTool -u https://$.domainexample.com/ -w CrtDictionary=domainexample.com -t 30 --timeout 5 -V2\n")
+    oh.print("FuzzingTool -u https://domainexample.com/$ -w OverflowDictionary=5000,:../:etc/passwd -t 30 --timeout 5 -V2\n")
 
 def showScannersHelp():
     oh.helpTitle(0, "Scanner options:")
-    oh.helpTitle(2, "Default: The default scanners are selected automatically during the tests, if a custom scanner wasn't gived")
+    oh.helpTitle(2, "Default: The default scanners are selected automatically during the tests, if a custom scanner wasn't gived\n")
     oh.helpContent(5, "DataScanner", "Scanner for the data fuzzing")
     oh.helpContent(5, "PathScanner", "Scanner for the path URL fuzzing")
     oh.helpContent(5, "SubdomainScanner", "Scanner for the subdomain URL fuzzing")
-    oh.helpTitle(2, "Custom (--scaner SCANNER): Set the custom scanner")
+    oh.helpTitle(2, "Custom (--scaner SCANNER): Set the custom scanner\n")
     for customScanner in getCustomPackageNames('scanners'):
         scanner = importCustomPackage('scanners', customScanner)
         if not scanner.__type__:
             typeFuzzing = ''
         else:
-            typeFuzzing = f" ({scanner.__type__} only)"
-        oh.helpContent(5, scanner.__name__, (scanner.__desc__+typeFuzzing))
+            typeFuzzing = f" (Recommended for {scanner.__type__})"
+        if not scanner.__params__:
+            params = ''
+        else:
+            params = f"={scanner.__params__}"
+        oh.helpContent(5, f"{scanner.__name__}{params}", f"{scanner.__desc__}{typeFuzzing}\n")
     oh.helpTitle(0, "Examples:\n")
-    oh.print("FuzzingTool -u https://domainexample.com/search.php?query= -w /path/to/wordlist/xss.txt --scanner ReflectedScanner -t 30 -o csv")
+    oh.print("FuzzingTool -u https://domainexample.com/search.php?query= -w /path/to/wordlist/xss.txt --scanner ReflectedScanner -t 30 -o csv\n")
 
 class ApplicationManager:
     """Class that handle with the entire application
@@ -162,9 +170,11 @@ class ApplicationManager:
                     showDictionariesHelp()
                 elif 'scanners' in askedHelp:
                     showScannersHelp()
+                else:
+                    oh.errorBox("Invalid help argument")
             else:
                 showHelpMenu()
-            exit("")
+            exit(0)
         if argv[1] == '-v' or argv[1] == '--version':
             exit(f"FuzzingTool v{version()}")
         oh.print(banner())
@@ -185,15 +195,19 @@ class ApplicationManager:
         cliParser = CLIParser(argv)
         targets = cliParser.getTargets()
         self.globalScanner = cliParser.checkGlobalScanner()
+        self.matcher = cliParser.checkMatcher()
+        self.verbose = cliParser.checkVerboseMode()
+        if self.globalScanner:
+            self.globalScanner.update(self.matcher)
+            self.scanner = self.globalScanner
+            oh.setPrintResultMode(self.scanner, self.isVerboseMode())
         cookie = cliParser.checkCookie()
         proxy = cliParser.checkProxy()
         proxies = cliParser.checkProxies()
         timeout = cliParser.checkTimeout()
         followRedirects = cliParser.checkFollowRedirects()
         self.delay = cliParser.checkDelay()
-        self.verbose = cliParser.checkVerboseMode()
         self.numberOfThreads = cliParser.checkNumThreads()
-        self.matcher = cliParser.checkMatcher()
         cliParser.checkReporter()
         for target in targets:
             oh.infoBox(f"Set target: {target['url']}")
@@ -219,7 +233,7 @@ class ApplicationManager:
         if self.dictSizeof < self.numberOfThreads:
             self.numberOfThreads = self.dictSizeof
         cliParser.checkPrefixAndSuffix(self.dict)
-        cliParser.checkCase(self.dict)
+        cliParser.checkCaseAndEncoding(self.dict)
 
     def start(self):
         """Starts the application"""
@@ -264,17 +278,14 @@ class ApplicationManager:
         self.allResults[targetHost] = self.results
         if not self.globalScanner:
             self.scanner = self.getDefaultScanner()
-        else:
-            self.scanner = self.globalScanner
-        self.scanner.update(self.matcher)
-        oh.setPrintResultMode(self.scanner, self.isVerboseMode())
-        if (not self.globalScanner
-            and (not self.matcher.comparatorIsSet()
-            and self.requester.isDataFuzzing())):
-            oh.infoBox("DataFuzzing detected, checking for a data comparator ...")
-            before = time.time()
-            self.scanner.setComparator(self.getDataComparator())
-            self.startedTime -= (time.time() - before)
+            self.scanner.update(self.matcher)
+            oh.setPrintResultMode(self.scanner, self.isVerboseMode())
+            if (not self.matcher.comparatorIsSet()
+                and self.requester.isDataFuzzing()):
+                oh.infoBox("DataFuzzing detected, checking for a data comparator ...")
+                before = time.time()
+                self.scanner.setComparator(self.getDataComparator())
+                self.startedTime -= (time.time() - before)
 
     def prepareFuzzer(self):
         """Prepare the fuzzer for the fuzzing tests"""

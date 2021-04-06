@@ -13,24 +13,36 @@
 from ..BaseDictionary import BaseDictionary
 from ....exceptions.MainExceptions import MissingParameter
 
-class StressDictionary(BaseDictionary):
-    __name__ = "StressDictionary"
+class OverflowDictionary(BaseDictionary):
+    __name__ = "OverflowDictionary"
     __author__ = "Vitor Oriel C N Borges"
+    __params__ = "QUANTITY_OF_PAYLOADS,INIT_PAYLOAD:PAYLOAD:END_PAYLOAD"
+    __desc__ = "Build the wordlist for stress and buffer overflow purposes"
+    __type__ = ""
 
     def __init__(self):
         super().__init__()
 
     def setWordlist(self, sourceParam: str):
-        sourceParam = sourceParam[1:len(sourceParam)-1]
         if not sourceParam:
             raise MissingParameter("quantity of payloads")
-        try:
-            if ',' in sourceParam:
-                quantityOfPayloads, payload = sourceParam.split(',', 1)
-                quantityOfPayloads = int(quantityOfPayloads)
+        if ',' in sourceParam:
+            quantityOfPayloads, payload = sourceParam.split(',', 1)
+            if ':' in payload:
+                try:
+                    initPayload, payload, endPayload = payload.split(':', 3)
+                except:
+                    raise Exception("Invalid quantity of values to unpack (expected initPayload:payload:endPayload)")
             else:
-                quantityOfPayloads = int(sourceParam)
-                payload = ''
+                initPayload, endPayload = '', ''
+            quantityOfPayloads = quantityOfPayloads
+        else:
+            quantityOfPayloads = sourceParam
+            initPayload, payload, endPayload = '', '', ''
+        try:
+            quantityOfPayloads = int(quantityOfPayloads)
         except:
-            raise Exception("quantity of payloads must be integer")
-        self._wordlist = [payload*i for i in range(quantityOfPayloads)]
+            raise Exception("The quantity of payloads must be integer")
+        self._wordlist = [
+            f"{initPayload}{payload*i}{endPayload}" for i in range(quantityOfPayloads)
+        ]

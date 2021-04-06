@@ -10,23 +10,22 @@
 #
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
+import binascii
+import html
+
 class Payloader:
     """Class that handle with the payload options
 
     Attributes:
         prefix: The prefix used in the payload
         suffix: The suffix used in the payload
-        uppercase: The uppercase payload flag
-        lowercase: The lowercase payload flag
-        capitalize: The capitalize payload flag
     """
     def __init__(self):
         """Class constructor"""
         self.__prefix = []
         self.__suffix = []
-        self.__uppercase = False
-        self.__lowercase = False
-        self.__capitalize = False
+        self.__case = lambda ajustedPayload : ajustedPayload
+        self.__encode = lambda ajustedPayload : ajustedPayload
 
     def setPrefix(self, prefix: list):
         """The prefix setter
@@ -44,30 +43,30 @@ class Payloader:
         """
         self.__suffix = suffix
 
-    def setUppecase(self, uppercase: bool):
-        """The uppercase setter
-
-        @type uppercase: bool
-        @param uppercase: The uppercase flag
-        """
-        self.__uppercase = uppercase
+    def setUppecase(self):
+        """The uppercase setter"""
+        self.__case = lambda ajustedPayload : [payload.upper() for payload in ajustedPayload]
     
-    def setLowercase(self, lowercase: bool):
-        """The lowercase setter
+    def setLowercase(self):
+        """The lowercase setter"""
+        self.__case = lambda ajustedPayload : [payload.lower() for payload in ajustedPayload]
 
-        @type lowercase: bool
-        @param lowercase: The lowercase flag
-        """
-        self.__lowercase = lowercase
-
-    def setCapitalize(self, capitalize: bool):
-        """The capitalize setter
-
-        @type capitalize: bool
-        @param capitalize: The capitalize flag
-        """
-        self.__capitalize = capitalize
+    def setCapitalize(self):
+        """The capitalize setter"""
+        self.__case = lambda ajustedPayload : [payload.capitalize() for payload in ajustedPayload]
     
+    def setBin(self):
+        """The binary encoding"""
+        self.__encode = lambda ajustedPayload : [bytearray(payload, 'utf-8') for payload in ajustedPayload]
+    
+    def setHex(self):
+        """The hexadecimal encoding"""
+        self.__encode = lambda ajustedPayload : [binascii.hexlify(bytearray(payload, 'utf-8')) for payload in ajustedPayload]
+
+    def setHtmlentity(self):
+        """The html entities escaping"""
+        self.__encode = lambda ajustedPayload : [html.escape(payload) for payload in ajustedPayload]
+
     def _getCustomizedPayload(self, payload: str):
         """Gets the payload list ajusted with the console options
 
@@ -80,10 +79,4 @@ class Payloader:
             ajustedPayload = [(prefix+payload) for prefix in self.__prefix for payload in ajustedPayload]
         if self.__suffix:
             ajustedPayload = [(payload+suffix) for suffix in self.__suffix for payload in ajustedPayload]
-        if self.__uppercase:
-            ajustedPayload = [payload.upper() for payload in ajustedPayload]
-        elif self.__lowercase:
-            ajustedPayload = [payload.lower() for payload in ajustedPayload]
-        elif self.__capitalize:
-            ajustedPayload = [payload.capitalize() for payload in ajustedPayload]
-        return ajustedPayload
+        return self.__encode(self.__case(ajustedPayload))

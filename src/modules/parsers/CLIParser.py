@@ -86,9 +86,6 @@ class CLIParser:
             if dictionary.startswith('[') and dictionary.endswith(']'):
                 from ..core.dictionaries.default.ListDictionary import ListDictionary
                 dictionary = ListDictionary()
-            elif dictionary.startswith('(') and dictionary.endswith(')'):
-                from ..core.dictionaries.default.StressDictionary import StressDictionary
-                dictionary = StressDictionary()
             else:
                 # For default, read the wordlist from a file
                 from ..core.dictionaries.default.FileDictionary import FileDictionary
@@ -221,23 +218,34 @@ class CLIParser:
             payloader.setSuffix(suffixes)
             oh.infoBox(f"Set suffix: {str(suffixes)}")
 
-    def checkCase(self, payloader: Payloader):
-        """Check if the --upper argument is present, and set the uppercase flag
-           Check if the --lower argument is present, and set the lowercase flag
-           Check if the --capitalize argument is present, and set the capitalize flag
-        
+    def checkCaseAndEncoding(self, payloader: Payloader):
+        """Check if the --upper argument is present, and set the uppercase case mode
+           Check if the --lower argument is present, and set the lowercase case mode
+           Check if the --capitalize argument is present, and set the capitalize case mode
+           Check if the --md5 argument is present, and set the md5 encoding mode
+           Check if the --sha1 argument is present, and set the sha1 encoding mode
+
         @type payloader: Payloader
         @param payloader: The object responsible to handle with the payloads
         """
         if '--lower' in self.__argv:
-            payloader.setLowercase(True)
+            payloader.setLowercase()
             oh.infoBox("Set payload case: lowercase")
         elif '--upper' in self.__argv:
-            payloader.setUppecase(True)
+            payloader.setUppecase()
             oh.infoBox("Set payload case: uppercase")
         elif '--capitalize' in self.__argv:
-            payloader.setCapitalize(True)
+            payloader.setCapitalize()
             oh.infoBox("Set payload case: capitalize")
+        if '--bin' in self.__argv:
+            payloader.setBin()
+            oh.infoBox("Set payload encoding: binary")
+        elif '--hex' in self.__argv:
+            payloader.setHex()
+            oh.infoBox("Set payload encoding: hexadecimal")
+        elif '--htmlentity' in self.__argv:
+            payloader.setHtmlentity()
+            oh.infoBox("Set payload encoding: htmlentity")
 
     def checkReporter(self):
         """Check if the -o argument is present, and set the report data (name and type)
