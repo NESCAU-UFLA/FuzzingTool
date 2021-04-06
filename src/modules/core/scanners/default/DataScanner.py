@@ -13,7 +13,7 @@
 from ..BaseScanner import BaseScanner
 from ..Matcher import Matcher
 from ....conn.Response import Response
-from ....IO.OutputHandler import getFormatedResult, Colors
+from ....IO.OutputHandler import Colors, outputHandler as oh
 
 class DataScanner(BaseScanner):
     __name__ = "DataScanner"
@@ -29,7 +29,7 @@ class DataScanner(BaseScanner):
         return self.match(result)
     
     def getMessage(self, result: dict):
-        result = getFormatedResult(result)
+        result = oh.getFormatedResult(result)
         return (
             f"{result['Payload']} {Colors.GRAY}["+
             f"{Colors.LIGHT_GRAY}RTT{Colors.RESET} {result['Time Taken']} | "+

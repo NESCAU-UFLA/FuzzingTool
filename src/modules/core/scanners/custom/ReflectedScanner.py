@@ -12,7 +12,7 @@
 
 from ..default.DataScanner import DataScanner
 from ....conn.Response import Response
-from ....IO.OutputHandler import getFormatedResult, Colors
+from ....IO.OutputHandler import Colors, outputHandler as oh
 
 import html
 
@@ -45,7 +45,7 @@ class ReflectedScanner(DataScanner):
             if self.__escaped[result['Request']]:
                 escaped = f" | {Colors.LIGHT_YELLOW}Reflected with HTML entities escaping"
             del self.__escaped[result['Request']]
-        result = getFormatedResult(result)
+        result = oh.getFormatedResult(result)
         return (
             f"{result['Payload']} {Colors.GRAY}["+
             f"{Colors.LIGHT_GRAY}RTT{Colors.RESET} {result['Time Taken']} | "+

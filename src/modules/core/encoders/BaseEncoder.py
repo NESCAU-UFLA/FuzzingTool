@@ -10,28 +10,35 @@
 #
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
-from ..BaseScanner import BaseScanner
-from ..Matcher import Matcher
-from ....conn.Response import Response
-from ....IO.OutputHandler import Colors, outputHandler as oh
+class BaseEncoder():
+    """Base encoder
+    
+    Attributes:
+        charset: The character encoding format
+    """
+    def __init__(self):
+        self.charset = 'utf-8'
 
-class SubdomainScanner(BaseScanner):
-    __name__ = "SubdomainScanner"
-    __author__ = "Vitor Oriel C N Borges"
+    def encode(self, payload: str):
+        """Encode a payload into an specific encoding type
 
-    def getResult(self, response: Response):
-        result = super().getResult(response)
-        result['IP'] = response.targetIp
-        return result
+        @type payload: str
+        @param payload: The payload used in the request
+        """
+        raise NotImplementedError("encode method should be overrided")
+    
+    def decode(self, payload):
+        """Decode a payload for the original version
 
-    def scan(self, result: dict):
-        return self.match(result)
+        @type payload: encoded
+        @param payload: The payload used in the request
+        """
+        raise NotImplementedError("decode method should be overrided")
+    
+    def stringfy(self, payload):
+        """Stringfy a payload to be used on output
 
-    def getMessage(self, result: dict):
-        payload = '{:<30}'.format(oh.fixPayloadToOutput(result['Payload']))
-        ip = '{:>15}'.format(result['IP'])
-        return (
-            f"{payload} {Colors.GRAY}["+
-            f'{Colors.LIGHT_GRAY}IP{Colors.RESET} {ip}'" | "+
-            f"{Colors.LIGHT_GRAY}Code{Colors.RESET} {result['Status']}{Colors.GRAY}]{Colors.RESET}"
-        )
+        @type payload: encoded
+        @param payload: The payload used in the request
+        """
+        raise NotImplementedError("stringfy method should be overrided")

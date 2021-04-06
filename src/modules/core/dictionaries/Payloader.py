@@ -10,7 +10,8 @@
 #
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
-import binascii
+from ..encoders import *
+
 import html
 
 class Payloader:
@@ -25,7 +26,9 @@ class Payloader:
         self.__prefix = []
         self.__suffix = []
         self.__case = lambda ajustedPayload : ajustedPayload
+        self.__escape = lambda ajustedPayload : ajustedPayload
         self.__encode = lambda ajustedPayload : ajustedPayload
+        self.encoder = None
 
     def setPrefix(self, prefix: list):
         """The prefix setter
@@ -54,18 +57,21 @@ class Payloader:
     def setCapitalize(self):
         """The capitalize setter"""
         self.__case = lambda ajustedPayload : [payload.capitalize() for payload in ajustedPayload]
-    
-    def setBin(self):
-        """The binary encoding"""
-        self.__encode = lambda ajustedPayload : [bytearray(payload, 'utf-8') for payload in ajustedPayload]
-    
-    def setHex(self):
-        """The hexadecimal encoding"""
-        self.__encode = lambda ajustedPayload : [binascii.hexlify(bytearray(payload, 'utf-8')) for payload in ajustedPayload]
 
-    def setHtmlentity(self):
+    def setHtmlentityEscape(self):
         """The html entities escaping"""
-        self.__encode = lambda ajustedPayload : [html.escape(payload) for payload in ajustedPayload]
+        self.__escape = lambda ajustedPayload : [html.escape(payload) for payload in ajustedPayload]
+
+    def setEncoder(self, encoder: str):
+        if 'bin' in encoder:
+            self.encoder = BinaryEncoder()
+        elif 'hex' in encoder:
+            self.encoder = HexEncoder()
+        elif 'base64' in encoder:
+            self.encoder = Base64Encoder()
+        else:
+            raise Exception("Invalid option for encoder")
+        self.__encode = lambda ajustedPayload : [self.encoder.encode(payload) for payload in ajustedPayload]
 
     def _getCustomizedPayload(self, payload: str):
         """Gets the payload list ajusted with the console options
@@ -79,4 +85,4 @@ class Payloader:
             ajustedPayload = [(prefix+payload) for prefix in self.__prefix for payload in ajustedPayload]
         if self.__suffix:
             ajustedPayload = [(payload+suffix) for suffix in self.__suffix for payload in ajustedPayload]
-        return self.__encode(self.__case(ajustedPayload))
+        return self.__encode(self.__escape(self.__case(ajustedPayload)))

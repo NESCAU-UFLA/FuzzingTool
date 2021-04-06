@@ -14,7 +14,7 @@ from ..BaseScanner import BaseScanner
 from ..Matcher import Matcher
 from ....conn.Response import Response
 from ....parsers.RequestParser import getPath
-from ....IO.OutputHandler import fixPayloadToOutput, Colors
+from ....IO.OutputHandler import Colors, outputHandler as oh
 
 class PathScanner(BaseScanner):
     __name__ = "PathScanner"
@@ -44,7 +44,7 @@ class PathScanner(BaseScanner):
         redirected = result['Redirected']
         if redirected:
             redirected = f" | {Colors.LIGHT_GRAY}Redirected{Colors.RESET} {Colors.LIGHT_YELLOW}{redirected}"
-        payload = '{:<30}'.format(fixPayloadToOutput(result['Payload']))
+        payload = '{:<30}'.format(oh.fixPayloadToOutput(result['Payload']))
         length = '{:>8}'.format(result['Length'])
         return (
             f"{payload} {Colors.GRAY}["+

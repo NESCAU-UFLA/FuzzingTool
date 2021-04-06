@@ -233,7 +233,7 @@ class ApplicationManager:
         if self.dictSizeof < self.numberOfThreads:
             self.numberOfThreads = self.dictSizeof
         cliParser.checkPrefixAndSuffix(self.dict)
-        cliParser.checkCaseAndEncoding(self.dict)
+        cliParser.checkCaseAndEncoder(self.dict)
 
     def start(self):
         """Starts the application"""

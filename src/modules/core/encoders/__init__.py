@@ -10,28 +10,5 @@
 #
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
-from ..BaseScanner import BaseScanner
-from ..Matcher import Matcher
-from ....conn.Response import Response
-from ....IO.OutputHandler import Colors, outputHandler as oh
-
-class SubdomainScanner(BaseScanner):
-    __name__ = "SubdomainScanner"
-    __author__ = "Vitor Oriel C N Borges"
-
-    def getResult(self, response: Response):
-        result = super().getResult(response)
-        result['IP'] = response.targetIp
-        return result
-
-    def scan(self, result: dict):
-        return self.match(result)
-
-    def getMessage(self, result: dict):
-        payload = '{:<30}'.format(oh.fixPayloadToOutput(result['Payload']))
-        ip = '{:>15}'.format(result['IP'])
-        return (
-            f"{payload} {Colors.GRAY}["+
-            f'{Colors.LIGHT_GRAY}IP{Colors.RESET} {ip}'" | "+
-            f"{Colors.LIGHT_GRAY}Code{Colors.RESET} {result['Status']}{Colors.GRAY}]{Colors.RESET}"
-        )
+from .BaseEncoder import BaseEncoder
+from .encoders import *

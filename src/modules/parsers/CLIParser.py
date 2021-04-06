@@ -14,6 +14,7 @@ from .RequestParser import getHost, getTargetUrl
 from ..utils.utils import getIndexesToParse, getCustomPackageNames, importCustomPackage
 from ..core.Fuzzer import Fuzzer
 from ..core.dictionaries import *
+from ..core.encoders import *
 from ..core.scanners import *
 from ..conn.Request import Request
 from ..IO.OutputHandler import outputHandler as oh
@@ -218,7 +219,7 @@ class CLIParser:
             payloader.setSuffix(suffixes)
             oh.infoBox(f"Set suffix: {str(suffixes)}")
 
-    def checkCaseAndEncoding(self, payloader: Payloader):
+    def checkCaseAndEncoder(self, payloader: Payloader):
         """Check if the --upper argument is present, and set the uppercase case mode
            Check if the --lower argument is present, and set the lowercase case mode
            Check if the --capitalize argument is present, and set the capitalize case mode
@@ -237,15 +238,23 @@ class CLIParser:
         elif '--capitalize' in self.__argv:
             payloader.setCapitalize()
             oh.infoBox("Set payload case: capitalize")
-        if '--bin' in self.__argv:
-            payloader.setBin()
-            oh.infoBox("Set payload encoding: binary")
-        elif '--hex' in self.__argv:
-            payloader.setHex()
-            oh.infoBox("Set payload encoding: hexadecimal")
-        elif '--htmlentity' in self.__argv:
-            payloader.setHtmlentity()
-            oh.infoBox("Set payload encoding: htmlentity")
+        if '--htmlentity' in self.__argv:
+            payloader.setHtmlentityEscape()
+            oh.infoBox("Set payload escaping: htmlentity")
+        try:
+            if '--bin' in self.__argv:
+                payloader.setEncoder('bin')
+                oh.infoBox("Set payload encoding: binary")
+            elif '--hex' in self.__argv:
+                payloader.setEncoder('hex')
+                oh.infoBox("Set payload encoding: hexadecimal")
+            elif '--base64' in self.__argv:
+                payloader.setEncoder('base64')
+                oh.infoBox("Set payload encoding: base64")
+        except Exception as e:
+            oh.errorBox(str(e))
+        if payloader.encoder:
+            oh.setStringfyCallback(payloader.encoder.stringfy)
 
     def checkReporter(self):
         """Check if the -o argument is present, and set the report data (name and type)

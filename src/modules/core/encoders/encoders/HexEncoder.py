@@ -10,28 +10,20 @@
 #
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
-from ..BaseScanner import BaseScanner
-from ..Matcher import Matcher
-from ....conn.Response import Response
-from ....IO.OutputHandler import Colors, outputHandler as oh
+from ..BaseEncoder import BaseEncoder
 
-class SubdomainScanner(BaseScanner):
-    __name__ = "SubdomainScanner"
-    __author__ = "Vitor Oriel C N Borges"
+import binascii
 
-    def getResult(self, response: Response):
-        result = super().getResult(response)
-        result['IP'] = response.targetIp
-        return result
+class HexEncoder(BaseEncoder):
+    """Hexadecimal encoder"""
+    def __init__(self):
+        super().__init__()
 
-    def scan(self, result: dict):
-        return self.match(result)
-
-    def getMessage(self, result: dict):
-        payload = '{:<30}'.format(oh.fixPayloadToOutput(result['Payload']))
-        ip = '{:>15}'.format(result['IP'])
-        return (
-            f"{payload} {Colors.GRAY}["+
-            f'{Colors.LIGHT_GRAY}IP{Colors.RESET} {ip}'" | "+
-            f"{Colors.LIGHT_GRAY}Code{Colors.RESET} {result['Status']}{Colors.GRAY}]{Colors.RESET}"
-        )
+    def encode(self, payload: str):
+        return binascii.hexlify(payload.encode(self.charset))
+    
+    def decode(self, payload):
+        return binascii.unhexlify(payload.decode(self.charset)).decode(self.charset)
+    
+    def stringfy(self, payload):
+        return f"h'{self.decode(payload)}'"
