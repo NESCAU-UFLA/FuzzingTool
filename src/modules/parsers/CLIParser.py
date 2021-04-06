@@ -285,14 +285,15 @@ class CLIParser:
                 params = ''
             if scannerName in getCustomPackageNames('scanners'):
                 scanner = importCustomPackage('scanners', scannerName)
-                try:
-                    scanner = scanner(params)
-                except TypeError:
+                if not scanner.__params__:
                     scanner = scanner()
-                except MissingParameter as e:
-                    oh.errorBox(f"Scanner {scannerName} missing parameter: {str(e)}")
-                except Exception as e:
-                    oh.errorBox(f"Bad scanner argument format: {str(e)}")
+                else:
+                    try:
+                        scanner = scanner(params)
+                    except MissingParameter as e:
+                        oh.errorBox(f"Scanner {scannerName} missing parameter: {str(e)}")
+                    except Exception as e:
+                        oh.errorBox(f"Bad scanner argument format: {str(e)}")
             else:
                 oh.errorBox(f"Scanner {scannerName} not available!")
             oh.infoBox(f"Set scanner: {scanner.__name__}")
