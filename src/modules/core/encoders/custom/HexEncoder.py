@@ -21,7 +21,6 @@ class HexEncoder(BaseEncoder):
     __desc__ = "Encode payload to hexadecimal"
     __type__ = "DataFuzzing"
 
-    """Hexadecimal encoder"""
     def __init__(self):
         super().__init__()
 

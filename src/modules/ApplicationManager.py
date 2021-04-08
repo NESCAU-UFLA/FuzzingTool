@@ -50,7 +50,6 @@ def banner():
     return banner
 
 def showHelpMenu():
-    """Creates the Help Menu"""
     oh.helpTitle(0, "Parameters:")
     oh.helpTitle(3, "Misc:")
     oh.helpContent(5, "-h, --help", "Show the help menu and exit")
@@ -129,8 +128,7 @@ def showEncodersHelp():
     oh.helpTitle(2, "Set the encoder used on the payloads\n")
     showCustomPackageHelp('encoders')
     oh.helpTitle(0, "Examples:\n")
-    oh.print("FuzzingTool -u https://domainexample.com/$ -w /path/to/wordlist/paths.txt -e UrlEncoder=2 -t 30 --timeout 10\n")
-    oh.print("FuzzingTool -u https://domainexample.com/$ -w /path/to/wordlist/paths.txt -e UrlEncoder=2 -t 30 --timeout 10\n")
+    oh.print("FuzzingTool -u https://domainexample.com/page.php?id= -w /path/to/wordlist/sqli.txt -e UrlEncoder=2 -t 30 --scanner GrepScanner=SQL\n")
 
 def showScannersHelp():
     oh.helpTitle(0, "Scanner options:")
@@ -178,6 +176,8 @@ class ApplicationManager:
                 askedHelp = argv[1].split('=')[1]
                 if 'dictionaries' in askedHelp:
                     showDictionariesHelp()
+                elif 'encoders' in askedHelp:
+                    showEncodersHelp()
                 elif 'scanners' in askedHelp:
                     showScannersHelp()
                 else:

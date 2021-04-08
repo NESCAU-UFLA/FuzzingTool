@@ -21,7 +21,6 @@ class HtmlEncoder(BaseEncoder):
     __desc__ = "Encode payload using HTML entities encoder"
     __type__ = "DataFuzzing"
 
-    """Html entities encoder"""
     def __init__(self):
         super().__init__()
 

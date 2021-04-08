@@ -19,7 +19,6 @@ class BinEncoder(BaseEncoder):
     __desc__ = "Encode payload to binary"
     __type__ = "DataFuzzing"
 
-    """Binary encoder"""
     def __init__(self):
         super().__init__()
 

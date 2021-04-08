@@ -21,7 +21,6 @@ class Base64Encoder(BaseEncoder):
     __desc__ = "Encode payload using Base64 encoder"
     __type__ = "DataFuzzing"
 
-    """Base64 encoder"""
     def __init__(self):
         super().__init__()
 

@@ -21,7 +21,6 @@ class UrlEncoder(BaseEncoder):
     __desc__ = "Encode payload using URL encoder"
     __type__ = "DataFuzzing"
 
-    """Url encoder"""
     def __init__(self, encodeLevel: int):
         super().__init__()
         if not encodeLevel:
