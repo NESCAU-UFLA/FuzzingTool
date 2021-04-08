@@ -12,16 +12,24 @@
 
 from ..BaseEncoder import BaseEncoder
 
-class BinaryEncoder(BaseEncoder):
-    """Binary encoder"""
+import binascii
+
+class HexEncoder(BaseEncoder):
+    __name__ = "HexEncoder"
+    __author__ = "Vitor Oriel C N Borges"
+    __params__ = ""
+    __desc__ = "Encode payload to hexadecimal"
+    __type__ = "DataFuzzing"
+
+    """Hexadecimal encoder"""
     def __init__(self):
         super().__init__()
 
     def encode(self, payload: str):
-        return bytearray(payload, self.charset)
+        return binascii.hexlify(payload.encode(self.charset))
     
     def decode(self, payload):
-        return payload.decode(self.charset)
+        return binascii.unhexlify(payload.decode(self.charset)).decode(self.charset)
     
     def stringfy(self, payload):
-        return f"b'{self.decode(payload)}'"
+        return f"h'{self.decode(payload)}'"

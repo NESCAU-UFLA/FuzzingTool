@@ -18,17 +18,17 @@ class Payloader:
     """Class that handle with the payload options
 
     Attributes:
+        encoder: The encoder used in the payload
         prefix: The prefix used in the payload
         suffix: The suffix used in the payload
     """
     def __init__(self):
         """Class constructor"""
+        self.encoder = None
         self.__prefix = []
         self.__suffix = []
         self.__case = lambda ajustedPayload : ajustedPayload
-        self.__escape = lambda ajustedPayload : ajustedPayload
         self.__encode = lambda ajustedPayload : ajustedPayload
-        self.encoder = None
 
     def setPrefix(self, prefix: list):
         """The prefix setter
@@ -58,19 +58,13 @@ class Payloader:
         """The capitalize setter"""
         self.__case = lambda ajustedPayload : [payload.capitalize() for payload in ajustedPayload]
 
-    def setHtmlentityEscape(self):
-        """The html entities escaping"""
-        self.__escape = lambda ajustedPayload : [html.escape(payload) for payload in ajustedPayload]
+    def setEncoder(self, encoder: BaseEncoder):
+        """The encoder setter
 
-    def setEncoder(self, encoder: str):
-        if 'bin' in encoder:
-            self.encoder = BinaryEncoder()
-        elif 'hex' in encoder:
-            self.encoder = HexEncoder()
-        elif 'base64' in encoder:
-            self.encoder = Base64Encoder()
-        else:
-            raise Exception("Invalid option for encoder")
+        @type encoder: BaseEncoder
+        @param encoder: The encoder used in the payloads
+        """
+        self.encoder = encoder
         self.__encode = lambda ajustedPayload : [self.encoder.encode(payload) for payload in ajustedPayload]
 
     def _getCustomizedPayload(self, payload: str):
@@ -85,4 +79,4 @@ class Payloader:
             ajustedPayload = [(prefix+payload) for prefix in self.__prefix for payload in ajustedPayload]
         if self.__suffix:
             ajustedPayload = [(payload+suffix) for suffix in self.__suffix for payload in ajustedPayload]
-        return self.__encode(self.__escape(self.__case(ajustedPayload)))
+        return self.__encode(self.__case(ajustedPayload))

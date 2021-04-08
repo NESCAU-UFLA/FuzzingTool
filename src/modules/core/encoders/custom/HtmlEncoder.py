@@ -10,5 +10,26 @@
 #
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
-from .BaseEncoder import BaseEncoder
-from .custom import *
+from ..BaseEncoder import BaseEncoder
+
+import html
+
+class HtmlEncoder(BaseEncoder):
+    __name__ = "HtmlEncoder"
+    __author__ = "Vitor Oriel C N Borges"
+    __params__ = ""
+    __desc__ = "Encode payload using HTML entities encoder"
+    __type__ = "DataFuzzing"
+
+    """Html entities encoder"""
+    def __init__(self):
+        super().__init__()
+
+    def encode(self, payload: str):
+        return html.escape(payload)
+    
+    def decode(self, payload):
+        return html.unescape(payload)
+    
+    def stringfy(self, payload):
+        return payload

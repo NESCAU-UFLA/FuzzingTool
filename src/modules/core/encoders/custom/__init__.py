@@ -10,20 +10,7 @@
 #
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
-from ..BaseEncoder import BaseEncoder
-
-import base64
-
-class Base64Encoder(BaseEncoder):
-    """Base64 encoder"""
-    def __init__(self):
-        super().__init__()
-
-    def encode(self, payload: str):
-        return base64.b64encode(payload.encode(self.charset))
-    
-    def decode(self, payload):
-        return base64.b64decode(payload).decode(self.charset)
-    
-    def stringfy(self, payload):
-        return payload.decode(self.charset)
+from .BinEncoder import BinEncoder
+from .HexEncoder import HexEncoder
+from .Base64Encoder import Base64Encoder
+from .HtmlEncoder import HtmlEncoder

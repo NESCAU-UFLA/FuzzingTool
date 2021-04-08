@@ -11,6 +11,7 @@
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
 from ..default.DataScanner import DataScanner
+from ...encoders.custom.HtmlEncoder import HtmlEncoder
 from ....conn.Response import Response
 from ....IO.OutputHandler import Colors, outputHandler as oh
 
@@ -21,10 +22,11 @@ class ReflectedScanner(DataScanner):
     __author__ = "Vitor Oriel C N Borges"
     __params__ = ""
     __desc__ = "Lookup if the payload was reflected in the response content"
-    __type__ = "DataFuzzing"
+    __type__ = "DataFuzzing without encoder"
 
     def __init__(self):
         super().__init__()
+        self.__encoder = HtmlEncoder()
         self.__escaped = {}
 
     def getResult(self, response: Response):
@@ -35,7 +37,7 @@ class ReflectedScanner(DataScanner):
         if super().scan(result):
             reflected = result['Payload'] in result['Body']
             if not reflected:
-                self.__escaped[result['Request']] = result['Payload'] in html.unescape(result['Body'])
+                self.__escaped[result['Request']] = result['Payload'] in self.__encoder.decode(result['Body'])
             return reflected
         return False
     

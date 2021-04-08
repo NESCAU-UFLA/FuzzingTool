@@ -104,7 +104,7 @@ def showDictionariesHelp():
         if not dictionary.__type__:
             typeFuzzing = ''
         else:
-            typeFuzzing = f" (Recomended for {dictionary.__type__})"
+            typeFuzzing = f" (Used for {dictionary.__type__})"
         oh.helpContent(5, f"{dictionary.__name__}={dictionary.__params__}", f"{dictionary.__desc__}{typeFuzzing}\n")
     oh.helpTitle(0, "Examples:\n")
     oh.print("FuzzingTool -u https://$.domainexample.com/ -w /path/to/wordlist/subdomains.txt -t 30 --timeout 5 -V2\n")
@@ -124,7 +124,7 @@ def showScannersHelp():
         if not scanner.__type__:
             typeFuzzing = ''
         else:
-            typeFuzzing = f" (Recommended for {scanner.__type__})"
+            typeFuzzing = f" (Used for {scanner.__type__})"
         if not scanner.__params__:
             params = ''
         else:
@@ -210,7 +210,7 @@ class ApplicationManager:
         self.numberOfThreads = cliParser.checkNumThreads()
         cliParser.checkReporter()
         for target in targets:
-            oh.infoBox(f"Set target: {target['url']}")
+            oh.infoBox(f"Set target URL: {target['url']}")
             oh.infoBox(f"Set request method: {target['methods']}")
             if target['data']['PARAM'] or target['data']['BODY']:
                 oh.infoBox(f"Set request data: {str(target['data'])}")
@@ -233,7 +233,14 @@ class ApplicationManager:
         if self.dictSizeof < self.numberOfThreads:
             self.numberOfThreads = self.dictSizeof
         cliParser.checkPrefixAndSuffix(self.dict)
-        cliParser.checkCaseAndEncoder(self.dict)
+        cliParser.checkCase(self.dict)
+        cliParser.checkEncoder(self.dict)
+        if self.dict.encoder:
+            if self.globalScanner:
+                scannerPackage = importCustomPackage('scanners', type(self.globalScanner).__name__)
+                if 'without encoder' in scannerPackage.__type__:
+                    oh.errorBox(f"Scanner {scannerPackage.__name__} don't work with encoders")
+            oh.setStringfyCallback(self.dict.encoder.stringfy)
 
     def start(self):
         """Starts the application"""
@@ -273,7 +280,9 @@ class ApplicationManager:
         self.requester = requester
         targetHost = getHost(getTargetUrl(requester.getUrlDict()))
         oh.infoBox(f"Preparing target {targetHost} ...")
+        before = time.time()
         self.checkIgnoreErrors(targetHost)
+        self.startedTime += (time.time() - before)
         self.results = []
         self.allResults[targetHost] = self.results
         if not self.globalScanner:
@@ -285,7 +294,7 @@ class ApplicationManager:
                 oh.infoBox("DataFuzzing detected, checking for a data comparator ...")
                 before = time.time()
                 self.scanner.setComparator(self.getDataComparator())
-                self.startedTime -= (time.time() - before)
+                self.startedTime += (time.time() - before)
 
     def prepareFuzzer(self):
         """Prepare the fuzzer for the fuzzing tests"""
@@ -437,13 +446,11 @@ class ApplicationManager:
             self.ignoreErrors = True
             fh.logger.open(host)
         else:
-            before = time.time()
             if oh.askYesNo('info', "Do you want to ignore errors on this target, and save them into a log file?"):
                 self.ignoreErrors = True
                 fh.logger.open(host)
             else:
                 self.ignoreErrors = False
-            self.startedTime -= (time.time() - before)
 
     def getDataComparator(self):
         """Check if the user wants to insert custom data comparator to validate the responses

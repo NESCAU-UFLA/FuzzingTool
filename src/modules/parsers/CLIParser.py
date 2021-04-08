@@ -71,7 +71,10 @@ class CLIParser:
         return targets
 
     def getDictionary(self):
-        """Get the fuzzing dictionary"""
+        """Get the fuzzing dictionary
+        
+        @returns BaseDictionary: The dictionary object used to provide the payloads
+        """
         try:
             wordlistSource = self.__argv[self.__argv.index('-w')+1]
         except ValueError:
@@ -219,12 +222,10 @@ class CLIParser:
             payloader.setSuffix(suffixes)
             oh.infoBox(f"Set suffix: {str(suffixes)}")
 
-    def checkCaseAndEncoder(self, payloader: Payloader):
+    def checkCase(self, payloader: Payloader):
         """Check if the --upper argument is present, and set the uppercase case mode
            Check if the --lower argument is present, and set the lowercase case mode
            Check if the --capitalize argument is present, and set the capitalize case mode
-           Check if the --md5 argument is present, and set the md5 encoding mode
-           Check if the --sha1 argument is present, and set the sha1 encoding mode
 
         @type payloader: Payloader
         @param payloader: The object responsible to handle with the payloads
@@ -238,23 +239,34 @@ class CLIParser:
         elif '--capitalize' in self.__argv:
             payloader.setCapitalize()
             oh.infoBox("Set payload case: capitalize")
-        if '--htmlentity' in self.__argv:
-            payloader.setHtmlentityEscape()
-            oh.infoBox("Set payload escaping: htmlentity")
-        try:
-            if '--bin' in self.__argv:
-                payloader.setEncoder('bin')
-                oh.infoBox("Set payload encoding: binary")
-            elif '--hex' in self.__argv:
-                payloader.setEncoder('hex')
-                oh.infoBox("Set payload encoding: hexadecimal")
-            elif '--base64' in self.__argv:
-                payloader.setEncoder('base64')
-                oh.infoBox("Set payload encoding: base64")
-        except Exception as e:
-            oh.errorBox(str(e))
-        if payloader.encoder:
-            oh.setStringfyCallback(payloader.encoder.stringfy)
+
+    def checkEncoder(self, payloader: Payloader):
+        """Check if the -e argument is present, and set the encoder for the payloads
+
+        @type payloader: Payloader
+        @param payloader: The object responsible to handle with the payloads
+        """
+        if '-e' in self.__argv:
+            encoderName = self.__argv[self.__argv.index('-e')+1]
+            if '=' in encoderName:
+                encoderName, params = encoderName.split('=', 1)
+            else:
+                params = ''
+            if encoderName in getCustomPackageNames('encoders'):
+                encoder = importCustomPackage('encoders', encoderName)
+                if not encoder.__params__:
+                    encoder = encoder()
+                else:
+                    try:
+                        encoder = encoder(params)
+                    except MissingParameter as e:
+                        oh.errorBox(f"Encoder {encoderName} missing parameter: {str(e)}")
+                    except Exception as e:
+                        oh.errorBox(f"Bad encoder argument format: {str(e)}")
+                payloader.setEncoder(encoder)
+            else:
+                oh.errorBox(f"Encoder {encoderName} not available!")
+            oh.infoBox(f"Set encoder: {encoder.__name__}")
 
     def checkReporter(self):
         """Check if the -o argument is present, and set the report data (name and type)
