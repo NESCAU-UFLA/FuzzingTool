@@ -93,24 +93,44 @@ def showHelpMenu():
     oh.print("FuzzingTool -w /path/to/wordlist/subdomains.txt -u https://$.domainexample.com/ -t 100 -Ms 1500 --timeout 5\n")
     oh.print("FuzzingTool -r /path/to/raw-http1.txt -r /path/to/raw-http2.txt --scheme https -w /path/to/wordlist/sqli.txt -V -o json\n")
 
+def showCustomPackageHelp(packageName: str):
+    """Show the custom package help
+
+    @type packageName: str
+    @param packageName: The package to search for the custom content
+    """
+    for customPackage in getCustomPackageNames(packageName):
+        package = importCustomPackage(packageName, customPackage)
+        if not package.__type__:
+            typeFuzzing = ''
+        else:
+            typeFuzzing = f" (Used for {package.__type__})"
+        if not package.__params__:
+            params = ''
+        else:
+            params = f"={package.__params__}"
+        oh.helpContent(5, f"{package.__name__}{params}", f"{package.__desc__}{typeFuzzing}\n")
+
 def showDictionariesHelp():
     oh.helpTitle(0, "Dictionary options: (-w)")
     oh.helpTitle(2, "Default: The default dictionaries are selected by default when no custom are choiced\n")
     oh.helpContent(5, "FILEPATH", "Set the path of the wordlist file")
     oh.helpContent(5, "[PAYLOAD1,PAYLOAD2,]", "Set the payloads list to be used as wordlist")
     oh.helpTitle(2, "Custom (Dictionary=PARAM): Set the custom dictionary and his parameter\n")
-    for customDictionary in getCustomPackageNames('dictionaries'):
-        dictionary = importCustomPackage('dictionaries', customDictionary)
-        if not dictionary.__type__:
-            typeFuzzing = ''
-        else:
-            typeFuzzing = f" (Used for {dictionary.__type__})"
-        oh.helpContent(5, f"{dictionary.__name__}={dictionary.__params__}", f"{dictionary.__desc__}{typeFuzzing}\n")
+    showCustomPackageHelp('dictionaries')
     oh.helpTitle(0, "Examples:\n")
     oh.print("FuzzingTool -u https://$.domainexample.com/ -w /path/to/wordlist/subdomains.txt -t 30 --timeout 5 -V2\n")
     oh.print("FuzzingTool -u https://$.domainexample.com/ -w [wp-admin,admin,webmail,www,cpanel] -t 30 --timeout 5 -V2\n")
     oh.print("FuzzingTool -u https://$.domainexample.com/ -w CrtDictionary=domainexample.com -t 30 --timeout 5 -V2\n")
     oh.print("FuzzingTool -u https://domainexample.com/$ -w OverflowDictionary=5000,:../:etc/passwd -t 30 --timeout 5 -V2\n")
+
+def showEncodersHelp():
+    oh.helpTitle(0, "Encoder options: (-e)")
+    oh.helpTitle(2, "Set the encoder used on the payloads\n")
+    showCustomPackageHelp('encoders')
+    oh.helpTitle(0, "Examples:\n")
+    oh.print("FuzzingTool -u https://domainexample.com/$ -w /path/to/wordlist/paths.txt -e UrlEncoder=2 -t 30 --timeout 10\n")
+    oh.print("FuzzingTool -u https://domainexample.com/$ -w /path/to/wordlist/paths.txt -e UrlEncoder=2 -t 30 --timeout 10\n")
 
 def showScannersHelp():
     oh.helpTitle(0, "Scanner options:")
@@ -119,17 +139,7 @@ def showScannersHelp():
     oh.helpContent(5, "PathScanner", "Scanner for the path URL fuzzing")
     oh.helpContent(5, "SubdomainScanner", "Scanner for the subdomain URL fuzzing")
     oh.helpTitle(2, "Custom (--scaner SCANNER): Set the custom scanner\n")
-    for customScanner in getCustomPackageNames('scanners'):
-        scanner = importCustomPackage('scanners', customScanner)
-        if not scanner.__type__:
-            typeFuzzing = ''
-        else:
-            typeFuzzing = f" (Used for {scanner.__type__})"
-        if not scanner.__params__:
-            params = ''
-        else:
-            params = f"={scanner.__params__}"
-        oh.helpContent(5, f"{scanner.__name__}{params}", f"{scanner.__desc__}{typeFuzzing}\n")
+    showCustomPackageHelp('scanners')
     oh.helpTitle(0, "Examples:\n")
     oh.print("FuzzingTool -u https://domainexample.com/search.php?query= -w /path/to/wordlist/xss.txt --scanner ReflectedScanner -t 30 -o csv\n")
 

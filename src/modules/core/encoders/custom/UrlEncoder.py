@@ -19,7 +19,7 @@ class UrlEncoder(BaseEncoder):
     __author__ = "Vitor Oriel C N Borges"
     __params__ = "ENCODE_LEVEL"
     __desc__ = "Encode payload using URL encoder"
-    __type__ = "PathFuzzing"
+    __type__ = "DataFuzzing"
 
     """Url encoder"""
     def __init__(self, encodeLevel: int):

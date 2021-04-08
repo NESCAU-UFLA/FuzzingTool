@@ -79,6 +79,11 @@ class Request:
         self.__requestIndex = 0
         self.__setupHeader()
         self.__subdomainFuzzing = parser.checkForSubdomainFuzz(self.__url)
+        if self.isUrlFuzzing():
+            self.__session = requests.Session()
+            self.__request = self.__sessionRequest
+        else:
+            self.__request = self.__commonRequest
         self.methods = methods
     
     def getUrl(self):
@@ -180,19 +185,15 @@ class Request:
 
     def resetRequestIndex(self):
         """Resets the request index to 0"""
-        self.__requestIndex = 0
+        self.__requestIndex = 1
 
-    def testConnection(self, proxy: bool = False):
-        """Test the connection with the target, and raise an exception if couldn't connect
-        
-        @type proxy: bool
-        @param proxy: A flag to enable or disable the use of the proxy
-        """
+    def testConnection(self):
+        """Test the connection with the target, and raise an exception if couldn't connect"""
         try:
             target = getTargetUrl(self.__url)
             response = requests.get(
                 target,
-                proxies=self.__proxy if proxy else {},
+                proxies=self.__proxy,
                 headers=parser.getHeader(self.__headers),
                 timeout=self.__timeout if self.__timeout else 10, # Default 10 seconds to make a request
             )
@@ -200,7 +201,7 @@ class Request:
         except requests.exceptions.HTTPError:
             raise RequestException(f"Connected to {target}, but raised a 404 status code on that direcory")
         except requests.exceptions.ProxyError:
-            raise RequestException()
+            raise RequestException(f"Can't connect to proxy")
         except requests.exceptions.SSLError:
             raise RequestException(f"SSL couldn't be validated on {target}")
         except requests.exceptions.Timeout:
@@ -216,9 +217,11 @@ class Request:
             raise RequestException(f"Failed to establish a connection to {target}")
 
     def hasRedirection(self):
-        """Test if the connection will have a redirection"""
+        """Test if the connection will have a redirection
+        
+        @returns bool: The flag to say if occur a redirection or not
+        """
         response = self.request(' ')
-        self.__requestIndex -= 1
         if '302' in str(response.getResponse().history):
             return True
         return False
@@ -228,14 +231,13 @@ class Request:
 
         @type payload: str
         @param payload: The payload used in the request
-        @returns dict: The response data dictionary
+        @returns Response: The response object of the request
         """
         if self.__proxies:
             self.__proxy = random.choice(self.__proxies)
         parser.setPayload(payload)
         requestParameters = self.__getRequestParameters()
         targetUrl = requestParameters['Url']
-        targetIp = ''
         try:
             if self.__subdomainFuzzing:
                 try:
@@ -245,19 +247,11 @@ class Request:
                 except:
                     raise InvalidHostname(f"Can't resolve hostname {hostname}")
             else:
+                targetIp = ''
                 hostname = targetUrl
             try:
                 before = time.time()
-                response = Response(requests.request(
-                    requestParameters['Method'],
-                    targetUrl,
-                    data=requestParameters['Data']['BODY'],
-                    params=requestParameters['Data']['PARAM'],
-                    headers=requestParameters['Headers'],
-                    proxies=self.__proxy,
-                    timeout=self.__timeout,
-                    allow_redirects=self.__followRedirects,
-                ))
+                response = self.__request(targetUrl, requestParameters)
                 timeTaken = (time.time() - before)
             except requests.exceptions.ProxyError:
                 raise RequestException("The actual proxy isn't working anymore.")
@@ -311,3 +305,45 @@ class Request:
             if 'Content-Length' in self.__headers['content'].keys():
                 del self.__headers['content']['Content-Length']
         self.__headers['content']['Accept-Encoding'] = 'gzip, deflate'
+    
+    def __sessionRequest(self, targetUrl: str, requestParameters: dict):
+        """Performs a request to the target using Session object
+
+        @type targetUrl: str
+        @param targetUrl: The target URL
+        @type requestParameters: dict
+        @param requestParameters: The request parameters dictionary
+        @returns Response: The response object of the request
+        """
+        return Response(self.__session.send(
+            self.__session.prepare_request(requests.Request(
+                requestParameters['Method'],
+                targetUrl,
+                data=requestParameters['Data']['BODY'],
+                params=requestParameters['Data']['PARAM'],
+                headers=requestParameters['Headers'],
+            )),
+            proxies=self.__proxy,
+            timeout=self.__timeout,
+            allow_redirects=self.__followRedirects,
+        ))
+    
+    def __commonRequest(self, targetUrl: str, requestParameters: dict):
+        """Performs a request to the target
+
+        @type targetUrl: str
+        @param targetUrl: The target URL
+        @type requestParameters: dict
+        @param requestParameters: The request parameters dictionary
+        @returns Response: The response object of the request
+        """
+        return Response(requests.request(
+            requestParameters['Method'],
+            targetUrl,
+            data=requestParameters['Data']['BODY'],
+            params=requestParameters['Data']['PARAM'],
+            headers=requestParameters['Headers'],
+            proxies=self.__proxy,
+            timeout=self.__timeout,
+            allow_redirects=self.__followRedirects,
+        ))
