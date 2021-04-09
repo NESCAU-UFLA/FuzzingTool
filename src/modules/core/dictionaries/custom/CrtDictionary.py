@@ -22,7 +22,7 @@ import re
 
 class CrtDictionary(BaseDictionary):
     __name__ = "CrtDictionary"
-    __author__ = "Vitor Oriel C N Borges"
+    __author__ = ("Vitor Oriel C N Borges")
     __params__ = "DOMAIN"
     __desc__ = "Build the wordlist based on the content of the site crt.sh"
     __type__ = "SubdomainFuzzing"

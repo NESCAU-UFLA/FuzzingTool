@@ -14,7 +14,7 @@ from ..BaseEncoder import BaseEncoder
 
 class BinEncoder(BaseEncoder):
     __name__ = "BinEncoder"
-    __author__ = "Vitor Oriel C N Borges"
+    __author__ = ("Vitor Oriel C N Borges")
     __params__ = ""
     __desc__ = "Encode payload to binary"
     __type__ = "DataFuzzing"

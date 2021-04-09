@@ -16,7 +16,7 @@ from ....exceptions.MainExceptions import MissingParameter
 
 class ListDictionary(BaseDictionary):
     __name__ = "ListDictionary"
-    __author__ = "Vitor Oriel C N Borges"
+    __author__ = ("Vitor Oriel C N Borges")
 
     def __init__(self):
         super().__init__()

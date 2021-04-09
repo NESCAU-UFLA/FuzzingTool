@@ -17,7 +17,7 @@ from ....IO.OutputHandler import Colors, outputHandler as oh
 
 class SubdomainScanner(BaseScanner):
     __name__ = "SubdomainScanner"
-    __author__ = "Vitor Oriel C N Borges"
+    __author__ = ("Vitor Oriel C N Borges")
 
     def getResult(self, response: Response):
         result = super().getResult(response)

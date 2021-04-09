@@ -19,7 +19,7 @@ import re
 
 class GrepScanner(DataScanner):
     __name__ = "GrepScanner"
-    __author__ = "Vitor Oriel C N Borges"
+    __author__ = ("Vitor Oriel C N Borges")
     __params__ = "REGEX"
     __desc__ = "Filter responses based on a regex"
     __type__ = "DataFuzzing"

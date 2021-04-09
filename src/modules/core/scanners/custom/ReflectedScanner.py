@@ -19,7 +19,7 @@ import html
 
 class ReflectedScanner(DataScanner):
     __name__ = "ReflectedScanner"
-    __author__ = "Vitor Oriel C N Borges"
+    __author__ = ("Vitor Oriel C N Borges")
     __params__ = ""
     __desc__ = "Lookup if the payload was reflected in the response content"
     __type__ = "DataFuzzing without encoder"

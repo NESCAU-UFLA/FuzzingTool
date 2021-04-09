@@ -15,7 +15,7 @@ from ....exceptions.MainExceptions import MissingParameter
 
 class OverflowDictionary(BaseDictionary):
     __name__ = "OverflowDictionary"
-    __author__ = "Vitor Oriel C N Borges"
+    __author__ = ("Vitor Oriel C N Borges")
     __params__ = "QUANTITY_OF_PAYLOADS,INIT_PAYLOAD:PAYLOAD:END_PAYLOAD"
     __desc__ = "Build the wordlist for stress and buffer overflow purposes"
     __type__ = ""

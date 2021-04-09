@@ -15,7 +15,7 @@ from ....IO.FileHandler import fileHandler as fh
 
 class FileDictionary(BaseDictionary):
     __name__ = "FileDictionary"
-    __author__ = "Vitor Oriel C N Borges"
+    __author__ = ("Vitor Oriel C N Borges")
 
     def __init__(self):
         super().__init__()

@@ -18,7 +18,7 @@ from ....IO.OutputHandler import Colors, outputHandler as oh
 
 class PathScanner(BaseScanner):
     __name__ = "PathScanner"
-    __author__ = "Vitor Oriel C N Borges"
+    __author__ = ("Vitor Oriel C N Borges")
 
     def getResult(self, response: Response):
         result = super().getResult(response)

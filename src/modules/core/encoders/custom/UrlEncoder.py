@@ -16,7 +16,7 @@ from urllib.parse import quote, unquote
 
 class UrlEncoder(BaseEncoder):
     __name__ = "UrlEncoder"
-    __author__ = "Vitor Oriel C N Borges"
+    __author__ = ("Vitor Oriel C N Borges")
     __params__ = "ENCODE_LEVEL"
     __desc__ = "Encode payload using URL encoder"
     __type__ = "DataFuzzing"

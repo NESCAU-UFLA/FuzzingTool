@@ -16,7 +16,7 @@ import binascii
 
 class HexEncoder(BaseEncoder):
     __name__ = "HexEncoder"
-    __author__ = "Vitor Oriel C N Borges"
+    __author__ = ("Vitor Oriel C N Borges")
     __params__ = ""
     __desc__ = "Encode payload to hexadecimal"
     __type__ = "DataFuzzing"

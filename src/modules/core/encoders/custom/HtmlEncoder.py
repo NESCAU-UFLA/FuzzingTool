@@ -16,7 +16,7 @@ import html
 
 class HtmlEncoder(BaseEncoder):
     __name__ = "HtmlEncoder"
-    __author__ = "Vitor Oriel C N Borges"
+    __author__ = ("Vitor Oriel C N Borges")
     __params__ = ""
     __desc__ = "Encode payload using HTML entities encoder"
     __type__ = "DataFuzzing"

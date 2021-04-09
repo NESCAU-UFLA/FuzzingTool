@@ -16,7 +16,7 @@ import base64
 
 class Base64Encoder(BaseEncoder):
     __name__ = "Base64Encoder"
-    __author__ = "Vitor Oriel C N Borges"
+    __author__ = ("Vitor Oriel C N Borges")
     __params__ = ""
     __desc__ = "Encode payload using Base64 encoder"
     __type__ = "DataFuzzing"
