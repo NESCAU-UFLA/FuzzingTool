@@ -42,10 +42,13 @@ Reach out the user's manual (command list and usage examples) on our <a href="ht
 We use <a target="_blank" href="https://semver.org/">SemVer</a> for versioning. For the versions available, see the <a target="_blank" href="https://github.com/NESCAU-UFLA/FuzzingTool/releases">tags on this repository</a>.
 
 ## Authors
-* <b>Vitor Oriel</b> - <a target="_blank" href="https://github.com/VitorOriel">Profile</a>
+ * <b>Vitor Oriel</b> - <a target="_blank" href="https://github.com/VitorOriel">Profile</a>
 
 ## Contributors
-* <a target="_blank" href="#"><b>Gabriel Prestes</b></a>: Designed the logo
+ * <a target="_blank" href="#"><b>Gabriel Prestes</b></a>: Designed the logo
+
+## Contributing
+If you want to contribute to FuzzingTool project, please read [CONTRIBUTING.md](https://github.com/NESCAU-UFLA/FuzzingTool/blob/master/.github/CONTRIBUTING.md).
 
 ## License
 This project is licensed under the MIT License - see the <a target="_blank" href="https://github.com/NESCAU-UFLA/FuzzingTool/blob/master/LICENSE.md">LICENSE.md</a> for details.
