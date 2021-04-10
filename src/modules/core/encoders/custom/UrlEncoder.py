@@ -18,7 +18,7 @@ class UrlEncoder(BaseEncoder):
     __name__ = "UrlEncoder"
     __author__ = ("Vitor Oriel C N Borges")
     __params__ = "ENCODE_LEVEL"
-    __desc__ = "Encode payload using URL encoder"
+    __desc__ = "Replace special characters in string using the %xx escape. Letters, digits, and the characters '_.-~' are never quoted."
     __type__ = "DataFuzzing"
 
     def __init__(self, encodeLevel: int):

@@ -33,8 +33,8 @@ def getCustomPackageNames(module: str):
         _, _, customPackages = next(walk(f"./modules/core/{module}/custom/"))
     except:
         from os.path import dirname, abspath
-        modulesPath = dirname(dirname(abspath(__file__)))
-        _, _, customPackages = next(walk(f"{modulesPath}/core/{module}/custom/"))
+        libPath = dirname(dirname(abspath(__file__)))
+        _, _, customPackages = next(walk(f"{libPath}/core/{module}/custom/"))
     if '__init__.py' in customPackages:
         customPackages.remove('__init__.py')
     return [packageFile.split('.')[0] for packageFile in customPackages]

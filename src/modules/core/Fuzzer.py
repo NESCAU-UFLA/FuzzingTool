@@ -52,9 +52,9 @@ class Fuzzer:
         @param delay: The delay between each request
         @type numberOfThreads: int
         @param numberOfThreads: The number of threads used in the fuzzing tests
-        @type resultCallback: Callback Fuction
+        @type resultCallback: Callable
         @param resultCallback: The callback function for the results
-        @type exceptionCallbacks: list[invalidHostnameCallback, requestExceptionCallback]
+        @type exceptionCallbacks: list
         @param exceptionCallbacks: The list that handles with exception callbacks
         """
         self.__requester = requester

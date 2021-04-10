@@ -161,7 +161,8 @@ class ApplicationManager:
         return self.verbose[0]
 
     def main(self, argv: list):
-        """The main function
+        """The main function.
+           Prepares the application environment and starts the fuzzing
 
         @type argv: list
         @param argv: The arguments given in the execution
@@ -195,7 +196,8 @@ class ApplicationManager:
         self.start()
 
     def init(self, argv: list):
-        """The initialization function
+        """The initialization function.
+           Set the application variables including plugins requires
 
         @type argv: list
         @param argv: The arguments given in the execution
@@ -251,7 +253,9 @@ class ApplicationManager:
             oh.setStringfyCallback(self.dict.encoder.stringfy)
 
     def start(self):
-        """Starts the application"""
+        """Starts the fuzzing application.
+           Each target is fuzzed based on their own methods list
+        """
         self.startedTime = time.time()
         self.fuzzer = None
         try:
@@ -280,7 +284,8 @@ class ApplicationManager:
             oh.infoBox("Test completed")
 
     def prepareTarget(self, requester: Request):
-        """Prepare the target variables for the fuzzing tests
+        """Prepare the target variables for the fuzzing tests.
+           Both error logger and default scanners are seted
         
         @type requester: Request
         @param requester: The requester for the target
@@ -305,7 +310,9 @@ class ApplicationManager:
                 self.startedTime += (time.time() - before)
 
     def prepareFuzzer(self):
-        """Prepare the fuzzer for the fuzzing tests"""
+        """Prepare the fuzzer for the fuzzing tests.
+           Refill the dictionary with the wordlist content
+        """
         self.dict.reload()
         self.fuzzer = Fuzzer(
             requester=self.requester,
@@ -356,7 +363,7 @@ class ApplicationManager:
             raise SkipTargetException(str(e))
 
     def invalidHostnameCallback(self, e: InvalidHostname):
-        """Handle with the subdomain request exceptions
+        """Handle with the subdomain hostname resolver exceptions
         
         @type e: InvalidHostname
         @param e: The invalid hostname exception
@@ -387,9 +394,9 @@ class ApplicationManager:
         return scanner
 
     def checkConnectionAndRedirections(self):
-        """Test the connection and redirection to target"""
-        # If we'll not fuzzing the url paths, so
-        # test the redirections before start the fuzzing
+        """Test the connection and redirection to target.
+           If data fuzzing is detected, check for redirections
+        """
         for requester in self.requesters:
             oh.infoBox(f"Checking connection and redirections on {requester.getUrl()} ...")
             if requester.isUrlFuzzing():
@@ -420,7 +427,8 @@ class ApplicationManager:
             oh.errorBox("No targets left for fuzzing")
 
     def checkRedirections(self, requester: Request):
-        """Check the redirections for a target
+        """Check the redirections for a target.
+           Perform a redirection check for each method in requester methods list
         
         @type requester: Request
         @param requester: The requester for the target
@@ -443,13 +451,13 @@ class ApplicationManager:
             oh.warningBox("No methods left on this target, removed from targets list")
 
     def checkIgnoreErrors(self, host: str):
-        """Check if the user wants to ignore the errors during the tests
+        """Check if the user wants to ignore the errors during the tests.
+           By default, URL fuzzing (path and subdomain) ignore errors
         
         @type host: str
         @param host: The target hostname
         """
         fh.logger.close()
-        # By default, URL Fuzzing (path and subdomain) ignore errors
         if self.requester.isUrlFuzzing():
             self.ignoreErrors = True
             fh.logger.open(host)
@@ -495,7 +503,9 @@ class ApplicationManager:
         return comparator
 
     def showFooter(self):
-        """Show the footer content of the software, after maked the fuzzing"""
+        """Show the footer content of the software, after maked the fuzzing.
+           The results are shown for each target
+        """
         if self.fuzzer:
             if self.startedTime:
                 oh.infoBox(f"Time taken: {float('%.2f'%(time.time() - self.startedTime))} seconds")

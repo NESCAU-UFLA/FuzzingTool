@@ -94,7 +94,7 @@ class OutputHandler:
     def setStringfyCallback(self, stringfyCallback: Callable):
         """Set the stringfy function for the encoded payloads
 
-        @type stringfyCallback: Callable(encodedPayload)
+        @type stringfyCallback: Callable
         @param stringfyCallback: The stringfy callback from the encoder
         """
         self.__stringfy = stringfyCallback

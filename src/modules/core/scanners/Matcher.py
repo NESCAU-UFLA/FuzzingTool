@@ -29,6 +29,11 @@ class Matcher:
         }
 
     def update(self, matcher):
+        """Update the self attributes based on another Matcher attributes
+
+        @type matcher: Matcher
+        @param matcher: The other matcher to copy the attributes
+        """
         self._comparator = matcher._comparator
         self._allowedStatus = matcher._allowedStatus
 
