@@ -43,7 +43,6 @@ class Response:
         @param requestIndex: The request index
         @type ip: str
         @param ip: The target IP
-        @returns dict: The response data parsed into a dictionary
         """
         self.method = method
         self.payload = payload
