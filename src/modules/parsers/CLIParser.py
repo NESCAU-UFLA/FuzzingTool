@@ -198,6 +198,21 @@ class CLIParser:
             return int(numThreads)
         return 1
 
+    def checkActionByStatus(self):
+        if '--status-action' in self.__argv:
+            status = self.__argv[self.__argv.index('--status-action')+1]
+            if ':' in status:
+                status, action = status.split(':', 1)
+                action = action.lower()
+            else:
+                action = 'skip'
+            try:
+                int(status)
+            except:
+                oh.errorBox("Status code must be an integer")
+            return (status, action)
+        return (None, None)
+
     def checkPrefixAndSuffix(self, payloader: Payloader):
         """Check if the --prefix argument is present, and set the prefix into request parser
            Check if the --suffix argument is present, and set the suffix into request parser

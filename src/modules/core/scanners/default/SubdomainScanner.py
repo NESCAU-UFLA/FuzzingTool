@@ -25,7 +25,7 @@ class SubdomainScanner(BaseScanner):
         return result
 
     def scan(self, result: dict):
-        return self.match(result)
+        return True
 
     def getMessage(self, result: dict):
         payload = '{:<30}'.format(oh.fixPayloadToOutput(result['Payload']))

@@ -34,12 +34,10 @@ class ReflectedScanner(DataScanner):
 
     def scan(self, result: dict):
         self.__escaped[result['Request']] = False
-        if super().scan(result):
-            reflected = result['Payload'] in result['Body']
-            if not reflected:
-                self.__escaped[result['Request']] = result['Payload'] in self.__encoder.decode(result['Body'])
-            return reflected
-        return False
+        reflected = result['Payload'] in result['Body']
+        if not reflected:
+            self.__escaped[result['Request']] = result['Payload'] in self.__encoder.decode(result['Body'])
+        return reflected
     
     def getMessage(self, result: dict):
         escaped = ''

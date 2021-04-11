@@ -49,6 +49,406 @@ def banner():
               "      and should not be used in environments without legal authorization.\n")
     return banner
 
+class ApplicationManager:
+    """Class that handle with the entire application
+
+    Attributes:
+        requesters: The requesters list
+        startedTime: The time when start the fuzzing test
+        allResults: The results dictionary for each host
+    """
+    def __init__(self):
+        """Class constructor"""
+        self.requesters = []
+        self.startedTime = 0
+        self.allResults = {}
+        self.status = 429
+        self.actionByStatus = lambda status : None
+
+    def isVerboseMode(self):
+        """The verboseMode getter
+
+        @returns bool: The verbose mode flag
+        """
+        return self.verbose[0]
+
+    def main(self, argv: list):
+        """The main function.
+           Prepares the application environment and starts the fuzzing
+
+        @type argv: list
+        @param argv: The arguments given in the execution
+        """
+        if len(argv) < 2:
+            oh.print(banner())
+            oh.errorBox("Invalid format! Use -h on 2nd parameter to show the help menu.")
+        if '-h' in argv[1] or '--help' in argv[1]:
+            if '=' in argv[1]:
+                askedHelp = argv[1].split('=')[1]
+                if 'dictionaries' in askedHelp:
+                    showDictionariesHelp()
+                elif 'encoders' in askedHelp:
+                    showEncodersHelp()
+                elif 'scanners' in askedHelp:
+                    showScannersHelp()
+                else:
+                    oh.errorBox("Invalid help argument")
+            else:
+                showHelpMenu()
+            exit(0)
+        if argv[1] == '-v' or argv[1] == '--version':
+            exit(f"FuzzingTool v{version()}")
+        oh.print(banner())
+        try:
+            self.init(argv)
+            self.checkConnectionAndRedirections()
+        except KeyboardInterrupt:
+            oh.abortBox("Test aborted by the user")
+            exit(0)
+        self.start()
+
+    def init(self, argv: list):
+        """The initialization function.
+           Set the application variables including plugins requires
+
+        @type argv: list
+        @param argv: The arguments given in the execution
+        """
+        cliParser = CLIParser(argv)
+        targets = cliParser.getTargets()
+        self.globalScanner = cliParser.checkGlobalScanner()
+        self.matcher = cliParser.checkMatcher()
+        self.verbose = cliParser.checkVerboseMode()
+        self.detectStatus, action = cliParser.checkActionByStatus()
+        if self.detectStatus:
+            self.actionByStatus = self.getActionByStatus(action)
+        self.delay = cliParser.checkDelay()
+        self.numberOfThreads = cliParser.checkNumThreads()
+        cliParser.checkReporter()
+        if self.globalScanner:
+            self.globalScanner.update(self.matcher)
+            self.scanner = self.globalScanner
+            oh.setPrintResultMode(self.scanner, self.isVerboseMode())
+        cookie = cliParser.checkCookie()
+        proxy = cliParser.checkProxy()
+        proxies = cliParser.checkProxies()
+        timeout = cliParser.checkTimeout()
+        followRedirects = cliParser.checkFollowRedirects()
+        for target in targets:
+            oh.infoBox(f"Set target URL: {target['url']}")
+            oh.infoBox(f"Set request method: {target['methods']}")
+            if target['data']['PARAM'] or target['data']['BODY']:
+                oh.infoBox(f"Set request data: {str(target['data'])}")
+            requester = Request(
+                url=target['url'],
+                methods=target['methods'],
+                data=target['data'],
+                headers=target['header'],
+                followRedirects=followRedirects,
+                proxy=proxy,
+                proxies=proxies,
+            )
+            if cookie:
+                requester.setHeaderContent('Cookie', cookie)
+            if timeout:
+                requester.setTimeout(timeout)
+            self.requesters.append(requester)
+        self.dict = cliParser.getDictionary()
+        self.dictSizeof = len(self.dict)
+        if self.dictSizeof < self.numberOfThreads:
+            self.numberOfThreads = self.dictSizeof
+        cliParser.checkPrefixAndSuffix(self.dict)
+        cliParser.checkCase(self.dict)
+        cliParser.checkEncoder(self.dict)
+        if self.dict.encoder:
+            if self.globalScanner:
+                scannerPackage = importCustomPackage('scanners', type(self.globalScanner).__name__)
+                if 'without encoder' in scannerPackage.__type__:
+                    oh.errorBox(f"Scanner {scannerPackage.__name__} don't work with encoders")
+            oh.setStringfyCallback(self.dict.encoder.stringfy)
+
+    def getActionByStatus(self, action: str):
+        def skipTarget():
+            self.skipTarget = f"Status code {self.detectStatus} detected"
+
+        if 'skip' in action:
+            return skipTarget
+
+    def checkConnectionAndRedirections(self):
+        """Test the connection and redirection to target.
+           If data fuzzing is detected, check for redirections
+        """
+        for requester in self.requesters:
+            oh.infoBox(f"Checking connection and redirections on {requester.getUrl()} ...")
+            if requester.isUrlFuzzing():
+                oh.infoBox("Test mode set for URL fuzzing")
+                oh.infoBox("Testing connection ...")
+                try:
+                    requester.testConnection()
+                except RequestException as e:
+                    if oh.askYesNo('warning', f"{str(e)}. Remove this target?"):
+                        self.requesters.remove(requester)
+                else:
+                    oh.infoBox("Connection status: OK")
+            else:
+                oh.infoBox("Test mode set for data fuzzing")
+                oh.infoBox("Testing connection ...")
+                try:
+                    requester.testConnection()
+                except RequestException as e:
+                    if len(self.requesters) == 1:
+                        oh.errorBox(f"{str(e)}.")
+                    else:
+                        oh.warningBox(f"{str(e)}. Target removed from list.")
+                        self.requesters.remove(requester)
+                oh.infoBox("Connection status: OK")
+                if requester.isDataFuzzing():
+                    self.checkRedirections(requester)
+        if len(self.requesters) == 0:
+            oh.errorBox("No targets left for fuzzing")
+
+    def checkRedirections(self, requester: Request):
+        """Check the redirections for a target.
+           Perform a redirection check for each method in requester methods list
+        
+        @type requester: Request
+        @param requester: The requester for the target
+        """
+        oh.infoBox("Testing redirections ...")
+        for method in requester.methods:
+            requester.setMethod(method)
+            oh.infoBox(f"Testing with {method} method ...")
+            try:
+                if requester.hasRedirection():
+                    if oh.askYesNo('warning', "You was redirected to another page. Remove this method?"):
+                        requester.methods.remove(method)
+                        oh.infoBox(f"Method {method} removed from list")
+                else:
+                    oh.infoBox("No redirections")
+            except RequestException as e:
+                oh.warningBox(f"{str(e)}. Removing method {method}")
+        if len(requester.methods) == 0:
+            self.requesters.remove(requester)
+            oh.warningBox("No methods left on this target, removed from targets list")
+
+    def start(self):
+        """Starts the fuzzing application.
+           Each target is fuzzed based on their own methods list
+        """
+        self.startedTime = time.time()
+        self.fuzzer = None
+        try:
+            for requester in self.requesters:
+                try:
+                    self.prepareTarget(requester)
+                    oh.infoBox(f"Starting test on '{self.requester.getUrl()}' ...")
+                    for method in self.requester.methods:
+                        self.requester.resetRequestIndex()
+                        self.requester.setMethod(method)
+                        oh.infoBox(f"Set method for fuzzing: {method}")
+                        self.prepareFuzzer()
+                        if not self.isVerboseMode():
+                            oh.print("")
+                except SkipTargetException as e:
+                    oh.warningBox("Skip target detected, pausing threads ...")
+                    if self.fuzzer and self.fuzzer.isRunning():
+                        self.fuzzer.stop()
+                    oh.abortBox(f"{str(e)}. Skipping target")
+        except KeyboardInterrupt:
+            if self.fuzzer and self.fuzzer.isRunning():
+                self.fuzzer.stop()
+            oh.abortBox("Test aborted by the user")
+        finally:
+            self.showFooter()
+            oh.infoBox("Test completed")
+
+    def prepareTarget(self, requester: Request):
+        """Prepare the target variables for the fuzzing tests.
+           Both error logger and default scanners are seted
+        
+        @type requester: Request
+        @param requester: The requester for the target
+        """
+        self.requester = requester
+        targetHost = getHost(getTargetUrl(requester.getUrlDict()))
+        oh.infoBox(f"Preparing target {targetHost} ...")
+        before = time.time()
+        self.checkIgnoreErrors(targetHost)
+        self.startedTime += (time.time() - before)
+        self.results = []
+        self.allResults[targetHost] = self.results
+        self.skipTarget = False
+        if not self.globalScanner:
+            self.scanner = self.getDefaultScanner()
+            self.scanner.update(self.matcher)
+            oh.setPrintResultMode(self.scanner, self.isVerboseMode())
+            if (not self.matcher.comparatorIsSet()
+                and self.requester.isDataFuzzing()):
+                oh.infoBox("DataFuzzing detected, checking for a data comparator ...")
+                before = time.time()
+                self.scanner.setComparator(self.getDataComparator())
+                self.startedTime += (time.time() - before)
+
+    def prepareFuzzer(self):
+        """Prepare the fuzzer for the fuzzing tests.
+           Refill the dictionary with the wordlist content
+        """
+        self.dict.reload()
+        self.fuzzer = Fuzzer(
+            requester=self.requester,
+            dictionary=self.dict,
+            scanner=self.scanner,
+            delay=self.delay,
+            numberOfThreads=self.numberOfThreads,
+            resultCallback=self.resultCallback,
+            exceptionCallbacks=[self.invalidHostnameCallback, self.requestExceptionCallback],
+        )
+        self.fuzzer.start()
+        while not self.fuzzer.join():
+            if self.skipTarget:
+                raise SkipTargetException(self.skipTarget)
+
+    def resultCallback(self, result: dict, validate: bool):
+        """Callback function for the results output
+
+        @type result: dict
+        @param result: The FuzzingTool result
+        @type validate: bool
+        @param validate: A validator flag for the result, gived by the scanner
+        """
+        if self.detectStatus and result['Status'] == int(self.detectStatus):
+            self.actionByStatus()
+        if self.verbose[0]:
+            if validate:
+                self.results.append(result)
+            oh.printResult(result, validate)
+        else:
+            if validate:
+                self.results.append(result)
+                oh.printResult(result, validate)
+            oh.progressStatus(
+                f"[{result['Request']}/{self.dictSizeof}] {str(int((int(result['Request'])/self.dictSizeof)*100))}%"
+            )
+    
+    def requestExceptionCallback(self, e: RequestException):
+        """Handle with the request exceptions
+        
+        @type e: RequestException
+        @param e: The request exception
+        """
+        if self.ignoreErrors:
+            if not self.verbose[0]:
+                oh.progressStatus(
+                    f"[{self.requester.getRequestIndex()}/{self.dictSizeof}] {str(int((int(self.requester.getRequestIndex())/self.dictSizeof)*100))}%"
+                )
+            else:
+                if self.verbose[1]:
+                    oh.notWorkedBox(str(e))
+            fh.logger.write(str(e))
+        else:
+            self.skipTarget = str(e)
+
+    def invalidHostnameCallback(self, e: InvalidHostname):
+        """Handle with the subdomain hostname resolver exceptions
+        
+        @type e: InvalidHostname
+        @param e: The invalid hostname exception
+        """
+        if self.verbose[0]:
+            if self.verbose[1]:
+                oh.notWorkedBox(str(e))
+        else:
+            oh.progressStatus(
+                f"[{self.requester.getRequestIndex()}/{self.dictSizeof}] {str(int((int(self.requester.getRequestIndex())/self.dictSizeof)*100))}%"
+            )
+
+    def getDefaultScanner(self):
+        """Check what's the scanners that will be used
+        
+        @returns BaseScanner: The scanner used in the fuzzing tests
+        """
+        if self.requester.isUrlFuzzing():
+            if self.requester.isSubdomainFuzzing():
+                from .core.scanners.default.SubdomainScanner import SubdomainScanner
+                scanner = SubdomainScanner()
+            else:
+                from .core.scanners.default.PathScanner import PathScanner
+                scanner = PathScanner()
+        else:
+            from .core.scanners.default.DataScanner import DataScanner
+            scanner = DataScanner()
+        return scanner
+
+    def checkIgnoreErrors(self, host: str):
+        """Check if the user wants to ignore the errors during the tests.
+           By default, URL fuzzing (path and subdomain) ignore errors
+        
+        @type host: str
+        @param host: The target hostname
+        """
+        fh.logger.close()
+        if self.requester.isUrlFuzzing():
+            self.ignoreErrors = True
+            fh.logger.open(host)
+        else:
+            if oh.askYesNo('info', "Do you want to ignore errors on this target, and save them into a log file?"):
+                self.ignoreErrors = True
+                fh.logger.open(host)
+            else:
+                self.ignoreErrors = False
+
+    def getDataComparator(self):
+        """Check if the user wants to insert custom data comparator to validate the responses
+        
+        @returns dict: The data comparator dictionary
+        """
+        comparator = {
+            'Length': None,
+            'Time': None,
+        }
+        payload = ' ' # Set an arbitraty payload
+        oh.infoBox(f"Making first request with '{payload}' as payload ...")
+        try:
+            # Make the first request to get some info about the target
+            response = self.requester.request(payload)
+        except RequestException as e:
+            raise SkipTargetException(f"{str(e)}")
+        firstResult = self.scanner.getResult(
+            response=response
+        )
+        oh.printResult(firstResult, False)
+        defaultLength = int(firstResult['Length'])+300
+        if oh.askYesNo('info', "Do you want to exclude responses based on custom length?"):
+            length = oh.askData(f"Insert the length (default {defaultLength})")
+            if not length:
+                length = defaultLength
+            comparator['Length'] = int(length)
+        defaultTime = firstResult['Time Taken']+5.0
+        if oh.askYesNo('info', "Do you want to exclude responses based on custom time?"):
+            time = oh.askData(f"Insert the time (in seconds, default {defaultTime} seconds)")
+            if not time:
+                time = defaultTime
+            comparator['Time'] = float(time)
+        return comparator
+
+    def showFooter(self):
+        """Show the footer content of the software, after maked the fuzzing.
+           The results are shown for each target
+        """
+        if self.fuzzer:
+            if self.startedTime:
+                oh.infoBox(f"Time taken: {float('%.2f'%(time.time() - self.startedTime))} seconds")
+            for key, value in self.allResults.items():
+                if value:
+                    if self.isVerboseMode():
+                        oh.infoBox(f"Found {len(value)} matched results on target {key}:")
+                        for result in value:
+                            oh.printResult(result, True)
+                    fh.reporter.open(key)
+                    fh.reporter.write(value)
+                else:
+                    oh.infoBox(f"No matched results was found on target {key}")
+
 def showHelpMenu():
     oh.helpTitle(0, "Parameters:")
     oh.helpTitle(3, "Misc:")
@@ -138,384 +538,3 @@ def showScannersHelp():
     showCustomPackageHelp('scanners')
     oh.helpTitle(0, "Examples:\n")
     oh.print("FuzzingTool -u https://domainexample.com/search.php?query= -w /path/to/wordlist/xss.txt --scanner ReflectedScanner -t 30 -o csv\n")
-
-class ApplicationManager:
-    """Class that handle with the entire application
-
-    Attributes:
-        requesters: The requesters list
-        startedTime: The time when start the fuzzing test
-        allResults: The results dictionary for each host
-    """
-    def __init__(self):
-        """Class constructor"""
-        self.requesters = []
-        self.startedTime = 0
-        self.allResults = {}
-
-    def isVerboseMode(self):
-        """The verboseMode getter
-
-        @returns bool: The verbose mode flag
-        """
-        return self.verbose[0]
-
-    def main(self, argv: list):
-        """The main function.
-           Prepares the application environment and starts the fuzzing
-
-        @type argv: list
-        @param argv: The arguments given in the execution
-        """
-        if len(argv) < 2:
-            oh.print(banner())
-            oh.errorBox("Invalid format! Use -h on 2nd parameter to show the help menu.")
-        if '-h' in argv[1] or '--help' in argv[1]:
-            if '=' in argv[1]:
-                askedHelp = argv[1].split('=')[1]
-                if 'dictionaries' in askedHelp:
-                    showDictionariesHelp()
-                elif 'encoders' in askedHelp:
-                    showEncodersHelp()
-                elif 'scanners' in askedHelp:
-                    showScannersHelp()
-                else:
-                    oh.errorBox("Invalid help argument")
-            else:
-                showHelpMenu()
-            exit(0)
-        if argv[1] == '-v' or argv[1] == '--version':
-            exit(f"FuzzingTool v{version()}")
-        oh.print(banner())
-        try:
-            self.init(argv)
-            self.checkConnectionAndRedirections()
-        except KeyboardInterrupt:
-            oh.abortBox("Test aborted by the user")
-            exit(0)
-        self.start()
-
-    def init(self, argv: list):
-        """The initialization function.
-           Set the application variables including plugins requires
-
-        @type argv: list
-        @param argv: The arguments given in the execution
-        """
-        cliParser = CLIParser(argv)
-        targets = cliParser.getTargets()
-        self.globalScanner = cliParser.checkGlobalScanner()
-        self.matcher = cliParser.checkMatcher()
-        self.verbose = cliParser.checkVerboseMode()
-        if self.globalScanner:
-            self.globalScanner.update(self.matcher)
-            self.scanner = self.globalScanner
-            oh.setPrintResultMode(self.scanner, self.isVerboseMode())
-        cookie = cliParser.checkCookie()
-        proxy = cliParser.checkProxy()
-        proxies = cliParser.checkProxies()
-        timeout = cliParser.checkTimeout()
-        followRedirects = cliParser.checkFollowRedirects()
-        self.delay = cliParser.checkDelay()
-        self.numberOfThreads = cliParser.checkNumThreads()
-        cliParser.checkReporter()
-        for target in targets:
-            oh.infoBox(f"Set target URL: {target['url']}")
-            oh.infoBox(f"Set request method: {target['methods']}")
-            if target['data']['PARAM'] or target['data']['BODY']:
-                oh.infoBox(f"Set request data: {str(target['data'])}")
-            requester = Request(
-                url=target['url'],
-                methods=target['methods'],
-                data=target['data'],
-                headers=target['header'],
-                followRedirects=followRedirects,
-                proxy=proxy,
-                proxies=proxies,
-            )
-            if cookie:
-                requester.setHeaderContent('Cookie', cookie)
-            if timeout:
-                requester.setTimeout(timeout)
-            self.requesters.append(requester)
-        self.dict = cliParser.getDictionary()
-        self.dictSizeof = len(self.dict)
-        if self.dictSizeof < self.numberOfThreads:
-            self.numberOfThreads = self.dictSizeof
-        cliParser.checkPrefixAndSuffix(self.dict)
-        cliParser.checkCase(self.dict)
-        cliParser.checkEncoder(self.dict)
-        if self.dict.encoder:
-            if self.globalScanner:
-                scannerPackage = importCustomPackage('scanners', type(self.globalScanner).__name__)
-                if 'without encoder' in scannerPackage.__type__:
-                    oh.errorBox(f"Scanner {scannerPackage.__name__} don't work with encoders")
-            oh.setStringfyCallback(self.dict.encoder.stringfy)
-
-    def start(self):
-        """Starts the fuzzing application.
-           Each target is fuzzed based on their own methods list
-        """
-        self.startedTime = time.time()
-        self.fuzzer = None
-        try:
-            for requester in self.requesters:
-                try:
-                    self.prepareTarget(requester)
-                    oh.infoBox(f"Starting test on '{self.requester.getUrl()}' ...")
-                    for method in self.requester.methods:
-                        self.requester.resetRequestIndex()
-                        self.requester.setMethod(method)
-                        oh.infoBox(f"Set method for fuzzing: {method}")
-                        self.prepareFuzzer()
-                        self.fuzzer.start()
-                        if not self.isVerboseMode():
-                            oh.print("")
-                except SkipTargetException as e:
-                    if self.fuzzer and self.fuzzer.isRunning():
-                        self.fuzzer.stop()
-                    oh.abortBox(f"{str(e)}. Skipping target")
-        except KeyboardInterrupt:
-            if self.fuzzer and self.fuzzer.isRunning():
-                self.fuzzer.stop()
-            oh.abortBox("Test aborted by the user")
-        finally:
-            self.showFooter()
-            oh.infoBox("Test completed")
-
-    def prepareTarget(self, requester: Request):
-        """Prepare the target variables for the fuzzing tests.
-           Both error logger and default scanners are seted
-        
-        @type requester: Request
-        @param requester: The requester for the target
-        """
-        self.requester = requester
-        targetHost = getHost(getTargetUrl(requester.getUrlDict()))
-        oh.infoBox(f"Preparing target {targetHost} ...")
-        before = time.time()
-        self.checkIgnoreErrors(targetHost)
-        self.startedTime += (time.time() - before)
-        self.results = []
-        self.allResults[targetHost] = self.results
-        if not self.globalScanner:
-            self.scanner = self.getDefaultScanner()
-            self.scanner.update(self.matcher)
-            oh.setPrintResultMode(self.scanner, self.isVerboseMode())
-            if (not self.matcher.comparatorIsSet()
-                and self.requester.isDataFuzzing()):
-                oh.infoBox("DataFuzzing detected, checking for a data comparator ...")
-                before = time.time()
-                self.scanner.setComparator(self.getDataComparator())
-                self.startedTime += (time.time() - before)
-
-    def prepareFuzzer(self):
-        """Prepare the fuzzer for the fuzzing tests.
-           Refill the dictionary with the wordlist content
-        """
-        self.dict.reload()
-        self.fuzzer = Fuzzer(
-            requester=self.requester,
-            dictionary=self.dict,
-            scanner=self.scanner,
-            delay=self.delay,
-            numberOfThreads=self.numberOfThreads,
-            resultCallback=self.resultCallback,
-            exceptionCallbacks=[self.invalidHostnameCallback, self.requestExceptionCallback],
-        )
-
-    def resultCallback(self, result: dict, validate: bool):
-        """Callback function for the results output
-
-        @type result: dict
-        @param result: The FuzzingTool result
-        @type validate: bool
-        @param validate: A validator flag for the result, gived by the scanner
-        """
-        if self.verbose[0]:
-            if validate:
-                self.results.append(result)
-            oh.printResult(result, validate)
-        else:
-            if validate:
-                self.results.append(result)
-                oh.printResult(result, validate)
-            oh.progressStatus(
-                f"[{result['Request']}/{self.dictSizeof}] {str(int((int(result['Request'])/self.dictSizeof)*100))}%"
-            )
-    
-    def requestExceptionCallback(self, e: RequestException):
-        """Handle with the request exceptions
-        
-        @type e: RequestException
-        @param e: The request exception
-        """
-        if self.ignoreErrors:
-            if not self.verbose[0]:
-                oh.progressStatus(
-                    f"[{self.requester.getRequestIndex()}/{self.dictSizeof}] {str(int((int(self.requester.getRequestIndex())/self.dictSizeof)*100))}%"
-                )
-            else:
-                if self.verbose[1]:
-                    oh.notWorkedBox(str(e))
-            fh.logger.write(str(e))
-        else:
-            raise SkipTargetException(str(e))
-
-    def invalidHostnameCallback(self, e: InvalidHostname):
-        """Handle with the subdomain hostname resolver exceptions
-        
-        @type e: InvalidHostname
-        @param e: The invalid hostname exception
-        """
-        if self.verbose[0]:
-            if self.verbose[1]:
-                oh.notWorkedBox(str(e))
-        else:
-            oh.progressStatus(
-                f"[{self.requester.getRequestIndex()}/{self.dictSizeof}] {str(int((int(self.requester.getRequestIndex())/self.dictSizeof)*100))}%"
-            )
-
-    def getDefaultScanner(self):
-        """Check what's the scanners that will be used
-        
-        @returns BaseScanner: The scanner used in the fuzzing tests
-        """
-        if self.requester.isUrlFuzzing():
-            if self.requester.isSubdomainFuzzing():
-                from .core.scanners.default.SubdomainScanner import SubdomainScanner
-                scanner = SubdomainScanner()
-            else:
-                from .core.scanners.default.PathScanner import PathScanner
-                scanner = PathScanner()
-        else:
-            from .core.scanners.default.DataScanner import DataScanner
-            scanner = DataScanner()
-        return scanner
-
-    def checkConnectionAndRedirections(self):
-        """Test the connection and redirection to target.
-           If data fuzzing is detected, check for redirections
-        """
-        for requester in self.requesters:
-            oh.infoBox(f"Checking connection and redirections on {requester.getUrl()} ...")
-            if requester.isUrlFuzzing():
-                oh.infoBox("Test mode set for URL fuzzing")
-                oh.infoBox("Testing connection ...")
-                try:
-                    requester.testConnection()
-                except RequestException as e:
-                    if oh.askYesNo('warning', f"{str(e)}. Remove this target?"):
-                        self.requesters.remove(requester)
-                else:
-                    oh.infoBox("Connection status: OK")
-            else:
-                oh.infoBox("Test mode set for data fuzzing")
-                oh.infoBox("Testing connection ...")
-                try:
-                    requester.testConnection()
-                except RequestException as e:
-                    if len(self.requesters) == 1:
-                        oh.errorBox(f"{str(e)}.")
-                    else:
-                        oh.warningBox(f"{str(e)}. Target removed from list.")
-                        self.requesters.remove(requester)
-                oh.infoBox("Connection status: OK")
-                if requester.isDataFuzzing():
-                    self.checkRedirections(requester)
-        if len(self.requesters) == 0:
-            oh.errorBox("No targets left for fuzzing")
-
-    def checkRedirections(self, requester: Request):
-        """Check the redirections for a target.
-           Perform a redirection check for each method in requester methods list
-        
-        @type requester: Request
-        @param requester: The requester for the target
-        """
-        oh.infoBox("Testing redirections ...")
-        for method in requester.methods:
-            requester.setMethod(method)
-            oh.infoBox(f"Testing with {method} method ...")
-            try:
-                if requester.hasRedirection():
-                    if oh.askYesNo('warning', "You was redirected to another page. Remove this method?"):
-                        requester.methods.remove(method)
-                        oh.infoBox(f"Method {method} removed from list")
-                else:
-                    oh.infoBox("No redirections")
-            except RequestException as e:
-                oh.warningBox(f"{str(e)}. Removing method {method}")
-        if len(requester.methods) == 0:
-            self.requesters.remove(requester)
-            oh.warningBox("No methods left on this target, removed from targets list")
-
-    def checkIgnoreErrors(self, host: str):
-        """Check if the user wants to ignore the errors during the tests.
-           By default, URL fuzzing (path and subdomain) ignore errors
-        
-        @type host: str
-        @param host: The target hostname
-        """
-        fh.logger.close()
-        if self.requester.isUrlFuzzing():
-            self.ignoreErrors = True
-            fh.logger.open(host)
-        else:
-            if oh.askYesNo('info', "Do you want to ignore errors on this target, and save them into a log file?"):
-                self.ignoreErrors = True
-                fh.logger.open(host)
-            else:
-                self.ignoreErrors = False
-
-    def getDataComparator(self):
-        """Check if the user wants to insert custom data comparator to validate the responses
-        
-        @returns dict: The data comparator dictionary
-        """
-        comparator = {
-            'Length': None,
-            'Time': None,
-        }
-        payload = ' ' # Set an arbitraty payload
-        oh.infoBox(f"Making first request with '{payload}' as payload ...")
-        try:
-            # Make the first request to get some info about the target
-            response = self.requester.request(payload)
-        except RequestException as e:
-            raise SkipTargetException(f"{str(e)}")
-        firstResult = self.scanner.getResult(
-            response=response
-        )
-        oh.printResult(firstResult, False)
-        defaultLength = int(firstResult['Length'])+300
-        if oh.askYesNo('info', "Do you want to exclude responses based on custom length?"):
-            length = oh.askData(f"Insert the length (default {defaultLength})")
-            if not length:
-                length = defaultLength
-            comparator['Length'] = int(length)
-        defaultTime = firstResult['Time Taken']+5.0
-        if oh.askYesNo('info', "Do you want to exclude responses based on custom time?"):
-            time = oh.askData(f"Insert the time (in seconds, default {defaultTime} seconds)")
-            if not time:
-                time = defaultTime
-            comparator['Time'] = float(time)
-        return comparator
-
-    def showFooter(self):
-        """Show the footer content of the software, after maked the fuzzing.
-           The results are shown for each target
-        """
-        if self.fuzzer:
-            if self.startedTime:
-                oh.infoBox(f"Time taken: {float('%.2f'%(time.time() - self.startedTime))} seconds")
-            for key, value in self.allResults.items():
-                if value:
-                    if self.isVerboseMode():
-                        oh.infoBox(f"Found {len(value)} matched results on target {key}:")
-                        for result in value:
-                            oh.printResult(result, True)
-                    fh.reporter.open(key)
-                    fh.reporter.write(value)
-                else:
-                    oh.infoBox(f"No matched results was found on target {key}")

@@ -26,7 +26,7 @@ class DataScanner(BaseScanner):
         return result
 
     def scan(self, result: dict):
-        return self.match(result)
+        return True
     
     def getMessage(self, result: dict):
         result = oh.getFormatedResult(result)

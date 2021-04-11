@@ -15,6 +15,7 @@ from .scanners import *
 from ..conn.Request import Request
 from ..IO.OutputHandler import outputHandler as oh
 from ..IO.FileHandler import fileHandler as fh
+from ..exceptions.MainExceptions import SkipTargetException
 from ..exceptions.RequestExceptions import RequestException, InvalidHostname
 
 from threading import Thread, Event, Semaphore
@@ -83,35 +84,46 @@ class Fuzzer:
             """Run the threads"""
             while self.__running and not self.__dict.isEmpty():
                 payload = next(self.__dict)
-                try:
-                    for p in payload:
-                        try:
-                            result = self.__scanner.getResult(
-                                response=self.__requester.request(p)
-                            )
-                            self.__resultsCallback(result, self.__scanner.scan(result))
-                            time.sleep(self.__delay)
-                        except InvalidHostname as e:
-                            self.__exceptionCallbacks[0](e)
-                        except RequestException as e:
-                            self.__exceptionCallbacks[1](e)
-                finally:
-                    if not self.__playerHandler.isSet():
-                        self.__numberOfThreads -= 1
-                        self.__semaphoreHandler.release()
+                for p in payload:
+                    try:
+                        result = self.__scanner.getResult(
+                            response=self.__requester.request(p)
+                        )
+                        self.__resultsCallback(
+                            result,
+                            self.__scanner.scan(result) if self.__scanner.match(result) else False
+                        )
+                    except InvalidHostname as e:
+                        self.__exceptionCallbacks[0](e)
+                    except RequestException as e:
+                        self.__exceptionCallbacks[1](e)
+                    finally:
+                        time.sleep(self.__delay)
+                if not self.__playerHandler.isSet():
+                    self.__numberOfThreads -= 1
+                    self.__semaphoreHandler.release()
 
         def start():
             """Handle with threads start"""
             self.__playerHandler.set() # Awake threads
             for thread in self.__threads:
                 thread.start()
-            for thread in self.__threads:
-                thread.join()
 
         def stop():
             """Handle with threads stop"""
             self.__running = False
             self.__playerHandler.clear()
+
+        def join():
+            """Join the threads
+
+            @returns bool: A flag to say if the threads are running or not
+            """
+            for thread in self.__threads:
+                thread.join(self.__joinTimeout)
+                if thread.is_alive():
+                    return False
+            return True
 
         def setup():
             """Handle with threads setup
@@ -119,6 +131,7 @@ class Fuzzer:
             New Fuzzer Attributes:
                 threads: The list with the threads used in the application
                 running: A flag to say if the application is running or not
+                joinTimeout: The join timeout for the threads
                 playerHandler: The Event object handler - an internal flag manager for the threads
                 semaphoreHandler: The Semaphore object handler - an internal counter manager for the threads
             """
@@ -126,18 +139,21 @@ class Fuzzer:
             self.__running = True
             for i in range(self.__numberOfThreads):
                 self.__threads.append(Thread(target=run, daemon=True))
+            self.__joinTimeout = 0.001*float(self.__numberOfThreads)
             self.__playerHandler = Event()
             self.__semaphoreHandler = Semaphore(0)
             self.__playerHandler.clear() # Not necessary, but force the blocking of the threads
-        
+
         if action == 'setup': return setup()
         elif action == 'start': return start()
         elif action == 'stop': return stop()
+        elif action == 'join': return join
 
     def start(self):
         """Starts the fuzzer application"""
         self.threadHandle('setup')
         self.threadHandle('start')
+        self.join = self.threadHandle('join')
 
     def stop(self):
         """Stop the fuzzer application"""

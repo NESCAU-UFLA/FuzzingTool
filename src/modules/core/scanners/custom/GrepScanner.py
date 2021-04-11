@@ -38,9 +38,7 @@ class GrepScanner(DataScanner):
         return super().getResult(response)
 
     def scan(self, result: dict):
-        if super().scan(result):
-            return True if self.__regexer.search(result['Body']) else False
-        return False
+        return True if self.__regexer.search(result['Body']) else False
     
     def getMessage(self, result: dict):
         return super().getMessage(result)
