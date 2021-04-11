@@ -119,9 +119,9 @@ class ApplicationManager:
         self.globalScanner = cliParser.checkGlobalScanner()
         self.matcher = cliParser.checkMatcher()
         self.verbose = cliParser.checkVerboseMode()
-        self.detectStatus, action = cliParser.checkActionByStatus()
-        if self.detectStatus:
-            self.actionByStatus = self.getActionByStatus(action)
+        self.blacklistedStatus, action = cliParser.checkBlacklistedStatus()
+        if self.blacklistedStatus:
+            self.actionByStatus = self.getBlacklistedStatusAction(action)
         self.delay = cliParser.checkDelay()
         self.numberOfThreads = cliParser.checkNumThreads()
         cliParser.checkReporter()
@@ -167,12 +167,41 @@ class ApplicationManager:
                     oh.errorBox(f"Scanner {scannerPackage.__name__} don't work with encoders")
             oh.setStringfyCallback(self.dict.encoder.stringfy)
 
-    def getActionByStatus(self, action: str):
+    def getBlacklistedStatusAction(self, action: str):
+        """Get the action callback if a blacklisted status code is set
+
+        @returns Callable: A callback function for the blacklisted status code
+        """
         def skipTarget():
-            self.skipTarget = f"Status code {self.detectStatus} detected"
+            self.skipTarget = f"Status code {self.blacklistedStatus} detected"
+        
+        def wait():
+            if not self.fuzzer.isPaused():
+                if not self.isVerboseMode():
+                    oh.print("")
+                oh.warningBox(f"Status code {self.blacklistedStatus} detected. Pausing threads ...")
+                self.fuzzer.pause()
+                if not self.isVerboseMode():
+                    oh.print("")
+                oh.infoBox(f"Waiting for {self.timeToWait} seconds ...")
+                time.sleep(self.timeToWait)
+                oh.infoBox("Resuming target ...")
+                self.fuzzer.resume()
 
         if 'skip' in action:
             return skipTarget
+        if 'wait' in action:
+            try:
+                action, timeToWait = action.split('=')
+            except:
+                oh.errorBox("Must set a time to wait")
+            try:
+                self.timeToWait = float(timeToWait)
+            except:
+                oh.errorBox("Time to wait must be a number")
+            return wait
+        else:
+            oh.errorBox("Invalid type of blacklist action")
 
     def checkConnectionAndRedirections(self):
         """Test the connection and redirection to target.
@@ -250,10 +279,12 @@ class ApplicationManager:
                         if not self.isVerboseMode():
                             oh.print("")
                 except SkipTargetException as e:
-                    oh.warningBox("Skip target detected, pausing threads ...")
+                    if not self.isVerboseMode():
+                        oh.print("")
+                    oh.warningBox("Skip target detected, stopping threads ...")
                     if self.fuzzer and self.fuzzer.isRunning():
                         self.fuzzer.stop()
-                    oh.abortBox(f"{str(e)}. Skipping target")
+                    oh.abortBox(f"{str(e)}. Target skipped")
         except KeyboardInterrupt:
             if self.fuzzer and self.fuzzer.isRunning():
                 self.fuzzer.stop()
@@ -277,7 +308,7 @@ class ApplicationManager:
         self.startedTime += (time.time() - before)
         self.results = []
         self.allResults[targetHost] = self.results
-        self.skipTarget = False
+        self.skipTarget = None
         if not self.globalScanner:
             self.scanner = self.getDefaultScanner()
             self.scanner.update(self.matcher)
@@ -304,9 +335,10 @@ class ApplicationManager:
             exceptionCallbacks=[self.invalidHostnameCallback, self.requestExceptionCallback],
         )
         self.fuzzer.start()
-        while not self.fuzzer.join():
-            if self.skipTarget:
-                raise SkipTargetException(self.skipTarget)
+        while not self.dict.isEmpty():
+            while not self.fuzzer.join():
+                if self.skipTarget:
+                    raise SkipTargetException(self.skipTarget)
 
     def resultCallback(self, result: dict, validate: bool):
         """Callback function for the results output
@@ -316,19 +348,20 @@ class ApplicationManager:
         @type validate: bool
         @param validate: A validator flag for the result, gived by the scanner
         """
-        if self.detectStatus and result['Status'] == int(self.detectStatus):
+        if self.blacklistedStatus and result['Status'] == int(self.blacklistedStatus):
             self.actionByStatus()
-        if self.verbose[0]:
-            if validate:
-                self.results.append(result)
-            oh.printResult(result, validate)
         else:
-            if validate:
-                self.results.append(result)
+            if self.verbose[0]:
+                if validate:
+                    self.results.append(result)
                 oh.printResult(result, validate)
-            oh.progressStatus(
-                f"[{result['Request']}/{self.dictSizeof}] {str(int((int(result['Request'])/self.dictSizeof)*100))}%"
-            )
+            else:
+                if validate:
+                    self.results.append(result)
+                    oh.printResult(result, validate)
+                oh.progressStatus(
+                    f"[{result['Request']}/{self.dictSizeof}] {str(int((int(result['Request'])/self.dictSizeof)*100))}%"
+                )
     
     def requestExceptionCallback(self, e: RequestException):
         """Handle with the request exceptions

@@ -198,9 +198,9 @@ class CLIParser:
             return int(numThreads)
         return 1
 
-    def checkActionByStatus(self):
-        if '--status-action' in self.__argv:
-            status = self.__argv[self.__argv.index('--status-action')+1]
+    def checkBlacklistedStatus(self):
+        if '--blacklist-status' in self.__argv:
+            status = self.__argv[self.__argv.index('--blacklist-status')+1]
             if ':' in status:
                 status, action = status.split(':', 1)
                 action = action.lower()
