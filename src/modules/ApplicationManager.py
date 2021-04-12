@@ -62,8 +62,6 @@ class ApplicationManager:
         self.requesters = []
         self.startedTime = 0
         self.allResults = {}
-        self.status = 429
-        self.actionByStatus = lambda status : None
 
     def isVerboseMode(self):
         """The verboseMode getter
@@ -120,8 +118,9 @@ class ApplicationManager:
         self.matcher = cliParser.checkMatcher()
         self.verbose = cliParser.checkVerboseMode()
         self.blacklistedStatus, action = cliParser.checkBlacklistedStatus()
+        self.blacklistAction = lambda status : None
         if self.blacklistedStatus:
-            self.actionByStatus = self.getBlacklistedStatusAction(action)
+            self.blacklistAction = self.getBlacklistedStatusAction(action)
         self.delay = cliParser.checkDelay()
         self.numberOfThreads = cliParser.checkNumThreads()
         cliParser.checkReporter()
@@ -183,8 +182,8 @@ class ApplicationManager:
                 self.fuzzer.pause()
                 if not self.isVerboseMode():
                     oh.print("")
-                oh.infoBox(f"Waiting for {self.timeToWait} seconds ...")
-                time.sleep(self.timeToWait)
+                oh.infoBox(f"Waiting for {self.waitingTime} seconds ...")
+                time.sleep(self.waitingTime)
                 oh.infoBox("Resuming target ...")
                 self.fuzzer.resume()
 
@@ -196,7 +195,7 @@ class ApplicationManager:
             except:
                 oh.errorBox("Must set a time to wait")
             try:
-                self.timeToWait = float(timeToWait)
+                self.waitingTime = float(timeToWait)
             except:
                 oh.errorBox("Time to wait must be a number")
             return wait
@@ -349,7 +348,7 @@ class ApplicationManager:
         @param validate: A validator flag for the result, gived by the scanner
         """
         if self.blacklistedStatus and result['Status'] == int(self.blacklistedStatus):
-            self.actionByStatus()
+            self.blacklistAction()
         else:
             if self.verbose[0]:
                 if validate:
@@ -516,6 +515,7 @@ def showHelpMenu():
     oh.helpContent(5, "--delay DELAY", "Define the delay between each request (in seconds)")
     oh.helpContent(5, "-t NUMBEROFTHREADS", "Define the number of threads used in the tests")
     oh.helpContent(5, "-o REPORT", "Define the report format (accept txt, csv and json)")
+    oh.helpContent(5, "--blacklist-status STATUS:ACTION", "Blacklist a status code from response, and take an action when is detected. Available actions: skip (to skip the current target), wait=SECONDS (to pause the app for some seconds)")
     oh.helpTitle(0, "Examples:\n")
     oh.print("FuzzingTool -u http://127.0.0.1/post.php?id= -w /path/to/wordlist/sqli.txt -Mt 20 -Mc 500-600 -t 30 -o fuzzingGet.csv\n")
     oh.print("FuzzingTool -w /path/to/wordlist/sqli.txt -u http://127.0.0.1/controller/user.php -d 'login&passw&user=login' -Ms 1200\n")
