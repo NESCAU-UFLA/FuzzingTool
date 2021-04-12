@@ -25,8 +25,8 @@ class Payloader:
     def __init__(self):
         """Class constructor"""
         self.encoder = None
-        self.__prefix = []
-        self.__suffix = []
+        self._prefix = []
+        self._suffix = []
         self.__case = lambda ajustedPayload : ajustedPayload
         self.__encode = lambda ajustedPayload : ajustedPayload
 
@@ -36,7 +36,7 @@ class Payloader:
         @type prefix: list
         @param prefix: The prefix used in the payload
         """
-        self.__prefix = prefix
+        self._prefix = prefix
     
     def setSuffix(self, suffix: list):
         """The suffix setter
@@ -44,7 +44,7 @@ class Payloader:
         @type suffix: list
         @param suffix: The suffix used in the payload
         """
-        self.__suffix = suffix
+        self._suffix = suffix
 
     def setUppecase(self):
         """The uppercase setter"""
@@ -75,8 +75,8 @@ class Payloader:
         @returns list: The payloads used in the request
         """
         ajustedPayload = [payload]
-        if self.__prefix:
-            ajustedPayload = [(prefix+payload) for prefix in self.__prefix for payload in ajustedPayload]
-        if self.__suffix:
-            ajustedPayload = [(payload+suffix) for suffix in self.__suffix for payload in ajustedPayload]
+        if self._prefix:
+            ajustedPayload = [(prefix+payload) for prefix in self._prefix for payload in ajustedPayload]
+        if self._suffix:
+            ajustedPayload = [(payload+suffix) for suffix in self._suffix for payload in ajustedPayload]
         return self.__encode(self.__case(ajustedPayload))

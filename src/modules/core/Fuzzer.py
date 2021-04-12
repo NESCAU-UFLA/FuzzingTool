@@ -109,6 +109,8 @@ class Fuzzer:
                         self.__exceptionCallbacks[1](e)
                     finally:
                         time.sleep(self.__delay)
+                if self.isPaused():
+                    self.__runningThreads -= 1
 
         def start():
             """Handle with threads start"""
@@ -118,14 +120,14 @@ class Fuzzer:
 
         def resume():
             """Handle with the threads resume"""
+            self.__runningThreads = self.__numberOfThreads
             self.__playerHandler.set()
 
         def pause():
             """Handle with the threads pause"""
             self.__playerHandler.clear()
-            for thread in self.__threads:
-                if thread.is_alive():
-                    pass
+            while self.__runningThreads > 1:
+                pass
             time.sleep(0.1)
 
         def join():
@@ -144,12 +146,14 @@ class Fuzzer:
             
             New Fuzzer Attributes:
                 threads: The list with the threads used in the application
+                runningThreads: The running threads count
                 joinTimeout: The join timeout for the threads
                 playerHandler: The Event object handler - an internal flag manager for the threads
             """
             self.__threads = []
             for i in range(self.__numberOfThreads):
                 self.__threads.append(Thread(target=run, daemon=True))
+            self.__runningThreads = self.__numberOfThreads
             self.__joinTimeout = 0.001*float(self.__numberOfThreads)
             self.__playerHandler = Event()
             self.__playerHandler.clear() # Not necessary, but force the blocking of the threads

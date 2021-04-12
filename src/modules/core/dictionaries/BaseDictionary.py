@@ -39,7 +39,13 @@ class BaseDictionary(Payloader):
 
         @returns int: The wordlist length
         """
-        return len(self._wordlist)
+        lengthPrefix = len(self._prefix)
+        if lengthPrefix == 0:
+            lengthPrefix = 1
+        lengthSuffix = len(self._suffix)
+        if lengthSuffix == 0:
+            lengthSuffix = 1
+        return (len(self._wordlist)*lengthSuffix*lengthPrefix)
 
     def isEmpty(self):
         """The payloads empty queue flag getter

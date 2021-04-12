@@ -154,10 +154,10 @@ class ApplicationManager:
                 requester.setTimeout(timeout)
             self.requesters.append(requester)
         self.dict = cliParser.getDictionary()
+        cliParser.checkPrefixAndSuffix(self.dict)
         self.dictSizeof = len(self.dict)
         if self.dictSizeof < self.numberOfThreads:
             self.numberOfThreads = self.dictSizeof
-        cliParser.checkPrefixAndSuffix(self.dict)
         cliParser.checkCase(self.dict)
         cliParser.checkEncoder(self.dict)
         if self.dict.encoder:
