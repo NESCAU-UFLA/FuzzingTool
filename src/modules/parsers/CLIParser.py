@@ -199,6 +199,10 @@ class CLIParser:
         return 1
 
     def checkBlacklistedStatus(self):
+        """Check if the --blacklist-status argument is present, and set the blacklisted status and action
+
+        @returns tuple(list, str): The tuple with the status list and action
+        """
         if '--blacklist-status' in self.__argv:
             status = self.__argv[self.__argv.index('--blacklist-status')+1]
             if ':' in status:

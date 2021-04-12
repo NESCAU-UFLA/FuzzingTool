@@ -516,7 +516,7 @@ def showHelpMenu():
     oh.helpContent(5, "--delay DELAY", "Define the delay between each request (in seconds)")
     oh.helpContent(5, "-t NUMBEROFTHREADS", "Define the number of threads used in the tests")
     oh.helpContent(5, "-o REPORT", "Define the report format (accept txt, csv and json)")
-    oh.helpContent(5, "--blacklist-status STATUS:ACTION", "Blacklist a status code from response, and take an action when is detected. Available actions: skip (to skip the current target), wait=SECONDS (to pause the app for some seconds)")
+    oh.helpContent(5, "--blacklist-status STATUS:ACTION", "Blacklist status codes from response, and take an action when one is detected. Available actions: skip (to skip the current target), wait=SECONDS (to pause the app for some seconds)")
     oh.helpTitle(0, "Examples:\n")
     oh.print("FuzzingTool -u http://127.0.0.1/post.php?id= -w /path/to/wordlist/sqli.txt -Mt 20 -Mc 500-600 -t 30 -o fuzzingGet.csv\n")
     oh.print("FuzzingTool -w /path/to/wordlist/sqli.txt -u http://127.0.0.1/controller/user.php -d 'login&passw&user=login' -Ms 1200\n")
