@@ -42,7 +42,7 @@ Reach out the user's manual (command list and usage examples) on our <a href="ht
 We use <a target="_blank" href="https://semver.org/">SemVer</a> for versioning. For the versions available, see the <a target="_blank" href="https://github.com/NESCAU-UFLA/FuzzingTool/releases">tags on this repository</a>.
 
 ## Authors
- * <b>Vitor Oriel</b> - <a target="_blank" href="https://github.com/VitorOriel">Profile</a>
+ * <b>Vitor Oriel</b> (vitorwixmix@gmail.com) - <a target="_blank" href="https://github.com/VitorOriel">Profile</a>
 
 ## Contributors
  * <a target="_blank" href="#"><b>Gabriel Prestes</b></a>: Designed the logo
