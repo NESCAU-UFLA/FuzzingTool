@@ -171,14 +171,14 @@ class ApplicationManager:
 
         @returns Callable: A callback function for the blacklisted status code
         """
-        def skipTarget():
-            self.skipTarget = f"Status code {self.blacklistedStatus} detected"
+        def skipTarget(status: int):
+            self.skipTarget = f"Status code {str(status)} detected"
         
-        def wait():
+        def wait(status: int):
             if not self.fuzzer.isPaused():
                 if not self.isVerboseMode():
                     oh.print("")
-                oh.warningBox(f"Status code {self.blacklistedStatus} detected. Pausing threads ...")
+                oh.warningBox(f"Status code {str(status)} detected. Pausing threads ...")
                 self.fuzzer.pause()
                 if not self.isVerboseMode():
                     oh.print("")
@@ -312,8 +312,8 @@ class ApplicationManager:
             self.scanner = self.getDefaultScanner()
             self.scanner.update(self.matcher)
             oh.setPrintResultMode(self.scanner, self.isVerboseMode())
-            if (not self.matcher.comparatorIsSet()
-                and self.requester.isDataFuzzing()):
+            if (self.requester.isDataFuzzing() and
+                not self.matcher.comparatorIsSet()):
                 oh.infoBox("DataFuzzing detected, checking for a data comparator ...")
                 before = time.time()
                 self.scanner.setComparator(self.getDataComparator())
@@ -347,8 +347,8 @@ class ApplicationManager:
         @type validate: bool
         @param validate: A validator flag for the result, gived by the scanner
         """
-        if self.blacklistedStatus and result['Status'] == int(self.blacklistedStatus):
-            self.blacklistAction()
+        if self.blacklistedStatus and result['Status'] in self.blacklistedStatus:
+            self.blacklistAction(result['Status'])
         else:
             if self.verbose[0]:
                 if validate:

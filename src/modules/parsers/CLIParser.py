@@ -206,12 +206,16 @@ class CLIParser:
                 action = action.lower()
             else:
                 action = 'skip'
+            if ',' in status:
+                statusList = status.split(',')
+            else:
+                statusList = [status]
             try:
-                int(status)
+                statusList = [int(status) for status in statusList]
             except:
                 oh.errorBox("Status code must be an integer")
-            return (status, action)
-        return (None, None)
+            return (statusList, action)
+        return ([], None)
 
     def checkPrefixAndSuffix(self, payloader: Payloader):
         """Check if the --prefix argument is present, and set the prefix into request parser

@@ -90,26 +90,25 @@ class Fuzzer:
         def run():
             """Run the threads"""
             while self.__running and not self.__dict.isEmpty():
-                if not self.__paused:
-                    payload = next(self.__dict)
-                    for p in payload:
-                        try:
-                            result = self.__scanner.getResult(
-                                response=self.__requester.request(p)
-                            )
-                            self.__resultsCallback(
-                                result,
-                                self.__scanner.scan(result) if self.__scanner.match(result) else False
-                            )
-                        except InvalidHostname as e:
-                            self.__exceptionCallbacks[0](e)
-                        except RequestException as e:
-                            self.__exceptionCallbacks[1](e)
-                        finally:
-                            time.sleep(self.__delay)
+                self.__playerHandler.wait()
+                payload = next(self.__dict)
+                for p in payload:
+                    try:
+                        result = self.__scanner.getResult(
+                            response=self.__requester.request(p)
+                        )
+                        self.__resultsCallback(
+                            result,
+                            self.__scanner.scan(result) if self.__scanner.match(result) else False
+                        )
+                    except InvalidHostname as e:
+                        self.__exceptionCallbacks[0](e)
+                    except RequestException as e:
+                        self.__exceptionCallbacks[1](e)
+                    finally:
+                        time.sleep(self.__delay)
                 if not self.__playerHandler.isSet():
                     self.__threadsRunning -= 1
-                    self.__semaphoreHandler.release()
 
         def start():
             """Handle with threads start"""
@@ -121,23 +120,22 @@ class Fuzzer:
             """Handle with threads stop"""
             self.__running = False
             self.__playerHandler.clear()
+            while self.__threadsRunning > 1:
+                pass
+            time.sleep(0.1)
 
         def resume():
             """Handle with the threads resume"""
             self.__playerHandler.set()
             self.__threadsRunning = self.__numberOfThreads
             self.__paused = False
-            self.__semaphoreHandler.release()
 
         def pause():
             """Handle with the threads pause"""
             self.__paused = True
-            if self.__numberOfThreads > 1:
-                self.__playerHandler.clear()
-                for thread in self.__threads:
-                    if thread.is_alive():
-                        self.__semaphoreHandler.acquire()
-                        time.sleep(self.__joinTimeout)
+            self.__playerHandler.clear()
+            while self.__threadsRunning > 1:
+                pass
 
         def join():
             """Join the threads
@@ -158,7 +156,6 @@ class Fuzzer:
                 running: A flag to say if the application is running or not
                 joinTimeout: The join timeout for the threads
                 playerHandler: The Event object handler - an internal flag manager for the threads
-                semaphoreHandler: The Semaphore object handler - an internal counter manager for the threads
             """
             self.__paused = False
             self.__threadsRunning = self.__numberOfThreads
@@ -168,7 +165,6 @@ class Fuzzer:
                 self.__threads.append(Thread(target=run, daemon=True))
             self.__joinTimeout = 0.001*float(self.__numberOfThreads)
             self.__playerHandler = Event()
-            self.__semaphoreHandler = Semaphore(0)
             self.__playerHandler.clear() # Not necessary, but force the blocking of the threads
 
         if action == 'setup': return setup()
@@ -187,9 +183,6 @@ class Fuzzer:
     def stop(self):
         """Stop the fuzzer application"""
         self.threadHandle('stop')
-        while self.__threadsRunning > 1:
-            pass
-        time.sleep(0.1)
     
     def resume(self):
         """Resume the fuzzer application"""
@@ -198,5 +191,3 @@ class Fuzzer:
     def pause(self):
         """Pause the fuzzer application"""
         self.threadHandle('pause')
-        while self.__threadsRunning > 0:
-            pass
