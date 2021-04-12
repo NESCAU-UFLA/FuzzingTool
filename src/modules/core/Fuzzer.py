@@ -116,13 +116,6 @@ class Fuzzer:
             for thread in self.__threads:
                 thread.start()
 
-        def stop():
-            """Handle with threads stop"""
-            self.__playerHandler.clear()
-            while self.__threadsRunning > 1:
-                pass
-            time.sleep(0.1)
-
         def resume():
             """Handle with the threads resume"""
             self.__playerHandler.set()
@@ -133,6 +126,7 @@ class Fuzzer:
             self.__playerHandler.clear()
             while self.__threadsRunning > 1:
                 pass
+            time.sleep(0.01)
 
         def join():
             """Join the threads
@@ -165,7 +159,7 @@ class Fuzzer:
 
         if action == 'setup': return setup()
         elif action == 'start': return start()
-        elif action == 'stop': return stop()
+        elif action == 'stop': return pause()
         elif action == 'join': return join
         elif action == 'resume': return resume()
         elif action == 'pause': return pause()

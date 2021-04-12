@@ -278,14 +278,15 @@ class ApplicationManager:
                         if not self.isVerboseMode():
                             oh.print("")
                 except SkipTargetException as e:
-                    if not self.isVerboseMode():
-                        oh.print("")
-                    oh.warningBox("Skip target detected, stopping threads ...")
                     if self.fuzzer and self.fuzzer.isRunning():
+                        if not self.isVerboseMode():
+                            oh.print("")
+                        oh.warningBox("Skip target detected, stopping threads ...")
                         self.fuzzer.stop()
                     oh.abortBox(f"{str(e)}. Target skipped")
         except KeyboardInterrupt:
             if self.fuzzer and self.fuzzer.isRunning():
+                oh.abortBox("Test aborted, stopping threads ...")
                 self.fuzzer.stop()
             oh.abortBox("Test aborted by the user")
         finally:
