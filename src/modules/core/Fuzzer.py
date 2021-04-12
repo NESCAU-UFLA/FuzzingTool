@@ -78,7 +78,7 @@ class Fuzzer:
 
         @returns bool: The paused flag
         """
-        return self.__paused
+        return not self.__playerHandler.isSet()
 
     def threadHandle(self, action: str):
         """Function that handle with all of the threads functions and atributes
@@ -118,7 +118,6 @@ class Fuzzer:
 
         def stop():
             """Handle with threads stop"""
-            self.__running = False
             self.__playerHandler.clear()
             while self.__threadsRunning > 1:
                 pass
@@ -128,11 +127,9 @@ class Fuzzer:
             """Handle with the threads resume"""
             self.__playerHandler.set()
             self.__threadsRunning = self.__numberOfThreads
-            self.__paused = False
 
         def pause():
             """Handle with the threads pause"""
-            self.__paused = True
             self.__playerHandler.clear()
             while self.__threadsRunning > 1:
                 pass
@@ -157,7 +154,6 @@ class Fuzzer:
                 joinTimeout: The join timeout for the threads
                 playerHandler: The Event object handler - an internal flag manager for the threads
             """
-            self.__paused = False
             self.__threadsRunning = self.__numberOfThreads
             self.__threads = []
             self.__running = True
