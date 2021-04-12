@@ -90,15 +90,15 @@ class OutputHandler:
             self.__lock = threading.Lock()
             self.__breakLine = '\n'
 
-    def setPrintResultMode(self, scanner: object):
+    def setPrintResultMode(self, getMessageCallback: Callable):
         """Set the print content mode for the results
 
-        @type scanner: object
-        @param scanner: The subdomain fuzzing flag
+        @type getMessageCallback: Callable
+        @param getMessageCallback: The get message callback for the results
         """
         self.printResult = self.printForBoxMode
         try:
-            self.__getMessage = scanner.getMessage
+            self.__getMessage = getMessageCallback
         except NotImplementedError as e:
             exit(str(e))
 

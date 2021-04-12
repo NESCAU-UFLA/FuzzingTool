@@ -128,7 +128,7 @@ class ApplicationManager:
         if self.globalScanner:
             self.globalScanner.update(self.matcher)
             self.scanner = self.globalScanner
-            oh.setPrintResultMode(self.scanner, self.isVerboseMode())
+            oh.setPrintResultMode(self.scanner.getMessage)
         cookie = cliParser.checkCookie()
         proxy = cliParser.checkProxy()
         proxies = cliParser.checkProxies()
@@ -313,7 +313,7 @@ class ApplicationManager:
         if not self.globalScanner:
             self.scanner = self.getDefaultScanner()
             self.scanner.update(self.matcher)
-            oh.setPrintResultMode(self.scanner)
+            oh.setPrintResultMode(self.scanner.getMessage)
             if (self.requester.isDataFuzzing() and
                 not self.matcher.comparatorIsSet()):
                 oh.infoBox("DataFuzzing detected, checking for a data comparator ...")
