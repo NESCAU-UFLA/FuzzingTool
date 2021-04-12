@@ -51,7 +51,6 @@ class OutputHandler:
     """
     Attributes:
         lastInline: A flag to say if the last output was inline or not
-        lock: The threads locker
         info: The info label
         warning: The warning label
         error: The error label
@@ -66,7 +65,6 @@ class OutputHandler:
         else:
             OutputHandler.__instance = self
         self.__lastInline = False
-        self.__lock = threading.Lock()
         self.__info = f'{Colors.GRAY}[{Colors.BLUE_GRAY}INFO{Colors.GRAY}]{Colors.RESET} '
         self.__warning = f'{Colors.GRAY}[{Colors.YELLOW}WARNING{Colors.GRAY}]{Colors.RESET} '
         self.__error = f'{Colors.GRAY}[{Colors.RED}ERROR{Colors.GRAY}]{Colors.RESET} '
@@ -75,16 +73,29 @@ class OutputHandler:
         self.__notWorked = f'{Colors.GRAY}[{Colors.RED}-{Colors.GRAY}]{Colors.RESET} '
         self.__stringfy = lambda payload : payload
 
-    def setPrintResultMode(self, scanner: object, verboseMode: bool):
-        """Set the print content mode by the Fuzzer responses
+    def setVerbosityOutput(self, verboseMode: bool):
+        """Set the output verbosity mode
 
-        @type scanner: object
-        @param scanner: The subdomain fuzzing flag
+        Attributes:
+            breakLine: A string to break line
+            lock: The threads locker
+
         @type verboseMode: bool
         @param verboseMode: The verbose mode flag
         """
         if verboseMode:
             self.__lock = None
+            self.__breakLine = ''
+        else:
+            self.__lock = threading.Lock()
+            self.__breakLine = '\n'
+
+    def setPrintResultMode(self, scanner: object):
+        """Set the print content mode for the results
+
+        @type scanner: object
+        @param scanner: The subdomain fuzzing flag
+        """
         self.printResult = self.printForBoxMode
         try:
             self.__getMessage = scanner.getMessage
@@ -132,7 +143,7 @@ class OutputHandler:
         if self.__lock:
             with self.__lock:
                 sys.stdout.flush()
-        print(f'\n{self.__getTime()}{self.__getAbort(msg)}')
+        print(f'{self.__breakLine}{self.__getTime()}{self.__getAbort(msg)}')
 
     def workedBox(self, msg: str):
         """Print the message with worked label and a message

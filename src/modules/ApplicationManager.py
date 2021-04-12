@@ -117,6 +117,7 @@ class ApplicationManager:
         self.globalScanner = cliParser.checkGlobalScanner()
         self.matcher = cliParser.checkMatcher()
         self.verbose = cliParser.checkVerboseMode()
+        oh.setVerbosityOutput(self.isVerboseMode())
         self.blacklistedStatus, action = cliParser.checkBlacklistedStatus()
         self.blacklistAction = lambda status : None
         if self.blacklistedStatus:
@@ -312,7 +313,7 @@ class ApplicationManager:
         if not self.globalScanner:
             self.scanner = self.getDefaultScanner()
             self.scanner.update(self.matcher)
-            oh.setPrintResultMode(self.scanner, self.isVerboseMode())
+            oh.setPrintResultMode(self.scanner)
             if (self.requester.isDataFuzzing() and
                 not self.matcher.comparatorIsSet()):
                 oh.infoBox("DataFuzzing detected, checking for a data comparator ...")

@@ -31,6 +31,7 @@ class Fuzzer:
         numberOfThreads: The number of threads used in the application
         scanner: A scanner object, used to validate the results
         dict: The dictionary object to handle with the payloads
+        running: A flag to say if the application is running or not
     """
     def __init__(self,
         requester: Request,
@@ -65,6 +66,7 @@ class Fuzzer:
         self.__dict = dictionary
         self.__resultsCallback = resultCallback
         self.__exceptionCallbacks = exceptionCallbacks
+        self.__running = True
 
     def isRunning(self):
         """The running flag getter
@@ -89,7 +91,7 @@ class Fuzzer:
         """
         def run():
             """Run the threads"""
-            while self.__running and not self.__dict.isEmpty():
+            while not self.__dict.isEmpty():
                 self.__playerHandler.wait()
                 payload = next(self.__dict)
                 for p in payload:
@@ -107,8 +109,6 @@ class Fuzzer:
                         self.__exceptionCallbacks[1](e)
                     finally:
                         time.sleep(self.__delay)
-                if not self.__playerHandler.isSet():
-                    self.__threadsRunning -= 1
 
         def start():
             """Handle with threads start"""
@@ -119,14 +119,14 @@ class Fuzzer:
         def resume():
             """Handle with the threads resume"""
             self.__playerHandler.set()
-            self.__threadsRunning = self.__numberOfThreads
 
         def pause():
             """Handle with the threads pause"""
             self.__playerHandler.clear()
-            while self.__threadsRunning > 1:
-                pass
-            time.sleep(0.01)
+            for thread in self.__threads:
+                if thread.is_alive():
+                    pass
+            time.sleep(0.1)
 
         def join():
             """Join the threads
@@ -144,13 +144,10 @@ class Fuzzer:
             
             New Fuzzer Attributes:
                 threads: The list with the threads used in the application
-                running: A flag to say if the application is running or not
                 joinTimeout: The join timeout for the threads
                 playerHandler: The Event object handler - an internal flag manager for the threads
             """
-            self.__threadsRunning = self.__numberOfThreads
             self.__threads = []
-            self.__running = True
             for i in range(self.__numberOfThreads):
                 self.__threads.append(Thread(target=run, daemon=True))
             self.__joinTimeout = 0.001*float(self.__numberOfThreads)
@@ -172,6 +169,7 @@ class Fuzzer:
 
     def stop(self):
         """Stop the fuzzer application"""
+        self.__running = False
         self.threadHandle('stop')
     
     def resume(self):
