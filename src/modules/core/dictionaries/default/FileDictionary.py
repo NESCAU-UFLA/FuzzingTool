@@ -21,4 +21,7 @@ class FileDictionary(BaseDictionary):
         super().__init__()
 
     def setWordlist(self, sourceParam: str):
-        self._wordlist = set(fh.read(sourceParam))
+        try:
+            self._wordlist = set(fh.read(sourceParam))
+        except Exception as e:
+            raise e

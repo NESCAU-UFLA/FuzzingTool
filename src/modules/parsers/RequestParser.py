@@ -68,12 +68,6 @@ class RequestParser:
 
         @returns dict: The target URL dictionary
         """
-        if '://' not in url:
-            # No schema was defined, default protocol http
-            url = f'http://{url}'
-        if '/' not in getUrlWithoutScheme(url):
-            # Insert a base path if wasn't specified
-            url += '/'
         url = {
             'content': url,
             'fuzzingIndexes': getIndexesToParse(url)

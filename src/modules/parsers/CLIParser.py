@@ -10,7 +10,7 @@
 #
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
-from .RequestParser import getHost, getTargetUrl
+from .RequestParser import getHost, getTargetUrl, getUrlWithoutScheme
 from ..utils.utils import getIndexesToParse, getCustomPackageNames, importCustomPackage
 from ..core.Fuzzer import Fuzzer
 from ..core.dictionaries import *
@@ -55,9 +55,10 @@ class CLIParser:
                 oh.errorBox("At least a target URL is needed to make the fuzzing")
             if '-X' in self.__argv:
                 method = self.__argv[self.__argv.index('-X')+1]
-                customMethods = [method]
                 if ',' in method:
                     customMethods = method.split(',')
+                else:
+                    customMethods = [method]
             else:
                 customMethods = []
             for i in urlIndexes:
@@ -138,7 +139,10 @@ class CLIParser:
         if '--proxies' in self.__argv:
             proxiesFileName = self.__argv[self.__argv.index('--proxies')+1]
             oh.infoBox(f"Loading proxies from file '{proxiesFileName}' ...")
-            proxies = fh.read(proxiesFileName)
+            try:
+                proxies = fh.read(proxiesFileName)
+            except Exception as e:
+                oh.errorBox(str(e))
             return [{
                 'http': f"http://{proxy}",
                 'https': f"https://{proxy}",
@@ -409,7 +413,10 @@ class CLIParser:
         @param i: The index of the raw filename on terminal
         @returns tuple(str, list, dict, dict): The default parameters of the requests
         """
-        headerList = deque(fh.read(self.__argv[i]))
+        try:
+            headerList = deque(fh.read(self.__argv[i]))
+        except Exception as e:
+            oh.errorBox(str(e))
         method, path, httpVer = headerList.popleft().split(' ')
         if ',' in method:
             methods = method.split(',')
@@ -442,6 +449,12 @@ class CLIParser:
         @returns tuple(str, list, dict): The tuple with the new target URL, the request method and params
         """
         url = self.__argv[i]
+        if '://' not in url:
+            # No schema was defined, default protocol http
+            url = f'http://{url}'
+        if '/' not in getUrlWithoutScheme(url):
+            # Insert a base path if wasn't specified
+            url += '/'
         data = {
             'PARAM': '',
             'BODY': '',

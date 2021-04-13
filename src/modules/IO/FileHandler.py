@@ -33,6 +33,7 @@ class Logger:
         
         @type host: str
         @param host: The target hostname
+        @returns str: The log path and name
         """
         now = datetime.now()
         logFileName = f'log-{now.strftime("%Y-%m-%d_%H:%M")}.log'
@@ -43,8 +44,7 @@ class Logger:
         except FileNotFoundError:
             Path(logDir).mkdir(parents=True, exist_ok=True)
             self.__file = open(logFullPath, 'w')
-        finally:
-            oh.infoBox(f'The logs will be saved on \'{logFullPath}\'')
+        return logFullPath
 
     def write(self, exception: str):
         """Write the exception on the log file
@@ -83,6 +83,7 @@ class Reporter:
         
         @type host: str
         @param host: The target hostname
+        @returns str: The report path and name
         """
         reportType = self.__metadata['Type']
         reportName = self.__metadata['Name']
@@ -96,8 +97,7 @@ class Reporter:
         except FileNotFoundError:
             Path(reportDir).mkdir(parents=True, exist_ok=True)
             self.__file = open(reportFullPath, 'w')
-        finally:
-            oh.infoBox(f'Saving results for {host} on \'{reportFullPath}\' ...')
+        return reportFullPath
 
     def write(self, results: dict):
         """Write the vulnerable input and response content into a report
@@ -112,7 +112,6 @@ class Reporter:
         elif self.__metadata['Type'] == 'json':
             self.__jsonWriter(results)
         self.__file.close()
-        oh.infoBox('Results saved')
 
     def __txtWriter(self, reportContent: list):
         """The txt report writer
@@ -161,10 +160,8 @@ class FileHandler:
 
     """
     Attributes:
-        wordlistFile: The wordlist file
-        report: The report format and name dict
-        reportFile: The report file
-        logFile: The log file
+        logger: The object that handles with the log files
+        reporter: The object that handles with the report files
     """
     def __init__(self):
         if FileHandler.__instance != None:
@@ -173,7 +170,6 @@ class FileHandler:
             FileHandler.__instance = self
         self.logger = Logger()
         self.reporter = Reporter()
-        self.__wordlistFile = None
 
     def read(self, fileName: str):
         """Reads content of a file.
@@ -186,6 +182,6 @@ class FileHandler:
             with open(f'{fileName}', 'r') as thisFile:
                 return [data.rstrip('\n') for data in thisFile]
         except FileNotFoundError:
-            oh.errorBox(f"File '{fileName}' not found.")
+            raise Exception(f"File '{fileName}' not found.")
 
 fileHandler = FileHandler.getInstance()

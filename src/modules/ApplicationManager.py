@@ -422,11 +422,13 @@ class ApplicationManager:
         fh.logger.close()
         if self.requester.isUrlFuzzing():
             self.ignoreErrors = True
-            fh.logger.open(host)
+            logPath = fh.logger.open(host)
+            oh.infoBox(f'The logs will be saved on \'{logPath}\'')
         else:
             if oh.askYesNo('info', "Do you want to ignore errors on this target, and save them into a log file?"):
                 self.ignoreErrors = True
-                fh.logger.open(host)
+                logPath = fh.logger.open(host)
+                oh.infoBox(f'The logs will be saved on \'{logPath}\'')
             else:
                 self.ignoreErrors = False
 
@@ -477,8 +479,10 @@ class ApplicationManager:
                         oh.infoBox(f"Found {len(value)} matched results on target {key}:")
                         for result in value:
                             oh.printResult(result, True)
-                    fh.reporter.open(key)
+                    reportPath = fh.reporter.open(key)
+                    oh.infoBox(f'Saving results for {key} on \'{reportPath}\' ...')
                     fh.reporter.write(value)
+                    oh.infoBox('Results saved')
                 else:
                     oh.infoBox(f"No matched results was found on target {key}")
 
