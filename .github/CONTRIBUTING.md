@@ -16,7 +16,7 @@ You can contribute for FuzzingTool project with:
 ### Code guidelines
 If you want to code contribute for FuzzingTool, follow this guideline:
  * Variable names must be cohesive with the context. Do not drop variable names like `x, y, z`;
- * Every function or method must have a description about it on comments, with the parameters and the return (if it has). An exception are for the methods that already have their meanings builded in (like class constructors if no parameters are passed, and destructors), and overriding methods. See this example:
+ * Every function or method must have a description about it on comments, with the parameters and the return (if it has). An exception is for the methods that already have their meanings builded in (like class constructors if no parameters are passed, and destructors), and overriding methods. See this example:
  ```py
 def concatenate(paramOne: int, paramTwo: str):
     """Concatenates the first parameter into the second parameter
@@ -29,7 +29,7 @@ def concatenate(paramOne: int, paramTwo: str):
     """
     return f"{str(paramOne)}{paramTwo}"
  ```
- * Every class attribute that are being initialized on the constructor, must have an description. If you want to include a description for attributes that are outside of the constructor, just put it inside the respectived method that are being called. For example:
+ * Every class attribute that are being initialized on the constructor, must have an description. If you want to include a description for attributes that are outside of the constructor, just put inside the respectived method that are being called. For example:
  ```py
 class Foo:
     """Class that handles with Foo
@@ -61,4 +61,4 @@ class Foo:
         self.counter += 1
         self.sumBuffer = self._varOne + self.__varTwo
  ```
- * Do not leave blank lines when inside a function or method, just to separate between each classe, method or function.
+ * Do not leave blank lines when inside a function or method, just to separate between each class, method or function.
