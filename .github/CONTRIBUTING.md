@@ -7,6 +7,9 @@ Read our document [BUG_REPORT.md](https://github.com/NESCAU-UFLA/FuzzingTool/blo
 ## Feature Request
 Read our document [FEATURE_REQUEST.md](https://github.com/NESCAU-UFLA/FuzzingTool/blob/master/.github/ISSUE_TEMPLATE/FEATURE_REQUEST.md) to check the issue template for request a feature.
 
+## Wordlist contributing
+Feel free to conribute to our [wordlists](https://github.com/NESCAU-UFLA/FuzzingTool/tree/master/wordlists). Just remember to update the file header with your name as contributor.
+
 ## Code contributing
 You can contribute for FuzzingTool project with:
  * Code refatoring (better encapsulation, for example);
