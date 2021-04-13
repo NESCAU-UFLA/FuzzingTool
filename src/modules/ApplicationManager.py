@@ -39,10 +39,10 @@ def version():
     return version
 
 def banner():
-    banner = ("\033[36m   ____                        _____       _"+'\n'+
-              "\033[36m  |  __|_ _ ___ ___ _ ___ ___ |_   _|_ ___| |"+"\033[0m Version "+version()+'\n'+
-              "\033[36m  |  __| | |- _|- _|'|   | . |  | | . | . | |"+'\n'+
-              "\033[36m  |_|  |___|___|___|_|_|_|_  |  |_|___|___|_|"+'\n'+
+    banner = ("\033[36m   ____                        _____       _\n"+
+              "\033[36m  |  __|_ _ ___ ___ _ ___ ___ |_   _|_ ___| |"+f"\033[0m Version {version()}\n"+
+              "\033[36m  |  __| | |- _|- _|'|   | . |  | | . | . | |\n"+
+              "\033[36m  |_|  |___|___|___|_|_|_|_  |  |_|___|___|_|\n"+
               "\033[36m                         |___|\033[0m\n\n"+
               "  [!] Disclaimer: We're not responsible for the misuse of this tool.\n"+
               "      This project was created for educational purposes\n"+
@@ -172,9 +172,19 @@ class ApplicationManager:
         @returns Callable: A callback function for the blacklisted status code
         """
         def skipTarget(status: int):
+            """The skip target callback for the blacklistAction
+
+            @type status: int
+            @param status: The identified status code into the blacklist
+            """
             self.skipTarget = f"Status code {str(status)} detected"
         
         def wait(status: int):
+            """The wait (pause) callback for the blacklistAction
+
+            @type status: int
+            @param status: The identified status code into the blacklist
+            """
             if not self.fuzzer.isPaused():
                 if not self.isVerboseMode():
                     oh.print("")
@@ -364,7 +374,7 @@ class ApplicationManager:
                 )
     
     def requestExceptionCallback(self, e: RequestException):
-        """Handle with the request exceptions
+        """Callback that handle with the request exceptions
         
         @type e: RequestException
         @param e: The request exception
@@ -382,7 +392,7 @@ class ApplicationManager:
             self.skipTarget = str(e)
 
     def invalidHostnameCallback(self, e: InvalidHostname):
-        """Handle with the subdomain hostname resolver exceptions
+        """Callback that handle with the subdomain hostname resolver exceptions
         
         @type e: InvalidHostname
         @param e: The invalid hostname exception
