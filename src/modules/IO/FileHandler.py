@@ -180,7 +180,7 @@ class FileHandler:
         """
         try:
             with open(f'{fileName}', 'r') as thisFile:
-                return [data.rstrip('\n') for data in thisFile]
+                return [line.rstrip('\n') for line in thisFile if not line.startswith('#')]
         except FileNotFoundError:
             raise Exception(f"File '{fileName}' not found.")
 
