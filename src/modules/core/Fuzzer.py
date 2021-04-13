@@ -75,13 +75,6 @@ class Fuzzer:
         """
         return self.__running
 
-    def isPaused(self):
-        """The paused flag getter
-
-        @returns bool: The paused flag
-        """
-        return not self.__playerHandler.isSet()
-
     def threadHandle(self, action: str):
         """Function that handle with all of the threads functions and atributes
 
@@ -109,7 +102,7 @@ class Fuzzer:
                         self.__exceptionCallbacks[1](e)
                     finally:
                         time.sleep(self.__delay)
-                if self.isPaused():
+                if isPaused():
                     self.__runningThreads -= 1
 
         def start():
@@ -129,6 +122,13 @@ class Fuzzer:
             while self.__runningThreads > 1:
                 pass
             time.sleep(0.1)
+
+        def isPaused():
+            """The paused flag getter
+
+            @returns bool: The paused flag
+            """
+            return not self.__playerHandler.isSet()
 
         def join():
             """Join the threads
@@ -164,6 +164,7 @@ class Fuzzer:
         elif action == 'join': return join
         elif action == 'resume': return resume()
         elif action == 'pause': return pause()
+        elif action == 'isPaused': return isPaused()
 
     def start(self):
         """Starts the fuzzer application"""
@@ -183,3 +184,10 @@ class Fuzzer:
     def pause(self):
         """Pause the fuzzer application"""
         self.threadHandle('pause')
+    
+    def isPaused(self):
+        """The paused flag getter
+
+        @returns bool: The paused flag
+        """
+        return threadHandle('isPaused')
