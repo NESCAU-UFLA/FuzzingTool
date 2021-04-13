@@ -58,7 +58,6 @@ class ApplicationManager:
         allResults: The results dictionary for each host
     """
     def __init__(self):
-        """Class constructor"""
         self.requesters = []
         self.startedTime = 0
         self.allResults = {}

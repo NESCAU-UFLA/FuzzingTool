@@ -59,7 +59,6 @@ class OutputHandler:
         notWorked: The not worked label
     """
     def __init__(self):
-        """Class constructor"""
         if OutputHandler.__instance != None:
             raise Exception("This class is a singleton!")
         else:

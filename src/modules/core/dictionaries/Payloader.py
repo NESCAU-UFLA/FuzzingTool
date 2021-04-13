@@ -23,7 +23,6 @@ class Payloader:
         suffix: The suffix used in the payload
     """
     def __init__(self):
-        """Class constructor"""
         self.encoder = None
         self._prefix = []
         self._suffix = []

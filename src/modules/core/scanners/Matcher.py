@@ -18,7 +18,6 @@ class Matcher:
         allowedStatus: The dictionary with the allowed status codes (and range)
     """
     def __init__(self):
-        """Class constructor"""
         self._comparator = {
             'Length': None,
             'Time': None

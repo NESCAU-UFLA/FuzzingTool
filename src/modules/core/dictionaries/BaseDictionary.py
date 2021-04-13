@@ -22,7 +22,6 @@ class BaseDictionary(Payloader):
         wordlist: The wordlist that contains the payloads backup
     """
     def __init__(self):
-        """Class constructor"""
         super().__init__()
         self.__payloads = Queue()
         self._wordlist = []

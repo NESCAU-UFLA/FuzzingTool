@@ -23,11 +23,9 @@ OUTPUT_DIRECTORY = f'{Path.home()}/.FuzzingTool'
 
 class Logger:
     def __init__(self):
-        """Class constructor"""
         self.__file = None
 
     def __del__(self):
-        """Class destructor"""
         self.close()
 
     def open(self, host: str):
@@ -169,7 +167,6 @@ class FileHandler:
         logFile: The log file
     """
     def __init__(self):
-        """Class constructor"""
         if FileHandler.__instance != None:
             raise Exception("This class is a singleton!")
         else:

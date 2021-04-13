@@ -61,7 +61,6 @@ class RequestParser:
         payload: The payload used in the request
     """
     def __init__(self):
-        """Class constructor"""
         self.__payload = ''
 
     def setupUrl(self, url: str):
