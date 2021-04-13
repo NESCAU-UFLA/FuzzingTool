@@ -144,7 +144,7 @@ class Fuzzer:
         def setup():
             """Handle with threads setup
             
-            New Fuzzer Attributes:
+            Attributes:
                 threads: The list with the threads used in the application
                 runningThreads: The running threads count
                 joinTimeout: The join timeout for the threads
