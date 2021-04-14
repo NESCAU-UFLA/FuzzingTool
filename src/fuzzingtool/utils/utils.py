@@ -22,6 +22,10 @@ def getIndexesToParse(content: str, searchFor: str = '$'):
     return [i for i, char in enumerate(content) if char == searchFor]
 
 def getLibPath():
+    """Get the fuzzingtool lib path
+
+    @returns str: The fuzzingtool lib path
+    """
     from os.path import dirname, abspath
     return dirname(dirname(abspath(__file__)))
 
