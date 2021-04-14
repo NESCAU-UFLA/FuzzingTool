@@ -12,7 +12,9 @@
 #
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
-from fuzzingtool.FuzzingTool import main
+from .ApplicationManager import ApplicationManager
 
-if __name__ == "__main__":
-    main()
+import sys
+
+def main():
+    ApplicationManager().main(sys.argv)

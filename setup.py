@@ -25,7 +25,7 @@ setup(
     package_dir={'fuzzingtool': 'src/fuzzingtool'},
     entry_points={
         'console_scripts': [
-            'FuzzingTool = FuzzingTool:main'
+            'FuzzingTool = fuzzingtool.FuzzingTool:main'
         ]
     },
     install_requires=install_requires,
