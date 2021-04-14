@@ -1,7 +1,7 @@
 <p align="center">
 <img src="https://user-images.githubusercontent.com/43549176/110254984-525fb200-7f70-11eb-84f0-9afdcab9725a.png" height="200" /><br/>
-<a href="https://github.com/NESCAU-UFLA/FuzzingTool/releases/tag/v3.8.1">
-<img src="https://img.shields.io/static/v1?label=Release&message=v3.8.1&color=darkred" />
+<a href="https://github.com/NESCAU-UFLA/FuzzingTool/releases/tag/v3.9.0">
+<img src="https://img.shields.io/static/v1?label=Release&message=v3.9.0&color=darkred" />
 </a>
 <img src="https://img.shields.io/static/v1?label=python&message=3.6%20|%203.7%20|%203.8&color=informational&logo=python" />
 <a href="https://github.com/NESCAU-UFLA/FuzzingTool/blob/master/LICENSE.md">
