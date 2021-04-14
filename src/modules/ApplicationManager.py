@@ -345,10 +345,9 @@ class ApplicationManager:
             exceptionCallbacks=[self.invalidHostnameCallback, self.requestExceptionCallback],
         )
         self.fuzzer.start()
-        while not self.dict.isEmpty():
-            while not self.fuzzer.join():
-                if self.skipTarget:
-                    raise SkipTargetException(self.skipTarget)
+        while not self.fuzzer.join():
+            if self.skipTarget:
+                raise SkipTargetException(self.skipTarget)
 
     def resultCallback(self, result: dict, validate: bool):
         """Callback function for the results output
