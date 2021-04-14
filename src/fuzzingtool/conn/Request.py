@@ -185,7 +185,7 @@ class Request:
 
     def resetRequestIndex(self):
         """Resets the request index to 0"""
-        self.__requestIndex = 1
+        self.__requestIndex = 0
 
     def testConnection(self):
         """Test the connection with the target, and raise an exception if couldn't connect"""
