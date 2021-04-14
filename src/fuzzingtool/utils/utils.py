@@ -21,6 +21,10 @@ def getIndexesToParse(content: str, searchFor: str = '$'):
     """
     return [i for i, char in enumerate(content) if char == searchFor]
 
+def getLibPath():
+    from os.path import dirname, abspath
+    return dirname(dirname(abspath(__file__)))
+
 def getCustomPackageNames(module: str):
     """Gets the custom package names (inside /core/module/custom/)
 
@@ -30,11 +34,9 @@ def getCustomPackageNames(module: str):
     """
     from os import walk
     try:
-        _, _, customPackages = next(walk(f"./modules/core/{module}/custom/"))
+        _, _, customPackages = next(walk(f"./fuzzingtool/core/{module}/custom/"))
     except:
-        from os.path import dirname, abspath
-        libPath = dirname(dirname(abspath(__file__)))
-        _, _, customPackages = next(walk(f"{libPath}/core/{module}/custom/"))
+        _, _, customPackages = next(walk(f"{getLibPath()}/core/{module}/custom/"))
     if '__init__.py' in customPackages:
         customPackages.remove('__init__.py')
     return [packageFile.split('.')[0] for packageFile in customPackages]
@@ -49,16 +51,10 @@ def importCustomPackage(module: str, package: str):
     @returns import: The import of the searched package
     """
     from importlib import import_module
-    try:
-        customImported = import_module(
-            f".modules.core.{module}.custom.{package}",
-            package=f"{package}"
-        )
-    except:
-        customImported = import_module(
-            f"modules.core.{module}.custom.{package}",
-            package=f"{package}"
-        )
+    customImported = import_module(
+        f"fuzzingtool.core.{module}.custom.{package}",
+        package=f"{package}"
+    )
     return getattr(customImported, package)
 
 def checkRangeList(content: str):

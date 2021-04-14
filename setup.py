@@ -21,10 +21,11 @@ setup(
     license="MIT",
     keywords="pentesting-tools python3 fuzzing web-security",
     url="https://github.com/NESCAU-UFLA/FuzzingTool/",
-    packages=find_packages(),
+    packages=find_packages(where='src'),
+    package_dir={'fuzzingtool': 'src/fuzzingtool'},
     entry_points={
         'console_scripts': [
-            'FuzzingTool = src:FuzzingTool.main'
+            'FuzzingTool = FuzzingTool:main'
         ]
     },
     install_requires=install_requires,

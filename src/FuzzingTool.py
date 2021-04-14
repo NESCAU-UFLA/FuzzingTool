@@ -13,10 +13,7 @@
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
 # Pip (import) fix
-try:
-    from .modules.ApplicationManager import ApplicationManager
-except:
-    from modules.ApplicationManager import ApplicationManager
+from fuzzingtool.ApplicationManager import ApplicationManager
 
 import sys
 
