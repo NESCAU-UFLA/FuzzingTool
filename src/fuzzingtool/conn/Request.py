@@ -238,50 +238,49 @@ class Request:
         parser.setPayload(payload)
         requestParameters = self.__getRequestParameters()
         targetUrl = requestParameters['Url']
-        try:
-            if self.__subdomainFuzzing:
-                try:
-                    hostname = getHost(targetUrl)
-                    targetIp = socket.gethostbyname(hostname)
-                    payload = targetUrl
-                except:
-                    raise InvalidHostname(f"Can't resolve hostname {hostname}")
-            else:
-                targetIp = ''
-                hostname = targetUrl
+        self.__requestIndex += 1
+        requestIndex = self.__requestIndex
+        if self.__subdomainFuzzing:
             try:
-                before = time.time()
-                response = self.__request(targetUrl, requestParameters)
-                timeTaken = (time.time() - before)
-            except requests.exceptions.ProxyError:
-                raise RequestException("The actual proxy isn't working anymore.")
-            except requests.exceptions.TooManyRedirects:
-                raise RequestException(f"Too many redirects on {targetUrl}")
-            except requests.exceptions.SSLError:
-                raise RequestException(f"SSL couldn't be validated on {targetUrl}")
-            except requests.exceptions.Timeout:
-                raise RequestException(f"Connection to {targetUrl} timed out")
-            except requests.exceptions.InvalidHeader as e:
-                e = str(e)
-                invalidHeader = e[e.rindex(': ')+2:]
-                raise RequestException(f"Invalid header {invalidHeader}: {requestParameters['Headers'][invalidHeader].decode('utf-8')}")
-            except (
-                requests.exceptions.ConnectionError,
-                requests.exceptions.RequestException
-            ):
-                raise RequestException(f"Failed to establish a connection to {targetUrl}")
-            except (
-                UnicodeError,
-                urllib3.exceptions.LocationParseError
-            ):
-                raise RequestException(f"Invalid hostname {hostname} for HTTP request")
-            except ValueError as e:
-                raise RequestException(str(e))
-            else:
-                response.setRequestData(requestParameters['Method'], payload, timeTaken, self.__requestIndex, targetIp)
-                return response
-        finally:
-            self.__requestIndex += 1
+                hostname = getHost(targetUrl)
+                targetIp = socket.gethostbyname(hostname)
+                payload = targetUrl
+            except:
+                raise InvalidHostname(f"Can't resolve hostname {hostname}")
+        else:
+            targetIp = ''
+            hostname = targetUrl
+        try:
+            before = time.time()
+            response = self.__request(targetUrl, requestParameters)
+            timeTaken = (time.time() - before)
+        except requests.exceptions.ProxyError:
+            raise RequestException("The actual proxy isn't working anymore.")
+        except requests.exceptions.TooManyRedirects:
+            raise RequestException(f"Too many redirects on {targetUrl}")
+        except requests.exceptions.SSLError:
+            raise RequestException(f"SSL couldn't be validated on {targetUrl}")
+        except requests.exceptions.Timeout:
+            raise RequestException(f"Connection to {targetUrl} timed out")
+        except requests.exceptions.InvalidHeader as e:
+            e = str(e)
+            invalidHeader = e[e.rindex(': ')+2:]
+            raise RequestException(f"Invalid header {invalidHeader}: {requestParameters['Headers'][invalidHeader].decode('utf-8')}")
+        except (
+            requests.exceptions.ConnectionError,
+            requests.exceptions.RequestException
+        ):
+            raise RequestException(f"Failed to establish a connection to {targetUrl}")
+        except (
+            UnicodeError,
+            urllib3.exceptions.LocationParseError
+        ):
+            raise RequestException(f"Invalid hostname {hostname} for HTTP request")
+        except ValueError as e:
+            raise RequestException(str(e))
+        else:
+            response.setRequestData(requestParameters['Method'], payload, timeTaken, requestIndex, targetIp)
+            return response
 
     def __getRequestParameters(self):
         """Get the request parameters using in the request fields
