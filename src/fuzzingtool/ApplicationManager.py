@@ -12,7 +12,7 @@
 
 from .utils.utils import getCustomPackageNames, importCustomPackage
 from .parsers.CLIParser import CLIParser
-from .parsers.RequestParser import getTargetUrl, getHost
+from .parsers.RequestParser import getPureUrl, getHost
 from .core.Fuzzer import Fuzzer
 from .core.dictionaries.Payloader import Payloader
 from .core.scanners.Matcher import Matcher
@@ -311,7 +311,7 @@ class ApplicationManager:
         @param requester: The requester for the target
         """
         self.requester = requester
-        targetHost = getHost(getTargetUrl(requester.getUrlDict()))
+        targetHost = getHost(getPureUrl(requester.getUrlDict()))
         oh.infoBox(f"Preparing target {targetHost} ...")
         before = time.time()
         self.checkIgnoreErrors(targetHost)

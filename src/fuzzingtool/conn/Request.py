@@ -11,7 +11,7 @@
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
 from .Response import Response
-from ..parsers.RequestParser import getHost, getTargetUrl, requestParser as parser
+from ..parsers.RequestParser import getHost, getPureUrl, requestParser as parser
 from ..exceptions.RequestExceptions import RequestException, InvalidHostname
 
 import random
@@ -184,37 +184,40 @@ class Request:
         self.__timeout = timeout
 
     def resetRequestIndex(self):
-        """Resets the request index to 0"""
-        self.__requestIndex = 0
+        """Resets the request index"""
+        if not self.__subdomainFuzzing:
+            self.__requestIndex = 1
+        else:
+            self.__requestIndex = 0
 
     def testConnection(self):
         """Test the connection with the target, and raise an exception if couldn't connect"""
         try:
-            target = getTargetUrl(self.__url)
+            url = getPureUrl(self.__url)
             response = requests.get(
-                target,
+                url,
                 proxies=self.__proxy,
                 headers=parser.getHeader(self.__headers),
                 timeout=self.__timeout if self.__timeout else 10, # Default 10 seconds to make a request
             )
             response.raise_for_status()
         except requests.exceptions.HTTPError:
-            raise RequestException(f"Connected to {target}, but raised a 404 status code on that direcory")
+            raise RequestException(f"Connected to {url}, but raised a 404 status code on that direcory")
         except requests.exceptions.ProxyError:
             raise RequestException(f"Can't connect to proxy")
         except requests.exceptions.SSLError:
-            raise RequestException(f"SSL couldn't be validated on {target}")
+            raise RequestException(f"SSL couldn't be validated on {url}")
         except requests.exceptions.Timeout:
-            raise RequestException(f"Connection to {target} timed out")
+            raise RequestException(f"Connection to {url} timed out")
         except requests.exceptions.InvalidHeader as e:
             e = str(e)
             invalidHeader = e[e.rindex(': ')+2:]
-            raise RequestException(f"Invalid header {invalidHeader}: {requestParameters['Headers'][invalidHeader].decode('utf-8')}")
+            raise RequestException(f"Invalid header {invalidHeader}: {headers[invalidHeader].decode('utf-8')}")
         except (
             requests.exceptions.ConnectionError,
             requests.exceptions.RequestException
         ):
-            raise RequestException(f"Failed to establish a connection to {target}")
+            raise RequestException(f"Failed to establish a connection to {url}")
 
     def hasRedirection(self):
         """Test if the connection will have a redirection
@@ -235,65 +238,66 @@ class Request:
         """
         if self.__proxies:
             self.__proxy = random.choice(self.__proxies)
-        parser.setPayload(payload)
-        requestParameters = self.__getRequestParameters()
-        targetUrl = requestParameters['Url']
-        self.__requestIndex += 1
-        requestIndex = self.__requestIndex
-        if self.__subdomainFuzzing:
-            try:
-                hostname = getHost(targetUrl)
-                targetIp = socket.gethostbyname(hostname)
-                payload = targetUrl
-            except:
-                raise InvalidHostname(f"Can't resolve hostname {hostname}")
-        else:
-            targetIp = ''
-            hostname = targetUrl
+        method, url, headers, data = self.__getRequestParameters(payload)
         try:
-            before = time.time()
-            response = self.__request(targetUrl, requestParameters)
-            timeTaken = (time.time() - before)
-        except requests.exceptions.ProxyError:
-            raise RequestException("The actual proxy isn't working anymore.")
-        except requests.exceptions.TooManyRedirects:
-            raise RequestException(f"Too many redirects on {targetUrl}")
-        except requests.exceptions.SSLError:
-            raise RequestException(f"SSL couldn't be validated on {targetUrl}")
-        except requests.exceptions.Timeout:
-            raise RequestException(f"Connection to {targetUrl} timed out")
-        except requests.exceptions.InvalidHeader as e:
-            e = str(e)
-            invalidHeader = e[e.rindex(': ')+2:]
-            raise RequestException(f"Invalid header {invalidHeader}: {requestParameters['Headers'][invalidHeader].decode('utf-8')}")
-        except (
-            requests.exceptions.ConnectionError,
-            requests.exceptions.RequestException
-        ):
-            raise RequestException(f"Failed to establish a connection to {targetUrl}")
-        except (
-            UnicodeError,
-            urllib3.exceptions.LocationParseError
-        ):
-            raise RequestException(f"Invalid hostname {hostname} for HTTP request")
-        except ValueError as e:
-            raise RequestException(str(e))
-        else:
-            response.setRequestData(requestParameters['Method'], payload, timeTaken, requestIndex, targetIp)
-            return response
+            if self.__subdomainFuzzing:
+                try:
+                    hostname = getHost(url)
+                    ip = socket.gethostbyname(hostname)
+                    payload = url
+                except:
+                    raise InvalidHostname(f"Can't resolve hostname {hostname}")
+            else:
+                ip = ''
+                hostname = url
+            try:
+                before = time.time()
+                response = self.__request(method, url, headers, data)
+                timeTaken = (time.time() - before)
+            except requests.exceptions.ProxyError:
+                raise RequestException("The actual proxy isn't working anymore.")
+            except requests.exceptions.TooManyRedirects:
+                raise RequestException(f"Too many redirects on {url}")
+            except requests.exceptions.SSLError:
+                raise RequestException(f"SSL couldn't be validated on {url}")
+            except requests.exceptions.Timeout:
+                raise RequestException(f"Connection to {url} timed out")
+            except requests.exceptions.InvalidHeader as e:
+                e = str(e)
+                invalidHeader = e[e.rindex(': ')+2:]
+                raise RequestException(f"Invalid header {invalidHeader}: {headers[invalidHeader].decode('utf-8')}")
+            except (
+                requests.exceptions.ConnectionError,
+                requests.exceptions.RequestException
+            ):
+                raise RequestException(f"Failed to establish a connection to {url}")
+            except (
+                UnicodeError,
+                urllib3.exceptions.LocationParseError
+            ):
+                raise RequestException(f"Invalid hostname {hostname} for HTTP request")
+            except ValueError as e:
+                raise RequestException(str(e))
+            else:
+                response.setRequestData(method, payload, timeTaken, self.__requestIndex, ip)
+                return response
+        finally:
+            self.__requestIndex += 1
 
-    def __getRequestParameters(self):
+    def __getRequestParameters(self, payload: str):
         """Get the request parameters using in the request fields
 
-        @returns dict: The parameters dict of the request
+        @type payload: str
+        @param payload: The payload used in the request
+        @returns tuple(str, str, dict, dict): The parameters of the request
         """
-        requestParameters = {
-            'Method': parser.getMethod(self.__method),
-            'Url': parser.getUrl(self.__url),
-            'Headers': parser.getHeader(self.__headers),
-            'Data': parser.getData(self.__data),
-        }
-        return requestParameters
+        parser.setPayload(payload)
+        return (
+            parser.getMethod(self.__method),
+            parser.getUrl(self.__url),
+            parser.getHeader(self.__headers),
+            parser.getData(self.__data),
+        )
 
     def __setupHeader(self):
         """Setup the HTTP Header"""
@@ -305,43 +309,61 @@ class Request:
                 del self.__headers['content']['Content-Length']
         self.__headers['content']['Accept-Encoding'] = 'gzip, deflate'
     
-    def __sessionRequest(self, targetUrl: str, requestParameters: dict):
+    def __sessionRequest(self,
+        method: str,
+        url: str,
+        headers: dict,
+        data: dict
+    ):
         """Performs a request to the target using Session object
 
-        @type targetUrl: str
-        @param targetUrl: The target URL
-        @type requestParameters: dict
-        @param requestParameters: The request parameters dictionary
+        @type method: str
+        @param method: The request method
+        @type url: str
+        @param url: The target URL
+        @type headers: dict
+        @param headers: The http header of the request
+        @type data: dict
+        @param data: The data to be send with the request
         @returns Response: The response object of the request
         """
         return Response(self.__session.send(
             self.__session.prepare_request(requests.Request(
-                requestParameters['Method'],
-                targetUrl,
-                data=requestParameters['Data']['BODY'],
-                params=requestParameters['Data']['PARAM'],
-                headers=requestParameters['Headers'],
+                method,
+                url,
+                data=data['BODY'],
+                params=data['PARAM'],
+                headers=headers,
             )),
             proxies=self.__proxy,
             timeout=self.__timeout,
             allow_redirects=self.__followRedirects,
         ))
     
-    def __commonRequest(self, targetUrl: str, requestParameters: dict):
+    def __commonRequest(self,
+        method: str,
+        url: str,
+        headers: dict,
+        data: dict
+    ):
         """Performs a request to the target
 
-        @type targetUrl: str
-        @param targetUrl: The target URL
-        @type requestParameters: dict
-        @param requestParameters: The request parameters dictionary
+        @type method: str
+        @param method: The request method
+        @type url: str
+        @param url: The target URL
+        @type headers: dict
+        @param headers: The http header of the request
+        @type data: dict
+        @param data: The data to be send with the request
         @returns Response: The response object of the request
         """
         return Response(requests.request(
-            requestParameters['Method'],
-            targetUrl,
-            data=requestParameters['Data']['BODY'],
-            params=requestParameters['Data']['PARAM'],
-            headers=requestParameters['Headers'],
+            method,
+            url,
+            data=data['BODY'],
+            params=data['PARAM'],
+            headers=headers,
             proxies=self.__proxy,
             timeout=self.__timeout,
             allow_redirects=self.__followRedirects,

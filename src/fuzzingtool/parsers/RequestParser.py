@@ -32,7 +32,7 @@ def getPath(url: str):
     url = getUrlWithoutScheme(url)
     return url[url.index('/'):]
 
-def getTargetUrl(url: dict):
+def getPureUrl(url: dict):
     """Gets the URL without the $ variable
 
     @type url: dict
