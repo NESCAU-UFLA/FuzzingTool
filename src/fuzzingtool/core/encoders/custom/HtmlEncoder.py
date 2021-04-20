@@ -29,6 +29,3 @@ class HtmlEncoder(BaseEncoder):
     
     def decode(self, payload):
         return html.unescape(payload)
-    
-    def stringfy(self, payload):
-        return payload

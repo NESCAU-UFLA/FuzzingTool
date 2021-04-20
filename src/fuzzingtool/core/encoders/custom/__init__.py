@@ -10,7 +10,6 @@
 #
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
-from .BinEncoder import BinEncoder
 from .HexEncoder import HexEncoder
 from .Base64Encoder import Base64Encoder
 from .HtmlEncoder import HtmlEncoder

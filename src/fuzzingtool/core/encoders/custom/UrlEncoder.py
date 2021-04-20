@@ -38,9 +38,6 @@ class UrlEncoder(BaseEncoder):
     def decode(self, payload):
         return self.__recursivelyDecode(payload, self.encodeLevel)
     
-    def stringfy(self, payload):
-        return payload
-    
     def __recursivelyEncode(self, payload: str, i: int):
         """Recursively encode the payload
 

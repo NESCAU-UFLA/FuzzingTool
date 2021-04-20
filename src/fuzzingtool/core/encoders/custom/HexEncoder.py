@@ -25,10 +25,7 @@ class HexEncoder(BaseEncoder):
         super().__init__()
 
     def encode(self, payload: str):
-        return binascii.hexlify(payload.encode(self.charset))
+        return binascii.hexlify(payload.encode(self.charset)).decode(self.charset)
     
     def decode(self, payload):
-        return binascii.unhexlify(payload.decode(self.charset)).decode(self.charset)
-    
-    def stringfy(self, payload):
-        return f"h'{self.decode(payload)}'"
+        return binascii.unhexlify(payload.encode(self.charset)).decode(self.charset)

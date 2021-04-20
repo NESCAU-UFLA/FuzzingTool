@@ -22,7 +22,7 @@ class ReflectedScanner(DataScanner):
     __author__ = ("Vitor Oriel C N Borges")
     __params__ = ""
     __desc__ = "Lookup if the payload was reflected in the response content"
-    __type__ = "DataFuzzing without encoder"
+    __type__ = "DataFuzzing"
 
     def __init__(self):
         super().__init__()

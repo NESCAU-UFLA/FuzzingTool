@@ -159,12 +159,6 @@ class ApplicationManager:
             self.numberOfThreads = self.dictSizeof
         cliParser.checkCase(self.dict)
         cliParser.checkEncoder(self.dict)
-        if self.dict.encoder:
-            if self.globalScanner:
-                scannerPackage = importCustomPackage('scanners', type(self.globalScanner).__name__)
-                if 'without encoder' in scannerPackage.__type__:
-                    oh.errorBox(f"Scanner {scannerPackage.__name__} don't work with encoders")
-            oh.setStringfyCallback(self.dict.encoder.stringfy)
 
     def getBlacklistedStatusAction(self, action: str):
         """Get the action callback if a blacklisted status code is set

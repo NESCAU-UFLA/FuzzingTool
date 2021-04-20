@@ -70,7 +70,6 @@ class OutputHandler:
         self.__abord = f'{Colors.GRAY}[{Colors.RED}ABORT{Colors.GRAY}]{Colors.RESET} '
         self.__worked = f'{Colors.GRAY}[{Colors.GREEN}+{Colors.GRAY}]{Colors.RESET} '
         self.__notWorked = f'{Colors.GRAY}[{Colors.RED}-{Colors.GRAY}]{Colors.RESET} '
-        self.__stringfy = lambda payload : payload
 
     def setVerbosityOutput(self, verboseMode: bool):
         """Set the output verbosity mode
@@ -100,14 +99,6 @@ class OutputHandler:
             self.__getMessage = getMessageCallback
         except NotImplementedError as e:
             exit(str(e))
-
-    def setStringfyCallback(self, stringfyCallback: Callable):
-        """Set the stringfy function for the encoded payloads
-
-        @type stringfyCallback: Callable
-        @param stringfyCallback: The stringfy callback from the encoder
-        """
-        self.__stringfy = stringfyCallback
 
     def infoBox(self, msg: str):
         """Print the message with a info label
@@ -265,10 +256,6 @@ class OutputHandler:
         @param payload: The payload used in the request
         @returns str: The fixed payload to output
         """
-        try:
-            payload = self.__stringfy(payload)
-        except:
-            pass
         if '	' in payload:
             payload = payload.replace('	', ' ')
         if len(payload) > 30:
