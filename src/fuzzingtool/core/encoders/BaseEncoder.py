@@ -34,11 +34,3 @@ class BaseEncoder():
         @param payload: The payload used in the request
         """
         raise NotImplementedError("decode method should be overrided")
-    
-    def stringfy(self, payload):
-        """Stringfy a payload to be used on output
-
-        @type payload: encoded
-        @param payload: The payload used in the request
-        """
-        raise NotImplementedError("stringfy method should be overrided")
