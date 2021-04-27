@@ -202,7 +202,7 @@ class Request:
             )
             response.raise_for_status()
         except requests.exceptions.HTTPError:
-            raise RequestException(f"Connected to {url}, but raised a 404 status code on that direcory")
+            raise RequestException(f"Connected to {url}, but raised a 404 status code")
         except requests.exceptions.ProxyError:
             raise RequestException(f"Can't connect to proxy")
         except requests.exceptions.SSLError:
@@ -255,7 +255,7 @@ class Request:
                 response = self.__request(method, url, headers, data)
                 timeTaken = (time.time() - before)
             except requests.exceptions.ProxyError:
-                raise RequestException("The actual proxy isn't working anymore.")
+                raise RequestException("Can't connect to proxy")
             except requests.exceptions.TooManyRedirects:
                 raise RequestException(f"Too many redirects on {url}")
             except requests.exceptions.SSLError:

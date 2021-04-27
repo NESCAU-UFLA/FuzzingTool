@@ -228,8 +228,9 @@ class ApplicationManager:
                 try:
                     requester.testConnection()
                 except RequestException as e:
-                    if len(self.requesters) == 1:
-                        oh.errorBox(f"{str(e)}.")
+                    if "connected" in str(e).lower():
+                        if oh.askYesNo('warning', f"{str(e)}. Remove this target?"):
+                            self.requesters.remove(requester)
                     else:
                         oh.warningBox(f"{str(e)}. Target removed from list.")
                         self.requesters.remove(requester)
