@@ -220,6 +220,8 @@ class ApplicationManager:
                 except RequestException as e:
                     if oh.askYesNo('warning', f"{str(e)}. Remove this target?"):
                         self.requesters.remove(requester)
+                    if len(self.requesters) == 0:
+                        oh.errorBox("No targets left for fuzzing")
                 else:
                     oh.infoBox("Connection status: OK")
             else:
@@ -234,11 +236,11 @@ class ApplicationManager:
                     else:
                         oh.warningBox(f"{str(e)}. Target removed from list.")
                         self.requesters.remove(requester)
+                    if len(self.requesters) == 0:
+                        oh.errorBox("No targets left for fuzzing")
                 oh.infoBox("Connection status: OK")
                 if requester.isDataFuzzing():
                     self.checkRedirections(requester)
-        if len(self.requesters) == 0:
-            oh.errorBox("No targets left for fuzzing")
 
     def checkRedirections(self, requester: Request):
         """Check the redirections for a target.
