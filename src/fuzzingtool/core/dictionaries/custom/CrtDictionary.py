@@ -17,7 +17,7 @@ from ....IO.OutputHandler import outputHandler as oh
 from ....exceptions.RequestExceptions import RequestException
 from ....exceptions.MainExceptions import MissingParameter
 
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup as bs
 import re
 
 class CrtDictionary(BaseDictionary):
@@ -60,7 +60,7 @@ class CrtDictionary(BaseDictionary):
             raise Exception(str(e))
         if 'None found' in response.text:
             raise Exception(f"No certified domains was found for '{sourceParam}'")
-        contentList = [element.string for element in BeautifulSoup(response.text, "lxml")('td')]
+        contentList = [element.string for element in bs(response.text, "lxml")('td')]
         regex = r"([a-zA-Z0-9]+\.)*[a-zA-Z0-9]+"
         for splited in sourceParam.split('.'):
             regex += r"\."+splited

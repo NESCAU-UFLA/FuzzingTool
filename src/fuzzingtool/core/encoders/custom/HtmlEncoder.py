@@ -27,5 +27,5 @@ class HtmlEncoder(BaseEncoder):
     def encode(self, payload: str):
         return html.escape(payload)
     
-    def decode(self, payload):
+    def decode(self, payload: str):
         return html.unescape(payload)

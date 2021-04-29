@@ -27,10 +27,10 @@ class BaseEncoder():
         """
         raise NotImplementedError("encode method should be overrided")
     
-    def decode(self, payload):
+    def decode(self, payload: str):
         """Decode a payload for the original version
 
-        @type payload: encoded
+        @type payload: str
         @param payload: The payload used in the request
         """
         raise NotImplementedError("decode method should be overrided")

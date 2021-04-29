@@ -27,5 +27,5 @@ class Base64Encoder(BaseEncoder):
     def encode(self, payload: str):
         return base64.b64encode(payload.encode(self.charset)).decode(self.charset)
     
-    def decode(self, payload):
+    def decode(self, payload: str):
         return base64.b64decode(payload).decode(self.charset)

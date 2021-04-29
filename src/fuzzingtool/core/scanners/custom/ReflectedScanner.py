@@ -11,11 +11,8 @@
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
 from ..default.DataScanner import DataScanner
-from ...encoders.custom.HtmlEncoder import HtmlEncoder
 from ....conn.Response import Response
 from ....IO.OutputHandler import Colors, outputHandler as oh
-
-import html
 
 class ReflectedScanner(DataScanner):
     __name__ = "ReflectedScanner"
@@ -24,34 +21,36 @@ class ReflectedScanner(DataScanner):
     __desc__ = "Lookup if the payload was reflected in the response content"
     __type__ = "DataFuzzing"
 
+    """
+    Attributes:
+        reflected: The dictionary to save a flag for each matched result,
+                   saying if the payload was reflected or not
+    """
     def __init__(self):
         super().__init__()
-        self.__encoder = HtmlEncoder()
-        self.__escaped = {}
+        self.__reflected = {}
 
     def getResult(self, response: Response):
         return super().getResult(response)
 
     def scan(self, result: dict):
-        self.__escaped[result['Request']] = False
         reflected = result['Payload'] in result['Body']
-        if not reflected:
-            self.__escaped[result['Request']] = result['Payload'] in self.__encoder.decode(result['Body'])
+        self.__reflected[result['Request']] = reflected
         return reflected
     
     def getMessage(self, result: dict):
         escaped = ''
-        if self.__escaped:
-            if self.__escaped[result['Request']]:
-                escaped = f" | {Colors.LIGHT_YELLOW}Reflected with HTML entities escaping"
-            del self.__escaped[result['Request']]
+        reflected = f"{Colors.LIGHT_YELLOW}{Colors.BOLD}IDK"
+        if result['Request'] in self.__reflected:
+            if self.__reflected[result['Request']]:
+                reflected = f"{Colors.GREEN}{Colors.BOLD}YES"
+            else:
+                reflected = f"{Colors.LIGHT_RED}{Colors.BOLD}NO "
+                del self.__reflected[result['Request']]
         result = oh.getFormatedResult(result)
         return (
             f"{result['Payload']} {Colors.GRAY}["+
-            f"{Colors.LIGHT_GRAY}RTT{Colors.RESET} {result['Time Taken']} | "+
+            f"{Colors.LIGHT_GRAY}Reflected{Colors.RESET} {reflected}{Colors.RESET} | "+
             f"{Colors.LIGHT_GRAY}Code{Colors.RESET} {result['Status']} | "+
-            f"{Colors.LIGHT_GRAY}Size{Colors.RESET} {result['Length']} | "+
-            f"{Colors.LIGHT_GRAY}Words{Colors.RESET} {result['Words']} | "+
-            f"{Colors.LIGHT_GRAY}Lines{Colors.RESET} {result['Lines']}"+
-            f"{escaped}{Colors.GRAY}]{Colors.RESET}"
+            f"{Colors.LIGHT_GRAY}Size{Colors.RESET} {result['Length']}{Colors.GRAY}]{Colors.RESET}"
         )

@@ -27,5 +27,5 @@ class HexEncoder(BaseEncoder):
     def encode(self, payload: str):
         return binascii.hexlify(payload.encode(self.charset)).decode(self.charset)
     
-    def decode(self, payload):
+    def decode(self, payload: str):
         return binascii.unhexlify(payload.encode(self.charset)).decode(self.charset)
