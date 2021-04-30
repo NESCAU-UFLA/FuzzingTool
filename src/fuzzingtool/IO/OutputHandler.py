@@ -33,7 +33,7 @@ class Colors:
     BLUE_GRAY = '\033[36m'
     LIGHT_GRAY = '\u001b[38;5;250m'
     LIGHT_YELLOW = '\u001b[33;1m'
-    LIGHT_RED = "\u001b[31;1m"
+    LIGHT_RED = "\033[91m"
     LIGHT_GREEN = '\u001b[38;5;48m'
     BOLD = '\033[1m'
 

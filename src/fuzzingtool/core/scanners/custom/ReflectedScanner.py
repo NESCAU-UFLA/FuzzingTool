@@ -39,7 +39,6 @@ class ReflectedScanner(DataScanner):
         return reflected
     
     def getMessage(self, result: dict):
-        escaped = ''
         reflected = f"{Colors.LIGHT_YELLOW}{Colors.BOLD}IDK"
         if result['Request'] in self.__reflected:
             if self.__reflected[result['Request']]:

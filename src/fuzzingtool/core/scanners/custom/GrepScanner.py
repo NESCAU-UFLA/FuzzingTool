@@ -12,7 +12,7 @@
 
 from ..default.DataScanner import DataScanner
 from ....conn.Response import Response
-from ....IO.OutputHandler import outputHandler as oh
+from ....IO.OutputHandler import Colors, outputHandler as oh
 from ....exceptions.MainExceptions import MissingParameter
 
 import re
@@ -24,6 +24,12 @@ class GrepScanner(DataScanner):
     __desc__ = "Filter responses based on a regex"
     __type__ = "DataFuzzing"
 
+    """
+    Attributes:
+        regexer: The regex object to find the content into the response body
+        found: The dictionary to save a flag for each matched result,
+               saying if the response body match with the regex or not
+    """
     def __init__(self, regex: str):
         if not regex:
             raise MissingParameter("regex")
@@ -33,12 +39,28 @@ class GrepScanner(DataScanner):
             oh.infoBox(f"Regex used: {regex}")
         except re.error:
             raise Exception("Invalid regex format")
+        self.__found = {}
 
     def getResult(self, response: Response):
         return super().getResult(response)
 
     def scan(self, result: dict):
-        return True if self.__regexer.search(result['Body']) else False
+        found = True if self.__regexer.search(result['Body']) else False
+        self.__found[result['Request']] = found
+        return found
     
     def getMessage(self, result: dict):
-        return super().getMessage(result)
+        found = f"{Colors.LIGHT_YELLOW}{Colors.BOLD}IDK"
+        if result['Request'] in self.__found:
+            if self.__found[result['Request']]:
+                found = f"{Colors.GREEN}{Colors.BOLD}YES"
+            else:
+                found = f"{Colors.LIGHT_RED}{Colors.BOLD}NO "
+                del self.__found[result['Request']]
+        result = oh.getFormatedResult(result)
+        return (
+            f"{result['Payload']} {Colors.GRAY}["+
+            f"{Colors.LIGHT_GRAY}Found{Colors.RESET} {found}{Colors.RESET} | "+
+            f"{Colors.LIGHT_GRAY}Code{Colors.RESET} {result['Status']} | "+
+            f"{Colors.LIGHT_GRAY}Size{Colors.RESET} {result['Length']}{Colors.GRAY}]{Colors.RESET}"
+        )
