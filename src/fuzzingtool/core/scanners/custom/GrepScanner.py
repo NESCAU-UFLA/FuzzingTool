@@ -60,7 +60,7 @@ class GrepScanner(DataScanner):
         result = oh.getFormatedResult(result)
         return (
             f"{result['Payload']} {Colors.GRAY}["+
-            f"{Colors.LIGHT_GRAY}Found{Colors.RESET} {found}{Colors.RESET} | "+
+            f"{Colors.LIGHT_GRAY}Regex found{Colors.RESET} {found}{Colors.RESET} | "+
             f"{Colors.LIGHT_GRAY}Code{Colors.RESET} {result['Status']} | "+
             f"{Colors.LIGHT_GRAY}Size{Colors.RESET} {result['Length']}{Colors.GRAY}]{Colors.RESET}"
         )

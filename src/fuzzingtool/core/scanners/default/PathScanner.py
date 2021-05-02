@@ -44,12 +44,12 @@ class PathScanner(BaseScanner):
                 statusColor = f'{Colors.BOLD}{Colors.LIGHT_YELLOW}'
             redirected = result['Redirected']
             if redirected:
-                redirected = f" | {Colors.LIGHT_GRAY}Redirected{Colors.RESET} {Colors.LIGHT_YELLOW}{redirected}"
+                redirected = f" {Colors.LIGHT_YELLOW}Redirected to {redirected}{Colors.RESET}"
         payload = '{:<30}'.format(oh.fixPayloadToOutput(result['Payload']))
         length = '{:>8}'.format(result['Length'])
         return (
             f"{payload} {Colors.GRAY}["+
             f"{Colors.LIGHT_GRAY}Code{Colors.RESET} {statusColor}{status}{Colors.RESET} | "+
-            f"{Colors.LIGHT_GRAY}Size{Colors.RESET} {length}"+
-            f"{redirected}{Colors.GRAY}]{Colors.RESET}"
+            f"{Colors.LIGHT_GRAY}Size{Colors.RESET} {length}{Colors.GRAY}]{Colors.RESET}"+
+            f"{redirected}"
         )
