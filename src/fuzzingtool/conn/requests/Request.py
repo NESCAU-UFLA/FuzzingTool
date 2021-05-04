@@ -191,7 +191,7 @@ class Request:
         except requests.exceptions.HTTPError:
             raise RequestException(f"Connected to {url}, but raised a 404 status code")
         except requests.exceptions.ProxyError:
-            raise RequestException(f"Can't connect to proxy")
+            raise RequestException(f"Can't connect to the proxy")
         except requests.exceptions.SSLError:
             raise RequestException(f"SSL couldn't be validated on {url}")
         except requests.exceptions.Timeout:
