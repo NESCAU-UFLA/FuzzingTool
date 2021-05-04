@@ -21,14 +21,14 @@ class ListDictionary(BaseDictionary):
     def __init__(self):
         super().__init__()
 
-    def setWordlist(self, sourceParam: str):
-        sourceParam = sourceParam[1:len(sourceParam)-1]
-        if not sourceParam:
-            raise MissingParameter("list of elements")
-        if ',' in sourceParam:
+    def setWordlist(self, payloadList: str):
+        payloadList = payloadList[1:len(payloadList)-1]
+        if not payloadList:
+            raise MissingParameter("list of payloads")
+        if ',' in payloadList:
             buildedList = []
-            for param in sourceParam.split(','):
-                buildedList.extend(checkRangeList(param))
+            for payload in payloadList.split(','):
+                buildedList.extend(checkRangeList(payload))
         else:
-            buildedList = checkRangeList(sourceParam)
+            buildedList = checkRangeList(payloadList)
         self._wordlist = buildedList

@@ -30,15 +30,15 @@ class CrtDictionary(BaseDictionary):
     def __init__(self):
         super().__init__()
 
-    def setWordlist(self, sourceParam: str):
-        if not sourceParam:
+    def setWordlist(self, host: str):
+        if not host:
             raise MissingParameter("target host")
         requester = Request(
             url="https://crt.sh/",
             method='GET',
             data={
                 'PARAM': {
-                    'q': sourceParam,
+                    'q': host,
                 },
                 'BODY': {},
             },
@@ -59,11 +59,11 @@ class CrtDictionary(BaseDictionary):
         except RequestException as e:
             raise Exception(str(e))
         if 'None found' in response.text:
-            raise Exception(f"No certified domains was found for '{sourceParam}'")
+            raise Exception(f"No certified domains was found for '{host}'")
         contentList = [element.string for element in bs(response.text, "lxml")('td')]
         regex = r"([a-zA-Z0-9]+\.)*[a-zA-Z0-9]+"
-        for splited in sourceParam.split('.'):
+        for splited in host.split('.'):
             regex += r"\."+splited
         regexer = re.compile(regex)
         domainList = sorted(set([element for element in contentList if regexer.match(str(element))]))
-        self._wordlist = [domain.split(f'.{sourceParam}')[0] for domain in domainList]
+        self._wordlist = [domain.split(f'.{host}')[0] for domain in domainList]

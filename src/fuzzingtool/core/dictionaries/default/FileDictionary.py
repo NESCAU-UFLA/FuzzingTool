@@ -20,8 +20,8 @@ class FileDictionary(BaseDictionary):
     def __init__(self):
         super().__init__()
 
-    def setWordlist(self, sourceParam: str):
+    def setWordlist(self, filePath: str):
         try:
-            self._wordlist = set(fh.read(sourceParam))
+            self._wordlist = set(fh.read(filePath))
         except Exception as e:
             raise e
