@@ -54,6 +54,17 @@ def getUrlWithoutScheme(url: str):
     """
     return url[(url.index('://')+3):]
 
+def checkForSubdomainFuzz(url: str):
+    """Checks if the fuzzing tests will occur on subdomain
+
+    @type url: str
+    @param url: The target URL
+    @returns bool: The subdomain fuzzing flag
+    """
+    if ('.' in url and '$' in url) and url.index('$') < url.index('.'):
+        return True
+    return False
+
 class RequestParser:
     """Class that handle with request arguments parsing
     
@@ -132,19 +143,6 @@ class RequestParser:
         else:
             headerValue.append(value[lastIndex:len(value)])
         return headerValue
-
-    def checkForSubdomainFuzz(self, url: dict):
-        """Checks if the fuzzing tests will occur on subdomain
-
-        @type url: dict
-        @param url: The URL dictionary
-        @returns bool: The subdomain fuzzing flag
-        """
-        if url['fuzzingIndexes']:
-            url = url['content']
-            if '.' in url and url.index('$') < url.index('.'):
-                return True
-        return False
 
     def getMethod(self, method: dict):
         """The new method getter

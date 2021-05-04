@@ -12,7 +12,7 @@
 
 from ..BaseScanner import BaseScanner
 from ..Matcher import Matcher
-from ....conn.Response import Response
+from ....conn.responses.Response import Response
 from ....IO.OutputHandler import Colors, outputHandler as oh
 
 class DataScanner(BaseScanner):

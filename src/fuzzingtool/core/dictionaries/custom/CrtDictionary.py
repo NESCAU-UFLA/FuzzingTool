@@ -11,8 +11,8 @@
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
 from ..BaseDictionary import BaseDictionary
-from ....conn.Request import Request
-from ....conn.Response import Response
+from ....conn.requests.Request import Request
+from ....conn.responses.Response import Response
 from ....IO.OutputHandler import outputHandler as oh
 from ....exceptions.RequestExceptions import RequestException
 from ....exceptions.MainExceptions import MissingParameter

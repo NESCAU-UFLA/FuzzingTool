@@ -11,7 +11,7 @@
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
 from .Matcher import Matcher
-from ...conn.Response import Response
+from ...conn.responses.Response import Response
 
 class BaseScanner(Matcher):
     """Base scanner"""

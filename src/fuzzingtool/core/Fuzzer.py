@@ -12,7 +12,7 @@
 
 from .dictionaries import *
 from .scanners import *
-from ..conn.Request import Request
+from ..conn.requests import *
 from ..IO.OutputHandler import outputHandler as oh
 from ..IO.FileHandler import fileHandler as fh
 from ..exceptions.MainExceptions import SkipTargetException

@@ -12,11 +12,9 @@
 
 from .RequestParser import getHost, getPureUrl, getUrlWithoutScheme
 from ..utils.utils import getIndexesToParse, getCustomPackageNames, importCustomPackage
-from ..core.Fuzzer import Fuzzer
 from ..core.dictionaries import *
 from ..core.encoders import *
 from ..core.scanners import *
-from ..conn.Request import Request
 from ..IO.OutputHandler import outputHandler as oh
 from ..IO.FileHandler import fileHandler as fh
 from ..exceptions.MainExceptions import MissingParameter

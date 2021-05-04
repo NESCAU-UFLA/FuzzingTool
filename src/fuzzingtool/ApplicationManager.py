@@ -12,12 +12,11 @@
 
 from .utils.utils import getCustomPackageNames, importCustomPackage
 from .parsers.CLIParser import CLIParser
-from .parsers.RequestParser import getPureUrl, getHost
+from .parsers.RequestParser import getPureUrl, getHost, checkForSubdomainFuzz
 from .core.Fuzzer import Fuzzer
 from .core.dictionaries.Payloader import Payloader
 from .core.scanners.Matcher import Matcher
-from .conn.Request import Request
-from .conn.Response import Response
+from .conn import *
 from .IO.OutputHandler import outputHandler as oh
 from .IO.FileHandler import fileHandler as fh
 from .exceptions.MainExceptions import SkipTargetException
@@ -138,15 +137,26 @@ class ApplicationManager:
             oh.infoBox(f"Set request method: {target['methods']}")
             if target['data']['PARAM'] or target['data']['BODY']:
                 oh.infoBox(f"Set request data: {str(target['data'])}")
-            requester = Request(
-                url=target['url'],
-                methods=target['methods'],
-                data=target['data'],
-                headers=target['header'],
-                followRedirects=followRedirects,
-                proxy=proxy,
-                proxies=proxies,
-            )
+            if checkForSubdomainFuzz(target['url']):
+                requester = SubdomainRequest(
+                    url=target['url'],
+                    methods=target['methods'],
+                    data=target['data'],
+                    headers=target['header'],
+                    followRedirects=followRedirects,
+                    proxy=proxy,
+                    proxies=proxies,
+                )
+            else:
+                requester = Request(
+                    url=target['url'],
+                    methods=target['methods'],
+                    data=target['data'],
+                    headers=target['header'],
+                    followRedirects=followRedirects,
+                    proxy=proxy,
+                    proxies=proxies,
+                )
             if cookie:
                 requester.setHeaderContent('Cookie', cookie)
             if timeout:
@@ -407,7 +417,7 @@ class ApplicationManager:
         @returns BaseScanner: The scanner used in the fuzzing tests
         """
         if self.requester.isUrlFuzzing():
-            if self.requester.isSubdomainFuzzing():
+            if "SubdomainRequest" in str(type(self.requester)):
                 from .core.scanners.default.SubdomainScanner import SubdomainScanner
                 scanner = SubdomainScanner()
             else:

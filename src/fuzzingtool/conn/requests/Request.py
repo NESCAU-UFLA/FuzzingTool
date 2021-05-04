@@ -10,13 +10,12 @@
 #
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
-from .Response import Response
-from ..parsers.RequestParser import getHost, getPureUrl, requestParser as parser
-from ..exceptions.RequestExceptions import RequestException, InvalidHostname
+from ..responses.Response import Response
+from ...parsers.RequestParser import getHost, getPureUrl, requestParser as parser
+from ...exceptions.RequestExceptions import RequestException, InvalidHostname
 
 import random
 import time
-import socket
 import urllib3.exceptions
 try:
     import requests
@@ -36,7 +35,6 @@ class Request:
         timeout: The request timeout before raise a TimeoutException
         followRedirects: The follow redirections flag
         requestIndex: The request index
-        subdomainFuzzing: A flag to say if the fuzzing will occur on subdomain
         methods: The methods list to be used on fuzzing
     """
     def __init__(self,
@@ -68,7 +66,7 @@ class Request:
         @type proxies: list
         @param proxies: The list with the proxies used in the requests
         """
-        self.__url = parser.setupUrl(url)
+        self._url = parser.setupUrl(url)
         self.__method = parser.setupMethod(method)
         self.__data = data
         self.__headers = headers
@@ -76,14 +74,13 @@ class Request:
         self.__proxies = proxies
         self.__timeout = None if not self.isUrlFuzzing() else 10
         self.__followRedirects = followRedirects
-        self.__requestIndex = 0
         self.__setupHeader()
-        self.__subdomainFuzzing = parser.checkForSubdomainFuzz(self.__url)
         if self.isUrlFuzzing():
             self.__session = requests.Session()
             self.__request = self.__sessionRequest
         else:
             self.__request = self.__commonRequest
+        self._requestIndex = 0
         self.methods = methods
     
     def getUrl(self):
@@ -91,28 +88,21 @@ class Request:
 
         @returns str: The target URL
         """
-        return self.__url['content']
+        return self._url['content']
 
     def getUrlDict(self):
         """The url getter
 
         @returns dict: The target URL dictionary
         """
-        return self.__url
+        return self._url
 
     def isUrlFuzzing(self):
         """The URL fuzzing flag getter
         
         @returns bool: The URL Fuzzing flag
         """
-        return False if not self.__url['fuzzingIndexes'] else True
-
-    def isSubdomainFuzzing(self):
-        """The Subdomain Fuzzing flag getter
-
-        @returns bool: The Subdomain Fuzzing flag
-        """
-        return self.__subdomainFuzzing
+        return False if not self._url['fuzzingIndexes'] else True
 
     def isMethodFuzzing(self):
         """The method fuzzing flag getter
@@ -155,7 +145,7 @@ class Request:
 
         @returns int: The request index
         """
-        return self.__requestIndex
+        return self._requestIndex
 
     def setMethod(self, method: str):
         """The request method setter
@@ -185,15 +175,12 @@ class Request:
 
     def resetRequestIndex(self):
         """Resets the request index"""
-        if not self.__subdomainFuzzing:
-            self.__requestIndex = 1
-        else:
-            self.__requestIndex = 0
+        self._requestIndex = 1
 
     def testConnection(self):
         """Test the connection with the target, and raise an exception if couldn't connect"""
         try:
-            url = getPureUrl(self.__url)
+            url = getPureUrl(self._url)
             response = requests.get(
                 url,
                 proxies=self.__proxy,
@@ -240,49 +227,38 @@ class Request:
             self.__proxy = random.choice(self.__proxies)
         method, url, headers, data = self.__getRequestParameters(payload)
         try:
-            if self.__subdomainFuzzing:
-                try:
-                    hostname = getHost(url)
-                    ip = socket.gethostbyname(hostname)
-                    payload = url
-                except:
-                    raise InvalidHostname(f"Can't resolve hostname {hostname}")
-            else:
-                ip = ''
-                hostname = url
-            try:
-                before = time.time()
-                response = self.__request(method, url, headers, data)
-                timeTaken = (time.time() - before)
-            except requests.exceptions.ProxyError:
-                raise RequestException("Can't connect to proxy")
-            except requests.exceptions.TooManyRedirects:
-                raise RequestException(f"Too many redirects on {url}")
-            except requests.exceptions.SSLError:
-                raise RequestException(f"SSL couldn't be validated on {url}")
-            except requests.exceptions.Timeout:
-                raise RequestException(f"Connection to {url} timed out")
-            except requests.exceptions.InvalidHeader as e:
-                e = str(e)
-                invalidHeader = e[e.rindex(': ')+2:]
-                raise RequestException(f"Invalid header {invalidHeader}: {headers[invalidHeader].decode('utf-8')}")
-            except (
-                requests.exceptions.ConnectionError,
-                requests.exceptions.RequestException
-            ):
-                raise RequestException(f"Failed to establish a connection to {url}")
-            except (
-                UnicodeError,
-                urllib3.exceptions.LocationParseError
-            ):
-                raise RequestException(f"Invalid hostname {hostname} for HTTP request")
-            except ValueError as e:
-                raise RequestException(str(e))
-            else:
-                response.setRequestData(method, payload, timeTaken, self.__requestIndex, ip)
-                return response
+            before = time.time()
+            response = self.__request(method, url, headers, data)
+            timeTaken = (time.time() - before)
+        except requests.exceptions.ProxyError:
+            raise RequestException("Can't connect to the proxy")
+        except requests.exceptions.TooManyRedirects:
+            raise RequestException(f"Too many redirects on {url}")
+        except requests.exceptions.SSLError:
+            raise RequestException(f"SSL couldn't be validated on {url}")
+        except requests.exceptions.Timeout:
+            raise RequestException(f"Connection to {url} timed out")
+        except requests.exceptions.InvalidHeader as e:
+            e = str(e)
+            invalidHeader = e[e.rindex(': ')+2:]
+            raise RequestException(f"Invalid header {invalidHeader}: {headers[invalidHeader].decode('utf-8')}")
+        except (
+            requests.exceptions.ConnectionError,
+            requests.exceptions.RequestException
+        ):
+            raise RequestException(f"Failed to establish a connection to {url}")
+        except (
+            UnicodeError,
+            urllib3.exceptions.LocationParseError
+        ):
+            raise RequestException(f"Invalid hostname {getHost(url)} for HTTP request")
+        except ValueError as e:
+            raise RequestException(str(e))
+        else:
+            response.setRequestData(method, payload, timeTaken, self._requestIndex)
+            return response
         finally:
-            self.__requestIndex += 1
+            self._requestIndex += 1
 
     def __getRequestParameters(self, payload: str):
         """Get the request parameters using in the request fields
@@ -294,7 +270,7 @@ class Request:
         parser.setPayload(payload)
         return (
             parser.getMethod(self.__method),
-            parser.getUrl(self.__url),
+            parser.getUrl(self._url),
             parser.getHeader(self.__headers),
             parser.getData(self.__data),
         )

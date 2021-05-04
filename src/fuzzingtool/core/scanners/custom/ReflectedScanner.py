@@ -11,7 +11,7 @@
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
 from ..default.DataScanner import DataScanner
-from ....conn.Response import Response
+from ....conn.responses.Response import Response
 from ....IO.OutputHandler import Colors, outputHandler as oh
 
 class ReflectedScanner(DataScanner):
