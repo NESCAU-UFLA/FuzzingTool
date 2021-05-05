@@ -197,7 +197,10 @@ class CLIParser:
         if '-t' in self.__argv:
             numThreads = self.__argv[self.__argv.index('-t')+1]
             oh.infoBox(f"Set number of threads: {numThreads} thread(s)")
-            return int(numThreads)
+            try:
+                return int(numThreads)
+            except:
+                oh.errorBox("The number of threads must be an integer")
         return 1
 
     def checkBlacklistedStatus(self):
@@ -502,8 +505,6 @@ class CLIParser:
             keys.append('PARAM')
         if data['BODY']:
             keys.append('BODY')
-        if not keys:
-            return dataDict
         for key in keys:
             if '&' in data[key]:
                 data[key] = data[key].split('&')

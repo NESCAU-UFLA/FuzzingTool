@@ -79,11 +79,10 @@ class RequestParser:
 
         @returns dict: The target URL dictionary
         """
-        url = {
+        return {
             'content': url,
             'fuzzingIndexes': getIndexesToParse(url)
         }
-        return url
 
     def setupMethod(self, method: str):
         """The method setup

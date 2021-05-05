@@ -23,6 +23,7 @@ from .exceptions.MainExceptions import SkipTargetException
 from .exceptions.RequestExceptions import InvalidHostname, RequestException
 
 import time
+import threading
 
 APP_VERSION = {
     'MAJOR_VERSION': 3,
@@ -55,11 +56,13 @@ class ApplicationManager:
         requesters: The requesters list
         startedTime: The time when start the fuzzing test
         allResults: The results dictionary for each host
+        lock: A thread locker to prevent overwrites on logfiles
     """
     def __init__(self):
         self.requesters = []
         self.startedTime = 0
         self.allResults = {}
+        self.lock = threading.Lock()
 
     def isVerboseMode(self):
         """The verboseMode getter
@@ -352,7 +355,7 @@ class ApplicationManager:
             exceptionCallbacks=[self.invalidHostnameCallback, self.requestExceptionCallback],
         )
         self.fuzzer.start()
-        while not self.fuzzer.join():
+        while self.fuzzer.join():
             if self.skipTarget:
                 raise SkipTargetException(self.skipTarget)
 
@@ -393,7 +396,8 @@ class ApplicationManager:
             else:
                 if self.verbose[1]:
                     oh.notWorkedBox(str(e))
-            fh.logger.write(str(e))
+            with self.lock:
+                fh.logger.write(str(e))
         else:
             self.skipTarget = str(e)
 

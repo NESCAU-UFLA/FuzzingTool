@@ -18,7 +18,7 @@ from ..IO.FileHandler import fileHandler as fh
 from ..exceptions.MainExceptions import SkipTargetException
 from ..exceptions.RequestExceptions import RequestException, InvalidHostname
 
-from threading import Thread, Event, Semaphore
+from threading import Thread, Event
 import time
 from typing import Callable
 
@@ -64,9 +64,27 @@ class Fuzzer:
         self.__numberOfThreads = numberOfThreads
         self.__scanner = scanner
         self.__dict = dictionary
-        self.__resultsCallback = resultCallback
-        self.__exceptionCallbacks = exceptionCallbacks
         self.__running = True
+        self.resultsCallback = resultCallback
+        self.exceptionCallbacks = exceptionCallbacks
+        self.setup()
+
+    def setup(self):
+        """Handle with threads setup
+        
+        Attributes:
+            threads: The list with the threads used in the application
+            runningThreads: The running threads count
+            joinTimeout: The join timeout for the threads
+            playerHandler: The Event object handler - an internal flag manager for the threads
+        """
+        self.__threads = []
+        for i in range(self.__numberOfThreads):
+            self.__threads.append(Thread(target=self.run, daemon=True))
+        self.__runningThreads = self.__numberOfThreads
+        self.__joinTimeout = 0.001*float(self.__numberOfThreads)
+        self.__playerHandler = Event()
+        self.__playerHandler.clear() # Not necessary, but force the blocking of the threads
 
     def isRunning(self):
         """The running flag getter
@@ -75,119 +93,66 @@ class Fuzzer:
         """
         return self.__running
 
-    def threadHandle(self, action: str):
-        """Function that handle with all of the threads functions and atributes
-
-        @type action: str
-        @param action: The action taken by the thread handler
-        @returns func: A thread function
-        """
-        def run():
-            """Run the threads"""
-            while not self.__dict.isEmpty():
-                self.__playerHandler.wait()
-                payload = next(self.__dict)
-                for p in payload:
-                    try:
-                        result = self.__scanner.getResult(
-                            response=self.__requester.request(p)
-                        )
-                        self.__resultsCallback(
-                            result,
-                            self.__scanner.scan(result) if self.__scanner.match(result) else False
-                        )
-                    except InvalidHostname as e:
-                        self.__exceptionCallbacks[0](e)
-                    except RequestException as e:
-                        self.__exceptionCallbacks[1](e)
-                    finally:
-                        time.sleep(self.__delay)
-                if isPaused():
-                    self.__runningThreads -= 1
-
-        def start():
-            """Handle with threads start"""
-            self.__playerHandler.set() # Awake threads
-            for thread in self.__threads:
-                thread.start()
-
-        def resume():
-            """Handle with the threads resume"""
-            self.__runningThreads = self.__numberOfThreads
-            self.__playerHandler.set()
-
-        def pause():
-            """Handle with the threads pause"""
-            self.__playerHandler.clear()
-            while self.__runningThreads > 1:
-                pass
-            time.sleep(0.1)
-
-        def isPaused():
-            """The paused flag getter
-
-            @returns bool: The paused flag
-            """
-            return not self.__playerHandler.isSet()
-
-        def join():
-            """Join the threads
-
-            @returns bool: A flag to say if the threads are running or not
-            """
-            for thread in self.__threads:
-                thread.join(self.__joinTimeout)
-                if thread.is_alive():
-                    return False
-            return True
-
-        def setup():
-            """Handle with threads setup
-            
-            Attributes:
-                threads: The list with the threads used in the application
-                runningThreads: The running threads count
-                joinTimeout: The join timeout for the threads
-                playerHandler: The Event object handler - an internal flag manager for the threads
-            """
-            self.__threads = []
-            for i in range(self.__numberOfThreads):
-                self.__threads.append(Thread(target=run, daemon=True))
-            self.__runningThreads = self.__numberOfThreads
-            self.__joinTimeout = 0.001*float(self.__numberOfThreads)
-            self.__playerHandler = Event()
-            self.__playerHandler.clear() # Not necessary, but force the blocking of the threads
-
-        if action == 'setup': return setup()
-        elif action == 'start': return start()
-        elif action == 'stop': return pause()
-        elif action == 'join': return join
-        elif action == 'resume': return resume()
-        elif action == 'pause': return pause()
-        elif action == 'isPaused': return isPaused()
-
-    def start(self):
-        """Starts the fuzzer application"""
-        self.threadHandle('setup')
-        self.threadHandle('start')
-        self.join = self.threadHandle('join')
-
-    def stop(self):
-        """Stop the fuzzer application"""
-        self.__running = False
-        self.threadHandle('stop')
-    
-    def resume(self):
-        """Resume the fuzzer application"""
-        self.threadHandle('resume')
-    
-    def pause(self):
-        """Pause the fuzzer application"""
-        self.threadHandle('pause')
-    
     def isPaused(self):
         """The paused flag getter
 
         @returns bool: The paused flag
         """
-        return threadHandle('isPaused')
+        return not self.__playerHandler.isSet()
+
+    def run(self):
+        """Run the threads"""
+        while not self.__dict.isEmpty():
+            self.__playerHandler.wait()
+            payload = next(self.__dict)
+            for p in payload:
+                try:
+                    result = self.__scanner.getResult(
+                        response=self.__requester.request(p)
+                    )
+                    self.resultsCallback(
+                        result,
+                        self.__scanner.scan(result) if self.__scanner.match(result) else False
+                    )
+                except InvalidHostname as e:
+                    self.exceptionCallbacks[0](e)
+                except RequestException as e:
+                    self.exceptionCallbacks[1](e)
+                finally:
+                    time.sleep(self.__delay)
+            if self.isPaused():
+                self.__runningThreads -= 1
+
+    def join(self):
+        """Join the threads
+
+        @returns bool: A flag to say if the threads are running or not
+        """
+        for thread in self.__threads:
+            thread.join(self.__joinTimeout)
+            if thread.is_alive():
+                return True
+        return False
+
+    def start(self):
+        """Starts the fuzzer application"""
+        self.__playerHandler.set() # Awake threads
+        for thread in self.__threads:
+            thread.start()
+
+    def pause(self):
+        """Pause the fuzzer application"""
+        self.__playerHandler.clear()
+        while self.__runningThreads > 1:
+            pass
+        time.sleep(0.1)
+
+    def stop(self):
+        """Stop the fuzzer application"""
+        self.__running = False
+        self.pause()
+    
+    def resume(self):
+        """Resume the fuzzer application"""
+        self.__runningThreads = self.__numberOfThreads
+        self.__playerHandler.set()
