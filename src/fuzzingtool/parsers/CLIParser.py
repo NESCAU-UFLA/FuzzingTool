@@ -10,7 +10,7 @@
 #
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
-from .RequestParser import getHost, getPureUrl, getUrlWithoutScheme
+from .RequestParser import getUrlWithoutScheme
 from ..utils.utils import getIndexesToParse, getCustomPackageNames, importCustomPackage
 from ..core.dictionaries import *
 from ..core.encoders import *

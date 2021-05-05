@@ -10,10 +10,6 @@
 #
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
-from .OutputHandler import outputHandler as oh
-
-import platform
-import os
 import csv
 import json
 from datetime import datetime

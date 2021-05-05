@@ -14,8 +14,6 @@ from .dictionaries import *
 from .scanners import *
 from ..conn.requests import *
 from ..IO.OutputHandler import outputHandler as oh
-from ..IO.FileHandler import fileHandler as fh
-from ..exceptions.MainExceptions import SkipTargetException
 from ..exceptions.RequestExceptions import RequestException, InvalidHostname
 
 from threading import Thread, Event
