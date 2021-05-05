@@ -17,11 +17,11 @@ from ....exceptions.MainExceptions import MissingParameter
 
 import re
 
-class GrepScanner(DataScanner):
-    __name__ = "GrepScanner"
+class FindScanner(DataScanner):
+    __name__ = "FindScanner"
     __author__ = ("Vitor Oriel C N Borges")
     __params__ = "REGEX"
-    __desc__ = "Filter responses based on a regex"
+    __desc__ = "Filter results based on a regex match into the response body"
     __type__ = "DataFuzzing"
 
     """
