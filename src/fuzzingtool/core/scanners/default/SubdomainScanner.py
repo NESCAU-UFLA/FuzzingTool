@@ -22,7 +22,7 @@ class SubdomainScanner(BaseScanner):
     def getResult(self, response: Response):
         result = super().getResult(response)
         result['Payload'] = response.getResponse().request.url
-        result['IP'] = response.targetIp
+        result['IP'] = response.custom['IP']
         return result
 
     def scan(self, result: dict):

@@ -15,6 +15,7 @@ class Response:
 
     Attributes:
         response: The response object of the request
+        custom: A dict to handle with the custom information of a response
     """
     def __init__(self, response: object):
         """Class constructor
@@ -23,6 +24,7 @@ class Response:
         @param response: The response of a request
         """
         self.__response = response
+        self.custom = {}
         self.__loadResponseData()
     
     def getResponse(self):
@@ -51,14 +53,6 @@ class Response:
         self.payload = payload
         self.RTT = float('%.6f'%(timeTaken))
         self.requestIndex = requestIndex
-    
-    def setTargetIp(self, ip: str):
-        """The target IP setter
-
-        @type ip: str
-        @param ip: The target IP
-        """
-        self.targetIp = ip
 
     def __loadResponseData(self):
         """Loads the response data"""

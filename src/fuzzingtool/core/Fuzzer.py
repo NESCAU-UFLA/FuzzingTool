@@ -74,15 +74,15 @@ class Fuzzer:
             threads: The list with the threads used in the application
             runningThreads: The running threads count
             joinTimeout: The join timeout for the threads
-            playerHandler: The Event object handler - an internal flag manager for the threads
+            player: The player event object handler - an internal flag manager for the threads
         """
         self.__threads = []
         for i in range(self.__numberOfThreads):
             self.__threads.append(Thread(target=self.run, daemon=True))
         self.__runningThreads = self.__numberOfThreads
         self.__joinTimeout = 0.001*float(self.__numberOfThreads)
-        self.__playerHandler = Event()
-        self.__playerHandler.clear() # Not necessary, but force the blocking of the threads
+        self.__player = Event()
+        self.__player.clear() # Not necessary, but force the blocking of the threads
 
     def isRunning(self):
         """The running flag getter
@@ -96,12 +96,11 @@ class Fuzzer:
 
         @returns bool: The paused flag
         """
-        return not self.__playerHandler.isSet()
+        return not self.__player.isSet()
 
     def run(self):
         """Run the threads"""
         while not self.__dict.isEmpty():
-            self.__playerHandler.wait()
             payload = next(self.__dict)
             for p in payload:
                 try:
@@ -120,6 +119,7 @@ class Fuzzer:
                     time.sleep(self.__delay)
             if self.isPaused():
                 self.__runningThreads -= 1
+                self.__player.wait()
 
     def join(self):
         """Join the threads
@@ -134,13 +134,13 @@ class Fuzzer:
 
     def start(self):
         """Starts the fuzzer application"""
-        self.__playerHandler.set() # Awake threads
+        self.__player.set() # Awake threads
         for thread in self.__threads:
             thread.start()
 
     def pause(self):
         """Pause the fuzzer application"""
-        self.__playerHandler.clear()
+        self.__player.clear()
         while self.__runningThreads > 1:
             pass
         time.sleep(0.1)
@@ -153,4 +153,4 @@ class Fuzzer:
     def resume(self):
         """Resume the fuzzer application"""
         self.__runningThreads = self.__numberOfThreads
-        self.__playerHandler.set()
+        self.__player.set()

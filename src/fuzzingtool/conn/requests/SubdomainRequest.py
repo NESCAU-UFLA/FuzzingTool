@@ -73,5 +73,5 @@ class SubdomainRequest(Request):
         parser.setPayload(payload)
         ip = self.resolveHostname(getHost(parser.getUrl(self._url)))
         response = super().request(payload)
-        response.setTargetIp(ip)
+        response.custom['IP'] = ip
         return response
