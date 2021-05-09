@@ -51,6 +51,8 @@ class OutputHandler:
 
     """
     Attributes:
+        lock: The threads locker
+        breakLine: A string to break line
         lastInline: A flag to say if the last output was inline or not
         info: The info label
         warning: The warning label
@@ -64,6 +66,8 @@ class OutputHandler:
             raise Exception("This class is a singleton!")
         else:
             OutputHandler.__instance = self
+        self.__lock = None
+        self.__breakLine = ''
         self.__lastInline = False
         self.__info = f'{Colors.GRAY}[{Colors.BLUE_GRAY}INFO{Colors.GRAY}]{Colors.RESET} '
         self.__warning = f'{Colors.GRAY}[{Colors.YELLOW}WARNING{Colors.GRAY}]{Colors.RESET} '
@@ -74,10 +78,6 @@ class OutputHandler:
 
     def setVerbosityOutput(self, verboseMode: bool):
         """Set the output verbosity mode
-
-        Attributes:
-            breakLine: A string to break line
-            lock: The threads locker
 
         @type verboseMode: bool
         @param verboseMode: The verbose mode flag

@@ -287,12 +287,12 @@ class CLIParser:
             else:
                 params = ''
             if encoderName in getCustomPackageNames('encoders'):
-                encoder = importCustomPackage('encoders', encoderName)
-                if not encoder.__params__:
-                    encoder = encoder()
+                Encoder = importCustomPackage('encoders', encoderName)
+                if not Encoder.__params__:
+                    encoder = Encoder()
                 else:
                     try:
-                        encoder = encoder(params)
+                        encoder = Encoder(params)
                     except MissingParameter as e:
                         oh.errorBox(f"Encoder {encoderName} missing parameter: {str(e)}")
                     except Exception as e:
@@ -300,7 +300,7 @@ class CLIParser:
                 payloader.setEncoder(encoder)
             else:
                 oh.errorBox(f"Encoder {encoderName} not available!")
-            oh.infoBox(f"Set encoder: {encoder.__name__}")
+            oh.infoBox(f"Set encoder: {Encoder.__name__}")
 
     def checkReporter(self):
         """Check if the -o argument is present, and set the report data (name and type)
@@ -339,19 +339,19 @@ class CLIParser:
             else:
                 params = ''
             if scannerName in getCustomPackageNames('scanners'):
-                scanner = importCustomPackage('scanners', scannerName)
-                if not scanner.__params__:
-                    scanner = scanner()
+                Scanner = importCustomPackage('scanners', scannerName)
+                if not Scanner.__params__:
+                    scanner = Scanner()
                 else:
                     try:
-                        scanner = scanner(params)
+                        scanner = Scanner(params)
                     except MissingParameter as e:
                         oh.errorBox(f"Scanner {scannerName} missing parameter: {str(e)}")
                     except Exception as e:
                         oh.errorBox(f"Bad scanner argument format: {str(e)}")
             else:
                 oh.errorBox(f"Scanner {scannerName} not available!")
-            oh.infoBox(f"Set scanner: {scanner.__name__}")
+            oh.infoBox(f"Set scanner: {Scanner.__name__}")
         else:
             scanner = None
         return scanner
