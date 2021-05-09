@@ -155,7 +155,10 @@ class CLIParser:
         if '--timeout' in self.__argv:
             timeout = self.__argv[self.__argv.index('--timeout')+1]
             oh.infoBox(f"Set request timeout: {timeout} seconds")
-            return int(timeout)
+            try:
+                return int(timeout)
+            except:
+                oh.errorBox(f"The request timeout ({timeout}) must be an integer")
         return None
 
     def checkFollowRedirects(self):
@@ -175,7 +178,10 @@ class CLIParser:
         if '--delay' in self.__argv:
             delay = self.__argv[self.__argv.index('--delay')+1]
             oh.infoBox(f"Set delay: {delay} second(s)")
-            return float(delay)
+            try:
+                return float(delay)
+            except:
+                oh.errorBox(f"The delay ({delay}) must be a number")
         return 0
 
     def checkVerboseMode(self):
@@ -200,7 +206,7 @@ class CLIParser:
             try:
                 return int(numThreads)
             except:
-                oh.errorBox("The number of threads must be an integer")
+                oh.errorBox(f"The number of threads ({numThreads}) must be an integer")
         return 1
 
     def checkBlacklistedStatus(self):
@@ -380,11 +386,17 @@ class CLIParser:
         }
         if '-Ms' in self.__argv:
             length = self.__argv[self.__argv.index('-Ms')+1]
-            comparator['Length'] = int(length)
+            try:
+                comparator['Length'] = int(length)
+            except:
+                oh.errorBox(f"The match length argument ({length}) must be an integer")
             oh.infoBox(f"Exclude by length: {length} bytes")
         if '-Mt' in self.__argv:
             time = self.__argv[self.__argv.index('-Mt')+1]
-            comparator['Time'] = float(time)
+            try:
+                comparator['Time'] = float(time)
+            except:
+                oh.errorBox(f"The match time argument ({time}) must be a number")
             oh.infoBox(f"Exclude by time: {time} seconds")
         matcher.setComparator(comparator)
         return matcher
@@ -524,10 +536,13 @@ class CLIParser:
         @type allowedRange: list
         @param allowedRange: The range of allowed status codes
         """
-        if '-' not in status:
-            allowedList.append(int(status))
-        else:
-            codeLeft, codeRight = (int(code) for code in status.split('-', 1))
-            if codeRight < codeLeft:
-                codeLeft, codeRight = codeRight, codeLeft
-            allowedRange[:] = [codeLeft, codeRight]
+        try:
+            if '-' not in status:
+                allowedList.append(int(status))
+            else:
+                codeLeft, codeRight = (int(code) for code in status.split('-', 1))
+                if codeRight < codeLeft:
+                    codeLeft, codeRight = codeRight, codeLeft
+                allowedRange[:] = [codeLeft, codeRight]
+        except:
+            oh.errorBox(f"The match status argument ({status}) must be integer")
