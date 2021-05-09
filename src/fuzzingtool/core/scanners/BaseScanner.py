@@ -27,8 +27,9 @@ class BaseScanner(Matcher):
         """
         result = {
             'Request': str(response.requestIndex),
-            'Method': response.method,
-            'Payload': response.payload,
+            'Url': response.requestUrl,
+            'Method': response.requestMethod,
+            'Payload': response.requestPayload,
             'Time Taken': response.RTT,
             'Request Time': float('%.6f'%(response.RTT-response.elapsedTime)),
             'Response Time': response.elapsedTime,

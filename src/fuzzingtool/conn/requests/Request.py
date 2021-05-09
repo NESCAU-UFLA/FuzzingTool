@@ -255,7 +255,7 @@ class Request:
         except ValueError as e:
             raise RequestException(str(e))
         else:
-            response.setRequestData(method, payload, timeTaken, self._requestIndex)
+            response.setRequestData(url, method, payload, timeTaken, self._requestIndex)
             return response
         finally:
             self._requestIndex += 1

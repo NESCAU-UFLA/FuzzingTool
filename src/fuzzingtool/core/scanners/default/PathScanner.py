@@ -23,10 +23,8 @@ class PathScanner(BaseScanner):
     def getResult(self, response: Response):
         result = super().getResult(response)
         response = response.getResponse()
-        result['Payload'] = getPath(response.request.url)
         result['Redirected'] = ''
         if '301' in str(response.history) or '302' in str(response.history):
-            result['Payload'] = getPath(response.history[0].request.url)
             result['Redirected'] = response.url
         return result
 
@@ -45,10 +43,10 @@ class PathScanner(BaseScanner):
             redirected = result['Redirected']
             if redirected:
                 redirected = f" {Colors.LIGHT_YELLOW}Redirected to {redirected}{Colors.RESET}"
-        payload = '{:<30}'.format(oh.fixPayloadToOutput(result['Payload']))
+        url = '{:<30}'.format(oh.fixPayloadToOutput(getPath(result['Url'])))
         length = '{:>8}'.format(result['Length'])
         return (
-            f"{payload} {Colors.GRAY}["+
+            f"{url} {Colors.GRAY}["+
             f"{Colors.LIGHT_GRAY}Code{Colors.RESET} {statusColor}{status}{Colors.RESET} | "+
             f"{Colors.LIGHT_GRAY}Size{Colors.RESET} {length}{Colors.GRAY}]{Colors.RESET}"+
             f"{redirected}"

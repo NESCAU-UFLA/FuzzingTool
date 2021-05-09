@@ -21,7 +21,6 @@ class SubdomainScanner(BaseScanner):
 
     def getResult(self, response: Response):
         result = super().getResult(response)
-        result['Payload'] = response.getResponse().request.url
         result['IP'] = response.custom['IP']
         return result
 
@@ -29,10 +28,10 @@ class SubdomainScanner(BaseScanner):
         return True
 
     def getMessage(self, result: dict):
-        payload = '{:<30}'.format(oh.fixPayloadToOutput(result['Payload']))
+        url = '{:<30}'.format(oh.fixPayloadToOutput(result['Url']))
         ip = '{:>15}'.format(result['IP'])
         return (
-            f"{payload} {Colors.GRAY}["+
+            f"{url} {Colors.GRAY}["+
             f'{Colors.LIGHT_GRAY}IP{Colors.RESET} {ip}'" | "+
             f"{Colors.LIGHT_GRAY}Code{Colors.RESET} {result['Status']}{Colors.GRAY}]{Colors.RESET}"
         )

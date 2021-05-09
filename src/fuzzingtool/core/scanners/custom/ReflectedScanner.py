@@ -46,10 +46,11 @@ class ReflectedScanner(DataScanner):
             else:
                 reflected = f"{Colors.LIGHT_RED}{Colors.BOLD}NO "
                 del self.__reflected[result['Request']]
-        result = oh.getFormatedResult(result)
+        payload = '{:<30}'.format(oh.fixPayloadToOutput(result['Payload']))
+        length = '{:>8}'.format(result['Length'])
         return (
-            f"{result['Payload']} {Colors.GRAY}["+
+            f"{payload} {Colors.GRAY}["+
             f"{Colors.LIGHT_GRAY}Reflected{Colors.RESET} {reflected}{Colors.RESET} | "+
             f"{Colors.LIGHT_GRAY}Code{Colors.RESET} {result['Status']} | "+
-            f"{Colors.LIGHT_GRAY}Size{Colors.RESET} {result['Length']}{Colors.GRAY}]{Colors.RESET}"
+            f"{Colors.LIGHT_GRAY}Size{Colors.RESET} {length}{Colors.GRAY}]{Colors.RESET}"
         )

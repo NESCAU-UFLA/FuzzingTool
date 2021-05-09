@@ -35,6 +35,7 @@ class Response:
         return self.__response
 
     def setRequestData(self,
+        url: str,
         method: str,
         payload: str,
         timeTaken: float,
@@ -42,6 +43,8 @@ class Response:
     ):
         """Set the request data to be used into the dictionary
 
+        @type url: str
+        @param url: The target URL
         @type payload: str
         @param payload: The payload used in the request
         @type timeTaken: float
@@ -49,8 +52,9 @@ class Response:
         @type requestIndex: int
         @param requestIndex: The request index
         """
-        self.method = method
-        self.payload = payload
+        self.requestUrl = url
+        self.requestMethod = method
+        self.requestPayload = payload
         self.RTT = float('%.6f'%(timeTaken))
         self.requestIndex = requestIndex
 
