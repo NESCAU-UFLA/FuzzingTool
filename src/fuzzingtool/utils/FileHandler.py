@@ -65,13 +65,24 @@ class Reporter:
         }
         self.__file = None
     
-    def setMetadata(self, report: dict):
+    def setMetadata(self, report: str):
         """The report setter
 
-        @type report: dict
-        @param report: The report format and name dict
+        @type report: str
+        @param report: The report format and name
         """
-        self.__metadata = report
+        if '.' in report:
+            reportName, reportType = report.split('.')
+        else:
+            reportType = report
+            reportName = ''
+        reportType = reportType.lower()
+        if reportType not in ['txt', 'csv', 'json']:
+            raise Exception(f"Unsupported report format for {reportType}! Accepts: txt, csv and json")
+        self.__metadata = {
+            'Type': reportType,
+            'Name': reportName,
+        }
     
     def open(self, host: str):
         """Opens the report file 

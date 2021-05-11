@@ -267,22 +267,8 @@ class CliParser:
         """
         if '-o' in self.__argv:
             report = self.__argv[self.__argv.index('-o')+1]
-            if '.' in report:
-                reportName, reportType = report.split('.')
-            else:
-                reportType = report
-                reportName = ''
-            reportType = reportType.lower()
-            if reportType not in ['txt', 'csv', 'json']:
-                co.errorBox(f"Unsupported report format for {reportType}! Accepts: txt, csv and json")
             co.infoBox(f"Set report: {report}")
-        else:
-            reportType = 'txt'
-            reportName = ''
-        fh.reporter.setMetadata({
-            'Type': reportType,
-            'Name': reportName,
-        })
+            fh.reporter.setMetadata(report)
 
     def checkGlobalScanner(self):
         """Check if the --scanner argument is present, and return the asked scanner by the user
@@ -312,6 +298,9 @@ class CliParser:
         matcher = Matcher()
         if '-Mc' in self.__argv:
             allowedStatus = self.__argv[self.__argv.index('-Mc')+1]
+            if '200' not in allowedStatus:
+                if co.askYesNo('warning', "Status code 200 (OK) wasn't included. Do you want to include it to the allowed status codes?"):
+                    allowedStatus += ",200"
             allowedList = []
             allowedRange = []
             if ',' in allowedStatus:
@@ -319,9 +308,6 @@ class CliParser:
                     self.__getAllowedStatus(status, allowedList, allowedRange)
             else:
                 self.__getAllowedStatus(allowedStatus, allowedList, allowedRange)
-            if 200 not in allowedList:
-                if co.askYesNo('warning', "Status code 200 (OK) wasn't included. Do you want to include it to the allowed status codes?"):
-                    allowedList = [200] + allowedList
             allowedStatus = {
                 'List': allowedList,
                 'Range': allowedRange,

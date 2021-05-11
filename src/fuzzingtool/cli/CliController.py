@@ -86,19 +86,16 @@ class CliController:
             exit(f"FuzzingTool v{version()}")
         co.print(banner())
         try:
-            self.init(argv)
+            self.init()
             self.checkConnectionAndRedirections()
         except KeyboardInterrupt:
             co.abortBox("Test aborted by the user")
             exit(0)
         self.start()
 
-    def init(self, argv: list):
+    def init(self):
         """The initialization function.
            Set the application variables including plugins requires
-
-        @type argv: list
-        @param argv: The arguments given in the execution
         """
         cliParser = CliParser(argv)
         targets = cliParser.getTargets()
