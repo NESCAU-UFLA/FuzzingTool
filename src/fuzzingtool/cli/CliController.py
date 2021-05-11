@@ -534,7 +534,7 @@ def showCustomPackageHelp(packageName: str):
     @param packageName: The package to search for the custom content
     """
     for customPackage in getCustomPackageNames(packageName):
-        Package = PluginFactory.classCreator(packageName, customPackage)
+        Package = PluginFactory.classCreator(customPackage, packageName)
         if not Package.__type__:
             typeFuzzing = ''
         else:
