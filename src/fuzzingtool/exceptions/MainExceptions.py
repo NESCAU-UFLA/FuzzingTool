@@ -13,5 +13,8 @@
 class SkipTargetException(Exception):
     pass
 
+class InvalidPluginName(Exception):
+    pass
+
 class MissingParameter(Exception):
     pass

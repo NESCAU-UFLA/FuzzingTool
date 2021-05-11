@@ -12,9 +12,7 @@
 #
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
-from .ApplicationManager import ApplicationManager
+from .cli.CliController import CliController
 
-import sys
-
-def main():
-    ApplicationManager().main(sys.argv)
+def main_cli():
+    CliController().main()

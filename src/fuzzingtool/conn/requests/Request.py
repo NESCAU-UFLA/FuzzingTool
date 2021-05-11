@@ -10,8 +10,8 @@
 #
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
+from ..RequestParser import *
 from ..responses.Response import Response
-from ...parsers.RequestParser import getHost, getPureUrl, requestParser as parser
 from ...exceptions.RequestExceptions import RequestException, InvalidHostname
 
 import random
@@ -41,11 +41,13 @@ class Request:
         url: str,
         method: str = 'GET',
         methods: list = [],
-        data: dict = {},
+        data: str = "",
         headers: dict = {},
         followRedirects: bool = True,
         proxy: dict = {},
         proxies: list = [],
+        timeout: int = 0,
+        cookie: str = '',
     ):
         """Class constructor
 
@@ -66,15 +68,14 @@ class Request:
         @type proxies: list
         @param proxies: The list with the proxies used in the requests
         """
-        self._url = parser.setupUrl(url)
-        self.__method = parser.setupMethod(method)
-        self.__data = data
-        self.__headers = headers
-        self.__proxy = proxy
-        self.__proxies = proxies
-        self.__timeout = None if not self.isUrlFuzzing() else 10
+        self._url = self.__setupUrl(url)
+        self.__method = self.__setupMethod(method)
+        self.__data = self.__setupData(data)
+        self.__header = self.__setupHeader(headers)
+        self.__proxy = self.__setupProxy(proxy) if proxy else {}
+        self.__proxies = [self.__setupProxy(proxy) for proxy in proxies]
+        self.__timeout = None if not self.isUrlFuzzing() else 10 if not timeout else timeout
         self.__followRedirects = followRedirects
-        self.__setupHeader()
         if self.isUrlFuzzing():
             self.__session = requests.Session()
             self.__request = self.__sessionRequest
@@ -82,6 +83,8 @@ class Request:
             self.__request = self.__commonRequest
         self._requestIndex = 0
         self.methods = methods
+        if cookie:
+            self.setHeaderContent('Cookie', cookie)
     
     def getUrl(self):
         """The url content getter
@@ -122,7 +125,7 @@ class Request:
         for key, value in self.__data['BODY'].items():
             if not value:
                 return True
-        if self.__headers['payloadKeys']:
+        if self.__header['payloadKeys']:
             return True
         return False
 
@@ -153,17 +156,23 @@ class Request:
         @type method: str
         @param method: The request method
         """
-        self.__method = parser.setupMethod(method)
+        self.__method = self.__setupMethod(method)
 
-    def setHeaderContent(self, key: str, value: str):
+    def setHeaderContent(self, key: str, value: str, header: dict = {}):
         """The header content setter
 
         @type key: str
-        @param key: The HTTP Header key
+        @param key: The HTTP header key
         @type value: str
-        @param value: The HTTP Header value
+        @param value: The HTTP header value
         """
-        parser.setHeaderContent(self.__headers, key, value)
+        if not header:
+            header = self.__header
+        if '$' in value:
+            header['payloadKeys'].append(key)
+            header['content'][key] = self.__parseHeaderValue(value)
+        else:
+            header['content'][key] = value
 
     def setTimeout(self, timeout: int):
         """The timeout setter
@@ -184,7 +193,7 @@ class Request:
             response = requests.get(
                 url,
                 proxies=self.__proxy,
-                headers=parser.getHeader(self.__headers),
+                headers=requestParser.getHeader(self.__header),
                 timeout=self.__timeout if self.__timeout else 10, # Default 10 seconds to make a request
             )
             response.raise_for_status()
@@ -260,6 +269,130 @@ class Request:
         finally:
             self._requestIndex += 1
 
+    def __setupUrl(self, url: str):
+        """The URL setup
+
+        @returns dict: The target URL dictionary
+        """
+        if '://' not in url:
+            # No schema was defined, default protocol http
+            url = f'http://{url}'
+        if '/' not in getUrlWithoutScheme(url):
+            # Insert a base path if wasn't specified
+            url += '/'
+        if '?' in url:
+            url, self.__param = url.split('?', 1)
+        else:
+            self.__param = ''
+        return {
+            'content': url,
+            'fuzzingIndexes': getIndexesToParse(url)
+        }
+
+    def __setupMethod(self, method: str):
+        """The method setup
+
+        @returns dict: The target method dictionary
+        """
+        return {
+            'content': method,
+            'fuzzingIndexes': getIndexesToParse(method)
+        }
+
+    def __setupHeader(self, header: dict):
+        """Setup the HTTP Header
+        
+        @type header: dict
+        @param header: The HTTP header dictionary
+        @returns dict: The HTTP header dictionary
+        """
+        header = {
+            'content': header,
+            'payloadKeys': [],
+        }
+        for key, value in header['content'].items():
+            self.setHeaderContent(key, value, header)
+        if not header['content']:
+            header['content']['User-Agent'] = 'FuzzingTool Requester Agent'
+        else:
+            if 'Content-Length' in header['content'].keys():
+                del header['content']['Content-Length']
+        header['content']['Accept-Encoding'] = 'gzip, deflate'
+        return header
+
+    def __parseHeaderValue(self, value: str):
+        """Parse the header value into a list
+
+        @type value: str
+        @param value: The HTTP Header value
+        @returns list: The list with the HTTP Header value content
+        """
+        headerValue = []
+        lastIndex = 0
+        for i in getIndexesToParse(value):
+            headerValue.append(value[lastIndex:i])
+            lastIndex = i+1
+        if lastIndex == len(value):
+            headerValue.append('')
+        else:
+            headerValue.append(value[lastIndex:len(value)])
+        return headerValue
+
+    def __setupData(self, data: str):
+        """Split all the request parameters into a list of arguments used in the request
+
+        @type data: str
+        @param data: The body data of the request
+        @returns dict: The entries data of the request
+        """
+        rawData = {
+            'PARAM': '',
+            'BODY': '',
+        }
+        dataDict = {
+            'PARAM': {},
+            'BODY': {},
+        }
+        keys = []
+        if self.__param:
+            rawData['PARAM'] = self.__param
+            keys.append('PARAM')
+        del self.__param
+        if data:
+            rawData['BODY'] = data
+            keys.append('BODY')
+        for key in keys:
+            if '&' in rawData[key]:
+                rawData[key] = rawData[key].split('&')
+                for arg in rawData[key]:
+                    self.__buildDataDict(dataDict[key], arg)
+            else:
+                self.__buildDataDict(dataDict[key], rawData[key])
+        return dataDict
+
+    def __buildDataDict(self, dataDict: dict, key: str):
+        """Set the default parameter values if are given
+
+        @type data: dict
+        @param data: The entries data of the request
+        @type key: str
+        @param key: The parameter key of the request
+        """
+        if '=' in key:
+            key, value = key.split('=')
+            if not '$' in value:
+                dataDict[key] = value
+            else:
+                dataDict[key] = ''
+        else:
+            dataDict[key] = ''
+
+    def __setupProxy(proxy: str):
+        return {
+            'http': f"http://{proxy}",
+            'https': f"https://{proxy}",
+        }
+
     def __getRequestParameters(self, payload: str):
         """Get the request parameters using in the request fields
 
@@ -267,23 +400,13 @@ class Request:
         @param payload: The payload used in the request
         @returns tuple(str, str, dict, dict): The parameters of the request
         """
-        parser.setPayload(payload)
+        requestParser.setPayload(payload)
         return (
-            parser.getMethod(self.__method),
-            parser.getUrl(self._url),
-            parser.getHeader(self.__headers),
-            parser.getData(self.__data),
+            requestParser.getMethod(self.__method),
+            requestParser.getUrl(self._url),
+            requestParser.getHeader(self.__header),
+            requestParser.getData(self.__data),
         )
-
-    def __setupHeader(self):
-        """Setup the HTTP Header"""
-        self.__headers = parser.setupHeader(self.__headers)
-        if not self.__headers['content']:
-            self.__headers['content']['User-Agent'] = 'FuzzingTool Requester Agent'
-        else:
-            if 'Content-Length' in self.__headers['content'].keys():
-                del self.__headers['content']['Content-Length']
-        self.__headers['content']['Accept-Encoding'] = 'gzip, deflate'
     
     def __sessionRequest(self,
         method: str,

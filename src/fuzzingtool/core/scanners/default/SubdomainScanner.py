@@ -13,7 +13,7 @@
 from ..BaseScanner import BaseScanner
 from ..Matcher import Matcher
 from ....conn.responses.Response import Response
-from ....IO.OutputHandler import Colors, outputHandler as oh
+from ....cli.CliOutput import Colors, fixPayloadToOutput
 
 class SubdomainScanner(BaseScanner):
     __name__ = "SubdomainScanner"
@@ -27,8 +27,8 @@ class SubdomainScanner(BaseScanner):
     def scan(self, result: dict):
         return True
 
-    def getMessage(self, result: dict):
-        url = '{:<30}'.format(oh.fixPayloadToOutput(result['Url']))
+    def cliCallback(self, result: dict):
+        url = '{:<30}'.format(fixPayloadToOutput(result['Url']))
         ip = '{:>15}'.format(result['IP'])
         return (
             f"{url} {Colors.GRAY}["+

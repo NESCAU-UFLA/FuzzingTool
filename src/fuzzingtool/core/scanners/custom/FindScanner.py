@@ -12,7 +12,7 @@
 
 from ..default.DataScanner import DataScanner
 from ....conn.responses.Response import Response
-from ....IO.OutputHandler import Colors, outputHandler as oh
+from ....cli.CliOutput import Colors, fixPayloadToOutput
 from ....exceptions.MainExceptions import MissingParameter
 
 import re
@@ -36,7 +36,6 @@ class FindScanner(DataScanner):
         super().__init__()
         try:
             self.__regexer = re.compile(regex)
-            oh.infoBox(f"Regex used: {regex}")
         except re.error:
             raise Exception("Invalid regex format")
         self.__found = {}
@@ -49,7 +48,7 @@ class FindScanner(DataScanner):
         self.__found[result['Request']] = found
         return found
     
-    def getMessage(self, result: dict):
+    def cliCallback(self, result: dict):
         found = f"{Colors.LIGHT_YELLOW}{Colors.BOLD}IDK"
         if result['Request'] in self.__found:
             if self.__found[result['Request']]:
@@ -57,7 +56,7 @@ class FindScanner(DataScanner):
             else:
                 found = f"{Colors.LIGHT_RED}{Colors.BOLD}NO "
                 del self.__found[result['Request']]
-        payload = '{:<30}'.format(oh.fixPayloadToOutput(result['Payload']))
+        payload = '{:<30}'.format(fixPayloadToOutput(result['Payload']))
         length = '{:>8}'.format(result['Length'])
         return (
             f"{payload} {Colors.GRAY}["+

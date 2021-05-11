@@ -10,33 +10,23 @@
 #
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
-from .utils.utils import getCustomPackageNames, importCustomPackage
-from .parsers.CLIParser import CLIParser
-from .parsers.RequestParser import getPureUrl, getHost, checkForSubdomainFuzz
-from .core.Fuzzer import Fuzzer
-from .core.dictionaries.Payloader import Payloader
-from .core.scanners.Matcher import Matcher
-from .conn import *
-from .IO.OutputHandler import outputHandler as oh
-from .IO.FileHandler import fileHandler as fh
-from .exceptions.MainExceptions import SkipTargetException
-from .exceptions.RequestExceptions import InvalidHostname, RequestException
+from .CliParser import CliParser
+from .CliOutput import cliOutput as co
+from .. import version
+from ..utils.utils import getCustomPackageNames
+from ..utils.FileHandler import fileHandler as fh
+from ..core.Fuzzer import Fuzzer
+from ..core.dictionaries.Payloader import Payloader
+from ..core.scanners.Matcher import Matcher
+from ..conn import *
+from ..factories.HttpFactory import HttpFactory
+from ..factories.PluginFactory import PluginFactory
+from ..exceptions.MainExceptions import SkipTargetException
+from ..exceptions.RequestExceptions import InvalidHostname, RequestException
 
 import time
 import threading
-
-APP_VERSION = {
-    'MAJOR_VERSION': 3,
-    "MINOR_VERSION": 9,
-    "PATCH": 2
-}
-
-def version():
-    global APP_VERSION
-    version = (str(APP_VERSION['MAJOR_VERSION'])+"."+
-               str(APP_VERSION['MINOR_VERSION'])+"."+
-               str(APP_VERSION['PATCH']))
-    return version
+from sys import argv
 
 def banner():
     banner = ("\033[36m   ____                        _____       _\n"+
@@ -49,7 +39,7 @@ def banner():
               "      and should not be used in environments without legal authorization.\n")
     return banner
 
-class ApplicationManager:
+class CliController:
     """Class that handle with the entire application
 
     Attributes:
@@ -71,16 +61,13 @@ class ApplicationManager:
         """
         return self.verbose[0]
 
-    def main(self, argv: list):
+    def main(self):
         """The main function.
            Prepares the application environment and starts the fuzzing
-
-        @type argv: list
-        @param argv: The arguments given in the execution
         """
         if len(argv) < 2:
-            oh.print(banner())
-            oh.errorBox("Invalid format! Use -h on 2nd parameter to show the help menu.")
+            co.print(banner())
+            co.errorBox("Invalid format! Use -h on 2nd parameter to show the help menu.")
         if '-h' in argv[1] or '--help' in argv[1]:
             if '=' in argv[1]:
                 askedHelp = argv[1].split('=')[1]
@@ -91,18 +78,18 @@ class ApplicationManager:
                 elif 'scanners' in askedHelp:
                     showScannersHelp()
                 else:
-                    oh.errorBox("Invalid help argument")
+                    co.errorBox("Invalid help argument")
             else:
                 showHelpMenu()
             exit(0)
         if argv[1] == '-v' or argv[1] == '--version':
             exit(f"FuzzingTool v{version()}")
-        oh.print(banner())
+        co.print(banner())
         try:
             self.init(argv)
             self.checkConnectionAndRedirections()
         except KeyboardInterrupt:
-            oh.abortBox("Test aborted by the user")
+            co.abortBox("Test aborted by the user")
             exit(0)
         self.start()
 
@@ -113,12 +100,12 @@ class ApplicationManager:
         @type argv: list
         @param argv: The arguments given in the execution
         """
-        cliParser = CLIParser(argv)
+        cliParser = CliParser(argv)
         targets = cliParser.getTargets()
         self.globalScanner = cliParser.checkGlobalScanner()
         self.matcher = cliParser.checkMatcher()
         self.verbose = cliParser.checkVerboseMode()
-        oh.setVerbosityOutput(self.isVerboseMode())
+        co.setVerbosityOutput(self.isVerboseMode())
         self.blacklistedStatus, action = cliParser.checkBlacklistedStatus()
         self.blacklistAction = lambda status : None
         if self.blacklistedStatus:
@@ -129,41 +116,33 @@ class ApplicationManager:
         if self.globalScanner:
             self.globalScanner.update(self.matcher)
             self.scanner = self.globalScanner
-            oh.setPrintResultMode(self.scanner.getMessage)
+            co.setMessageCallback(self.scanner.cliCallback)
         cookie = cliParser.checkCookie()
         proxy = cliParser.checkProxy()
         proxies = cliParser.checkProxies()
         timeout = cliParser.checkTimeout()
         followRedirects = cliParser.checkFollowRedirects()
         for target in targets:
-            oh.infoBox(f"Set target URL: {target['url']}")
-            oh.infoBox(f"Set request method: {target['methods']}")
-            if target['data']['PARAM'] or target['data']['BODY']:
-                oh.infoBox(f"Set request data: {str(target['data'])}")
+            co.infoBox(f"Set target URL: {target['url']}")
+            co.infoBox(f"Set request method: {target['methods']}")
+            if target['data']:
+                co.infoBox(f"Set request data: {target['data']}")
             if checkForSubdomainFuzz(target['url']):
-                requester = SubdomainRequest(
-                    url=target['url'],
-                    methods=target['methods'],
-                    data=target['data'],
-                    headers=target['header'],
-                    followRedirects=followRedirects,
-                    proxy=proxy,
-                    proxies=proxies,
-                )
+                requestType = 'SubdomainRequest'
             else:
-                requester = Request(
-                    url=target['url'],
-                    methods=target['methods'],
-                    data=target['data'],
-                    headers=target['header'],
-                    followRedirects=followRedirects,
-                    proxy=proxy,
-                    proxies=proxies,
-                )
-            if cookie:
-                requester.setHeaderContent('Cookie', cookie)
-            if timeout:
-                requester.setTimeout(timeout)
+                requestType = 'Request'
+            requester = HttpFactory.requestCreator(
+                requestType,
+                url=target['url'],
+                methods=target['methods'],
+                data=target['data'],
+                headers=target['header'],
+                followRedirects=followRedirects,
+                proxy=proxy,
+                proxies=proxies,
+                timeout=timeout,
+                cookie=cookie,
+            )
             self.requesters.append(requester)
         self.dict = cliParser.getDictionary()
         cliParser.checkPrefixAndSuffix(self.dict)
@@ -194,14 +173,14 @@ class ApplicationManager:
             """
             if not self.fuzzer.isPaused():
                 if not self.isVerboseMode():
-                    oh.print("")
-                oh.warningBox(f"Status code {str(status)} detected. Pausing threads ...")
+                    co.print("")
+                co.warningBox(f"Status code {str(status)} detected. Pausing threads ...")
                 self.fuzzer.pause()
                 if not self.isVerboseMode():
-                    oh.print("")
-                oh.infoBox(f"Waiting for {self.waitingTime} seconds ...")
+                    co.print("")
+                co.infoBox(f"Waiting for {self.waitingTime} seconds ...")
                 time.sleep(self.waitingTime)
-                oh.infoBox("Resuming target ...")
+                co.infoBox("Resuming target ...")
                 self.fuzzer.resume()
 
         if 'skip' in action:
@@ -210,48 +189,48 @@ class ApplicationManager:
             try:
                 action, timeToWait = action.split('=')
             except:
-                oh.errorBox("Must set a time to wait")
+                co.errorBox("Must set a time to wait")
             try:
                 self.waitingTime = float(timeToWait)
             except:
-                oh.errorBox("Time to wait must be a number")
+                co.errorBox("Time to wait must be a number")
             return wait
         else:
-            oh.errorBox("Invalid type of blacklist action")
+            co.errorBox("Invalid type of blacklist action")
 
     def checkConnectionAndRedirections(self):
         """Test the connection and redirection to target.
            If data fuzzing is detected, check for redirections
         """
         for requester in self.requesters:
-            oh.infoBox(f"Checking connection and redirections on {requester.getUrl()} ...")
+            co.infoBox(f"Checking connection and redirections on {requester.getUrl()} ...")
             if requester.isUrlFuzzing():
-                oh.infoBox("Test mode set for URL fuzzing")
-                oh.infoBox("Testing connection ...")
+                co.infoBox("Test mode set for URL fuzzing")
+                co.infoBox("Testing connection ...")
                 try:
                     requester.testConnection()
                 except RequestException as e:
-                    if oh.askYesNo('warning', f"{str(e)}. Remove this target?"):
+                    if co.askYesNo('warning', f"{str(e)}. Remove this target?"):
                         self.requesters.remove(requester)
                     if len(self.requesters) == 0:
-                        oh.errorBox("No targets left for fuzzing")
+                        co.errorBox("No targets left for fuzzing")
                 else:
-                    oh.infoBox("Connection status: OK")
+                    co.infoBox("Connection status: OK")
             else:
-                oh.infoBox("Test mode set for data fuzzing")
-                oh.infoBox("Testing connection ...")
+                co.infoBox("Test mode set for data fuzzing")
+                co.infoBox("Testing connection ...")
                 try:
                     requester.testConnection()
                 except RequestException as e:
                     if "connected" in str(e).lower():
-                        if oh.askYesNo('warning', f"{str(e)}. Remove this target?"):
+                        if co.askYesNo('warning', f"{str(e)}. Remove this target?"):
                             self.requesters.remove(requester)
                     else:
-                        oh.warningBox(f"{str(e)}. Target removed from list.")
+                        co.warningBox(f"{str(e)}. Target removed from list.")
                         self.requesters.remove(requester)
                     if len(self.requesters) == 0:
-                        oh.errorBox("No targets left for fuzzing")
-                oh.infoBox("Connection status: OK")
+                        co.errorBox("No targets left for fuzzing")
+                co.infoBox("Connection status: OK")
                 if requester.isDataFuzzing():
                     self.checkRedirections(requester)
 
@@ -262,22 +241,22 @@ class ApplicationManager:
         @type requester: Request
         @param requester: The requester for the target
         """
-        oh.infoBox("Testing redirections ...")
+        co.infoBox("Testing redirections ...")
         for method in requester.methods:
             requester.setMethod(method)
-            oh.infoBox(f"Testing with {method} method ...")
+            co.infoBox(f"Testing with {method} method ...")
             try:
                 if requester.hasRedirection():
-                    if oh.askYesNo('warning', "You was redirected to another page. Remove this method?"):
+                    if co.askYesNo('warning', "You was redirected to another page. Remove this method?"):
                         requester.methods.remove(method)
-                        oh.infoBox(f"Method {method} removed from list")
+                        co.infoBox(f"Method {method} removed from list")
                 else:
-                    oh.infoBox("No redirections")
+                    co.infoBox("No redirections")
             except RequestException as e:
-                oh.warningBox(f"{str(e)}. Removing method {method}")
+                co.warningBox(f"{str(e)}. Removing method {method}")
         if len(requester.methods) == 0:
             self.requesters.remove(requester)
-            oh.warningBox("No methods left on this target, removed from targets list")
+            co.warningBox("No methods left on this target, removed from targets list")
 
     def start(self):
         """Starts the fuzzing application.
@@ -289,29 +268,29 @@ class ApplicationManager:
             for requester in self.requesters:
                 try:
                     self.prepareTarget(requester)
-                    oh.infoBox(f"Starting test on '{self.requester.getUrl()}' ...")
+                    co.infoBox(f"Starting test on '{self.requester.getUrl()}' ...")
                     for method in self.requester.methods:
                         self.requester.resetRequestIndex()
                         self.requester.setMethod(method)
-                        oh.infoBox(f"Set method for fuzzing: {method}")
+                        co.infoBox(f"Set method for fuzzing: {method}")
                         self.prepareFuzzer()
                         if not self.isVerboseMode():
-                            oh.print("")
+                            co.print("")
                 except SkipTargetException as e:
                     if self.fuzzer and self.fuzzer.isRunning():
                         if not self.isVerboseMode():
-                            oh.print("")
-                        oh.warningBox("Skip target detected, stopping threads ...")
+                            co.print("")
+                        co.warningBox("Skip target detected, stopping threads ...")
                         self.fuzzer.stop()
-                    oh.abortBox(f"{str(e)}. Target skipped")
+                    co.abortBox(f"{str(e)}. Target skipped")
         except KeyboardInterrupt:
             if self.fuzzer and self.fuzzer.isRunning():
-                oh.abortBox("Test aborted, stopping threads ...")
+                co.abortBox("Test aborted, stopping threads ...")
                 self.fuzzer.stop()
-            oh.abortBox("Test aborted by the user")
+            co.abortBox("Test aborted by the user")
         finally:
             self.showFooter()
-            oh.infoBox("Test completed")
+            co.infoBox("Test completed")
 
     def prepareTarget(self, requester: Request):
         """Prepare the target variables for the fuzzing tests.
@@ -322,7 +301,7 @@ class ApplicationManager:
         """
         self.requester = requester
         targetHost = getHost(getPureUrl(requester.getUrlDict()))
-        oh.infoBox(f"Preparing target {targetHost} ...")
+        co.infoBox(f"Preparing target {targetHost} ...")
         before = time.time()
         self.checkIgnoreErrors(targetHost)
         self.startedTime += (time.time() - before)
@@ -332,10 +311,10 @@ class ApplicationManager:
         if not self.globalScanner:
             self.scanner = self.getDefaultScanner()
             self.scanner.update(self.matcher)
-            oh.setPrintResultMode(self.scanner.getMessage)
+            co.setMessageCallback(self.scanner.cliCallback)
             if (self.requester.isDataFuzzing() and
                 not self.matcher.comparatorIsSet()):
-                oh.infoBox("DataFuzzing detected, checking for a data comparator ...")
+                co.infoBox("DataFuzzing detected, checking for a data comparator ...")
                 before = time.time()
                 self.scanner.setComparator(self.getDataComparator())
                 self.startedTime += (time.time() - before)
@@ -373,12 +352,12 @@ class ApplicationManager:
             if self.verbose[0]:
                 if validate:
                     self.results.append(result)
-                oh.printResult(result, validate)
+                co.printResult(result, validate)
             else:
                 if validate:
                     self.results.append(result)
-                    oh.printResult(result, validate)
-                oh.progressStatus(
+                    co.printResult(result, validate)
+                co.progressStatus(
                     f"[{result['Request']}/{self.dictSizeof}] {str(int((int(result['Request'])/self.dictSizeof)*100))}%"
                 )
     
@@ -390,12 +369,12 @@ class ApplicationManager:
         """
         if self.ignoreErrors:
             if not self.verbose[0]:
-                oh.progressStatus(
+                co.progressStatus(
                     f"[{self.requester.getRequestIndex()}/{self.dictSizeof}] {str(int((int(self.requester.getRequestIndex())/self.dictSizeof)*100))}%"
                 )
             else:
                 if self.verbose[1]:
-                    oh.notWorkedBox(str(e))
+                    co.notWorkedBox(str(e))
             with self.lock:
                 fh.logger.write(str(e))
         else:
@@ -409,9 +388,9 @@ class ApplicationManager:
         """
         if self.verbose[0]:
             if self.verbose[1]:
-                oh.notWorkedBox(str(e))
+                co.notWorkedBox(str(e))
         else:
-            oh.progressStatus(
+            co.progressStatus(
                 f"[{self.requester.getRequestIndex()}/{self.dictSizeof}] {str(int((int(self.requester.getRequestIndex())/self.dictSizeof)*100))}%"
             )
 
@@ -422,13 +401,13 @@ class ApplicationManager:
         """
         if self.requester.isUrlFuzzing():
             if "SubdomainRequest" in str(type(self.requester)):
-                from .core.scanners.default.SubdomainScanner import SubdomainScanner
+                from ..core.scanners.default.SubdomainScanner import SubdomainScanner
                 scanner = SubdomainScanner()
             else:
-                from .core.scanners.default.PathScanner import PathScanner
+                from ..core.scanners.default.PathScanner import PathScanner
                 scanner = PathScanner()
         else:
-            from .core.scanners.default.DataScanner import DataScanner
+            from ..core.scanners.default.DataScanner import DataScanner
             scanner = DataScanner()
         return scanner
 
@@ -443,12 +422,12 @@ class ApplicationManager:
         if self.requester.isUrlFuzzing():
             self.ignoreErrors = True
             logPath = fh.logger.open(host)
-            oh.infoBox(f'The logs will be saved on \'{logPath}\'')
+            co.infoBox(f'The logs will be saved on \'{logPath}\'')
         else:
-            if oh.askYesNo('info', "Do you want to ignore errors on this target, and save them into a log file?"):
+            if co.askYesNo('info', "Do you want to ignore errors on this target, and save them into a log file?"):
                 self.ignoreErrors = True
                 logPath = fh.logger.open(host)
-                oh.infoBox(f'The logs will be saved on \'{logPath}\'')
+                co.infoBox(f'The logs will be saved on \'{logPath}\'')
             else:
                 self.ignoreErrors = False
 
@@ -462,7 +441,7 @@ class ApplicationManager:
             'Time': None,
         }
         payload = ' ' # Set an arbitraty payload
-        oh.infoBox(f"Making first request with '{payload}' as payload ...")
+        co.infoBox(f"Making first request with '{payload}' as payload ...")
         try:
             # Make the first request to get some info about the target
             response = self.requester.request(payload)
@@ -471,16 +450,16 @@ class ApplicationManager:
         firstResult = self.scanner.getResult(
             response=response
         )
-        oh.printResult(firstResult, False)
+        co.printResult(firstResult, False)
         defaultLength = int(firstResult['Length'])+300
-        if oh.askYesNo('info', "Do you want to exclude responses based on custom length?"):
-            length = oh.askData(f"Insert the length (default {defaultLength})")
+        if co.askYesNo('info', "Do you want to exclude responses based on custom length?"):
+            length = co.askData(f"Insert the length (default {defaultLength})")
             if not length:
                 length = defaultLength
             comparator['Length'] = int(length)
         defaultTime = firstResult['Time Taken']+5.0
-        if oh.askYesNo('info', "Do you want to exclude responses based on custom time?"):
-            time = oh.askData(f"Insert the time (in seconds, default {defaultTime} seconds)")
+        if co.askYesNo('info', "Do you want to exclude responses based on custom time?"):
+            time = co.askData(f"Insert the time (in seconds, default {defaultTime} seconds)")
             if not time:
                 time = defaultTime
             comparator['Time'] = float(time)
@@ -492,61 +471,61 @@ class ApplicationManager:
         """
         if self.fuzzer:
             if self.startedTime:
-                oh.infoBox(f"Time taken: {float('%.2f'%(time.time() - self.startedTime))} seconds")
+                co.infoBox(f"Time taken: {float('%.2f'%(time.time() - self.startedTime))} seconds")
             for key, value in self.allResults.items():
                 if value:
                     if self.isVerboseMode():
-                        oh.infoBox(f"Found {len(value)} matched results on target {key}:")
+                        co.infoBox(f"Found {len(value)} matched results on target {key}:")
                         for result in value:
-                            oh.printResult(result, True)
+                            co.printResult(result, True)
                     reportPath = fh.reporter.open(key)
-                    oh.infoBox(f'Saving results for {key} on \'{reportPath}\' ...')
+                    co.infoBox(f'Saving results for {key} on \'{reportPath}\' ...')
                     fh.reporter.write(value)
-                    oh.infoBox('Results saved')
+                    co.infoBox('Results saved')
                 else:
-                    oh.infoBox(f"No matched results was found on target {key}")
+                    co.infoBox(f"No matched results was found on target {key}")
 
 def showHelpMenu():
-    oh.helpTitle(0, "Parameters:")
-    oh.helpTitle(3, "Misc:")
-    oh.helpContent(5, "-h, --help", "Show the help menu and exit")
-    oh.helpContent(5, "-v, --version", "Show the current version and exit")
-    oh.helpTitle(3, "Request options:")
-    oh.helpContent(5, "-r FILE", "Define the file with the raw HTTP request (scheme not specified)")
-    oh.helpContent(5, "--scheme SCHEME", "Define the scheme used in the URL (default http)")
-    oh.helpContent(5, "-u URL", "Define the target URL")
-    oh.helpContent(5, "-X METHOD", "Define the request http verbs (method)")
-    oh.helpContent(5, "-d DATA", "Define the request body data")
-    oh.helpContent(5, "--proxy IP:PORT", "Define the proxy")
-    oh.helpContent(5, "--proxies FILE", "Define the file with a list of proxies")
-    oh.helpContent(5, "--cookie COOKIE", "Define the HTTP Cookie header value")
-    oh.helpContent(5, "--timeout TIMEOUT", "Define the request timeout (in seconds)")
-    oh.helpContent(5, "--unfollow-redirects", "Stop to follow redirects")
-    oh.helpTitle(3, "Payload options:")
-    oh.helpContent(5, "-w WORDLIST", "Define the wordlist dictionary (--help=dictionaries for more info)")
-    oh.helpContent(5, "-e ENCODER", "Define the encoder used on payloads (--help=encoders for more info)")
-    oh.helpContent(5, "--prefix PREFIX", "Define the prefix(es) used with the payload")
-    oh.helpContent(5, "--suffix SUFFIX", "Define the suffix(es) used with the payload")
-    oh.helpContent(5, "--upper", "Set the uppercase case for the payloads")
-    oh.helpContent(5, "--lower", "Set the lowercase case for the payloads")
-    oh.helpContent(5, "--capitalize", "Set the capitalize case for the payloads")
-    oh.helpTitle(3, "Match options:")
-    oh.helpContent(5, "-Mc STATUS", "Match responses based on their status codes")
-    oh.helpContent(5, "-Ms SIZE", "Match responses based on their length (in bytes)")
-    oh.helpContent(5, "-Mt TIME", "Match responses based on their elapsed time (in seconds)")
-    oh.helpContent(5, "--scanner SCANNER", "Define the custom scanner (--help=scanners for more info)")
-    oh.helpTitle(3, "More options:")
-    oh.helpContent(5, "(-V, -V1) | -V2", "Enable the verbose mode (common or full verbose)")
-    oh.helpContent(5, "--delay DELAY", "Define the delay between each request (in seconds)")
-    oh.helpContent(5, "-t NUMBEROFTHREADS", "Define the number of threads used in the tests")
-    oh.helpContent(5, "-o REPORT", "Define the report format (accept txt, csv and json)")
-    oh.helpContent(5, "--blacklist-status STATUS:ACTION", "Blacklist status codes from response, and take an action when one is detected. Available actions: skip (to skip the current target), wait=SECONDS (to pause the app for some seconds)")
-    oh.helpTitle(0, "Examples:\n")
-    oh.print("FuzzingTool -u http://127.0.0.1/post.php?id= -w /path/to/wordlist/sqli.txt -Mt 20 -Mc 500-600 -t 30 -o fuzzingGet.csv\n")
-    oh.print("FuzzingTool -w /path/to/wordlist/sqli.txt -u http://127.0.0.1/controller/user.php -d 'login&passw&user=login' -Ms 1200\n")
-    oh.print("FuzzingTool -w /path/to/wordlist/paths.txt -u http://127.0.0.1/$ -u http://192.168.0.133/$ --suffix .php,.html --unfollow-redirects -Mc 200,302,303\n")
-    oh.print("FuzzingTool -w /path/to/wordlist/subdomains.txt -u https://$.domainexample.com/ -t 100 -Ms 1500 --timeout 5\n")
-    oh.print("FuzzingTool -r /path/to/raw-http1.txt -r /path/to/raw-http2.txt --scheme https -w /path/to/wordlist/sqli.txt -V -o json\n")
+    co.helpTitle(0, "Parameters:")
+    co.helpTitle(3, "Misc:")
+    co.helpContent(5, "-h, --help", "Show the help menu and exit")
+    co.helpContent(5, "-v, --version", "Show the current version and exit")
+    co.helpTitle(3, "Request options:")
+    co.helpContent(5, "-r FILE", "Define the file with the raw HTTP request (scheme not specified)")
+    co.helpContent(5, "--scheme SCHEME", "Define the scheme used in the URL (default http)")
+    co.helpContent(5, "-u URL", "Define the target URL")
+    co.helpContent(5, "-X METHOD", "Define the request http verbs (method)")
+    co.helpContent(5, "-d DATA", "Define the request body data")
+    co.helpContent(5, "--proxy IP:PORT", "Define the proxy")
+    co.helpContent(5, "--proxies FILE", "Define the file with a list of proxies")
+    co.helpContent(5, "--cookie COOKIE", "Define the HTTP Cookie header value")
+    co.helpContent(5, "--timeout TIMEOUT", "Define the request timeout (in seconds)")
+    co.helpContent(5, "--unfollow-redirects", "Stop to follow redirects")
+    co.helpTitle(3, "Payload options:")
+    co.helpContent(5, "-w WORDLIST", "Define the wordlist dictionary (--help=dictionaries for more info)")
+    co.helpContent(5, "-e ENCODER", "Define the encoder used on payloads (--help=encoders for more info)")
+    co.helpContent(5, "--prefix PREFIX", "Define the prefix(es) used with the payload")
+    co.helpContent(5, "--suffix SUFFIX", "Define the suffix(es) used with the payload")
+    co.helpContent(5, "--upper", "Set the uppercase case for the payloads")
+    co.helpContent(5, "--lower", "Set the lowercase case for the payloads")
+    co.helpContent(5, "--capitalize", "Set the capitalize case for the payloads")
+    co.helpTitle(3, "Match options:")
+    co.helpContent(5, "-Mc STATUS", "Match responses based on their status codes")
+    co.helpContent(5, "-Ms SIZE", "Match responses based on their length (in bytes)")
+    co.helpContent(5, "-Mt TIME", "Match responses based on their elapsed time (in seconds)")
+    co.helpContent(5, "--scanner SCANNER", "Define the custom scanner (--help=scanners for more info)")
+    co.helpTitle(3, "More options:")
+    co.helpContent(5, "(-V, -V1) | -V2", "Enable the verbose mode (common or full verbose)")
+    co.helpContent(5, "--delay DELAY", "Define the delay between each request (in seconds)")
+    co.helpContent(5, "-t NUMBEROFTHREADS", "Define the number of threads used in the tests")
+    co.helpContent(5, "-o REPORT", "Define the report format (accept txt, csv and json)")
+    co.helpContent(5, "--blacklist-status STATUS:ACTION", "Blacklist status codes from response, and take an action when one is detected. Available actions: skip (to skip the current target), wait=SECONDS (to pause the app for some seconds)")
+    co.helpTitle(0, "Examples:\n")
+    co.print("FuzzingTool -u http://127.0.0.1/post.php?id= -w /path/to/wordlist/sqli.txt -Mt 20 -Mc 500-600 -t 30 -o fuzzingGet.csv\n")
+    co.print("FuzzingTool -w /path/to/wordlist/sqli.txt -u http://127.0.0.1/controller/user.php -d 'login&passw&user=login' -Ms 1200\n")
+    co.print("FuzzingTool -w /path/to/wordlist/paths.txt -u http://127.0.0.1/$ -u http://192.168.0.133/$ --suffix .php,.html --unfollow-redirects -Mc 200,302,303\n")
+    co.print("FuzzingTool -w /path/to/wordlist/subdomains.txt -u https://$.domainexample.com/ -t 100 -Ms 1500 --timeout 5\n")
+    co.print("FuzzingTool -r /path/to/raw-http1.txt -r /path/to/raw-http2.txt --scheme https -w /path/to/wordlist/sqli.txt -V -o json\n")
 
 def showCustomPackageHelp(packageName: str):
     """Show the custom package help
@@ -555,44 +534,44 @@ def showCustomPackageHelp(packageName: str):
     @param packageName: The package to search for the custom content
     """
     for customPackage in getCustomPackageNames(packageName):
-        package = importCustomPackage(packageName, customPackage)
-        if not package.__type__:
+        Package = PluginFactory.classCreator(packageName, customPackage)
+        if not Package.__type__:
             typeFuzzing = ''
         else:
-            typeFuzzing = f" (Used for {package.__type__})"
-        if not package.__params__:
+            typeFuzzing = f" (Used for {Package.__type__})"
+        if not Package.__params__:
             params = ''
         else:
-            params = f"={package.__params__}"
-        oh.helpContent(5, f"{package.__name__}{params}", f"{package.__desc__}{typeFuzzing}\n")
+            params = f"={Package.__params__}"
+        co.helpContent(5, f"{Package.__name__}{params}", f"{Package.__desc__}{typeFuzzing}\n")
 
 def showDictionariesHelp():
-    oh.helpTitle(0, "Dictionary options: (-w)")
-    oh.helpTitle(2, "Default: The default dictionaries are selected by default when no custom are choiced\n")
-    oh.helpContent(5, "FILEPATH", "Set the path of the wordlist file")
-    oh.helpContent(5, "[PAYLOAD1,PAYLOAD2,]", "Set the payloads list to be used as wordlist")
-    oh.helpTitle(2, "Custom (Dictionary=PARAM): Set the custom dictionary and his parameter\n")
+    co.helpTitle(0, "Dictionary options: (-w)")
+    co.helpTitle(2, "Default: The default dictionaries are selected by default when no custom are choiced\n")
+    co.helpContent(5, "FILEPATH", "Set the path of the wordlist file")
+    co.helpContent(5, "[PAYLOAD1,PAYLOAD2,]", "Set the payloads list to be used as wordlist")
+    co.helpTitle(2, "Custom (Dictionary=PARAM): Set the custom dictionary and his parameter\n")
     showCustomPackageHelp('dictionaries')
-    oh.helpTitle(0, "Examples:\n")
-    oh.print("FuzzingTool -u https://$.domainexample.com/ -w /path/to/wordlist/subdomains.txt -t 30 --timeout 5 -V2\n")
-    oh.print("FuzzingTool -u https://$.domainexample.com/ -w [wp-admin,admin,webmail,www,cpanel] -t 30 --timeout 5 -V2\n")
-    oh.print("FuzzingTool -u https://$.domainexample.com/ -w CrtDictionary=domainexample.com -t 30 --timeout 5 -V2\n")
-    oh.print("FuzzingTool -u https://domainexample.com/$ -w OverflowDictionary=5000,:../:etc/passwd -t 30 --timeout 5 -V2\n")
+    co.helpTitle(0, "Examples:\n")
+    co.print("FuzzingTool -u https://$.domainexample.com/ -w /path/to/wordlist/subdomains.txt -t 30 --timeout 5 -V2\n")
+    co.print("FuzzingTool -u https://$.domainexample.com/ -w [wp-admin,admin,webmail,www,cpanel] -t 30 --timeout 5 -V2\n")
+    co.print("FuzzingTool -u https://$.domainexample.com/ -w CrtDictionary=domainexample.com -t 30 --timeout 5 -V2\n")
+    co.print("FuzzingTool -u https://domainexample.com/$ -w OverflowDictionary=5000,:../:etc/passwd -t 30 --timeout 5 -V2\n")
 
 def showEncodersHelp():
-    oh.helpTitle(0, "Encoder options: (-e)")
-    oh.helpTitle(2, "Set the encoder used on the payloads\n")
+    co.helpTitle(0, "Encoder options: (-e)")
+    co.helpTitle(2, "Set the encoder used on the payloads\n")
     showCustomPackageHelp('encoders')
-    oh.helpTitle(0, "Examples:\n")
-    oh.print("FuzzingTool -u https://domainexample.com/page.php?id= -w /path/to/wordlist/sqli.txt -e UrlEncoder=2 -t 30 --scanner GrepScanner=SQL\n")
+    co.helpTitle(0, "Examples:\n")
+    co.print("FuzzingTool -u https://domainexample.com/page.php?id= -w /path/to/wordlist/sqli.txt -e UrlEncoder=2 -t 30 --scanner GrepScanner=SQL\n")
 
 def showScannersHelp():
-    oh.helpTitle(0, "Scanner options:")
-    oh.helpTitle(2, "Default: The default scanners are selected automatically during the tests, if a custom scanner wasn't gived\n")
-    oh.helpContent(5, "DataScanner", "Scanner for the data fuzzing")
-    oh.helpContent(5, "PathScanner", "Scanner for the path URL fuzzing")
-    oh.helpContent(5, "SubdomainScanner", "Scanner for the subdomain URL fuzzing")
-    oh.helpTitle(2, "Custom (--scaner SCANNER): Set the custom scanner\n")
+    co.helpTitle(0, "Scanner options:")
+    co.helpTitle(2, "Default: The default scanners are selected automatically during the tests, if a custom scanner wasn't gived\n")
+    co.helpContent(5, "DataScanner", "Scanner for the data fuzzing")
+    co.helpContent(5, "PathScanner", "Scanner for the path URL fuzzing")
+    co.helpContent(5, "SubdomainScanner", "Scanner for the subdomain URL fuzzing")
+    co.helpTitle(2, "Custom (--scaner SCANNER): Set the custom scanner\n")
     showCustomPackageHelp('scanners')
-    oh.helpTitle(0, "Examples:\n")
-    oh.print("FuzzingTool -u https://domainexample.com/search.php?query= -w /path/to/wordlist/xss.txt --scanner ReflectedScanner -t 30 -o csv\n")
+    co.helpTitle(0, "Examples:\n")
+    co.print("FuzzingTool -u https://domainexample.com/search.php?query= -w /path/to/wordlist/xss.txt --scanner ReflectedScanner -t 30 -o csv\n")

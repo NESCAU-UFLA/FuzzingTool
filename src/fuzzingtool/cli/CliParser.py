@@ -10,18 +10,18 @@
 #
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
-from .RequestParser import getUrlWithoutScheme
-from ..utils.utils import getIndexesToParse, getCustomPackageNames, importCustomPackage
-from ..core.dictionaries import *
-from ..core.encoders import *
-from ..core.scanners import *
-from ..IO.OutputHandler import outputHandler as oh
-from ..IO.FileHandler import fileHandler as fh
-from ..exceptions.MainExceptions import MissingParameter
+from .CliOutput import cliOutput as co
+from ..conn.RequestParser import getUrlWithoutScheme
+from ..utils.utils import getIndexesToParse
+from ..utils.FileHandler import fileHandler as fh
+from ..exceptions.MainExceptions import InvalidPluginName
+from ..factories.PluginFactory import PluginFactory
+from ..core.dictionaries.Payloader import Payloader
+from ..core.scanners.Matcher import Matcher
 
 from collections import deque
 
-class CLIParser:
+class CliParser:
     """Class that handle with the sys argument parsing"""
     def __init__(self, argv: list):
         """Class constructor
@@ -36,38 +36,10 @@ class CLIParser:
 
         @returns list: The targets into a list
         """
-        targets = []
         if '-r' in self.__argv:
-            rawIndexes = getIndexesToParse(self.__argv, '-r')
-            for i in rawIndexes:
-                url, methods, data, headers = self.__getRequestFromRawHttp(i+1)
-                targets.append({
-                    'url': url,
-                    'methods': methods,
-                    'data': self.__getRequestData(data),
-                    'header': headers,
-                })
+            return self.buildTargetsFromRawHttp()
         else:
-            urlIndexes = getIndexesToParse(self.__argv, '-u')
-            if not urlIndexes:
-                oh.errorBox("At least a target URL is needed to make the fuzzing")
-            if '-X' in self.__argv:
-                method = self.__argv[self.__argv.index('-X')+1]
-                if ',' in method:
-                    customMethods = method.split(',')
-                else:
-                    customMethods = [method]
-            else:
-                customMethods = []
-            for i in urlIndexes:
-                url, methods, data = self.__getRequestFromArgs(i+1, customMethods)
-                targets.append({
-                    'url': url,
-                    'methods': methods,
-                    'data': self.__getRequestData(data),
-                    'header': {},
-                })
-        return targets
+            return self.buildTargetsFromArgs()
 
     def getDictionary(self):
         """Get the fuzzing dictionary
@@ -77,31 +49,33 @@ class CLIParser:
         try:
             wordlistSource = self.__argv[self.__argv.index('-w')+1]
         except ValueError:
-            oh.errorBox("An wordlist is needed to make the fuzzing")
+            co.errorBox("An wordlist is needed to make the fuzzing")
         if '=' in wordlistSource:
             dictionary, sourceParam = wordlistSource.split('=')
         else:
             dictionary = wordlistSource
             sourceParam = ''
-        if dictionary in getCustomPackageNames('dictionaries'):
-            dictionary = importCustomPackage('dictionaries', dictionary)()
-        else:
-            if dictionary.startswith('[') and dictionary.endswith(']'):
-                from ..core.dictionaries.default.ListDictionary import ListDictionary
-                dictionary = ListDictionary()
-            else:
-                # For default, read the wordlist from a file
-                from ..core.dictionaries.default.FileDictionary import FileDictionary
-                dictionary = FileDictionary()
-            sourceParam = wordlistSource
-        oh.infoBox("Building dictionary ...")
         try:
-            dictionary.setWordlist(sourceParam)
-        except MissingParameter as e:
-            oh.errorBox(f"{wordlistSource} missing parameter: {str(e)}")
+            dictionary = PluginFactory.objectCreator(dictionary, 'dictionaries', sourceParam)
+        except InvalidPluginName:
+            try:
+                if dictionary.startswith('[') and dictionary.endswith(']'):
+                    from ..core.dictionaries.default.ListDictionary import ListDictionary
+                    dictionary = ListDictionary(dictionary)
+                else:
+                    # For default, read the wordlist from a file
+                    from ..core.dictionaries.default.FileDictionary import FileDictionary
+                    dictionary = FileDictionary(dictionary)
+            except Exception as e:
+                co.errorBox(str(e))
         except Exception as e:
-            oh.errorBox(str(e))
-        oh.infoBox(f"Dictionary is done, loaded {len(dictionary)} payloads")
+            co.errorBox(str(e))
+        co.infoBox("Building dictionary ...")
+        try:
+            dictionary.setWordlist()
+        except Exception as e:
+            co.errorBox(str(e))
+        co.infoBox(f"Dictionary is done, loaded {len(dictionary)} payloads")
         return dictionary
 
     def checkCookie(self):
@@ -112,7 +86,7 @@ class CLIParser:
         cookie = ''
         if '--cookie' in self.__argv:
             cookie = self.__argv[self.__argv.index('--cookie')+1]
-            oh.infoBox(f"Set cookie: {cookie}")
+            co.infoBox(f"Set cookie: {cookie}")
         return cookie
 
     def checkProxy(self):
@@ -122,11 +96,8 @@ class CLIParser:
         """
         if '--proxy' in self.__argv:
             proxy = self.__argv[self.__argv.index('--proxy')+1]
-            oh.infoBox(f"Set proxy: {proxy}")
-            return {
-                'http': f"http://{proxy}",
-                'https': f"https://{proxy}",
-            }
+            co.infoBox(f"Set proxy: {proxy}")
+            return proxy
         return {}
 
     def checkProxies(self):
@@ -136,15 +107,11 @@ class CLIParser:
         """
         if '--proxies' in self.__argv:
             proxiesFileName = self.__argv[self.__argv.index('--proxies')+1]
-            oh.infoBox(f"Loading proxies from file '{proxiesFileName}' ...")
+            co.infoBox(f"Loading proxies from file '{proxiesFileName}' ...")
             try:
-                proxies = fh.read(proxiesFileName)
+                return fh.read(proxiesFileName)
             except Exception as e:
-                oh.errorBox(str(e))
-            return [{
-                'http': f"http://{proxy}",
-                'https': f"https://{proxy}",
-            } for proxy in proxies]
+                co.errorBox(str(e))
         return []
 
     def checkTimeout(self):
@@ -154,11 +121,11 @@ class CLIParser:
         """
         if '--timeout' in self.__argv:
             timeout = self.__argv[self.__argv.index('--timeout')+1]
-            oh.infoBox(f"Set request timeout: {timeout} seconds")
+            co.infoBox(f"Set request timeout: {timeout} seconds")
             try:
                 return int(timeout)
             except:
-                oh.errorBox(f"The request timeout ({timeout}) must be an integer")
+                co.errorBox(f"The request timeout ({timeout}) must be an integer")
         return None
 
     def checkFollowRedirects(self):
@@ -177,11 +144,11 @@ class CLIParser:
         """
         if '--delay' in self.__argv:
             delay = self.__argv[self.__argv.index('--delay')+1]
-            oh.infoBox(f"Set delay: {delay} second(s)")
+            co.infoBox(f"Set delay: {delay} second(s)")
             try:
                 return float(delay)
             except:
-                oh.errorBox(f"The delay ({delay}) must be a number")
+                co.errorBox(f"The delay ({delay}) must be a number")
         return 0
 
     def checkVerboseMode(self):
@@ -202,11 +169,11 @@ class CLIParser:
         """
         if '-t' in self.__argv:
             numThreads = self.__argv[self.__argv.index('-t')+1]
-            oh.infoBox(f"Set number of threads: {numThreads} thread(s)")
+            co.infoBox(f"Set number of threads: {numThreads} thread(s)")
             try:
                 return int(numThreads)
             except:
-                oh.errorBox(f"The number of threads ({numThreads}) must be an integer")
+                co.errorBox(f"The number of threads ({numThreads}) must be an integer")
         return 1
 
     def checkBlacklistedStatus(self):
@@ -228,7 +195,7 @@ class CLIParser:
             try:
                 statusList = [int(status) for status in statusList]
             except:
-                oh.errorBox("Status code must be an integer")
+                co.errorBox("Status code must be an integer")
             return (statusList, action)
         return ([], None)
 
@@ -246,7 +213,7 @@ class CLIParser:
             else:
                 prefixes = [prefix]
             payloader.setPrefix(prefixes)
-            oh.infoBox(f"Set prefix: {str(prefixes)}")
+            co.infoBox(f"Set prefix: {str(prefixes)}")
         if '--suffix' in self.__argv:
             suffix = self.__argv[self.__argv.index('--suffix')+1]
             if ',' in suffix:
@@ -254,7 +221,7 @@ class CLIParser:
             else:
                 suffixes = [suffix]
             payloader.setSuffix(suffixes)
-            oh.infoBox(f"Set suffix: {str(suffixes)}")
+            co.infoBox(f"Set suffix: {str(suffixes)}")
 
     def checkCase(self, payloader: Payloader):
         """Check if the --upper argument is present, and set the uppercase case mode
@@ -266,13 +233,13 @@ class CLIParser:
         """
         if '--lower' in self.__argv:
             payloader.setLowercase()
-            oh.infoBox("Set payload case: lowercase")
+            co.infoBox("Set payload case: lowercase")
         elif '--upper' in self.__argv:
             payloader.setUppecase()
-            oh.infoBox("Set payload case: uppercase")
+            co.infoBox("Set payload case: uppercase")
         elif '--capitalize' in self.__argv:
             payloader.setCapitalize()
-            oh.infoBox("Set payload case: capitalize")
+            co.infoBox("Set payload case: capitalize")
 
     def checkEncoder(self, payloader: Payloader):
         """Check if the -e argument is present, and set the encoder for the payloads
@@ -286,21 +253,11 @@ class CLIParser:
                 encoderName, params = encoderName.split('=', 1)
             else:
                 params = ''
-            if encoderName in getCustomPackageNames('encoders'):
-                Encoder = importCustomPackage('encoders', encoderName)
-                if not Encoder.__params__:
-                    encoder = Encoder()
-                else:
-                    try:
-                        encoder = Encoder(params)
-                    except MissingParameter as e:
-                        oh.errorBox(f"Encoder {encoderName} missing parameter: {str(e)}")
-                    except Exception as e:
-                        oh.errorBox(f"Bad encoder argument format: {str(e)}")
-                payloader.setEncoder(encoder)
-            else:
-                oh.errorBox(f"Encoder {encoderName} not available!")
-            oh.infoBox(f"Set encoder: {Encoder.__name__}")
+            try:
+                payloader.setEncoder(PluginFactory.objectCreator(encoderName, 'encoders', params))
+            except Exception as e:
+                co.errorBox(str(e))
+            co.infoBox(f"Set encoder: {encoderName}")
 
     def checkReporter(self):
         """Check if the -o argument is present, and set the report data (name and type)
@@ -317,8 +274,8 @@ class CLIParser:
                 reportName = ''
             reportType = reportType.lower()
             if reportType not in ['txt', 'csv', 'json']:
-                oh.errorBox(f"Unsupported report format for {reportType}! Accepts: txt, csv and json")
-            oh.infoBox(f"Set report: {report}")
+                co.errorBox(f"Unsupported report format for {reportType}! Accepts: txt, csv and json")
+            co.infoBox(f"Set report: {report}")
         else:
             reportType = 'txt'
             reportName = ''
@@ -338,20 +295,11 @@ class CLIParser:
                 scannerName, params = scannerName.split('=', 1)
             else:
                 params = ''
-            if scannerName in getCustomPackageNames('scanners'):
-                Scanner = importCustomPackage('scanners', scannerName)
-                if not Scanner.__params__:
-                    scanner = Scanner()
-                else:
-                    try:
-                        scanner = Scanner(params)
-                    except MissingParameter as e:
-                        oh.errorBox(f"Scanner {scannerName} missing parameter: {str(e)}")
-                    except Exception as e:
-                        oh.errorBox(f"Bad scanner argument format: {str(e)}")
-            else:
-                oh.errorBox(f"Scanner {scannerName} not available!")
-            oh.infoBox(f"Set scanner: {Scanner.__name__}")
+            try:
+                scanner = PluginFactory.objectCreator(scannerName, 'scanners', params)
+            except Exception as e:
+                co.errorBox(str(e))
+            co.infoBox(f"Set scanner: {scannerName}")
         else:
             scanner = None
         return scanner
@@ -372,14 +320,14 @@ class CLIParser:
             else:
                 self.__getAllowedStatus(allowedStatus, allowedList, allowedRange)
             if 200 not in allowedList:
-                if oh.askYesNo('warning', "Status code 200 (OK) wasn't included. Do you want to include it to the allowed status codes?"):
+                if co.askYesNo('warning', "Status code 200 (OK) wasn't included. Do you want to include it to the allowed status codes?"):
                     allowedList = [200] + allowedList
             allowedStatus = {
                 'List': allowedList,
                 'Range': allowedRange,
             }
             matcher.setAllowedStatus(allowedStatus)
-            oh.infoBox(f"Set the allowed status codes: {str(allowedStatus)}")
+            co.infoBox(f"Set the allowed status codes: {str(allowedStatus)}")
         comparator = {
             'Length': None,
             'Time': None,
@@ -389,19 +337,19 @@ class CLIParser:
             try:
                 comparator['Length'] = int(length)
             except:
-                oh.errorBox(f"The match length argument ({length}) must be an integer")
-            oh.infoBox(f"Exclude by length: {length} bytes")
+                co.errorBox(f"The match length argument ({length}) must be an integer")
+            co.infoBox(f"Exclude by length: {length} bytes")
         if '-Mt' in self.__argv:
             time = self.__argv[self.__argv.index('-Mt')+1]
             try:
                 comparator['Time'] = float(time)
             except:
-                oh.errorBox(f"The match time argument ({time}) must be a number")
-            oh.infoBox(f"Exclude by time: {time} seconds")
+                co.errorBox(f"The match time argument ({time}) must be a number")
+            co.infoBox(f"Exclude by time: {time} seconds")
         matcher.setComparator(comparator)
         return matcher
 
-    def __getHeader(self, args: list):
+    def buildHeaderFromRawHttp(self, args: list):
         """Get the HTTP header
 
         @tyoe args: list
@@ -419,40 +367,44 @@ class CLIParser:
             i += 1
         return headers
 
-    def __getRequestFromRawHttp(self, i: int):
+    def buildTargetsFromRawHttp(self):
         """Get the raw http of the requests
 
         @type i: int
         @param i: The index of the raw filename on terminal
         @returns tuple(str, list, dict, dict): The default parameters of the requests
         """
-        try:
-            headerList = deque(fh.read(self.__argv[i]))
-        except Exception as e:
-            oh.errorBox(str(e))
-        method, path, httpVer = headerList.popleft().split(' ')
-        if ',' in method:
-            methods = method.split(',')
-        else:
-            methods = [method]
-        headers = self.__getHeader(headerList)
-        data = {
-            'PARAM': '',
-            'BODY': '',
-        }
-        if '?' in path:
-            path, data['PARAM'] = path.split('?', 1)
         # Check if a scheme is specified, otherwise set http as default
         if '--scheme' in self.__argv:
             scheme = self.__argv[self.__argv.index('--scheme')+1]
         else:
             scheme = 'http'
-        url = f"{scheme}://{headers['Host']}{path}"
-        if len(headerList) > 0:
-            data['BODY'] = headerList.popleft()
-        return (url, methods, data, headers)
+        targets = []
+        for i in getIndexesToParse(self.__argv, '-r'):
+            try:
+                headerList = deque(fh.read(self.__argv[i+1]))
+            except Exception as e:
+                co.errorBox(str(e))
+            method, path, httpVer = headerList.popleft().split(' ')
+            if ',' in method:
+                methods = method.split(',')
+            else:
+                methods = [method]
+            headers = self.__getHeader(headerList)
+            url = f"{scheme}://{headers['Host']}{path}"
+            if len(headerList) > 0:
+                data = headerList.popleft()
+            else:
+                data = ''
+            targets.append({
+                'url': url,
+                'methods': methods,
+                'data': data,
+                'header': headers,
+            })
+        return targets
     
-    def __getRequestFromArgs(self, i: int, methods: list):
+    def buildTargetsFromArgs(self):
         """Get the param method to use ('?' or '$' in URL if GET, or -d) and the request paralisting
 
         @type i: int
@@ -461,70 +413,37 @@ class CLIParser:
         @param method: The request methods
         @returns tuple(str, list, dict): The tuple with the new target URL, the request method and params
         """
-        url = self.__argv[i]
-        if '://' not in url:
-            # No schema was defined, default protocol http
-            url = f'http://{url}'
-        if '/' not in getUrlWithoutScheme(url):
-            # Insert a base path if wasn't specified
-            url += '/'
-        data = {
-            'PARAM': '',
-            'BODY': '',
-        }
-        if '?' in url or '$' in url:
-            if not methods:
-                methods = ['GET']
-            if '?' in url:
-                url, data['PARAM'] = url.split('?', 1)
-        else:
-            if not methods:
-                methods = ['POST']
-        if '-d' in self.__argv:
-            data['BODY'] = self.__argv[self.__argv.index('-d')+1]
-        return (url, methods, data)
-    
-    def __makeDataDict(self, dataDict: dict, key: str):
-        """Set the default parameter values if are given
-
-        @type data: dict
-        @param data: The entries data of the request
-        @type key: str
-        @param key: The parameter key of the request
-        """
-        if '=' in key:
-            key, value = key.split('=')
-            if not '$' in value:
-                dataDict[key] = value
+        urlIndexes = getIndexesToParse(self.__argv, '-u')
+        if not urlIndexes:
+            co.errorBox("At least a target URL is needed to make the fuzzing")
+        if '-X' in self.__argv:
+            method = self.__argv[self.__argv.index('-X')+1]
+            if ',' in method:
+                methods = method.split(',')
             else:
-                dataDict[key] = ''
+                methods = [method]
         else:
-            dataDict[key] = ''
-
-    def __getRequestData(self, data: dict):
-        """Split all the request parameters into a list of arguments used in the request
-
-        @type data: dict
-        @param data: The parameters of the request
-        @returns dict: The entries data of the request
-        """
-        dataDict = {
-            'PARAM': {},
-            'BODY': {},
-        }
-        keys = []
-        if data['PARAM']:
-            keys.append('PARAM')
-        if data['BODY']:
-            keys.append('BODY')
-        for key in keys:
-            if '&' in data[key]:
-                data[key] = data[key].split('&')
-                for arg in data[key]:
-                    self.__makeDataDict(dataDict[key], arg)
+            methods = []
+        targets = []
+        for i in urlIndexes:
+            url = self.__argv[i+1]
+            if '?' in url or '$' in url:
+                if not methods:
+                    methods = ['GET']
             else:
-                self.__makeDataDict(dataDict[key], data[key])
-        return dataDict
+                if not methods:
+                    methods = ['POST']
+            if '-d' in self.__argv:
+                data = self.__argv[self.__argv.index('-d')+1]
+            else:
+                data = ''
+            targets.append({
+                'url': url,
+                'methods': methods,
+                'data': data,
+                'header': {},
+            })
+        return targets
     
     def __getAllowedStatus(self, status: str, allowedList: list, allowedRange: list):
         """Get the allowed status code list and range
@@ -545,4 +464,4 @@ class CLIParser:
                     codeLeft, codeRight = codeRight, codeLeft
                 allowedRange[:] = [codeLeft, codeRight]
         except:
-            oh.errorBox(f"The match status argument ({status}) must be integer")
+            co.errorBox(f"The match status argument ({status}) must be integer")

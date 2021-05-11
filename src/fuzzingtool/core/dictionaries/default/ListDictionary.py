@@ -18,17 +18,18 @@ class ListDictionary(BaseDictionary):
     __name__ = "ListDictionary"
     __author__ = ("Vitor Oriel C N Borges")
 
-    def __init__(self):
+    def __init__(self, payloadList: str):
         super().__init__()
-
-    def setWordlist(self, payloadList: str):
         payloadList = payloadList[1:len(payloadList)-1]
         if not payloadList:
             raise MissingParameter("list of payloads")
-        if ',' in payloadList:
+        self.payloadList = payloadList
+
+    def setWordlist(self):
+        if ',' in self.payloadList:
             buildedList = []
-            for payload in payloadList.split(','):
+            for payload in self.payloadList.split(','):
                 buildedList.extend(checkRangeList(payload))
         else:
-            buildedList = checkRangeList(payloadList)
+            buildedList = checkRangeList(self.payloadList)
         self._wordlist = buildedList

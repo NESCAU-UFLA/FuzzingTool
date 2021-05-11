@@ -23,6 +23,41 @@ if platform.system() == 'Windows':
         exit("Colorama package not installed. Install all dependencies first.")
     init()
 
+def fixPayloadToOutput(payload):
+    """Fix the payload's size
+
+    @type payload: str
+    @param payload: The payload used in the request
+    @returns str: The fixed payload to output
+    """
+    if '	' in payload:
+        payload = payload.replace('	', ' ')
+    if len(payload) > 30:
+        output = ""
+        for i in range(27):
+            output += payload[i]
+        output += '...'
+        return output
+    else:
+        return payload
+
+def getFormatedResult(result: dict):
+    """Format the result into a dict of strings
+
+    @type result: dict
+    @param result: The result dict
+    @returns dict: The result formated with strings
+    """
+    return {
+        'Request': '{:<7}'.format(result['Request']),
+        'Payload': '{:<30}'.format(fixPayloadToOutput(result['Payload'])),
+        'Time Taken': '{:>10}'.format(result['Time Taken']),
+        'Status': result['Status'],
+        'Length': '{:>8}'.format(result['Length']),
+        'Words': '{:>6}'.format(result['Words']),
+        'Lines': '{:>5}'.format(result['Lines'])
+    }
+
 class Colors:
     """Class that handle with the colors"""
     RESET = '\033[0m'
@@ -37,7 +72,7 @@ class Colors:
     LIGHT_GREEN = '\u001b[38;5;48m'
     BOLD = '\033[1m'
 
-class OutputHandler:
+class CliOutput:
     """Class that handle with the outputs
        Singleton Class
     """
@@ -45,9 +80,9 @@ class OutputHandler:
 
     @staticmethod
     def getInstance():
-        if OutputHandler.__instance == None:
-            OutputHandler()
-        return OutputHandler.__instance
+        if CliOutput.__instance == None:
+            CliOutput()
+        return CliOutput.__instance
 
     """
     Attributes:
@@ -62,10 +97,10 @@ class OutputHandler:
         notWorked: The not worked label
     """
     def __init__(self):
-        if OutputHandler.__instance != None:
+        if CliOutput.__instance != None:
             raise Exception("This class is a singleton!")
         else:
-            OutputHandler.__instance = self
+            CliOutput.__instance = self
         self.__lock = None
         self.__breakLine = ''
         self.__lastInline = False
@@ -89,7 +124,7 @@ class OutputHandler:
             self.__lock = threading.Lock()
             self.__breakLine = '\n'
 
-    def setPrintResultMode(self, getMessageCallback: Callable):
+    def setMessageCallback(self, getMessageCallback: Callable):
         """Set the print content mode for the results
 
         @type getMessageCallback: Callable
@@ -249,41 +284,6 @@ class OutputHandler:
         @param msg: The message
         """
         print(msg)
-    
-    def fixPayloadToOutput(self, payload):
-        """Fix the payload's size
-
-        @type payload: str
-        @param payload: The payload used in the request
-        @returns str: The fixed payload to output
-        """
-        if '	' in payload:
-            payload = payload.replace('	', ' ')
-        if len(payload) > 30:
-            output = ""
-            for i in range(27):
-                output += payload[i]
-            output += '...'
-            return output
-        else:
-            return payload
-
-    def getFormatedResult(self, result: dict):
-        """Format the result into a dict of strings
-
-        @type result: dict
-        @param result: The result dict
-        @returns dict: The result formated with strings
-        """
-        return {
-            'Request': '{:<7}'.format(result['Request']),
-            'Payload': '{:<30}'.format(self.fixPayloadToOutput(result['Payload'])),
-            'Time Taken': '{:>10}'.format(result['Time Taken']),
-            'Status': result['Status'],
-            'Length': '{:>8}'.format(result['Length']),
-            'Words': '{:>6}'.format(result['Words']),
-            'Lines': '{:>5}'.format(result['Lines'])
-        }
 
     def __getTime(self):
         """Get a time label
@@ -355,4 +355,4 @@ class OutputHandler:
         sys.stdout.write("\033[0G")
         sys.stdout.flush()
 
-outputHandler = OutputHandler.getInstance()
+cliOutput = CliOutput.getInstance()

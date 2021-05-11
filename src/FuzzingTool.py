@@ -12,7 +12,7 @@
 #
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
-from fuzzingtool.FuzzingTool import main
+from fuzzingtool.FuzzingTool import main_cli
 
 if __name__ == "__main__":
-    main()
+    main_cli()

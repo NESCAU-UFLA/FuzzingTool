@@ -13,8 +13,8 @@
 from ..BaseScanner import BaseScanner
 from ..Matcher import Matcher
 from ....conn.responses.Response import Response
-from ....parsers.RequestParser import getPath
-from ....IO.OutputHandler import Colors, outputHandler as oh
+from ....conn.RequestParser import getPath
+from ....cli.CliOutput import Colors, fixPayloadToOutput
 
 class PathScanner(BaseScanner):
     __name__ = "PathScanner"
@@ -31,7 +31,7 @@ class PathScanner(BaseScanner):
     def scan(self, result: dict):
         return True
     
-    def getMessage(self, result: dict):
+    def cliCallback(self, result: dict):
         status = result['Status']
         statusColor = ''
         redirected = ''
@@ -43,7 +43,7 @@ class PathScanner(BaseScanner):
             redirected = result['Redirected']
             if redirected:
                 redirected = f" {Colors.LIGHT_YELLOW}Redirected to {redirected}{Colors.RESET}"
-        url = '{:<30}'.format(oh.fixPayloadToOutput(getPath(result['Url'])))
+        url = '{:<30}'.format(fixPayloadToOutput(getPath(result['Url'])))
         length = '{:>8}'.format(result['Length'])
         return (
             f"{url} {Colors.GRAY}["+

@@ -10,5 +10,6 @@
 #
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
+from .RequestParser import *
 from .requests import *
 from .responses import *

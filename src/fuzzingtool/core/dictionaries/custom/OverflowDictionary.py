@@ -20,10 +20,8 @@ class OverflowDictionary(BaseDictionary):
     __desc__ = "Build the wordlist for stress and buffer overflow purposes"
     __type__ = ""
 
-    def __init__(self):
+    def __init__(self, sourceParam: str):
         super().__init__()
-
-    def setWordlist(self, sourceParam: str):
         if not sourceParam:
             raise MissingParameter("quantity of payloads")
         if ',' in sourceParam:
@@ -43,6 +41,12 @@ class OverflowDictionary(BaseDictionary):
             quantityOfPayloads = int(quantityOfPayloads)
         except:
             raise Exception("The quantity of payloads must be integer")
+        self.quantityOfPayloads = quantityOfPayloads
+        self.initPayload = initPayload
+        self.payload = payload
+        self.endPayload = endPayload
+
+    def setWordlist(self):
         self._wordlist = [
-            f"{initPayload}{payload*i}{endPayload}" for i in range(quantityOfPayloads)
+            f"{self.initPayload}{self.payload*i}{self.endPayload}" for i in range(self.quantityOfPayloads)
         ]

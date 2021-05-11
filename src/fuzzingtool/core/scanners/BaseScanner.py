@@ -49,7 +49,7 @@ class BaseScanner(Matcher):
         """
         raise NotImplementedError("scan method should be overrided")
 
-    def getMessage(self, result: dict):
+    def cliCallback(self, result: dict):
         """Get the formated message to be used on output
 
         @type result: dict

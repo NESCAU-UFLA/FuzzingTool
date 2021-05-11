@@ -11,47 +11,17 @@
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
 from .Request import Request
+from ..RequestParser import getHost, requestParser as parser
 from ..responses.Response import Response
-from ...parsers.RequestParser import getHost, requestParser as parser
 from ...exceptions.RequestExceptions import RequestException, InvalidHostname
 
 import socket
 
 class SubdomainRequest(Request):
     """Class that handle with the requests for subdomain fuzzing"""
-    def __init__(self,
-        url: str,
-        method: str = 'GET',
-        methods: list = [],
-        data: dict = {},
-        headers: dict = {},
-        followRedirects: bool = True,
-        proxy: dict = {},
-        proxies: list = [],
-    ):
-        """Class constructor
-
-        @type url: str
-        @param url: The target URL
-        @type method: str
-        @param method: The request http verb (method)
-        @type methods: list
-        @param methods: The request methods list
-        @type data: dict
-        @param data: The parameters of the request, with default values if are given
-        @type headers: dict
-        @param headers: The HTTP header of the request
-        @type followRedirects: bool
-        @param followRedirects: The follow redirects flag
-        @type proxy: dict
-        @param proxy: The proxy used in the request
-        @type proxies: list
-        @param proxies: The list with the proxies used in the requests
-        """
-        super().__init__(
-            url, method, methods, data,
-            headers, followRedirects, proxy, proxies,
-        )
+    def __init__(self, url, **kwargs):
+        """Class constructor"""
+        super().__init__(url, **kwargs)
     
     def resetRequestIndex(self):
         self._requestIndex = 0

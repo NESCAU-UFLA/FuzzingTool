@@ -45,22 +45,6 @@ def getCustomPackageNames(module: str):
         customPackages.remove('__init__.py')
     return [packageFile.split('.')[0] for packageFile in customPackages]
 
-def importCustomPackage(module: str, package: str):
-    """Get the import for the custom package
-
-    @type module: str
-    @param module: The module of the custom package
-    @type package: str
-    @param package: The package to be searched for
-    @returns import: The import of the searched package
-    """
-    from importlib import import_module
-    customImported = import_module(
-        f"fuzzingtool.core.{module}.custom.{package}",
-        package=f"{package}"
-    )
-    return getattr(customImported, package)
-
 def checkRangeList(content: str):
     """Checks if the given content has a range list,
        and make a list of the range specified

@@ -11,17 +11,18 @@
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
 from ..BaseDictionary import BaseDictionary
-from ....IO.FileHandler import fileHandler as fh
+from ....utils.FileHandler import fileHandler as fh
 
 class FileDictionary(BaseDictionary):
     __name__ = "FileDictionary"
     __author__ = ("Vitor Oriel C N Borges")
 
-    def __init__(self):
+    def __init__(self, filePath: str):
         super().__init__()
+        self.filePath = filePath
 
-    def setWordlist(self, filePath: str):
+    def setWordlist(self):
         try:
-            self._wordlist = set(fh.read(filePath))
+            self._wordlist = set(fh.read(self.filePath))
         except Exception as e:
             raise e

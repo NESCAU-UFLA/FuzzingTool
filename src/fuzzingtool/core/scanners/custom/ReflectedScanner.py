@@ -12,7 +12,7 @@
 
 from ..default.DataScanner import DataScanner
 from ....conn.responses.Response import Response
-from ....IO.OutputHandler import Colors, outputHandler as oh
+from ....cli.CliOutput import Colors, fixPayloadToOutput
 
 class ReflectedScanner(DataScanner):
     __name__ = "ReflectedScanner"
@@ -38,7 +38,7 @@ class ReflectedScanner(DataScanner):
         self.__reflected[result['Request']] = reflected
         return reflected
     
-    def getMessage(self, result: dict):
+    def cliCallback(self, result: dict):
         reflected = f"{Colors.LIGHT_YELLOW}{Colors.BOLD}IDK"
         if result['Request'] in self.__reflected:
             if self.__reflected[result['Request']]:
@@ -46,7 +46,7 @@ class ReflectedScanner(DataScanner):
             else:
                 reflected = f"{Colors.LIGHT_RED}{Colors.BOLD}NO "
                 del self.__reflected[result['Request']]
-        payload = '{:<30}'.format(oh.fixPayloadToOutput(result['Payload']))
+        payload = '{:<30}'.format(fixPayloadToOutput(result['Payload']))
         length = '{:>8}'.format(result['Length'])
         return (
             f"{payload} {Colors.GRAY}["+

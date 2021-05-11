@@ -13,7 +13,6 @@
 from ..BaseDictionary import BaseDictionary
 from ....conn.requests.Request import Request
 from ....conn.responses.Response import Response
-from ....IO.OutputHandler import outputHandler as oh
 from ....exceptions.RequestExceptions import RequestException
 from ....exceptions.MainExceptions import MissingParameter
 
@@ -27,21 +26,16 @@ class CrtDictionary(BaseDictionary):
     __desc__ = "Build the wordlist based on the content of the site crt.sh"
     __type__ = "SubdomainFuzzing"
 
-    def __init__(self):
+    def __init__(self, host: str):
         super().__init__()
-
-    def setWordlist(self, host: str):
         if not host:
             raise MissingParameter("target host")
+        self.host = host
+
+    def setWordlist(self):
         requester = Request(
-            url="https://crt.sh/",
+            url=f"https://crt.sh/?q={self.host}",
             method='GET',
-            data={
-                'PARAM': {
-                    'q': host,
-                },
-                'BODY': {},
-            },
             headers={
                 'Host': "crt.sh",
                 'User-Agent': "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:87.0) Gecko/20100101 Firefox/87.0",
@@ -59,11 +53,11 @@ class CrtDictionary(BaseDictionary):
         except RequestException as e:
             raise Exception(str(e))
         if 'None found' in response.text:
-            raise Exception(f"No certified domains was found for '{host}'")
+            raise Exception(f"No certified domains was found for '{self.host}'")
         contentList = [element.string for element in bs(response.text, "lxml")('td')]
         regex = r"([a-zA-Z0-9]+\.)*[a-zA-Z0-9]+"
-        for splited in host.split('.'):
+        for splited in self.host.split('.'):
             regex += r"\."+splited
         regexer = re.compile(regex)
         domainList = sorted(set([element for element in contentList if regexer.match(str(element))]))
-        self._wordlist = [domain.split(f'.{host}')[0] for domain in domainList]
+        self._wordlist = [domain.split(f'.{self.host}')[0] for domain in domainList]
