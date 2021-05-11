@@ -1,5 +1,5 @@
 from .BaseFactories import BasePluginFactory
-from ..utils.utils import getCustomPackageNames
+from ..utils.utils import getPluginNamesFromCategory
 from ..core.dictionaries import *
 from ..core.encoders import *
 from ..core.scanners import *
@@ -16,7 +16,7 @@ class PluginFactory(BasePluginFactory):
         return getattr(Plugin, name)
 
     def objectCreator(name, category, params = ''):
-        if name in getCustomPackageNames(category):
+        if name in getPluginNamesFromCategory(category):
             Plugin = PluginFactory.classCreator(name, category)
             if not Plugin.__params__:
                 return Plugin()

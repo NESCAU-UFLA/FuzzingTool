@@ -21,29 +21,22 @@ def getIndexesToParse(content: str, searchFor: str = '$'):
     """
     return [i for i, char in enumerate(content) if char == searchFor]
 
-def getLibPath():
-    """Get the fuzzingtool lib path
+def getPluginNamesFromCategory(category: str):
+    """Gets the custom package names (inside /core/category/custom/)
 
-    @returns str: The fuzzingtool lib path
-    """
-    from os.path import dirname, abspath
-    return dirname(dirname(abspath(__file__)))
-
-def getCustomPackageNames(module: str):
-    """Gets the custom package names (inside /core/module/custom/)
-
-    @type module: str
-    @param module: The module to search for the custom packages
-    @returns list: The list with the custom packages filenames
+    @type category: str
+    @param category: The category to search for the custom plugins
+    @returns list: The list with the custom plugins filenames
     """
     from os import walk
     try:
-        _, _, customPackages = next(walk(f"./fuzzingtool/core/{module}/custom/"))
+        _, _, pluginFiles = next(walk(f"./fuzzingtool/core/{category}/custom/"))
     except:
-        _, _, customPackages = next(walk(f"{getLibPath()}/core/{module}/custom/"))
-    if '__init__.py' in customPackages:
-        customPackages.remove('__init__.py')
-    return [packageFile.split('.')[0] for packageFile in customPackages]
+        from os.path import dirname, abspath
+        _, _, pluginFiles = next(walk(f"{dirname(dirname(abspath(__file__)))}/core/{category}/custom/"))
+    if '__init__.py' in pluginFiles:
+        pluginFiles.remove('__init__.py')
+    return [pluginFile.split('.')[0] for pluginFile in pluginFiles]
 
 def checkRangeList(content: str):
     """Checks if the given content has a range list,

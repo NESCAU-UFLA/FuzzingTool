@@ -13,7 +13,7 @@
 from .CliParser import CliParser
 from .CliOutput import cliOutput as co
 from .. import version
-from ..utils.utils import getCustomPackageNames
+from ..utils.utils import getPluginNamesFromCategory
 from ..utils.FileHandler import fileHandler as fh
 from ..core.Fuzzer import Fuzzer
 from ..core.dictionaries.Payloader import Payloader
@@ -527,23 +527,23 @@ def showHelpMenu():
     co.print("FuzzingTool -w /path/to/wordlist/subdomains.txt -u https://$.domainexample.com/ -t 100 -Ms 1500 --timeout 5\n")
     co.print("FuzzingTool -r /path/to/raw-http1.txt -r /path/to/raw-http2.txt --scheme https -w /path/to/wordlist/sqli.txt -V -o json\n")
 
-def showCustomPackageHelp(packageName: str):
+def showCustomPackageHelp(category: str):
     """Show the custom package help
 
-    @type packageName: str
-    @param packageName: The package to search for the custom content
+    @type category: str
+    @param category: The package category to search for his plugins
     """
-    for customPackage in getCustomPackageNames(packageName):
-        Package = PluginFactory.classCreator(customPackage, packageName)
-        if not Package.__type__:
+    for pluginName in getPluginNamesFromCategory(category):
+        Plugin = PluginFactory.classCreator(pluginName, category)
+        if not Plugin.__type__:
             typeFuzzing = ''
         else:
-            typeFuzzing = f" (Used for {Package.__type__})"
-        if not Package.__params__:
+            typeFuzzing = f" (Used for {Plugin.__type__})"
+        if not Plugin.__params__:
             params = ''
         else:
-            params = f"={Package.__params__}"
-        co.helpContent(5, f"{Package.__name__}{params}", f"{Package.__desc__}{typeFuzzing}\n")
+            params = f"={Plugin.__params__}"
+        co.helpContent(5, f"{Plugin.__name__}{params}", f"{Plugin.__desc__}{typeFuzzing}\n")
 
 def showDictionariesHelp():
     co.helpTitle(0, "Dictionary options: (-w)")
