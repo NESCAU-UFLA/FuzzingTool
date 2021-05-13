@@ -21,6 +21,13 @@ def getIndexesToParse(content: str, searchFor: str = '$'):
     """
     return [i for i, char in enumerate(content) if char == searchFor]
 
+def splitStrToList(string: str, separator: str = ','):
+    if string:
+        if separator in string:
+            return string.split(separator)
+        return [string]
+    return []
+
 def getPluginNamesFromCategory(category: str):
     """Gets the custom package names (inside /core/category/custom/)
 

@@ -12,7 +12,7 @@
 
 from ..default.DataScanner import DataScanner
 from ....conn.responses.Response import Response
-from ....cli.CliOutput import Colors, fixPayloadToOutput
+from ....interfaces.cli.CliOutput import Colors, fixPayloadToOutput
 
 class ReflectedScanner(DataScanner):
     __name__ = "ReflectedScanner"

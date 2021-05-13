@@ -45,7 +45,7 @@ class Payloader:
         """
         self._suffix = suffix
 
-    def setUppecase(self):
+    def setUppercase(self):
         """The uppercase setter"""
         self.__case = lambda ajustedPayload : [payload.upper() for payload in ajustedPayload]
     
@@ -78,4 +78,4 @@ class Payloader:
             ajustedPayload = [(prefix+payload) for prefix in self._prefix for payload in ajustedPayload]
         if self._suffix:
             ajustedPayload = [(payload+suffix) for suffix in self._suffix for payload in ajustedPayload]
-        return self.__encode(self.__case(ajustedPayload))
+        return self.__case(self.__encode(ajustedPayload))

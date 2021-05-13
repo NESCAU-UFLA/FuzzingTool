@@ -10,19 +10,18 @@
 #
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
-from .CliParser import CliParser
+from .CliParser import *
 from .CliOutput import cliOutput as co
-from .. import version
-from ..utils.utils import getPluginNamesFromCategory
-from ..utils.FileHandler import fileHandler as fh
-from ..core.Fuzzer import Fuzzer
-from ..core.dictionaries.Payloader import Payloader
-from ..core.scanners.Matcher import Matcher
-from ..conn import *
-from ..factories.HttpFactory import HttpFactory
-from ..factories.PluginFactory import PluginFactory
-from ..exceptions.MainExceptions import SkipTargetException
-from ..exceptions.RequestExceptions import InvalidHostname, RequestException
+from ... import version
+from ...utils.utils import getPluginNamesFromCategory
+from ...utils.FileHandler import fileHandler as fh
+from ...core.Fuzzer import Fuzzer
+from ...core.dictionaries.Payloader import Payloader
+from ...core.scanners.Matcher import Matcher
+from ...conn import *
+from ...factories.HttpFactory import HttpFactory
+from ...exceptions.MainExceptions import SkipTargetException
+from ...exceptions.RequestExceptions import InvalidHostname, RequestException
 
 import time
 import threading
@@ -91,63 +90,31 @@ class CliController:
         except KeyboardInterrupt:
             co.abortBox("Test aborted by the user")
             exit(0)
+        except Exception as e:
+            co.errorBox(str(e))
         self.start()
 
     def init(self):
         """The initialization function.
            Set the application variables including plugins requires
         """
-        cliParser = CliParser(argv)
-        targets = cliParser.getTargets()
-        self.globalScanner = cliParser.checkGlobalScanner()
-        self.matcher = cliParser.checkMatcher()
-        self.verbose = cliParser.checkVerboseMode()
+        parser = CliParser(argv)
+        self.__initRequesters(parser)
+        self.globalScanner = parser.scanner
+        self.matcher = parser.matcher
+        self.verbose = parser.verbose
         co.setVerbosityOutput(self.isVerboseMode())
-        self.blacklistedStatus, action = cliParser.checkBlacklistedStatus()
+        self.blacklistedStatus = parser.blacklistedStatus
         self.blacklistAction = lambda status : None
         if self.blacklistedStatus:
-            self.blacklistAction = self.getBlacklistedStatusAction(action)
-        self.delay = cliParser.checkDelay()
-        self.numberOfThreads = cliParser.checkNumThreads()
-        cliParser.checkReporter()
+            self.blacklistAction = self.getBlacklistedStatusAction(parser.blacklistAction)
+        self.delay = parser.delay
+        self.numberOfThreads = parser.numberOfThreads
         if self.globalScanner:
             self.globalScanner.update(self.matcher)
             self.scanner = self.globalScanner
             co.setMessageCallback(self.scanner.cliCallback)
-        cookie = cliParser.checkCookie()
-        proxy = cliParser.checkProxy()
-        proxies = cliParser.checkProxies()
-        timeout = cliParser.checkTimeout()
-        followRedirects = cliParser.checkFollowRedirects()
-        for target in targets:
-            co.infoBox(f"Set target URL: {target['url']}")
-            co.infoBox(f"Set request method: {target['methods']}")
-            if target['data']:
-                co.infoBox(f"Set request data: {target['data']}")
-            if checkForSubdomainFuzz(target['url']):
-                requestType = 'SubdomainRequest'
-            else:
-                requestType = 'Request'
-            requester = HttpFactory.requestCreator(
-                requestType,
-                url=target['url'],
-                methods=target['methods'],
-                data=target['data'],
-                headers=target['header'],
-                followRedirects=followRedirects,
-                proxy=proxy,
-                proxies=proxies,
-                timeout=timeout,
-                cookie=cookie,
-            )
-            self.requesters.append(requester)
-        self.dict = cliParser.getDictionary()
-        cliParser.checkPrefixAndSuffix(self.dict)
-        self.dictSizeof = len(self.dict)
-        if self.dictSizeof < self.numberOfThreads:
-            self.numberOfThreads = self.dictSizeof
-        cliParser.checkCase(self.dict)
-        cliParser.checkEncoder(self.dict)
+        self.__initDictionary(parser)
 
     def getBlacklistedStatusAction(self, action: str):
         """Get the action callback if a blacklisted status code is set
@@ -181,19 +148,21 @@ class CliController:
                 self.fuzzer.resume()
 
         if 'skip' in action:
+            co.infoBox(f"Blacklisted status codes: {str(self.blacklistedStatus)} with action {action}")
             return skipTarget
         if 'wait' in action:
             try:
                 action, timeToWait = action.split('=')
-            except:
-                co.errorBox("Must set a time to wait")
+            except ValueError:
+                raise Exception("Must set a time to wait")
             try:
                 self.waitingTime = float(timeToWait)
-            except:
-                co.errorBox("Time to wait must be a number")
+            except ValueError:
+                raise Exception("Time to wait must be a number")
+            co.infoBox(f"Blacklisted status codes: {str(self.blacklistedStatus)} with action {action} for {timeToWait} seconds")
             return wait
         else:
-            co.errorBox("Invalid type of blacklist action")
+            raise Exception("Invalid type of blacklist action")
 
     def checkConnectionAndRedirections(self):
         """Test the connection and redirection to target.
@@ -209,8 +178,6 @@ class CliController:
                 except RequestException as e:
                     if co.askYesNo('warning', f"{str(e)}. Remove this target?"):
                         self.requesters.remove(requester)
-                    if len(self.requesters) == 0:
-                        co.errorBox("No targets left for fuzzing")
                 else:
                     co.infoBox("Connection status: OK")
             else:
@@ -225,11 +192,11 @@ class CliController:
                     else:
                         co.warningBox(f"{str(e)}. Target removed from list.")
                         self.requesters.remove(requester)
-                    if len(self.requesters) == 0:
-                        co.errorBox("No targets left for fuzzing")
                 co.infoBox("Connection status: OK")
                 if requester.isDataFuzzing():
                     self.checkRedirections(requester)
+            if len(self.requesters) == 0:
+                raise Exception("No targets left for fuzzing")
 
     def checkRedirections(self, requester: Request):
         """Check the redirections for a target.
@@ -398,13 +365,13 @@ class CliController:
         """
         if self.requester.isUrlFuzzing():
             if "SubdomainRequest" in str(type(self.requester)):
-                from ..core.scanners.default.SubdomainScanner import SubdomainScanner
+                from ...core.scanners.default.SubdomainScanner import SubdomainScanner
                 scanner = SubdomainScanner()
             else:
-                from ..core.scanners.default.PathScanner import PathScanner
+                from ...core.scanners.default.PathScanner import PathScanner
                 scanner = PathScanner()
         else:
-            from ..core.scanners.default.DataScanner import DataScanner
+            from ...core.scanners.default.DataScanner import DataScanner
             scanner = DataScanner()
         return scanner
 
@@ -482,93 +449,42 @@ class CliController:
                 else:
                     co.infoBox(f"No matched results was found on target {key}")
 
-def showHelpMenu():
-    co.helpTitle(0, "Parameters:")
-    co.helpTitle(3, "Misc:")
-    co.helpContent(5, "-h, --help", "Show the help menu and exit")
-    co.helpContent(5, "-v, --version", "Show the current version and exit")
-    co.helpTitle(3, "Request options:")
-    co.helpContent(5, "-r FILE", "Define the file with the raw HTTP request (scheme not specified)")
-    co.helpContent(5, "--scheme SCHEME", "Define the scheme used in the URL (default http)")
-    co.helpContent(5, "-u URL", "Define the target URL")
-    co.helpContent(5, "-X METHOD", "Define the request http verbs (method)")
-    co.helpContent(5, "-d DATA", "Define the request body data")
-    co.helpContent(5, "--proxy IP:PORT", "Define the proxy")
-    co.helpContent(5, "--proxies FILE", "Define the file with a list of proxies")
-    co.helpContent(5, "--cookie COOKIE", "Define the HTTP Cookie header value")
-    co.helpContent(5, "--timeout TIMEOUT", "Define the request timeout (in seconds)")
-    co.helpContent(5, "--unfollow-redirects", "Stop to follow redirects")
-    co.helpTitle(3, "Payload options:")
-    co.helpContent(5, "-w WORDLIST", "Define the wordlist dictionary (--help=dictionaries for more info)")
-    co.helpContent(5, "-e ENCODER", "Define the encoder used on payloads (--help=encoders for more info)")
-    co.helpContent(5, "--prefix PREFIX", "Define the prefix(es) used with the payload")
-    co.helpContent(5, "--suffix SUFFIX", "Define the suffix(es) used with the payload")
-    co.helpContent(5, "--upper", "Set the uppercase case for the payloads")
-    co.helpContent(5, "--lower", "Set the lowercase case for the payloads")
-    co.helpContent(5, "--capitalize", "Set the capitalize case for the payloads")
-    co.helpTitle(3, "Match options:")
-    co.helpContent(5, "-Mc STATUS", "Match responses based on their status codes")
-    co.helpContent(5, "-Ms SIZE", "Match responses based on their length (in bytes)")
-    co.helpContent(5, "-Mt TIME", "Match responses based on their elapsed time (in seconds)")
-    co.helpContent(5, "--scanner SCANNER", "Define the custom scanner (--help=scanners for more info)")
-    co.helpTitle(3, "More options:")
-    co.helpContent(5, "(-V, -V1) | -V2", "Enable the verbose mode (common or full verbose)")
-    co.helpContent(5, "--delay DELAY", "Define the delay between each request (in seconds)")
-    co.helpContent(5, "-t NUMBEROFTHREADS", "Define the number of threads used in the tests")
-    co.helpContent(5, "-o REPORT", "Define the report format (accept txt, csv and json)")
-    co.helpContent(5, "--blacklist-status STATUS:ACTION", "Blacklist status codes from response, and take an action when one is detected. Available actions: skip (to skip the current target), wait=SECONDS (to pause the app for some seconds)")
-    co.helpTitle(0, "Examples:\n")
-    co.print("FuzzingTool -u http://127.0.0.1/post.php?id= -w /path/to/wordlist/sqli.txt -Mt 20 -Mc 500-600 -t 30 -o fuzzingGet.csv\n")
-    co.print("FuzzingTool -w /path/to/wordlist/sqli.txt -u http://127.0.0.1/controller/user.php -d 'login&passw&user=login' -Ms 1200\n")
-    co.print("FuzzingTool -w /path/to/wordlist/paths.txt -u http://127.0.0.1/$ -u http://192.168.0.133/$ --suffix .php,.html --unfollow-redirects -Mc 200,302,303\n")
-    co.print("FuzzingTool -w /path/to/wordlist/subdomains.txt -u https://$.domainexample.com/ -t 100 -Ms 1500 --timeout 5\n")
-    co.print("FuzzingTool -r /path/to/raw-http1.txt -r /path/to/raw-http2.txt --scheme https -w /path/to/wordlist/sqli.txt -V -o json\n")
+    def __initRequesters(self, parser: CliParser):
+        for target in parser.targets:
+            co.infoBox(f"Set target URL: {target['url']}")
+            co.infoBox(f"Set request method: {target['methods']}")
+            if target['data']:
+                co.infoBox(f"Set request data: {target['data']}")
+            if checkForSubdomainFuzz(target['url']):
+                requestType = 'SubdomainRequest'
+            else:
+                requestType = 'Request'
+            requester = HttpFactory.requestCreator(
+                requestType,
+                url=target['url'],
+                methods=target['methods'],
+                data=target['data'],
+                headers=target['header'],
+                followRedirects=parser.unfollowRedirects,
+                proxy=parser.proxy,
+                proxies=parser.proxies,
+                timeout=parser.timeout,
+                cookie=parser.cookie,
+            )
+            self.requesters.append(requester)
 
-def showCustomPackageHelp(category: str):
-    """Show the custom package help
-
-    @type category: str
-    @param category: The package category to search for his plugins
-    """
-    for pluginName in getPluginNamesFromCategory(category):
-        Plugin = PluginFactory.classCreator(pluginName, category)
-        if not Plugin.__type__:
-            typeFuzzing = ''
-        else:
-            typeFuzzing = f" (Used for {Plugin.__type__})"
-        if not Plugin.__params__:
-            params = ''
-        else:
-            params = f"={Plugin.__params__}"
-        co.helpContent(5, f"{Plugin.__name__}{params}", f"{Plugin.__desc__}{typeFuzzing}\n")
-
-def showDictionariesHelp():
-    co.helpTitle(0, "Dictionary options: (-w)")
-    co.helpTitle(2, "Default: The default dictionaries are selected by default when no custom are choiced\n")
-    co.helpContent(5, "FILEPATH", "Set the path of the wordlist file")
-    co.helpContent(5, "[PAYLOAD1,PAYLOAD2,]", "Set the payloads list to be used as wordlist")
-    co.helpTitle(2, "Custom (Dictionary=PARAM): Set the custom dictionary and his parameter\n")
-    showCustomPackageHelp('dictionaries')
-    co.helpTitle(0, "Examples:\n")
-    co.print("FuzzingTool -u https://$.domainexample.com/ -w /path/to/wordlist/subdomains.txt -t 30 --timeout 5 -V2\n")
-    co.print("FuzzingTool -u https://$.domainexample.com/ -w [wp-admin,admin,webmail,www,cpanel] -t 30 --timeout 5 -V2\n")
-    co.print("FuzzingTool -u https://$.domainexample.com/ -w CrtDictionary=domainexample.com -t 30 --timeout 5 -V2\n")
-    co.print("FuzzingTool -u https://domainexample.com/$ -w OverflowDictionary=5000,:../:etc/passwd -t 30 --timeout 5 -V2\n")
-
-def showEncodersHelp():
-    co.helpTitle(0, "Encoder options: (-e)")
-    co.helpTitle(2, "Set the encoder used on the payloads\n")
-    showCustomPackageHelp('encoders')
-    co.helpTitle(0, "Examples:\n")
-    co.print("FuzzingTool -u https://domainexample.com/page.php?id= -w /path/to/wordlist/sqli.txt -e UrlEncoder=2 -t 30 --scanner GrepScanner=SQL\n")
-
-def showScannersHelp():
-    co.helpTitle(0, "Scanner options:")
-    co.helpTitle(2, "Default: The default scanners are selected automatically during the tests, if a custom scanner wasn't gived\n")
-    co.helpContent(5, "DataScanner", "Scanner for the data fuzzing")
-    co.helpContent(5, "PathScanner", "Scanner for the path URL fuzzing")
-    co.helpContent(5, "SubdomainScanner", "Scanner for the subdomain URL fuzzing")
-    co.helpTitle(2, "Custom (--scaner SCANNER): Set the custom scanner\n")
-    showCustomPackageHelp('scanners')
-    co.helpTitle(0, "Examples:\n")
-    co.print("FuzzingTool -u https://domainexample.com/search.php?query= -w /path/to/wordlist/xss.txt --scanner ReflectedScanner -t 30 -o csv\n")
+    def __initDictionary(self, parser: CliParser):
+        self.dict = parser.dictionary
+        self.dict.setPrefix(parser.prefix)
+        self.dict.setSuffix(parser.suffix)
+        self.dictSizeof = len(self.dict)
+        if self.dictSizeof < self.numberOfThreads:
+            self.numberOfThreads = self.dictSizeof
+        if parser.lowercase:
+            self.dict.setLowercase()
+        elif parser.uppercase:
+            self.dict.setUppercase()
+        elif parser.capitalize:
+            self.dict.setCapitalize()
+        if parser.encoder:
+            self.dict.setEncoder(parser.encoder)

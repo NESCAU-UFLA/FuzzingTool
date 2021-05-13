@@ -13,7 +13,7 @@
 from ..BaseScanner import BaseScanner
 from ..Matcher import Matcher
 from ....conn.responses.Response import Response
-from ....cli.CliOutput import Colors, getFormatedResult
+from ....interfaces.cli.CliOutput import Colors, getFormatedResult
 
 class DataScanner(BaseScanner):
     __name__ = "DataScanner"

@@ -9,29 +9,3 @@
 #    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 ## https://github.com/NESCAU-UFLA/FuzzingTool
-
-from ..BaseScanner import BaseScanner
-from ..Matcher import Matcher
-from ....conn.responses.Response import Response
-from ....interfaces.cli.CliOutput import Colors, fixPayloadToOutput
-
-class SubdomainScanner(BaseScanner):
-    __name__ = "SubdomainScanner"
-    __author__ = ("Vitor Oriel C N Borges")
-
-    def getResult(self, response: Response):
-        result = super().getResult(response)
-        result['IP'] = response.custom['IP']
-        return result
-
-    def scan(self, result: dict):
-        return True
-
-    def cliCallback(self, result: dict):
-        url = '{:<30}'.format(fixPayloadToOutput(result['Url']))
-        ip = '{:>15}'.format(result['IP'])
-        return (
-            f"{url} {Colors.GRAY}["+
-            f'{Colors.LIGHT_GRAY}IP{Colors.RESET} {ip}'" | "+
-            f"{Colors.LIGHT_GRAY}Code{Colors.RESET} {result['Status']}{Colors.GRAY}]{Colors.RESET}"
-        )

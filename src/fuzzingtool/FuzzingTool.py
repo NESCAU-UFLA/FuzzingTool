@@ -12,7 +12,7 @@
 #
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
-from .cli.CliController import CliController
+from .interfaces.cli.CliController import CliController
 
 def main_cli():
     CliController().main()

@@ -14,7 +14,7 @@ from ..BaseScanner import BaseScanner
 from ..Matcher import Matcher
 from ....conn.responses.Response import Response
 from ....conn.RequestParser import getPath
-from ....cli.CliOutput import Colors, fixPayloadToOutput
+from ....interfaces.cli.CliOutput import Colors, fixPayloadToOutput
 
 class PathScanner(BaseScanner):
     __name__ = "PathScanner"
