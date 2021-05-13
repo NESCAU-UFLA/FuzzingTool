@@ -22,6 +22,14 @@ def getIndexesToParse(content: str, searchFor: str = '$'):
     return [i for i, char in enumerate(content) if char == searchFor]
 
 def splitStrToList(string: str, separator: str = ','):
+    """Split the given string into a list, using a separator
+
+    @type string: str
+    @param string: The string to be splited
+    @type separator: str
+    @param separator: A separator to split the string
+    @returns list: The splited string
+    """
     if string:
         if separator in string:
             return string.split(separator)
