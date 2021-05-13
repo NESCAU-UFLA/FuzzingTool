@@ -192,9 +192,10 @@ class CliController:
                     else:
                         co.warningBox(f"{str(e)}. Target removed from list.")
                         self.requesters.remove(requester)
-                co.infoBox("Connection status: OK")
-                if requester.isDataFuzzing():
-                    self.checkRedirections(requester)
+                else:
+                    co.infoBox("Connection status: OK")
+                    if requester.isDataFuzzing():
+                        self.checkRedirections(requester)
             if len(self.requesters) == 0:
                 raise Exception("No targets left for fuzzing")
 
@@ -420,13 +421,19 @@ class CliController:
             length = co.askData(f"Insert the length (default {defaultLength})")
             if not length:
                 length = defaultLength
-            comparator['Length'] = int(length)
+            try:
+                comparator['Length'] = int(length)
+            except ValueError:
+                co.errorBox(f"The length ({length}) must be an integer")
         defaultTime = firstResult['Time Taken']+5.0
         if co.askYesNo('info', "Do you want to exclude responses based on custom time?"):
             time = co.askData(f"Insert the time (in seconds, default {defaultTime} seconds)")
             if not time:
                 time = defaultTime
-            comparator['Time'] = float(time)
+            try:
+                comparator['Time'] = float(time)
+            except ValueError:
+                co.errorBox(f"The time ({time}) must be a number")
         return comparator
 
     def showFooter(self):
@@ -450,6 +457,11 @@ class CliController:
                     co.infoBox(f"No matched results was found on target {key}")
 
     def __initRequesters(self, parser: CliParser):
+        """Initialize the requesters
+
+        @type parser: CliParser
+        @param parser: The command line interface arguments object
+        """
         for target in parser.targets:
             co.infoBox(f"Set target URL: {target['url']}")
             co.infoBox(f"Set request method: {target['methods']}")
@@ -474,6 +486,11 @@ class CliController:
             self.requesters.append(requester)
 
     def __initDictionary(self, parser: CliParser):
+        """Initialize the dictionary
+
+        @type parser: CliParser
+        @param parser: The command line interface arguments object
+        """
         self.dict = parser.dictionary
         self.dict.setPrefix(parser.prefix)
         self.dict.setSuffix(parser.suffix)

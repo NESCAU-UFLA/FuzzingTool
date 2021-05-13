@@ -19,6 +19,12 @@ from ...core.scanners.Matcher import Matcher
 from ...exceptions.MainExceptions import InvalidPluginName
 
 def parsePlugin(plugin: str):
+    """Parse the plugin name into name and parameter
+
+    @type plugin: str
+    @param plugin: The plugin argument
+    @returns tuple(str, str): The plugin name and parameter
+    """
     if '=' in plugin:
         plugin, param = plugin.split('=')
     else:
@@ -147,12 +153,7 @@ class CliParser:
         self.setFollowRedirects()
 
     def extendTargetsFromRawHttp(self):
-        """Get the raw http of the requests
-
-        @type i: int
-        @param i: The index of the raw filename on terminal
-        @returns tuple(str, list, dict, dict): The default parameters of the requests
-        """
+        """Get the raw http of the requests"""
         headerFilenames = []
         for i in getIndexesToParse(self.__argv, '-r'):
             headerFilenames.append(self.__argv[i+1])
@@ -165,14 +166,7 @@ class CliParser:
             self.targets.extend(AB.buildTargetsFromRawHttp(headerFilenames, scheme))
     
     def extendTargetsFromArgs(self):
-        """Get the param method to use ('?' or '$' in URL if GET, or -d) and the request paralisting
-
-        @type i: int
-        @param i: The index of the target url in terminal
-        @type method: list
-        @param method: The request methods
-        @returns tuple(str, list, dict): The tuple with the new target URL, the request method and params
-        """
+        """Get the param method to use ('?' or '$' in URL if GET, or -d) and the request paralisting"""
         urls = []
         for i in getIndexesToParse(self.__argv, '-u'):
             urls.append(self.__argv[i+1])
@@ -188,30 +182,21 @@ class CliParser:
             self.targets.extend(AB.buildTargetsFromArgs(urls, method, data))
 
     def setCookie(self):
-        """Check if the --cookie argument is present, and set the value into the requester
-
-        @returns str: The cookie used in the request
-        """
+        """Check if the --cookie argument is present, and set it"""
         self.cookie = ''
         if '--cookie' in self.__argv:
             self.cookie = self.__argv[self.__argv.index('--cookie')+1]
             co.infoBox(f"Set cookie: {self.cookie}")
 
     def setProxy(self):
-        """Check if the --proxy argument is present, and set the value into the requester
-
-        @returns dict: The proxy dictionary used in the request
-        """
+        """Check if the --proxy argument is present, and set it"""
         self.proxy = ''
         if '--proxy' in self.__argv:
             self.proxy = self.__argv[self.__argv.index('--proxy')+1]
             co.infoBox(f"Set proxy: {self.proxy}")
 
     def setProxies(self):
-        """Check if the --proxies argument is present, and open a file
-        
-        @returns list: THe proxies list used in the request
-        """
+        """Check if the --proxies argument is present, and read the proxies from a file"""
         self.proxies = []
         if '--proxies' in self.__argv:
             proxiesFilename = self.__argv[self.__argv.index('--proxies')+1]
@@ -222,10 +207,7 @@ class CliParser:
             co.infoBox(f"Proxies loaded from file '{proxiesFilename}'")
 
     def setTimeout(self):
-        """Check if the --timeout argument is present, and set the request timeout
-
-        @returns None|int: The request timeout
-        """
+        """Check if the --timeout argument is present, and set the request timeout"""
         self.timeout = 0
         if '--timeout' in self.__argv:
             timeout = self.__argv[self.__argv.index('--timeout')+1]
@@ -236,10 +218,7 @@ class CliParser:
             co.infoBox(f"Set request timeout: {timeout} seconds")
 
     def setFollowRedirects(self):
-        """Check if the --unfollow-redirects argument is present, and set the follow redirects flag
-
-        @returns bool: The follow redirections flag used in the request
-        """
+        """Check if the --unfollow-redirects argument is present, and set the follow redirects flag"""
         self.unfollowRedirects = True
         if '--unfollow-redirects' in self.__argv:
             self.unfollowRedirects = False
@@ -252,10 +231,7 @@ class CliParser:
         self.setEncoder()
 
     def setDictionary(self):
-        """Get the fuzzing dictionary
-        
-        @returns BaseDictionary: The dictionary object used to provide the payloads
-        """
+        """Set the fuzzing dictionary"""
         try:
             dictionary = self.__argv[self.__argv.index('-w')+1]
         except ValueError:
@@ -284,11 +260,8 @@ class CliParser:
         co.infoBox(f"Dictionary is done, loaded {len(self.dictionary)} payloads")
 
     def setPrefixAndSuffix(self):
-        """Check if the --prefix argument is present, and set the prefix into request parser
-           Check if the --suffix argument is present, and set the suffix into request parser
-        
-        @type payloader: Payloader
-        @param payloader: The object responsible to handle with the payloads
+        """Check if the --prefix argument is present, and set the prefix
+           Check if the --suffix argument is present, and set the suffix
         """
         prefix = ''
         suffix = ''
@@ -305,9 +278,6 @@ class CliParser:
         """Check if the --upper argument is present, and set the uppercase case mode
            Check if the --lower argument is present, and set the lowercase case mode
            Check if the --capitalize argument is present, and set the capitalize case mode
-
-        @type payloader: Payloader
-        @param payloader: The object responsible to handle with the payloads
         """
         self.lowercase = False
         self.uppercase = False
@@ -323,8 +293,7 @@ class CliParser:
             co.infoBox("Set payload case: capitalize")
 
     def setEncoder(self):
-        """Check if the -e argument is present, and set the encoder for the payloads
-        """
+        """Check if the -e argument is present, and set the encoder"""
         self.encoder = None
         if '-e' in self.__argv:
             encoder = self.__argv[self.__argv.index('-e')+1]
@@ -342,10 +311,7 @@ class CliParser:
         self.setScanner()
 
     def setMatcher(self):
-        """Check for the Matcher arguments
-        
-        @returns Matcher: The global matcher for the scanners
-        """
+        """Set the matcher object"""
         self.matcher = Matcher()
         if '-Mc' in self.__argv:
             status = self.__argv[self.__argv.index('-Mc')+1]
@@ -373,10 +339,7 @@ class CliParser:
         self.matcher.setComparator(AB.buildMatcherComparator(length, time))
 
     def setScanner(self):
-        """Check if the --scanner argument is present, and return the asked scanner by the user
-
-        @returns None|BaseScanner: The scanner used in the fuzzer
-        """
+        """Check if the --scanner argument is present, and set it"""
         self.scanner = None
         if '--scanner' in self.__argv:
             scanner = self.__argv[self.__argv.index('--scanner')+1]
@@ -397,10 +360,7 @@ class CliParser:
         self.setReporter()
 
     def setVerboseMode(self):
-        """Check if the -V or --verbose argument is present, and set the verbose mode
-
-        @returns list: The verbosity mode list
-        """
+        """Check if the -V or --verbose argument is present, and set the verbose mode"""
         if '-V' in self.__argv or '-V1' in self.__argv:
             self.verbose = [True, False]
         elif '-V2' in self.__argv:
@@ -409,10 +369,7 @@ class CliParser:
             self.verbose = [False, False]
 
     def setDelay(self):
-        """Check if the --delay argument is present, and set the value into the fuzzer
-
-        @returns float: The delay between each request
-        """
+        """Check if the --delay argument is present, and set it"""
         self.delay = 0
         if '--delay' in self.__argv:
             delay = self.__argv[self.__argv.index('--delay')+1]
@@ -423,10 +380,7 @@ class CliParser:
             co.infoBox(f"Set delay: {str(delay)} second(s)")
 
     def setNumThreads(self):
-        """Check if the -t argument is present, and set the number of threads in the fuzzer
-
-        @returns int: The number of threads used in the fuzzer
-        """
+        """Check if the -t argument is present, and set it"""
         self.numberOfThreads = 1
         if '-t' in self.__argv:
             numberOfThreads = self.__argv[self.__argv.index('-t')+1]
@@ -437,8 +391,7 @@ class CliParser:
         co.infoBox(f"Set number of threads: {str(self.numberOfThreads)} thread(s)")
 
     def setBlacklistedStatus(self):
-        """Check if the --blacklist-status argument is present, and set the blacklisted status and action
-        """
+        """Check if the --blacklist-status argument is present, and set the blacklisted status and action"""
         self.blacklistedStatus = ''
         if '--blacklist-status' in self.__argv:
             status = self.__argv[self.__argv.index('--blacklist-status')+1]
@@ -450,11 +403,7 @@ class CliParser:
             self.blacklistedStatus = AB.buildBlacklistStatus(status)
 
     def setReporter(self):
-        """Check if the -o argument is present, and set the report data (name and type)
-        
-        @type requester: Request
-        @param requester: The object responsible to handle the requests
-        """
+        """Check if the -o argument is present, and set the report metadata (name and type)"""
         if '-o' in self.__argv:
             report = self.__argv[self.__argv.index('-o')+1]
             fh.reporter.setMetadata(report)

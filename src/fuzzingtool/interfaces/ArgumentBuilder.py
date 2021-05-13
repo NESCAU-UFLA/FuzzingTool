@@ -1,3 +1,15 @@
+## FuzzingTool
+# 
+# Authors:
+#    Vitor Oriel C N Borges <https://github.com/VitorOriel>
+# License: MIT (LICENSE.md)
+#    Copyright (c) 2021 Vitor Oriel
+#    Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+#    The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+#    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#
+## https://github.com/NESCAU-UFLA/FuzzingTool
+
 from ..utils.utils import splitStrToList
 from ..utils.FileHandler import fileHandler as fh
 
@@ -6,6 +18,16 @@ from collections import deque
 class ArgumentBuilder:
     @staticmethod
     def buildTargetsFromArgs(urls: list, method: str, data: str):
+        """Build the targets from arguments
+
+        @type urls: list
+        @param urls: The target URLs
+        @type method: str
+        @param method: The request methods
+        @type data: str
+        @param data: The raw request body data
+        @returns dict: The targets data builded into a dictionary
+        """
         methods = splitStrToList(method)
         targets = []
         for url in urls:
@@ -23,7 +45,15 @@ class ArgumentBuilder:
         return targets
 
     @staticmethod
-    def buildTargetsFromRawHttp(headerFilenames: list, scheme: str):
+    def buildTargetsFromRawHttp(rawHttpFilenames: list, scheme: str):
+        """Build the targets from raw http files
+
+        @type rawHttpFilenames: list
+        @param rawHttpFilenames: The list with the raw http filenames
+        @type scheme: str
+        @param scheme: The scheme used in the URL
+        @returns dict: The targets data builded into a dictionary
+        """
         def buildHeaderFromRawHttp(headerList: list):
             """Get the HTTP header
 
@@ -43,9 +73,9 @@ class ArgumentBuilder:
             return headers
         
         targets = []
-        for headerFilename in headerFilenames:
+        for rawHttpFilename in rawHttpFilenames:
             try:
-                headerList = deque(fh.read(headerFilename))
+                headerList = deque(fh.read(rawHttpFilename))
             except Exception as e:
                 raise Exception(str(e))
             method, path, httpVer = headerList.popleft().split(' ')
@@ -66,10 +96,22 @@ class ArgumentBuilder:
 
     @staticmethod
     def buildPrefixSuffix(string: str):
+        """Build the prefix or suffix arguments
+
+        @type string: str
+        @param string: The prefix or suffix argument
+        @returns list: The string parsed into a list
+        """
         return splitStrToList(string)
 
     @staticmethod
     def buildBlacklistStatus(status: str):
+        """Build the blacklisted status codes
+
+        @type status: str
+        @param status: The blacklisted status codes
+        @returns list: The parsed blacklisted status codes
+        """
         try:
             return [int(status) for status in splitStrToList(status)]
         except:
@@ -77,6 +119,12 @@ class ArgumentBuilder:
 
     @staticmethod
     def buildMatcherAllowedStatus(allowedStatus: str):
+        """Build the matcher attribute for allowed status
+
+        @type allowedStatus: str
+        @param allowedStatus: The allowed status codes to match results
+        @returns dict: The allowed status code, list and range, parsed into a dict
+        """
         def getAllowedStatus(status: str, allowedList: list, allowedRange: list):
             """Get the allowed status code list and range
 
@@ -109,6 +157,14 @@ class ArgumentBuilder:
 
     @staticmethod
     def buildMatcherComparator(length: int, time: float):
+        """Build the matcher attribute for data comparator
+
+        @type length: int
+        @param length: The length attribute for match results
+        @type time: float
+        @param time: The time attribute for match results
+        @returns dict: The data comparators parsed into a dict
+        """
         return {
             'Length': None if not length else length,
             'Time': None if not time else time,
