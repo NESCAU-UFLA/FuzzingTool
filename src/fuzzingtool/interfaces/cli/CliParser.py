@@ -12,7 +12,7 @@
 
 from .CliOutput import cliOutput as co
 from ..ArgumentBuilder import ArgumentBuilder as AB
-from ...utils.utils import getIndexesToParse
+from ...utils.utils import getIndexesToParse, getPluginNamesFromCategory
 from ...utils.FileHandler import fileHandler as fh
 from ...factories.PluginFactory import PluginFactory
 from ...core.scanners.Matcher import Matcher

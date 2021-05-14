@@ -13,7 +13,6 @@
 from .CliParser import *
 from .CliOutput import cliOutput as co
 from ... import version
-from ...utils.utils import getPluginNamesFromCategory
 from ...utils.FileHandler import fileHandler as fh
 from ...core.Fuzzer import Fuzzer
 from ...core.dictionaries.Payloader import Payloader
