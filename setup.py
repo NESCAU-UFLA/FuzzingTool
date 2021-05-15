@@ -5,7 +5,7 @@ from setuptools import setup, find_packages
 def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
-install_requires = ['requests', 'beautifulsoup4']
+install_requires = ['requests', 'beautifulsoup4', 'dnspython']
 
 if sys.platform.startswith("win"):
     install_requires.append("colorama>=0.4.0")

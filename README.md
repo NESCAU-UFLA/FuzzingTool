@@ -30,13 +30,17 @@ $ pip install FuzzingTool
 Or if you want to install it manually, download the last release or clone this repository, and also follow the next prerequisites.
 
 ### Prerequisites
- * Install the requests python package
+ * Install the requests package
  ```
  $ pip install requests
  ```
- * Install the BeautifulSoup python package
+ * Install the BeautifulSoup package
  ```
  $ pip install beautifulsoup4
+ ```
+ * Install the DnsPython package
+ ```
+ $ pip install dnspython
  ```
 
 ### User's Manual
