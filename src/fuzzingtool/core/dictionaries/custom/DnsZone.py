@@ -41,7 +41,7 @@ class DnsZone(BaseDictionary):
         for ip in nameServersIps:
             try:
                 zones = zone.from_xfr(query.xfr(ip.rstrip('.'), self.host))
-                transferedSubdomains.extend([str(host) for host in zones])
+                transferedSubdomains.extend([str(subdomain) for subdomain in zones])
             except:
                 continue
         if not transferedSubdomains:
