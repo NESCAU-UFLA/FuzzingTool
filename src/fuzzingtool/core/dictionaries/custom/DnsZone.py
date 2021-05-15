@@ -13,40 +13,39 @@
 from ..BaseDictionary import BaseDictionary
 from ....exceptions.MainExceptions import MissingParameter
 
-class OverflowDictionary(BaseDictionary):
-    __name__ = "OverflowDictionary"
-    __author__ = ("Vitor Oriel C N Borges")
-    __params__ = "QUANTITY_OF_PAYLOADS,INIT_PAYLOAD:PAYLOAD:END_PAYLOAD"
-    __desc__ = "Build the wordlist for stress and buffer overflow purposes"
-    __type__ = ""
+from dns import resolver, query, zone
 
-    def __init__(self, sourceParam: str):
+class DnsZone(BaseDictionary):
+    __name__ = "DnsZone"
+    __author__ = ("Vitor Oriel C N Borges")
+    __params__ = "DOMAIN"
+    __desc__ = "Build the wordlist based on a DNS zone transfer request"
+    __type__ = "SubdomainFuzzing"
+
+    def __init__(self, host: str):
         super().__init__()
-        if not sourceParam:
-            raise MissingParameter("quantity of payloads")
-        if ',' in sourceParam:
-            quantityOfPayloads, payload = sourceParam.split(',', 1)
-            if ':' in payload:
-                try:
-                    initPayload, payload, endPayload = payload.split(':', 3)
-                except:
-                    raise Exception("Invalid quantity of values to unpack (expected initPayload:payload:endPayload)")
-            else:
-                initPayload, endPayload = '', ''
-            quantityOfPayloads = quantityOfPayloads
-        else:
-            quantityOfPayloads = sourceParam
-            initPayload, payload, endPayload = '', '', ''
-        try:
-            quantityOfPayloads = int(quantityOfPayloads)
-        except:
-            raise Exception("The quantity of payloads must be integer")
-        self.quantityOfPayloads = quantityOfPayloads
-        self.initPayload = initPayload
-        self.payload = payload
-        self.endPayload = endPayload
+        if not host:
+            raise MissingParameter("target host")
+        self.host = host
 
     def setWordlist(self):
-        self._wordlist = [
-            f"{self.initPayload}{self.payload*i}{self.endPayload}" for i in range(self.quantityOfPayloads)
-        ]
+        nameServers = resolver.query(self.host, 'NS')
+        nameServersIps = []
+        for ns in nameServers:
+            records = resolver.query(str(ns), 'A')
+            for record in records:
+                nameServersIps.append(str(record))
+        if not nameServersIps:
+            raise Exception("Couldn't find any name servers")
+        transferedSubdomains = []
+        for ip in nameServersIps:
+            try:
+                zones = zone.from_xfr(query.xfr(ip.rstrip('.'), self.host))
+                transferedSubdomains.extend([str(host) for host in zones])
+            except:
+                continue
+        if not transferedSubdomains:
+            raise Exception(f"Couldn't make the zone transfer for any of the {len(nameServersIps)} name servers")
+        if '@' in transferedSubdomains:
+            transferedSubdomains.remove('@')
+        self._wordlist = set(transferedSubdomains)

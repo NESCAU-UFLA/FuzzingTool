@@ -12,20 +12,20 @@
 
 from ..BaseEncoder import BaseEncoder
 
-import binascii
+import html
 
-class HexEncoder(BaseEncoder):
-    __name__ = "HexEncoder"
+class Html(BaseEncoder):
+    __name__ = "Html"
     __author__ = ("Vitor Oriel C N Borges")
     __params__ = ""
-    __desc__ = "Encode payload to hexadecimal"
+    __desc__ = "Encode payload using HTML entities encoder"
     __type__ = "DataFuzzing"
 
     def __init__(self):
         super().__init__()
 
     def encode(self, payload: str):
-        return binascii.hexlify(payload.encode(self.charset)).decode(self.charset)
+        return html.escape(payload)
     
     def decode(self, payload: str):
-        return binascii.unhexlify(payload.encode(self.charset)).decode(self.charset)
+        return html.unescape(payload)

@@ -13,44 +13,54 @@
 from ..default.DataScanner import DataScanner
 from ....conn.responses.Response import Response
 from ....interfaces.cli.CliOutput import Colors, fixPayloadToOutput
+from ....exceptions.MainExceptions import MissingParameter
 
-class ReflectedScanner(DataScanner):
-    __name__ = "ReflectedScanner"
+import re
+
+class Find(DataScanner):
+    __name__ = "Find"
     __author__ = ("Vitor Oriel C N Borges")
-    __params__ = ""
-    __desc__ = "Lookup if the payload was reflected in the response body"
+    __params__ = "REGEX"
+    __desc__ = "Filter results based on a regex match into the response body"
     __type__ = "DataFuzzing"
 
     """
     Attributes:
-        reflected: The dictionary to save a flag for each matched result,
-                   saying if the payload was reflected or not
+        regexer: The regex object to find the content into the response body
+        found: The dictionary to save a flag for each matched result,
+               saying if the response body match with the regex or not
     """
-    def __init__(self):
+    def __init__(self, regex: str):
+        if not regex:
+            raise MissingParameter("regex")
         super().__init__()
-        self.__reflected = {}
+        try:
+            self.__regexer = re.compile(regex)
+        except re.error:
+            raise Exception("Invalid regex format")
+        self.__found = {}
 
     def getResult(self, response: Response):
         return super().getResult(response)
 
     def scan(self, result: dict):
-        reflected = result['Payload'] in result['Body']
-        self.__reflected[result['Request']] = reflected
-        return reflected
+        found = True if self.__regexer.search(result['Body']) else False
+        self.__found[result['Request']] = found
+        return found
     
     def cliCallback(self, result: dict):
-        reflected = f"{Colors.LIGHT_YELLOW}{Colors.BOLD}IDK"
-        if result['Request'] in self.__reflected:
-            if self.__reflected[result['Request']]:
-                reflected = f"{Colors.GREEN}{Colors.BOLD}YES"
+        found = f"{Colors.LIGHT_YELLOW}{Colors.BOLD}IDK"
+        if result['Request'] in self.__found:
+            if self.__found[result['Request']]:
+                found = f"{Colors.GREEN}{Colors.BOLD}YES"
             else:
-                reflected = f"{Colors.LIGHT_RED}{Colors.BOLD}NO "
-                del self.__reflected[result['Request']]
+                found = f"{Colors.LIGHT_RED}{Colors.BOLD}NO "
+                del self.__found[result['Request']]
         payload = '{:<30}'.format(fixPayloadToOutput(result['Payload']))
         length = '{:>8}'.format(result['Length'])
         return (
             f"{payload} {Colors.GRAY}["+
-            f"{Colors.LIGHT_GRAY}Reflected{Colors.RESET} {reflected}{Colors.RESET} | "+
+            f"{Colors.LIGHT_GRAY}Regex found{Colors.RESET} {found}{Colors.RESET} | "+
             f"{Colors.LIGHT_GRAY}Code{Colors.RESET} {result['Status']} | "+
             f"{Colors.LIGHT_GRAY}Size{Colors.RESET} {length}{Colors.GRAY}]{Colors.RESET}"
         )

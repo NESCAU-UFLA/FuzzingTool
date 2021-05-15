@@ -14,8 +14,8 @@ from ..BaseEncoder import BaseEncoder
 
 from urllib.parse import quote, unquote
 
-class UrlEncoder(BaseEncoder):
-    __name__ = "UrlEncoder"
+class Url(BaseEncoder):
+    __name__ = "Url"
     __author__ = ("Vitor Oriel C N Borges")
     __params__ = "ENCODE_LEVEL"
     __desc__ = "Replace special characters in string using the %xx escape. Letters, digits, and the characters '_.-~' are never quoted."

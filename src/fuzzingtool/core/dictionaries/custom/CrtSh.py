@@ -19,8 +19,8 @@ from ....exceptions.MainExceptions import MissingParameter
 from bs4 import BeautifulSoup as bs
 import re
 
-class CrtDictionary(BaseDictionary):
-    __name__ = "CrtDictionary"
+class CrtSh(BaseDictionary):
+    __name__ = "CrtSh"
     __author__ = ("Vitor Oriel C N Borges")
     __params__ = "DOMAIN"
     __desc__ = "Build the wordlist based on the content of the site crt.sh"

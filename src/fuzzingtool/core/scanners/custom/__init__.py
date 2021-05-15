@@ -10,4 +10,5 @@
 #
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
-from .ReflectedScanner import ReflectedScanner
+from .Reflected import Reflected
+from .Find import Find

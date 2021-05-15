@@ -10,7 +10,7 @@
 #
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
-from .HexEncoder import HexEncoder
-from .Base64Encoder import Base64Encoder
-from .HtmlEncoder import HtmlEncoder
-from .UrlEncoder import UrlEncoder
+from .Hex import Hex
+from .Base64 import Base64
+from .Html import Html
+from .Url import Url

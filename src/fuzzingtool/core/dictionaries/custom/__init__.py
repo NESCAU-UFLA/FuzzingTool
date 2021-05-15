@@ -10,4 +10,6 @@
 #
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
-from .CrtDictionary import CrtDictionary
+from .CrtSh import CrtSh
+from .DnsZone import DnsZone
+from .Overflow import Overflow

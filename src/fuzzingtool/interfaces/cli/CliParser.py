@@ -102,15 +102,15 @@ def showDictionariesHelp():
     co.helpTitle(0, "Examples:\n")
     co.print("FuzzingTool -u https://$.domainexample.com/ -w /path/to/wordlist/subdomains.txt -t 30 --timeout 5 -V2\n")
     co.print("FuzzingTool -u https://$.domainexample.com/ -w [wp-admin,admin,webmail,www,cpanel] -t 30 --timeout 5 -V2\n")
-    co.print("FuzzingTool -u https://$.domainexample.com/ -w CrtDictionary=domainexample.com -t 30 --timeout 5 -V2\n")
-    co.print("FuzzingTool -u https://domainexample.com/$ -w OverflowDictionary=5000,:../:etc/passwd -t 30 --timeout 5 -V2\n")
+    co.print("FuzzingTool -u https://$.domainexample.com/ -w CrtSh=domainexample.com -t 30 --timeout 5 -V2\n")
+    co.print("FuzzingTool -u https://domainexample.com/$ -w Overflow=5000,:../:etc/passwd -t 30 --timeout 5 -V2\n")
 
 def showEncodersHelp():
     co.helpTitle(0, "Encoder options: (-e)")
     co.helpTitle(2, "Set the encoder used on the payloads\n")
     showCustomPackageHelp('encoders')
     co.helpTitle(0, "Examples:\n")
-    co.print("FuzzingTool -u https://domainexample.com/page.php?id= -w /path/to/wordlist/sqli.txt -e UrlEncoder=2 -t 30 --scanner GrepScanner=SQL\n")
+    co.print("FuzzingTool -u https://domainexample.com/page.php?id= -w /path/to/wordlist/sqli.txt -e Url=2 -t 30 --scanner Find=SQL\n")
 
 def showScannersHelp():
     co.helpTitle(0, "Scanner options:")
@@ -121,7 +121,7 @@ def showScannersHelp():
     co.helpTitle(2, "Custom (--scaner SCANNER): Set the custom scanner\n")
     showCustomPackageHelp('scanners')
     co.helpTitle(0, "Examples:\n")
-    co.print("FuzzingTool -u https://domainexample.com/search.php?query= -w /path/to/wordlist/xss.txt --scanner ReflectedScanner -t 30 -o csv\n")
+    co.print("FuzzingTool -u https://domainexample.com/search.php?query= -w /path/to/wordlist/xss.txt --scanner Reflected -t 30 -o csv\n")
 
 class CliParser:
     """Class that handle with the sys argument parsing"""

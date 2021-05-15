@@ -14,8 +14,8 @@ from ..BaseEncoder import BaseEncoder
 
 import base64
 
-class Base64Encoder(BaseEncoder):
-    __name__ = "Base64Encoder"
+class Base64(BaseEncoder):
+    __name__ = "Base64"
     __author__ = ("Vitor Oriel C N Borges")
     __params__ = ""
     __desc__ = "Encode payload using Base64 encoder"
