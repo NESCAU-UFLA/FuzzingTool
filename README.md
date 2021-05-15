@@ -30,10 +30,14 @@ $ pip install FuzzingTool
 Or if you want to install it manually, download the last release or clone this repository, and also follow the next prerequisites.
 
 ### Prerequisites
-* Install the requests python package
-```
-$ pip install requests
-```
+ * Install the requests python package
+ ```
+ $ pip install requests
+ ```
+ * Install the BeautifulSoup python package
+ ```
+ $ pip install beautifulsoup4
+ ```
 
 ### User's Manual
 Reach out the user's manual (command list and usage examples) on our <a href="https://github.com/NESCAU-UFLA/FuzzingTool/wiki" target="_blank">wiki page</a>.
