@@ -16,6 +16,14 @@ class BaseHttpFactory(ABC):
     @staticmethod
     @abstractmethod
     def requestCreator(requestType, url, **kwargs):
+        """Build the requests based on their types
+
+        @type requestType: str
+        @param requestType: The request type
+        @type url: str
+        @param url: The target URL
+        @returns Request: A request object
+        """
         pass
 
 class BasePluginFactory(ABC):
@@ -34,5 +42,15 @@ class BasePluginFactory(ABC):
 
     @staticmethod
     @abstractmethod
-    def objectCreator(name, category, params):
+    def objectCreator(name, category, params = ''):
+        """Build the plugins based on their categories
+
+        @type name: str
+        @param name: The plugin name
+        @type category: str
+        @param category: The plugin category
+        @type params: str
+        @param params: The plugin parameters (if it has)
+        @returns Plugin: The selected plugin object
+        """
         pass

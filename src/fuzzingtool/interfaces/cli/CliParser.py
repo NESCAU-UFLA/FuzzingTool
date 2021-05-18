@@ -135,12 +135,14 @@ class CliParser:
         self.setArguments()
     
     def setArguments(self):
+        """Set all the app arguments"""
         self.setRequestArguments()
         self.setDictionaryArguments()
         self.setMatchArguments()
         self.setGeneralArguments()
 
     def setRequestArguments(self):
+        """Set the request arguments"""
         self.targets = []
         self.extendTargetsFromRawHttp()
         self.extendTargetsFromArgs()
@@ -153,7 +155,7 @@ class CliParser:
         self.setFollowRedirects()
 
     def extendTargetsFromRawHttp(self):
-        """Get the raw http of the requests"""
+        """Updated the targets list based on raw https"""
         headerFilenames = []
         for i in getIndexesToParse(self.__argv, '-r'):
             headerFilenames.append(self.__argv[i+1])
@@ -166,7 +168,7 @@ class CliParser:
             self.targets.extend(AB.buildTargetsFromRawHttp(headerFilenames, scheme))
     
     def extendTargetsFromArgs(self):
-        """Get the param method to use ('?' or '$' in URL if GET, or -d) and the request paralisting"""
+        """Updated the targets list based on the urls"""
         urls = []
         for i in getIndexesToParse(self.__argv, '-u'):
             urls.append(self.__argv[i+1])
@@ -225,6 +227,7 @@ class CliParser:
             co.infoBox(f"Stop to following redirects")
 
     def setDictionaryArguments(self):
+        """Set the dictionary arguments"""
         self.setDictionary()
         self.setPrefixAndSuffix()
         self.setCase()
@@ -307,6 +310,7 @@ class CliParser:
             co.infoBox(f"Set encoder: {encoder}")
 
     def setMatchArguments(self):
+        """Set the match arguments"""
         self.setMatcher()
         self.setScanner()
 
@@ -353,6 +357,7 @@ class CliParser:
             co.infoBox(f"Set scanner: {scanner}")
 
     def setGeneralArguments(self):
+        """Set the general arguments"""
         self.setVerboseMode()
         self.setDelay()
         self.setNumThreads()
