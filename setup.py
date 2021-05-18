@@ -1,3 +1,5 @@
+from src.fuzzingtool import version
+
 import os
 import sys
 from setuptools import setup, find_packages
@@ -16,7 +18,7 @@ if sys.platform.startswith("win"):
 
 setup(
     name="FuzzingTool",
-    version="3.9.2",
+    version=version(),
     author="Vitor Oriel C N Borges",
     author_email="vitorwixmix@gmail.com",
     description=("Software for fuzzing, used on web application pentestings."),
