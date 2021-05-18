@@ -16,31 +16,24 @@ FuzzingTool is a web penetration testing tool, that handles with fuzzing. After 
 We're not responsible for the misuse of this tool. This project was created for educational purposes and should not be used in environments without legal authorization.
 
 ## Screenshot
-![print-subdomain-example](https://user-images.githubusercontent.com/43549176/110864762-51e15700-82a1-11eb-8680-ab8d2cfcd2f5.png)
+![use-screenshots](https://user-images.githubusercontent.com/43549176/118672563-ba334400-b7ce-11eb-9927-78f6dc73eac8.png)
 
 ## Getting Started
 Before we start the *penetration testings*, take a look at the **installing** and **prerequisites**.
 
-### Installing
+### Installing from Pypi
 FuzzingTool is now on Pypi! You can install with:
 ```
 $ pip install FuzzingTool
 ```
 
-Or if you want to install it manually, download the last release or clone this repository, and also follow the next prerequisites.
+### Installing from source
+If you want to install it manually, download the last release or clone this repository, and also follow the next prerequisites.
 
-### Prerequisites
- * Install the requests package
+#### Prerequisites
+ * Go to the project source folder, and run:
  ```
- $ pip install requests
- ```
- * Install the BeautifulSoup package
- ```
- $ pip install beautifulsoup4
- ```
- * Install the DnsPython package
- ```
- $ pip install dnspython
+ $ pip install -r requirements.txt
  ```
 
 ### User's Manual
