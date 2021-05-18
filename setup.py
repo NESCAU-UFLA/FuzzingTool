@@ -5,7 +5,11 @@ from setuptools import setup, find_packages
 def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
-install_requires = ['requests', 'beautifulsoup4', 'dnspython']
+install_requires = [
+    'requests>=2.25.1',
+    'beautifulsoup4>=4.9.3',
+    'dnspython>=2.1.0',
+]
 
 if sys.platform.startswith("win"):
     install_requires.append("colorama>=0.4.0")
@@ -34,6 +38,8 @@ setup(
         "Development Status :: 4 - Beta",
         "Natural Language :: English",
         "License :: OSI Approved :: MIT License",
-        "Programming Language :: Python :: 3"
+        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
     ],
 )
