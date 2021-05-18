@@ -164,39 +164,23 @@ class CliController:
             raise Exception("Invalid type of blacklist action")
 
     def checkConnectionAndRedirections(self):
-        """Test the connection and redirection to target.
+        """Test the connection to target.
            If data fuzzing is detected, check for redirections
         """
         for requester in self.requesters:
             co.infoBox(f"Checking connection and redirections on {requester.getUrl()} ...")
-            if requester.isUrlFuzzing():
-                co.infoBox("Test mode set for URL fuzzing")
-                co.infoBox("Testing connection ...")
-                try:
-                    requester.testConnection()
-                except RequestException as e:
-                    if co.askYesNo('warning', f"{str(e)}. Remove this target?"):
-                        self.requesters.remove(requester)
-                else:
-                    co.infoBox("Connection status: OK")
+            co.infoBox("Testing connection ...")
+            try:
+                requester.testConnection()
+            except RequestException as e:
+                co.warningBox(f"{str(e)}. Target removed from list.")
+                self.requesters.remove(requester)
             else:
-                co.infoBox("Test mode set for data fuzzing")
-                co.infoBox("Testing connection ...")
-                try:
-                    requester.testConnection()
-                except RequestException as e:
-                    if "connected" in str(e).lower():
-                        if co.askYesNo('warning', f"{str(e)}. Remove this target?"):
-                            self.requesters.remove(requester)
-                    else:
-                        co.warningBox(f"{str(e)}. Target removed from list.")
-                        self.requesters.remove(requester)
-                else:
-                    co.infoBox("Connection status: OK")
-                    if requester.isDataFuzzing():
-                        self.checkRedirections(requester)
-            if len(self.requesters) == 0:
-                raise Exception("No targets left for fuzzing")
+                co.infoBox("Connection status: OK")
+                if requester.isDataFuzzing():
+                    self.checkRedirections(requester)
+        if len(self.requesters) == 0:
+            raise Exception("No targets left for fuzzing")
 
     def checkRedirections(self, requester: Request):
         """Check the redirections for a target.

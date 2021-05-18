@@ -196,9 +196,6 @@ class Request:
                 headers=requestParser.getHeader(self.__header),
                 timeout=self.__timeout if self.__timeout else 10, # Default 10 seconds to make a request
             )
-            response.raise_for_status()
-        except requests.exceptions.HTTPError:
-            raise RequestException(f"Connected to {url}, but raised a 404 status code")
         except requests.exceptions.ProxyError:
             raise RequestException(f"Can't connect to the proxy")
         except requests.exceptions.SSLError:
