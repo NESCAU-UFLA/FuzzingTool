@@ -1,4 +1,12 @@
-# Issue template
+---
+name: FEATURE REQUEST
+about: Request a featture
+title: ''
+labels: enhancement
+assignees: ''
+
+---
+
 ## Feature request
 **Context**: Is a solution or a feature request?
 
