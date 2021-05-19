@@ -1,4 +1,12 @@
-# Issue template
+---
+name: BUG REPORT
+about: Create a report to help us improve
+title: ''
+labels: bug
+assignees: ''
+
+---
+
 ## Bug reporting
 **Description**: A clear and concise description of the problem.
 
