@@ -10,5 +10,23 @@
 #
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
-from .FileDictionary import FileDictionary
-from .ListDictionary import ListDictionary
+from .BaseFactories import BaseDictFactory
+from .PluginFactory import PluginFactory
+from ..core.dictionaries import *
+from ..exceptions.MainExceptions import InvalidPluginName, MissingParameter
+
+class DictFactory(BaseDictFactory):
+    def creator(name: str, params: str):
+        try:
+            dictionary = PluginFactory.objectCreator(name, 'dictionaries', params)
+        except InvalidPluginName:
+            try:
+                if name.startswith('[') and name.endswith(']'):
+                    dictionary = ListDictionary(name)
+                else:
+                    # For default, read the wordlist from a file
+                    dictionary = FileDictionary(name)
+            except MissingParameter as e:
+                raise Exception(f"Missing parameter: {str(e)}")
+        dictionary.setWordlist()
+        return dictionary

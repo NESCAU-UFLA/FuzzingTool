@@ -13,7 +13,7 @@
 from ..default.DataScanner import DataScanner
 from ....conn.responses.Response import Response
 from ....interfaces.cli.CliOutput import Colors, getFormatedResult
-from ....exceptions.MainExceptions import MissingParameter
+from ....exceptions.MainExceptions import MissingParameter, BadArgumentFormat
 
 import re
 
@@ -37,7 +37,7 @@ class Find(DataScanner):
         try:
             self.__regexer = re.compile(regex)
         except re.error:
-            raise Exception("Invalid regex format")
+            raise BadArgumentFormat("invalid regex")
         self.__found = {}
 
     def getResult(self, response: Response):

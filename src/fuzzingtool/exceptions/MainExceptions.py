@@ -18,3 +18,6 @@ class InvalidPluginName(Exception):
 
 class MissingParameter(Exception):
     pass
+
+class BadArgumentFormat(Exception):
+    pass

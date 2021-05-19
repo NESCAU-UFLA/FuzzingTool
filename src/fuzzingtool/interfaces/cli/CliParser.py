@@ -14,6 +14,7 @@ from .CliOutput import cliOutput as co
 from ..ArgumentBuilder import ArgumentBuilder as AB
 from ...utils.utils import getIndexesToParse, getPluginNamesFromCategory
 from ...utils.FileHandler import fileHandler as fh
+from ...factories.DictFactory import DictFactory
 from ...factories.PluginFactory import PluginFactory
 from ...core.scanners.Matcher import Matcher
 from ...exceptions.MainExceptions import InvalidPluginName
@@ -239,25 +240,9 @@ class CliParser:
             dictionary = self.__argv[self.__argv.index('-w')+1]
         except ValueError:
             raise Exception("An wordlist is needed to make the fuzzing")
-        dictionary, param = parsePlugin(dictionary)
-        try:
-            self.dictionary = PluginFactory.objectCreator(dictionary, 'dictionaries', param)
-        except InvalidPluginName:
-            try:
-                if dictionary.startswith('[') and dictionary.endswith(']'):
-                    from ...core.dictionaries.default.ListDictionary import ListDictionary
-                    self.dictionary = ListDictionary(dictionary)
-                else:
-                    # For default, read the wordlist from a file
-                    from ...core.dictionaries.default.FileDictionary import FileDictionary
-                    self.dictionary = FileDictionary(dictionary)
-            except Exception as e:
-                raise Exception(str(e))
-        except Exception as e:
-            raise Exception(str(e))
         co.infoBox("Building dictionary ...")
         try:
-            self.dictionary.setWordlist()
+            self.dictionary = DictFactory.creator(parsePlugin(dictionary))
         except Exception as e:
             raise Exception(str(e))
         co.infoBox(f"Dictionary is done, loaded {len(self.dictionary)} payloads")

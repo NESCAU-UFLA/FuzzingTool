@@ -11,7 +11,7 @@
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
 from ..BaseDictionary import BaseDictionary
-from ....exceptions.MainExceptions import MissingParameter
+from ....exceptions.MainExceptions import MissingParameter, BadArgumentFormat
 
 class Overflow(BaseDictionary):
     __name__ = "Overflow"
@@ -30,7 +30,7 @@ class Overflow(BaseDictionary):
                 try:
                     initPayload, payload, endPayload = payload.split(':', 3)
                 except:
-                    raise Exception("Invalid quantity of values to unpack (expected initPayload:payload:endPayload)")
+                    raise BadArgumentFormat("invalid quantity of values to unpack (expected initPayload:payload:endPayload)")
             else:
                 initPayload, endPayload = '', ''
             quantityOfPayloads = quantityOfPayloads
@@ -40,7 +40,7 @@ class Overflow(BaseDictionary):
         try:
             quantityOfPayloads = int(quantityOfPayloads)
         except:
-            raise Exception("The quantity of payloads must be integer")
+            raise BadArgumentFormat("the quantity of payloads must be integer")
         self.quantityOfPayloads = quantityOfPayloads
         self.initPayload = initPayload
         self.payload = payload

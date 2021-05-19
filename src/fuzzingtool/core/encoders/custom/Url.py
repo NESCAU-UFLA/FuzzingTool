@@ -11,6 +11,7 @@
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
 from ..BaseEncoder import BaseEncoder
+from ....exceptions.MainExceptions import BadArgumentFormat
 
 from urllib.parse import quote, unquote
 
@@ -29,7 +30,7 @@ class Url(BaseEncoder):
             try:
                 encodeLevel = int(encodeLevel)
             except:
-                raise Exception("the encoding level must be an integer")
+                raise BadArgumentFormat("the encoding level must be an integer")
         self.encodeLevel = encodeLevel
 
     def encode(self, payload: str):

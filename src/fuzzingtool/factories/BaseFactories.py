@@ -15,7 +15,7 @@ from abc import ABC, abstractmethod
 class BaseHttpFactory(ABC):
     @staticmethod
     @abstractmethod
-    def requestCreator(requestType, url, **kwargs):
+    def requestCreator(requestType: str, url: str, **kwargs):
         """Build the requests based on their types
 
         @type requestType: str
@@ -29,7 +29,7 @@ class BaseHttpFactory(ABC):
 class BasePluginFactory(ABC):
     @staticmethod
     @abstractmethod
-    def classCreator(name, category):
+    def classCreator(name: str, category: str):
         """Get the import for the plugin
 
         @type name: str
@@ -42,7 +42,7 @@ class BasePluginFactory(ABC):
 
     @staticmethod
     @abstractmethod
-    def objectCreator(name, category, params = ''):
+    def objectCreator(name: str, category: str, params: str = ''):
         """Build the plugins based on their categories
 
         @type name: str
@@ -52,5 +52,19 @@ class BasePluginFactory(ABC):
         @type params: str
         @param params: The plugin parameters (if it has)
         @returns Plugin: The selected plugin object
+        """
+        pass
+
+class BaseDictFactory(ABC):
+    @staticmethod
+    @abstractmethod
+    def creator(name: str, params: str):
+        """Build the dictionaries
+
+        @type name: str
+        @param name: The dictionary name
+        @type params: str
+        @param params: The dicttionary parameters
+        @returns Dictionary: The dictionary object
         """
         pass

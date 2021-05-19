@@ -15,7 +15,7 @@ from ..utils.utils import getPluginNamesFromCategory
 from ..core.dictionaries import *
 from ..core.encoders import *
 from ..core.scanners import *
-from ..exceptions.MainExceptions import InvalidPluginName, MissingParameter
+from ..exceptions.MainExceptions import InvalidPluginName, MissingParameter, BadArgumentFormat
 
 from importlib import import_module
 
@@ -37,7 +37,7 @@ class PluginFactory(BasePluginFactory):
                     return Plugin(params)
                 except MissingParameter as e:
                     raise Exception(f"Plugin {name} missing parameter: {str(e)}")
-                except Exception as e:
+                except BadArgumentFormat as e:
                     raise Exception(f"Bad plugin {name} argument format: {str(e)}")
         else:
             raise InvalidPluginName(f"Plugin {name} does not exists")
