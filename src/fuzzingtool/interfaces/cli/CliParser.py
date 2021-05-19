@@ -240,9 +240,10 @@ class CliParser:
             dictionary = self.__argv[self.__argv.index('-w')+1]
         except ValueError:
             raise Exception("An wordlist is needed to make the fuzzing")
+        dictionary, param = parsePlugin(dictionary)
         co.infoBox("Building dictionary ...")
         try:
-            self.dictionary = DictFactory.creator(parsePlugin(dictionary))
+            self.dictionary = DictFactory.creator(dictionary, param)
         except Exception as e:
             raise Exception(str(e))
         co.infoBox(f"Dictionary is done, loaded {len(self.dictionary)} payloads")
