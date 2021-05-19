@@ -12,7 +12,7 @@
 
 from ..default.DataScanner import DataScanner
 from ....conn.responses.Response import Response
-from ....interfaces.cli.CliOutput import Colors, fixPayloadToOutput
+from ....interfaces.cli.CliOutput import Colors, getFormatedResult
 from ....exceptions.MainExceptions import MissingParameter
 
 import re
@@ -56,11 +56,13 @@ class Find(DataScanner):
             else:
                 found = f"{Colors.LIGHT_RED}{Colors.BOLD}NO "
                 del self.__found[result['Request']]
-        payload = '{:<30}'.format(fixPayloadToOutput(result['Payload']))
-        length = '{:>8}'.format(result['Length'])
+        payload, RTT, length = getFormatedResult(
+            result['Payload'], result['Time Taken'], result['Length']
+        )
         return (
             f"{payload} {Colors.GRAY}["+
             f"{Colors.LIGHT_GRAY}Regex found{Colors.RESET} {found}{Colors.RESET} | "+
             f"{Colors.LIGHT_GRAY}Code{Colors.RESET} {result['Status']} | "+
+            f"{Colors.LIGHT_GRAY}RTT{Colors.RESET} {RTT} | "+
             f"{Colors.LIGHT_GRAY}Size{Colors.RESET} {length}{Colors.GRAY}]{Colors.RESET}"
         )

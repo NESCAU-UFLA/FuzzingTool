@@ -29,12 +29,16 @@ class DataScanner(BaseScanner):
         return True
     
     def cliCallback(self, result: dict):
-        result = getFormatedResult(result)
+        payload, RTT, length = getFormatedResult(
+            result['Payload'], result['Time Taken'], result['Length']
+        )
+        words = '{:>6}'.format(result['Words'])
+        lines = '{:>5}'.format(result['Lines'])
         return (
-            f"{result['Payload']} {Colors.GRAY}["+
-            f"{Colors.LIGHT_GRAY}RTT{Colors.RESET} {result['Time Taken']} | "+
+            f"{payload} {Colors.GRAY}["+
             f"{Colors.LIGHT_GRAY}Code{Colors.RESET} {result['Status']} | "+
-            f"{Colors.LIGHT_GRAY}Size{Colors.RESET} {result['Length']} | "+
-            f"{Colors.LIGHT_GRAY}Words{Colors.RESET} {result['Words']} | "+
-            f"{Colors.LIGHT_GRAY}Lines{Colors.RESET} {result['Lines']}{Colors.GRAY}]{Colors.RESET}"
+            f"{Colors.LIGHT_GRAY}RTT{Colors.RESET} {RTT} | "+
+            f"{Colors.LIGHT_GRAY}Size{Colors.RESET} {length} | "+
+            f"{Colors.LIGHT_GRAY}Words{Colors.RESET} {words} | "+
+            f"{Colors.LIGHT_GRAY}Lines{Colors.RESET} {lines}{Colors.GRAY}]{Colors.RESET}"
         )

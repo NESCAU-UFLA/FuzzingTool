@@ -14,7 +14,7 @@ from ..BaseScanner import BaseScanner
 from ..Matcher import Matcher
 from ....conn.responses.Response import Response
 from ....conn.RequestParser import getPath
-from ....interfaces.cli.CliOutput import Colors, fixPayloadToOutput
+from ....interfaces.cli.CliOutput import Colors, getFormatedResult
 
 class PathScanner(BaseScanner):
     __name__ = "PathScanner"
@@ -43,11 +43,13 @@ class PathScanner(BaseScanner):
             redirected = result['Redirected']
             if redirected:
                 redirected = f" {Colors.LIGHT_YELLOW}Redirected to {redirected}{Colors.RESET}"
-        url = '{:<30}'.format(fixPayloadToOutput(getPath(result['Url'])))
-        length = '{:>8}'.format(result['Length'])
+        path, RTT, length = getFormatedResult(
+            getPath(result['Url']), result['Time Taken'], result['Length']
+        )
         return (
-            f"{url} {Colors.GRAY}["+
+            f"{path} {Colors.GRAY}["+
             f"{Colors.LIGHT_GRAY}Code{Colors.RESET} {statusColor}{status}{Colors.RESET} | "+
+            f"{Colors.LIGHT_GRAY}RTT{Colors.RESET} {RTT} | "+
             f"{Colors.LIGHT_GRAY}Size{Colors.RESET} {length}{Colors.GRAY}]{Colors.RESET}"+
             f"{redirected}"
         )

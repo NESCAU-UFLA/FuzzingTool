@@ -12,7 +12,7 @@
 
 from ..default.DataScanner import DataScanner
 from ....conn.responses.Response import Response
-from ....interfaces.cli.CliOutput import Colors, fixPayloadToOutput
+from ....interfaces.cli.CliOutput import Colors, getFormatedResult
 
 class Reflected(DataScanner):
     __name__ = "Reflected"
@@ -46,11 +46,13 @@ class Reflected(DataScanner):
             else:
                 reflected = f"{Colors.LIGHT_RED}{Colors.BOLD}NO "
                 del self.__reflected[result['Request']]
-        payload = '{:<30}'.format(fixPayloadToOutput(result['Payload']))
-        length = '{:>8}'.format(result['Length'])
+        payload, RTT, length = getFormatedResult(
+            result['Payload'], result['Time Taken'], result['Length']
+        )
         return (
             f"{payload} {Colors.GRAY}["+
             f"{Colors.LIGHT_GRAY}Reflected{Colors.RESET} {reflected}{Colors.RESET} | "+
             f"{Colors.LIGHT_GRAY}Code{Colors.RESET} {result['Status']} | "+
+            f"{Colors.LIGHT_GRAY}RTT{Colors.RESET} {RTT} | "+
             f"{Colors.LIGHT_GRAY}Size{Colors.RESET} {length}{Colors.GRAY}]{Colors.RESET}"
         )

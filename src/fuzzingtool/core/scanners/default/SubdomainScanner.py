@@ -13,7 +13,7 @@
 from ..BaseScanner import BaseScanner
 from ..Matcher import Matcher
 from ....conn.responses.Response import Response
-from ....interfaces.cli.CliOutput import Colors, fixPayloadToOutput
+from ....interfaces.cli.CliOutput import Colors, getFormatedResult
 
 class SubdomainScanner(BaseScanner):
     __name__ = "SubdomainScanner"
@@ -28,10 +28,14 @@ class SubdomainScanner(BaseScanner):
         return True
 
     def cliCallback(self, result: dict):
-        url = '{:<30}'.format(fixPayloadToOutput(result['Url']))
+        url, RTT, length = getFormatedResult(
+            result['Url'], result['Time Taken'], result['Length']
+        )
         ip = '{:>15}'.format(result['IP'])
         return (
             f"{url} {Colors.GRAY}["+
             f'{Colors.LIGHT_GRAY}IP{Colors.RESET} {ip}'" | "+
-            f"{Colors.LIGHT_GRAY}Code{Colors.RESET} {result['Status']}{Colors.GRAY}]{Colors.RESET}"
+            f"{Colors.LIGHT_GRAY}Code{Colors.RESET} {result['Status']} | "+
+            f"{Colors.LIGHT_GRAY}RTT{Colors.RESET} {RTT} | "+
+            f"{Colors.LIGHT_GRAY}Size{Colors.RESET} {length}{Colors.GRAY}]{Colors.RESET}"
         )

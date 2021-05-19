@@ -41,22 +41,18 @@ def fixPayloadToOutput(payload):
     else:
         return payload
 
-def getFormatedResult(result: dict):
+def getFormatedResult(payload: str, RTT: float, length: int):
     """Format the result into a dict of strings
 
     @type result: dict
     @param result: The result dict
-    @returns dict: The result formated with strings
+    @returns tuple(str, str, str): The result formated with strings
     """
-    return {
-        'Request': '{:<7}'.format(result['Request']),
-        'Payload': '{:<30}'.format(fixPayloadToOutput(result['Payload'])),
-        'Time Taken': '{:>10}'.format(result['Time Taken']),
-        'Status': result['Status'],
-        'Length': '{:>8}'.format(result['Length']),
-        'Words': '{:>6}'.format(result['Words']),
-        'Lines': '{:>5}'.format(result['Lines'])
-    }
+    return (
+        '{:<30}'.format(fixPayloadToOutput(payload)),
+        '{:>10}'.format(RTT),
+        '{:>8}'.format(length),
+    )
 
 class Colors:
     """Class that handle with the colors"""
