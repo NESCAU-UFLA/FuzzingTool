@@ -1,6 +1,6 @@
 ---
 name: FEATURE REQUEST
-about: Request a featture
+about: Request a feature
 title: ''
 labels: enhancement
 assignees: ''
