@@ -18,7 +18,7 @@ from dns import resolver, query, zone
 class DnsZone(BaseDictionary):
     __name__ = "DnsZone"
     __author__ = ("Vitor Oriel C N Borges")
-    __params__ = "DOMAIN"
+    __params__ = "TARGET_HOST"
     __desc__ = "Build the wordlist based on a DNS zone transfer request"
     __type__ = "SubdomainFuzzing"
 

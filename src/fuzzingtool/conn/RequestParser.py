@@ -36,8 +36,8 @@ def getPureUrl(url: dict):
     """Gets the URL without the $ variable
 
     @type url: dict
-    @param url: The target url
-    @returns str: The target url
+    @param url: The target URL in Request dictionary format
+    @returns str: The target URL
     """
     if url['fuzzingIndexes']:
         if '$.' in url['content']:

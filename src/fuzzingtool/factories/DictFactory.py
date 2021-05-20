@@ -12,12 +12,21 @@
 
 from .BaseFactories import BaseDictFactory
 from .PluginFactory import PluginFactory
+from ..conn.RequestParser import getHost, getPureUrl
+from ..conn.requests.Request import Request
 from ..core.dictionaries import *
 from ..exceptions.MainExceptions import InvalidPluginName, MissingParameter
 
 class DictFactory(BaseDictFactory):
-    def creator(name: str, params: str):
+    def creator(name: str, params: str, requester: Request):
         try:
+            Dictionary = PluginFactory.classCreator(name, 'dictionaries')
+            if (not params and
+                Dictionary.__params__ in ["TARGET_HOST", "TARGET_URL"]):
+                if "TARGET_HOST" in Dictionary.__params__:
+                    params = getHost(getPureUrl(requester.getUrlDict()))
+                if "TARGET_URL" in Dictionary.__params__:
+                    params = getPureUrl(requester.getUrlDict())
             dictionary = PluginFactory.objectCreator(name, 'dictionaries', params)
         except InvalidPluginName:
             try:
@@ -29,4 +38,6 @@ class DictFactory(BaseDictFactory):
             except MissingParameter as e:
                 raise Exception(f"Missing parameter: {str(e)}")
         dictionary.setWordlist()
+        if len(dictionary) == 0:
+            raise Exception("The dictionary generated an empty wordlist")
         return dictionary

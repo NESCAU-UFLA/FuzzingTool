@@ -20,24 +20,23 @@ from ..exceptions.MainExceptions import InvalidPluginName, MissingParameter, Bad
 from importlib import import_module
 
 class PluginFactory(BasePluginFactory):
-    def classCreator(name, category):
+    def classCreator(name: str, category: str):
+        if not name in getPluginNamesFromCategory(category):
+            raise InvalidPluginName(f"Plugin {name} does not exists")
         Plugin = import_module(
             f"fuzzingtool.core.{category}.custom.{name}",
             package=name
         )
         return getattr(Plugin, name)
 
-    def objectCreator(name, category, params = ''):
-        if name in getPluginNamesFromCategory(category):
-            Plugin = PluginFactory.classCreator(name, category)
-            if not Plugin.__params__:
-                return Plugin()
-            else:
-                try:
-                    return Plugin(params)
-                except MissingParameter as e:
-                    raise Exception(f"Plugin {name} missing parameter: {str(e)}")
-                except BadArgumentFormat as e:
-                    raise Exception(f"Bad plugin {name} argument format: {str(e)}")
+    def objectCreator(name: str, category: str, params: str = ''):
+        Plugin = PluginFactory.classCreator(name, category)
+        if not Plugin.__params__:
+            return Plugin()
         else:
-            raise InvalidPluginName(f"Plugin {name} does not exists")
+            try:
+                return Plugin(params)
+            except MissingParameter as e:
+                raise Exception(f"Plugin {name} missing parameter: {str(e)}")
+            except BadArgumentFormat as e:
+                raise Exception(f"Bad plugin {name} argument format: {str(e)}")

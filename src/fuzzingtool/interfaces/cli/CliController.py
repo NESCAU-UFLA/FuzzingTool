@@ -483,10 +483,10 @@ class CliController:
         @type parser: CliParser
         @param parser: The command line interface arguments object
         """
-        def buildDictionary(name: str, param: str):
+        def buildDictionary(name: str, params: str, i: int):
             co.infoBox(f"Building dictionary from {name} ...")
             try:
-                dictionary = DictFactory.creator(name, param)
+                dictionary = DictFactory.creator(name, params, self.requesters[i])
             except Exception as e:
                 raise Exception(str(e))
             co.infoBox(f"Dictionary is done, loaded {len(dictionary)} payloads")
@@ -506,11 +506,11 @@ class CliController:
         self.globalDict = None
         self.dicts = None
         if len(parser.dictionaries) != len(self.requesters):
-            name, param = parser.dictionaries[0]
-            self.globalDict, self.dictSizeof = buildDictionary(name, param)
+            name, params = parser.dictionaries[0]
+            self.globalDict, self.dictSizeof = buildDictionary(name, params, 0)
             self.dict = self.globalDict
         else:
             self.dicts = Queue()
-            for dictionary in parser.dictionaries:
-                name, param = dictionary
-                self.dicts.put(buildDictionary(name, param))
+            for i, dictionary in enumerate(parser.dictionaries):
+                name, params = dictionary
+                self.dicts.put(buildDictionary(name, params, i))
