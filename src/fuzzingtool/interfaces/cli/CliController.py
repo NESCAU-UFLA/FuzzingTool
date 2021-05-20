@@ -513,5 +513,4 @@ class CliController:
             self.dicts = Queue()
             for dictionary in parser.dictionaries:
                 name, param = dictionary
-                dictionary, dictSizeof = buildDictionary(name, param)
-                self.dicts.put((dictionary, dictSizeof))
+                self.dicts.put(buildDictionary(name, param))
