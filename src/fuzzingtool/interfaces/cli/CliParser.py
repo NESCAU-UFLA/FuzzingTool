@@ -14,7 +14,6 @@ from .CliOutput import cliOutput as co
 from ..ArgumentBuilder import ArgumentBuilder as AB
 from ...utils.utils import getIndexesToParse, getPluginNamesFromCategory
 from ...utils.FileHandler import fileHandler as fh
-from ...factories.DictFactory import DictFactory
 from ...factories.PluginFactory import PluginFactory
 from ...core.scanners.Matcher import Matcher
 from ...exceptions.MainExceptions import InvalidPluginName
@@ -145,6 +144,7 @@ class CliParser:
     def setRequestArguments(self):
         """Set the request arguments"""
         self.targets = []
+        self.targetsPositions = []
         self.extendTargetsFromRawHttp()
         self.extendTargetsFromArgs()
         if not self.targets:
@@ -160,6 +160,7 @@ class CliParser:
         headerFilenames = []
         for i in getIndexesToParse(self.__argv, '-r'):
             headerFilenames.append(self.__argv[i+1])
+            self.targetsPositions.append(i)
         if headerFilenames:
             # Check if a scheme is specified, otherwise set http as default
             if '--scheme' in self.__argv:
@@ -173,6 +174,7 @@ class CliParser:
         urls = []
         for i in getIndexesToParse(self.__argv, '-u'):
             urls.append(self.__argv[i+1])
+            self.targetsPositions.append(i)
         if urls:
             if '-X' in self.__argv:
                 method = self.__argv[self.__argv.index('-X')+1]
@@ -236,17 +238,13 @@ class CliParser:
 
     def setDictionary(self):
         """Set the fuzzing dictionary"""
-        try:
-            dictionary = self.__argv[self.__argv.index('-w')+1]
-        except ValueError:
+        dictPositions = getIndexesToParse(self.__argv, '-w')
+        if not dictPositions:
             raise Exception("An wordlist is needed to make the fuzzing")
-        dictionary, param = parsePlugin(dictionary)
-        co.infoBox("Building dictionary ...")
-        try:
-            self.dictionary = DictFactory.creator(dictionary, param)
-        except Exception as e:
-            raise Exception(str(e))
-        co.infoBox(f"Dictionary is done, loaded {len(self.dictionary)} payloads")
+        dictionaries = [self.__argv[(i+1)] for i in dictPositions]
+        self.dictionaries = []
+        for dictionary in dictionaries:
+            self.dictionaries.append(parsePlugin(dictionary))
 
     def setPrefixAndSuffix(self):
         """Check if the --prefix argument is present, and set the prefix
@@ -354,10 +352,14 @@ class CliParser:
         """Check if the -V or --verbose argument is present, and set the verbose mode"""
         if '-V' in self.__argv or '-V1' in self.__argv:
             self.verbose = [True, False]
+            verbosity = "normal"
         elif '-V2' in self.__argv:
             self.verbose = [True, True]
+            verbosity = "detailed"
         else:
             self.verbose = [False, False]
+            verbosity = "quiet"
+        co.infoBox(f"Set output mode: {verbosity}")
 
     def setDelay(self):
         """Check if the --delay argument is present, and set it"""

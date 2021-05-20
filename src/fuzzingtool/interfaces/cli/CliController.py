@@ -19,9 +19,11 @@ from ...core.dictionaries.Payloader import Payloader
 from ...core.scanners.Matcher import Matcher
 from ...conn import *
 from ...factories.HttpFactory import HttpFactory
+from ...factories.DictFactory import DictFactory
 from ...exceptions.MainExceptions import SkipTargetException
 from ...exceptions.RequestExceptions import InvalidHostname, RequestException
 
+from queue import Queue
 import time
 import threading
 from sys import argv
@@ -258,8 +260,6 @@ class CliController:
         self.skipTarget = None
         if not self.globalScanner:
             self.scanner = self.getDefaultScanner()
-            self.scanner.update(self.matcher)
-            co.setMessageCallback(self.scanner.cliCallback)
             if (self.requester.isDataFuzzing() and
                 not self.matcher.comparatorIsSet()):
                 co.infoBox("DataFuzzing detected, checking for a data comparator ...")
@@ -271,6 +271,8 @@ class CliController:
         """Prepare the fuzzer for the fuzzing tests.
            Refill the dictionary with the wordlist content
         """
+        if not self.globalDict:
+            self.dict, self.dictSizeof = self.dicts.get()
         self.dict.reload()
         self.fuzzer = Fuzzer(
             requester=self.requester,
@@ -357,6 +359,8 @@ class CliController:
         else:
             from ...core.scanners.default.DataScanner import DataScanner
             scanner = DataScanner()
+        scanner.update(self.matcher)
+        co.setMessageCallback(scanner.cliCallback)
         return scanner
 
     def checkIgnoreErrors(self, host: str):
@@ -426,9 +430,13 @@ class CliController:
         if self.fuzzer:
             if self.startedTime:
                 co.infoBox(f"Time taken: {float('%.2f'%(time.time() - self.startedTime))} seconds")
+            requesterIndex = 0
             for key, value in self.allResults.items():
                 if value:
                     if self.isVerboseMode():
+                        self.requester = self.requesters[requesterIndex]
+                        if not self.globalScanner:
+                            self.getDefaultScanner()
                         co.infoBox(f"Found {len(value)} matched results on target {key}:")
                         for result in value:
                             co.printResult(result, True)
@@ -438,6 +446,7 @@ class CliController:
                     co.infoBox('Results saved')
                 else:
                     co.infoBox(f"No matched results was found on target {key}")
+                requesterIndex += 1
 
     def __initRequesters(self, parser: CliParser):
         """Initialize the requesters
@@ -474,17 +483,35 @@ class CliController:
         @type parser: CliParser
         @param parser: The command line interface arguments object
         """
-        self.dict = parser.dictionary
-        self.dict.setPrefix(parser.prefix)
-        self.dict.setSuffix(parser.suffix)
-        self.dictSizeof = len(self.dict)
-        if self.dictSizeof < self.numberOfThreads:
-            self.numberOfThreads = self.dictSizeof
-        if parser.lowercase:
-            self.dict.setLowercase()
-        elif parser.uppercase:
-            self.dict.setUppercase()
-        elif parser.capitalize:
-            self.dict.setCapitalize()
-        if parser.encoder:
-            self.dict.setEncoder(parser.encoder)
+        def buildDictionary(name: str, param: str):
+            co.infoBox(f"Building dictionary from {name} ...")
+            try:
+                dictionary = DictFactory.creator(name, param)
+            except Exception as e:
+                raise Exception(str(e))
+            co.infoBox(f"Dictionary is done, loaded {len(dictionary)} payloads")
+            dictionary.setPrefix(parser.prefix)
+            dictionary.setSuffix(parser.suffix)
+            dictSizeof = len(dictionary)
+            if parser.lowercase:
+                dictionary.setLowercase()
+            elif parser.uppercase:
+                dictionary.setUppercase()
+            elif parser.capitalize:
+                dictionary.setCapitalize()
+            if parser.encoder:
+                dictionary.setEncoder(parser.encoder)
+            return (dictionary, dictSizeof)
+        
+        self.globalDict = None
+        self.dicts = None
+        if len(parser.dictionaries) != len(self.requesters):
+            name, param = parser.dictionaries[0]
+            self.globalDict, self.dictSizeof = buildDictionary(name, param)
+            self.dict = self.globalDict
+        else:
+            self.dicts = Queue()
+            for dictionary in parser.dictionaries:
+                name, param = dictionary
+                dictionary, dictSizeof = buildDictionary(name, param)
+                self.dicts.put((dictionary, dictSizeof))
