@@ -10,5 +10,4 @@
 #
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
-from .BaseEncoder import BaseEncoder
 from .custom import *
