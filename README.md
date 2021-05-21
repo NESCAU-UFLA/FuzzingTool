@@ -45,9 +45,6 @@ We use <a target="_blank" href="https://semver.org/">SemVer</a> for versioning. 
 ## Authors
  * <b>Vitor Oriel</b> (vitorwixmix@gmail.com) - <a target="_blank" href="https://github.com/VitorOriel">Profile</a>
 
-## Contributors
- * <a target="_blank" href="#"><b>Gabriel Prestes</b></a>: Designed the logo
-
 ## Contributing
 If you want to contribute to FuzzingTool project, please read [CONTRIBUTING.md](https://github.com/NESCAU-UFLA/FuzzingTool/blob/master/.github/CONTRIBUTING.md).
 
