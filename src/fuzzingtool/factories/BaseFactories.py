@@ -58,13 +58,15 @@ class BasePluginFactory(ABC):
 class BaseDictFactory(ABC):
     @staticmethod
     @abstractmethod
-    def creator(name: str, params: str):
+    def creator(name: str, params: str, requester):
         """Build the dictionaries
 
         @type name: str
         @param name: The dictionary name
         @type params: str
         @param params: The dicttionary parameters
+        @type requester: Request
+        @param requester: The requester for the given wordlist
         @returns Dictionary: The dictionary object
         """
         pass
