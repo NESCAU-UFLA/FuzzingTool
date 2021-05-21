@@ -129,20 +129,6 @@ class Request:
             return True
         return False
 
-    def getProxy(self):
-        """The proxy getter
-
-        @returns dict: The proxy
-        """
-        return self.__proxy
-
-    def getProxies(self):
-        """The proxies list getter
-
-        @returns list: The proxies list
-        """
-        return self.__proxies
-
     def getRequestIndex(self):
         """The request index getter
 
