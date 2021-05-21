@@ -353,7 +353,7 @@ class CliController:
         
         @returns BaseScanner: The scanner used in the fuzzing tests
         """
-        if self.requester.isUrlFuzzing():
+        if self.requester.isUrlFuzzing() and not '?' in self.requester.getUrl():
             if "SubdomainRequest" in str(type(self.requester)):
                 from ...core.scanners.default.SubdomainScanner import SubdomainScanner
                 scanner = SubdomainScanner()
@@ -488,6 +488,15 @@ class CliController:
         @param parser: The command line interface arguments object
         """
         def buildDictionary(name: str, params: str, i: int):
+            """Build the dictionary
+
+            @type name: str
+            @param name: The dictionary name
+            @type params: str
+            @param params: The dictionary parameters
+            @type i: int
+            @param i: The dictionary index to map his requester
+            """
             co.infoBox(f"Building dictionary from {name} ...")
             try:
                 dictionary = DictFactory.creator(name, params, self.requesters[i])
