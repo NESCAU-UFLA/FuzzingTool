@@ -164,14 +164,6 @@ class Request:
         else:
             header['content'][key] = value
 
-    def setTimeout(self, timeout: int):
-        """The timeout setter
-
-        @type timeout: int
-        @param timeout: The request timeout
-        """
-        self.__timeout = timeout
-
     def resetRequestIndex(self):
         """Resets the request index"""
         self._requestIndex = 1
