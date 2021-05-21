@@ -32,7 +32,7 @@ class Fuzzer:
     """
     def __init__(self,
         requester: Request,
-        dictionary: BaseDictionary,
+        dictionary: Dictionary,
         scanner: BaseScanner,
         delay: float,
         numberOfThreads: int,
@@ -43,7 +43,7 @@ class Fuzzer:
 
         @type requester: requester
         @param requester: The requester object to deal with the requests
-        @type dict: BaseDictionary
+        @type dict: Dictionary
         @param dict: The dicttionary object to deal with the payload dictionary
         @type scanner: BaseScanner
         @param scanner: The fuzzing results scanner

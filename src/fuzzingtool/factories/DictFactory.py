@@ -20,24 +20,23 @@ from ..exceptions.MainExceptions import InvalidPluginName, MissingParameter
 class DictFactory(BaseDictFactory):
     def creator(name: str, params: str, requester: Request):
         try:
-            Dictionary = PluginFactory.classCreator(name, 'dictionaries')
+            Wordlist = PluginFactory.classCreator(name, 'dictionaries')
             if (not params and
-                Dictionary.__params__ in ["TARGET_HOST", "TARGET_URL"]):
-                if "TARGET_HOST" in Dictionary.__params__:
+                Wordlist.__params__ in ["TARGET_HOST", "TARGET_URL"]):
+                if "TARGET_HOST" in Wordlist.__params__:
                     params = getHost(getPureUrl(requester.getUrlDict()))
-                if "TARGET_URL" in Dictionary.__params__:
+                if "TARGET_URL" in Wordlist.__params__:
                     params = getPureUrl(requester.getUrlDict())
-            dictionary = PluginFactory.objectCreator(name, 'dictionaries', params)
+            wordlist = PluginFactory.objectCreator(name, 'dictionaries', params)
         except InvalidPluginName:
             try:
                 if name.startswith('[') and name.endswith(']'):
-                    dictionary = ListDictionary(name)
+                    wordlist = ListWordlist(name)
                 else:
                     # For default, read the wordlist from a file
-                    dictionary = FileDictionary(name)
+                    wordlist = FileWordlist(name)
             except MissingParameter as e:
                 raise Exception(f"Missing parameter: {str(e)}")
-        dictionary.setWordlist()
-        if len(dictionary) == 0:
-            raise Exception("The dictionary generated an empty wordlist")
-        return dictionary
+        if len(wordlist) == 0:
+            raise Exception("The generated wordlist is empty")
+        return Dictionary(wordlist.get())

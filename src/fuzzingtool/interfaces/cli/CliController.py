@@ -276,8 +276,9 @@ class CliController:
            Refill the dictionary with the wordlist content
         """
         if not self.globalDict:
-            self.dict, self.dictSizeof = self.dicts.get()
-        self.dict.reload()
+            self.dict = self.dicts.get()
+            self.totalRequests = len(self.dict)
+            self.dict.reload()
         self.fuzzer = Fuzzer(
             requester=self.requester,
             dictionary=self.dict,
@@ -312,7 +313,7 @@ class CliController:
                     self.results.append(result)
                     co.printResult(result, validate)
                 co.progressStatus(
-                    f"[{result['Request']}/{self.dictSizeof}] {str(int((int(result['Request'])/self.dictSizeof)*100))}%"
+                    f"[{result['Request']}/{self.totalRequests}] {str(int((int(result['Request'])/self.totalRequests)*100))}%"
                 )
     
     def requestExceptionCallback(self, e: RequestException):
@@ -324,7 +325,7 @@ class CliController:
         if self.ignoreErrors:
             if not self.verbose[0]:
                 co.progressStatus(
-                    f"[{self.requester.getRequestIndex()}/{self.dictSizeof}] {str(int((int(self.requester.getRequestIndex())/self.dictSizeof)*100))}%"
+                    f"[{self.requester.getRequestIndex()}/{self.totalRequests}] {str(int((int(self.requester.getRequestIndex())/self.totalRequests)*100))}%"
                 )
             else:
                 if self.verbose[1]:
@@ -345,7 +346,7 @@ class CliController:
                 co.notWorkedBox(str(e))
         else:
             co.progressStatus(
-                f"[{self.requester.getRequestIndex()}/{self.dictSizeof}] {str(int((int(self.requester.getRequestIndex())/self.dictSizeof)*100))}%"
+                f"[{self.requester.getRequestIndex()}/{self.totalRequests}] {str(int((int(self.requester.getRequestIndex())/self.totalRequests)*100))}%"
             )
 
     def getDefaultScanner(self):
@@ -496,8 +497,9 @@ class CliController:
             @param params: The dictionary parameters
             @type i: int
             @param i: The dictionary index to map his requester
+            @returns Dictionary: The dictionary object
             """
-            co.infoBox(f"Building dictionary from {name} ...")
+            co.infoBox(f"Building dictionary from {name} wordlist ...")
             try:
                 dictionary = DictFactory.creator(name, params, self.requesters[i])
             except Exception as e:
@@ -505,7 +507,6 @@ class CliController:
             co.infoBox(f"Dictionary is done, loaded {len(dictionary)} payloads")
             dictionary.setPrefix(parser.prefix)
             dictionary.setSuffix(parser.suffix)
-            dictSizeof = len(dictionary)
             if parser.lowercase:
                 dictionary.setLowercase()
             elif parser.uppercase:
@@ -514,13 +515,13 @@ class CliController:
                 dictionary.setCapitalize()
             if parser.encoder:
                 dictionary.setEncoder(parser.encoder)
-            return (dictionary, dictSizeof)
+            return dictionary
         
         self.globalDict = None
         self.dicts = None
         if len(parser.dictionaries) != len(self.requesters):
             name, params = parser.dictionaries[0]
-            self.globalDict, self.dictSizeof = buildDictionary(name, params, 0)
+            self.globalDict = buildDictionary(name, params, 0)
             self.dict = self.globalDict
         else:
             self.dicts = Queue()

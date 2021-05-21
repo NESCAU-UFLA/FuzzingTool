@@ -10,10 +10,10 @@
 #
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
-from ..BaseDictionary import BaseDictionary
+from ..BaseWordlist import BaseWordlist
 from ....exceptions.MainExceptions import MissingParameter, BadArgumentFormat
 
-class Overflow(BaseDictionary):
+class Overflow(BaseWordlist):
     __name__ = "Overflow"
     __author__ = ("Vitor Oriel C N Borges")
     __params__ = "QUANTITY_OF_PAYLOADS,INIT_PAYLOAD:PAYLOAD:END_PAYLOAD"
@@ -21,7 +21,6 @@ class Overflow(BaseDictionary):
     __type__ = ""
 
     def __init__(self, sourceParam: str):
-        super().__init__()
         if not sourceParam:
             raise MissingParameter("quantity of payloads")
         if ',' in sourceParam:
@@ -45,8 +44,9 @@ class Overflow(BaseDictionary):
         self.initPayload = initPayload
         self.payload = payload
         self.endPayload = endPayload
+        super().__init__()
 
-    def setWordlist(self):
-        self._wordlist = [
+    def _build(self):
+        return [
             f"{self.initPayload}{self.payload*i}{self.endPayload}" for i in range(self.quantityOfPayloads)
         ]

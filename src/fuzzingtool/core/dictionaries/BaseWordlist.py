@@ -10,5 +10,28 @@
 #
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
-from .FileWordlist import FileWordlist
-from .ListWordlist import ListWordlist
+class BaseWordlist:
+    """Base wordlist
+
+    Attributes:
+        wordlist: The list with the payloads
+    """
+    def __init__(self):
+        self.__wordlist = self._build()
+
+    def __len__(self):
+        return len(self.__wordlist)
+
+    def get(self):
+        """The wordlist getter
+
+        @returns list: The list with the payloads
+        """
+        return self.__wordlist
+
+    def _build(self):
+        """The wordlist builder
+        
+        @returns list: The builded wordlist
+        """
+        raise NotImplementedError("setWordlist method should be overrided")

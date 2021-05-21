@@ -10,12 +10,12 @@
 #
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
-from ..BaseDictionary import BaseDictionary
+from ..BaseWordlist import BaseWordlist
 from ....exceptions.MainExceptions import MissingParameter
 
 from dns import resolver, query, zone
 
-class DnsZone(BaseDictionary):
+class DnsZone(BaseWordlist):
     __name__ = "DnsZone"
     __author__ = ("Vitor Oriel C N Borges")
     __params__ = "TARGET_HOST"
@@ -23,12 +23,12 @@ class DnsZone(BaseDictionary):
     __type__ = "SubdomainFuzzing"
 
     def __init__(self, host: str):
-        super().__init__()
         if not host:
             raise MissingParameter("target host")
         self.host = host
+        super().__init__()
 
-    def setWordlist(self):
+    def _build(self):
         nameServers = resolver.query(self.host, 'NS')
         nameServersIps = []
         for ns in nameServers:
@@ -48,4 +48,4 @@ class DnsZone(BaseDictionary):
             raise Exception(f"Couldn't make the zone transfer for any of the {len(nameServersIps)} name servers")
         if '@' in transferedSubdomains:
             transferedSubdomains.remove('@')
-        self._wordlist = set(transferedSubdomains)
+        return set(transferedSubdomains)

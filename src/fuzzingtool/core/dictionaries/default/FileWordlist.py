@@ -10,26 +10,19 @@
 #
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
-from ..BaseDictionary import BaseDictionary
-from ....utils.utils import checkRangeList
-from ....exceptions.MainExceptions import MissingParameter
+from ..BaseWordlist import BaseWordlist
+from ....utils.FileHandler import fileHandler as fh
 
-class ListDictionary(BaseDictionary):
-    __name__ = "ListDictionary"
+class FileWordlist(BaseWordlist):
+    __name__ = "FileWordlist"
     __author__ = ("Vitor Oriel C N Borges")
 
-    def __init__(self, payloadList: str):
+    def __init__(self, filePath: str):
+        self.filePath = filePath
         super().__init__()
-        payloadList = payloadList[1:len(payloadList)-1]
-        if not payloadList:
-            raise MissingParameter("list of payloads")
-        self.payloadList = payloadList
 
-    def setWordlist(self):
-        if ',' in self.payloadList:
-            buildedList = []
-            for payload in self.payloadList.split(','):
-                buildedList.extend(checkRangeList(payload))
-        else:
-            buildedList = checkRangeList(self.payloadList)
-        self._wordlist = buildedList
+    def _build(self):
+        try:
+            return set(fh.read(self.filePath))
+        except Exception as e:
+            raise e

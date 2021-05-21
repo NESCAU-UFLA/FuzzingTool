@@ -10,7 +10,7 @@
 #
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
-from ..BaseDictionary import BaseDictionary
+from ..BaseWordlist import BaseWordlist
 from ....conn.requests.Request import Request
 from ....conn.responses.Response import Response
 from ....exceptions.RequestExceptions import RequestException
@@ -19,7 +19,7 @@ from ....exceptions.MainExceptions import MissingParameter
 from bs4 import BeautifulSoup as bs
 import re
 
-class CrtSh(BaseDictionary):
+class CrtSh(BaseWordlist):
     __name__ = "CrtSh"
     __author__ = ("Vitor Oriel C N Borges")
     __params__ = "TARGET_HOST"
@@ -27,12 +27,12 @@ class CrtSh(BaseDictionary):
     __type__ = "SubdomainFuzzing"
 
     def __init__(self, host: str):
-        super().__init__()
         if not host:
             raise MissingParameter("target host")
         self.host = host
+        super().__init__()
 
-    def setWordlist(self):
+    def _build(self):
         requester = Request(
             url=f"https://crt.sh/?q={self.host}",
             method='GET',
@@ -60,4 +60,4 @@ class CrtSh(BaseDictionary):
             regex += r"\."+splited
         regexer = re.compile(regex)
         domainList = sorted(set([element for element in contentList if regexer.match(str(element))]))
-        self._wordlist = [domain.split(f'.{self.host}')[0] for domain in domainList]
+        return [domain.split(f'.{self.host}')[0] for domain in domainList]

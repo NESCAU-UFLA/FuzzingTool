@@ -14,17 +14,23 @@ from .Payloader import Payloader
 
 from queue import Queue
 
-class BaseDictionary(Payloader):
-    """Base dictionary
+class Dictionary(Payloader):
+    """Dictionary object handler
 
     Attributes:
-        payloads: The queue that contains all payloads inside the wordlist
         wordlist: The wordlist that contains the payloads backup
+        payloads: The queue that contains all payloads inside the wordlist
     """
-    def __init__(self):
+    def __init__(self, wordlist: list):
+        """Class constructor
+
+        @type wordlist: list
+        @param wordlist: The wordlist with the payloads
+        """
         super().__init__()
+        self.__wordlist = wordlist
         self.__payloads = Queue()
-        self._wordlist = []
+        self.reload()
 
     def __next__(self):
         """Gets the next payload to be processed
@@ -44,7 +50,7 @@ class BaseDictionary(Payloader):
         lengthSuffix = len(self._suffix)
         if lengthSuffix == 0:
             lengthSuffix = 1
-        return (len(self._wordlist)*lengthSuffix*lengthPrefix)
+        return (len(self.__wordlist)*lengthSuffix*lengthPrefix)
 
     def isEmpty(self):
         """The payloads empty queue flag getter
@@ -56,13 +62,5 @@ class BaseDictionary(Payloader):
     def reload(self):
         """Reloads the payloads queue with the wordlist content"""
         self.__payloads = Queue()
-        for payload in self._wordlist:
+        for payload in self.__wordlist:
             self.__payloads.put(payload)
-
-    def setWordlist(self, sourceParam: str):
-        """The wordlist setter
-
-        @type sourceParam: str
-        @param sourceParam: The source string of the wordlist
-        """
-        raise NotImplementedError("setWordlist method should be overrided")
