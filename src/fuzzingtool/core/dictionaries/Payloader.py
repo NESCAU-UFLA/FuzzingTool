@@ -12,8 +12,6 @@
 
 from ..encoders import *
 
-import html
-
 class Payloader:
     """Class that handle with the payload options
 
