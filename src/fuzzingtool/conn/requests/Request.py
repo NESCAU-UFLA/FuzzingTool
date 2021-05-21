@@ -67,6 +67,10 @@ class Request:
         @param proxy: The proxy used in the request
         @type proxies: list
         @param proxies: The list with the proxies used in the requests
+        @type timeout: int
+        @param timeout: The request timeout
+        @type cookie: str
+        @param cookie: The cookie HTTP header value
         """
         self._url = self.__setupUrl(url)
         self.__method = self.__setupMethod(method)
