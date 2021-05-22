@@ -17,24 +17,24 @@ class Matcher:
         comparator: The dictionary with the default entries to be compared with the current request
         allowedStatus: The dictionary with the allowed status codes (and range)
     """
-    def __init__(self):
-        self._comparator = {
-            'Length': None,
-            'Time': None
-        }
-        self._allowedStatus = {
+    def __init__(self,
+        allowedStatus: dict = {
             'List': [200],
             'Range': [],
-        }
+        },
+        comparator: dict = {
+            'Length': None,
+            'Time': None,
+        },
+    ):
+        self._allowedStatus = allowedStatus
+        self._comparator = comparator
 
-    def update(self, matcher):
-        """Update the self attributes based on another Matcher attributes
-
-        @type matcher: Matcher
-        @param matcher: The other matcher to copy the attributes
-        """
-        self._comparator = matcher._comparator
-        self._allowedStatus = matcher._allowedStatus
+    def getAllowedStatus(self):
+        return self._allowedStatus
+    
+    def getComparator(self):
+        return self._comparator
 
     def comparatorIsSet(self):
         """Check if any of the comparators are seted
@@ -43,21 +43,21 @@ class Matcher:
         """
         return self._comparator['Length'] or self._comparator['Time']
 
-    def setComparator(self, comparator: dict):
-        """The default comparator setter
-
-        @type comparator: dict
-        @param comparator: The comparator with time and length
-        """
-        self._comparator = comparator
-
     def setAllowedStatus(self, allowedStatus: dict):
         """The allowed status setter
 
         @type allowedStatus: dict
-        @param allowedStatus: The allowed status dict
+        @param allowedStatus: The allowed status dictionary
         """
         self._allowedStatus = allowedStatus
+
+    def setComparator(self, comparator: dict):
+        """The comparator setter
+
+        @type comparator: dict
+        @param comparator: The comparator dictionary
+        """
+        self._comparator = comparator
 
     def match(self, result: dict):
         """Check if the request content has some predefined characteristics based on a payload, it'll be considered as vulnerable

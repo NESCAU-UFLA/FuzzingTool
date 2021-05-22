@@ -299,32 +299,42 @@ class CliParser:
         self.setScanner()
 
     def setMatcher(self):
-        """Set the matcher object"""
-        self.matcher = Matcher()
-        if '-Mc' in self.__argv:
-            status = self.__argv[self.__argv.index('-Mc')+1]
-            if '200' not in status:
-                if co.askYesNo('warning', "Status code 200 (OK) wasn't included. Do you want to include it to the allowed status codes?"):
-                    status += ",200"
-            self.matcher.setAllowedStatus(AB.buildMatcherAllowedStatus(status))
-            co.infoBox(f"Set the allowed status codes: {status}")
-        length = None
-        time = None
-        if '-Ms' in self.__argv:
-            length = self.__argv[self.__argv.index('-Ms')+1]
-            try:
-                length = int(length)
-            except:
-                raise Exception(f"The match length argument ({length}) must be an integer")
-            co.infoBox(f"Exclude by length: {str(length)} bytes")
-        if '-Mt' in self.__argv:
-            time = self.__argv[self.__argv.index('-Mt')+1]
-            try:
-                time = float(time)
-            except:
-                raise Exception(f"The match time argument ({time}) must be a number")
-            co.infoBox(f"Exclude by time: {str(time)} seconds")
-        self.matcher.setComparator(AB.buildMatcherComparator(length, time))
+        """Set the matcher attributes"""
+        def getMatchStatus():
+            status = None
+            if '-Mc' in self.__argv:
+                status = self.__argv[self.__argv.index('-Mc')+1]
+                if '200' not in status:
+                    if co.askYesNo('warning', "Status code 200 (OK) wasn't included. Do you want to include it to the allowed status codes?"):
+                        status += ",200"
+                co.infoBox(f"Set the allowed status codes: {status}")
+            return status
+        
+        def getMatchLength():
+            length = None
+            if '-Ms' in self.__argv:
+                length = self.__argv[self.__argv.index('-Ms')+1]
+                try:
+                    length = int(length)
+                except:
+                    raise Exception(f"The match length argument ({length}) must be an integer")
+                co.infoBox(f"Exclude by length: {str(length)} bytes")
+            return length
+
+        def getMatchTime():
+            time = None
+            if '-Mt' in self.__argv:
+                time = self.__argv[self.__argv.index('-Mt')+1]
+                try:
+                    time = float(time)
+                except:
+                    raise Exception(f"The match time argument ({time}) must be a number")
+                co.infoBox(f"Exclude by time: {str(time)} seconds")
+            return time
+
+        self.matchStatus = getMatchStatus()
+        self.matchLength = getMatchLength()
+        self.matchTime = getMatchTime()
 
     def setScanner(self):
         """Check if the --scanner argument is present, and set it"""

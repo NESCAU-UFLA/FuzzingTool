@@ -12,6 +12,7 @@
 
 from .CliParser import *
 from .CliOutput import cliOutput as co
+from ..ArgumentBuilder import ArgumentBuilder as AB
 from ... import version
 from ...utils.FileHandler import fileHandler as fh
 from ...core.Fuzzer import Fuzzer
@@ -102,7 +103,12 @@ class CliController:
         parser = CliParser(argv)
         self.__initRequesters(parser)
         self.globalScanner = parser.scanner
-        self.matcher = parser.matcher
+        self.matcher = Matcher(
+            AB.buildMatcherAllowedStatus(parser.matchStatus),
+            AB.buildMatcherComparator(
+                parser.matchLength, parser.matchTime
+            )
+        )
         self.verbose = parser.verbose
         co.setVerbosityOutput(self.isVerboseMode())
         self.blacklistedStatus = parser.blacklistedStatus
@@ -112,7 +118,7 @@ class CliController:
         self.delay = parser.delay
         self.numberOfThreads = parser.numberOfThreads
         if self.globalScanner:
-            self.globalScanner.update(self.matcher)
+            self.globalScanner.updateMatcher(self.matcher)
             self.scanner = self.globalScanner
             co.setMessageCallback(self.scanner.cliCallback)
         self.__initDictionary(parser)
@@ -268,7 +274,10 @@ class CliController:
                 not self.matcher.comparatorIsSet()):
                 co.infoBox("DataFuzzing detected, checking for a data comparator ...")
                 before = time.time()
-                self.scanner.setComparator(self.getDataComparator())
+                self.scanner.updateMatcher(Matcher(
+                    self.matcher.getAllowedStatus,
+                    self.getDataComparator()
+                ))
                 self.startedTime += (time.time() - before)
 
     def prepareFuzzer(self):
@@ -364,7 +373,7 @@ class CliController:
         else:
             from ...core.scanners.default.DataScanner import DataScanner
             scanner = DataScanner()
-        scanner.update(self.matcher)
+        scanner.updateMatcher(self.matcher)
         co.setMessageCallback(scanner.cliCallback)
         return scanner
 
@@ -393,10 +402,6 @@ class CliController:
         
         @returns dict: The data comparator dictionary
         """
-        comparator = {
-            'Length': None,
-            'Time': None,
-        }
         payload = ' ' # Set an arbitraty payload
         co.infoBox(f"Making first request with '{payload}' as payload ...")
         try:
@@ -408,15 +413,17 @@ class CliController:
             response=response
         )
         co.printResult(firstResult, False)
+        length = None
         defaultLength = int(firstResult['Length'])+300
         if co.askYesNo('info', "Do you want to exclude responses based on custom length?"):
             length = co.askData(f"Insert the length (default {defaultLength})")
             if not length:
                 length = defaultLength
             try:
-                comparator['Length'] = int(length)
+                length = int(length)
             except ValueError:
                 co.errorBox(f"The length ({length}) must be an integer")
+        time = None
         defaultTime = firstResult['Time Taken']+5.0
         if co.askYesNo('info', "Do you want to exclude responses based on custom time?"):
             time = co.askData(f"Insert the time (in seconds, default {defaultTime} seconds)")
@@ -426,7 +433,7 @@ class CliController:
                 comparator['Time'] = float(time)
             except ValueError:
                 co.errorBox(f"The time ({time}) must be a number")
-        return comparator
+        return AB.buildMatcherComparator(length, time)
 
     def showFooter(self):
         """Show the footer content of the software, after maked the fuzzing.

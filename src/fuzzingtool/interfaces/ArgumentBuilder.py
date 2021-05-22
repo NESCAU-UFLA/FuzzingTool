@@ -146,7 +146,7 @@ class ArgumentBuilder:
             except:
                 raise Exception(f"The match status argument ({status}) must be integer")
 
-        allowedList = []
+        allowedList = [200] if not allowedStatus else []
         allowedRange = []
         for status in splitStrToList(allowedStatus):
             getAllowedStatus(status, allowedList, allowedRange)

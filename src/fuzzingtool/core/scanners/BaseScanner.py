@@ -18,6 +18,15 @@ class BaseScanner(Matcher):
     def __init__(self):
         super().__init__()
 
+    def updateMatcher(self, matcher: Matcher):
+        """Update the self matcher attributes based on another Matcher attributes
+
+        @type matcher: Matcher
+        @param matcher: The other matcher to copy the attributes
+        """
+        super().setAllowedStatus(matcher.getAllowedStatus())
+        super().setComparator(matcher.getComparator())
+
     def getResult(self, response: Response):
         """Get the response data parsed into a dictionary
         
