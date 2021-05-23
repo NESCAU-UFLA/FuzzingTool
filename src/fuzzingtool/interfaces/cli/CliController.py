@@ -287,6 +287,7 @@ class CliController:
         if not self.globalDict:
             self.dict = self.dicts.get()
             self.totalRequests = len(self.dict)
+        else:
             self.dict.reload()
         self.fuzzer = Fuzzer(
             requester=self.requester,
