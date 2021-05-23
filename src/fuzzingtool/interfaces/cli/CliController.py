@@ -531,6 +531,7 @@ class CliController:
             name, params = parser.dictionaries[0]
             self.globalDict = buildDictionary(name, params, 0)
             self.dict = self.globalDict
+            self.totalRequests = len(self.dict)
         else:
             self.dicts = Queue()
             for i, dictionary in enumerate(parser.dictionaries):
