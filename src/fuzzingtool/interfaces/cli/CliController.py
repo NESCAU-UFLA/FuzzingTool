@@ -181,11 +181,8 @@ class CliController:
             try:
                 requester.testConnection()
             except RequestException as e:
-                if "SubdomainRequest" in str(type(requester)):
-                    if co.askYesNo('warning', f"{str(e)}. Remove this target?"):
-                        self.requesters.remove(requester)
-                else:
-                    co.warningBox(f"{str(e)}. Target removed from list.")
+                if not co.askYesNo('warning', f"{str(e)}. Continue anyway?"):
+                    co.infoBox(f"Target removed from list.")
                     self.requesters.remove(requester)
             else:
                 co.infoBox("Connection status: OK")
