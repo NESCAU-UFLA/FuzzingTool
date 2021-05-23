@@ -275,7 +275,7 @@ class CliController:
                 co.infoBox("DataFuzzing detected, checking for a data comparator ...")
                 before = time.time()
                 self.scanner.updateMatcher(Matcher(
-                    self.matcher.getAllowedStatus,
+                    self.matcher.getAllowedStatus(),
                     self.getDataComparator()
                 ))
                 self.startedTime += (time.time() - before)
@@ -446,8 +446,8 @@ class CliController:
             for key, value in self.allResults.items():
                 if value:
                     if self.isVerboseMode():
-                        self.requester = self.requesters[requesterIndex]
                         if not self.globalScanner:
+                            self.requester = self.requesters[requesterIndex]
                             self.getDefaultScanner()
                         co.infoBox(f"Found {len(value)} matched results on target {key}:")
                         for result in value:
