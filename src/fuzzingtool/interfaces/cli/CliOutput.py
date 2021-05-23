@@ -213,18 +213,21 @@ class CliOutput:
         print(self.__getTime()+self.__getInfo(msg)+': ', end='')
         return input()
 
-    def progressStatus(self, status: str):
+    def progressStatus(self, requestIndex: int, totalRequests: int):
         """Output the progress status of the fuzzing
 
-        @type status: str
-        @param status: The status progress of the fuzzing (between 0% to 100%)
+        @type requestIndex: int
+        @param requestIndex: The actual request index
+        @type totalRequests: int
+        @param totalRequests: The total of requests quantity
         """
         with self.__lock:
             if not self.__lastInline:
                 self.__eraseLine()
                 self.__lastInline = True
+            status = f"Status: [{requestIndex}/{totalRequests}] {str(int((int(requestIndex)/totalRequests)*100))}% completed"
             sys.stdout.flush()
-            print('\r'+self.__getTime()+self.__getInfo(f"Status: {status} completed"), end='')
+            print('\r'+self.__getTime()+self.__getInfo(status), end='')
 
     def printForBoxMode(self, result: dict, vulnValidator: bool):
         """Custom output print for box mode
@@ -286,8 +289,7 @@ class CliOutput:
 
         @returns str: The time label with format HH:MM:SS
         """
-        now = datetime.now()
-        time = now.strftime("%H:%M:%S")
+        time = datetime.now().strftime("%H:%M:%S")
         return f'{Colors.GRAY}[{Colors.LIGHT_GREEN}{time}{Colors.GRAY}]{Colors.RESET} '
 
     def __getInfo(self, msg: str):

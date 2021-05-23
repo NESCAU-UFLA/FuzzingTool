@@ -322,7 +322,7 @@ class CliController:
                     self.results.append(result)
                     co.printResult(result, validate)
                 co.progressStatus(
-                    f"[{result['Request']}/{self.totalRequests}] {str(int((int(result['Request'])/self.totalRequests)*100))}%"
+                    result['Request'], self.totalRequests
                 )
     
     def requestExceptionCallback(self, e: RequestException):
@@ -334,7 +334,7 @@ class CliController:
         if self.ignoreErrors:
             if not self.verbose[0]:
                 co.progressStatus(
-                    f"[{self.requester.getRequestIndex()}/{self.totalRequests}] {str(int((int(self.requester.getRequestIndex())/self.totalRequests)*100))}%"
+                    self.requester.getRequestIndex(), self.totalRequests
                 )
             else:
                 if self.verbose[1]:
@@ -355,7 +355,7 @@ class CliController:
                 co.notWorkedBox(str(e))
         else:
             co.progressStatus(
-                f"[{self.requester.getRequestIndex()}/{self.totalRequests}] {str(int((int(self.requester.getRequestIndex())/self.totalRequests)*100))}%"
+                self.requester.getRequestIndex(), self.totalRequests
             )
 
     def getDefaultScanner(self):
