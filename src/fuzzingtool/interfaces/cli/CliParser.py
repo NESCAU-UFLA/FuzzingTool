@@ -202,14 +202,9 @@ class CliParser:
 
     def setProxies(self):
         """Check if the --proxies argument is present, and read the proxies from a file"""
-        self.proxies = []
+        self.proxies = ''
         if '--proxies' in self.__argv:
-            proxiesFilename = self.__argv[self.__argv.index('--proxies')+1]
-            try:
-                self.proxies = fh.read(proxiesFilename)
-            except Exception as e:
-                raise Exception(str(e))
-            co.infoBox(f"Proxies loaded from file '{proxiesFilename}'")
+            self.proxies = self.__argv[self.__argv.index('--proxies')+1]
 
     def setTimeout(self):
         """Check if the --timeout argument is present, and set the request timeout"""

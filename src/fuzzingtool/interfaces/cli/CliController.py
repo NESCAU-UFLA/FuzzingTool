@@ -49,12 +49,14 @@ class CliController:
         startedTime: The time when start the fuzzing test
         allResults: The results dictionary for each host
         lock: A thread locker to prevent overwrites on logfiles
+        blacklistStatus: The blacklist status object
     """
     def __init__(self):
         self.requesters = []
         self.startedTime = 0
         self.allResults = {}
         self.lock = threading.Lock()
+        self.blacklistStatus = None
 
     def isVerboseMode(self):
         """The verboseMode getter
@@ -111,18 +113,19 @@ class CliController:
         )
         self.verbose = parser.verbose
         co.setVerbosityOutput(self.isVerboseMode())
-        blacklistedStatus = parser.blacklistedStatus
-        action = parser.blacklistAction
-        self.blacklistStatus = BlacklistStatus(
-            status=blacklistedStatus,
-            action=action,
-            actionParam=parser.blacklistActionParam,
-            actionCallbacks={
-                'skip': self._skipCallback,
-                'wait': self._waitCallback,
-            },
-        )
-        co.infoBox(f"Blacklisted status codes: {blacklistedStatus} with action {action}")
+        if parser.blacklistedStatus:
+            blacklistedStatus = parser.blacklistedStatus
+            action = parser.blacklistAction
+            self.blacklistStatus = BlacklistStatus(
+                status=blacklistedStatus,
+                action=action,
+                actionParam=parser.blacklistActionParam,
+                actionCallbacks={
+                    'skip': self._skipCallback,
+                    'wait': self._waitCallback,
+                },
+            )
+            co.infoBox(f"Blacklisted status codes: {blacklistedStatus} with action {action}")
         self.delay = parser.delay
         self.numberOfThreads = parser.numberOfThreads
         if self.globalScanner:
@@ -395,7 +398,7 @@ class CliController:
         @type validate: bool
         @param validate: A validator flag for the result, gived by the scanner
         """
-        if self.blacklistStatus.codes and result['Status'] in self.blacklistStatus.codes:
+        if self.blacklistStatus and result['Status'] in self.blacklistStatus.codes:
             self.blacklistStatus.actionCallback(result['Status'])
         else:
             if self.verbose[0]:
@@ -466,7 +469,7 @@ class CliController:
                 headers=target['header'],
                 followRedirects=parser.unfollowRedirects,
                 proxy=parser.proxy,
-                proxies=parser.proxies,
+                proxies=fh.read(parser.proxies) if parser.proxies else [],
                 timeout=parser.timeout,
                 cookie=parser.cookie,
             )

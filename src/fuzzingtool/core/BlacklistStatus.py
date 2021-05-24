@@ -13,12 +13,29 @@
 from ..utils.utils import splitStrToList
 
 class BlacklistStatus:
+    """Blacklist status handler object
+
+    Attributes:
+        codes: The list with the blacklisted status codes
+        actionCallback: The callback function to trigger when detect a blacklisted status
+    """
     def __init__(self,
         status: str,
         action: str,
         actionParam: str,
         actionCallbacks: dict
     ):
+        """Class constructor
+        
+        @type status: str
+        @param status: The blacklist status codes in string format
+        @type action: str
+        @param action: The action taken when detects a status in blacklist
+        @type actionParam: str
+        @param actionParam: The parameter for the action, if it requires
+        @type actionCallbacks: dict
+        @param actionCallbacks: The action callbacks
+        """
         self.codes = self.buildStatusList(status)
         self.actionCallback = self.setActionCallback(action, actionParam, actionCallbacks)
     
@@ -41,6 +58,12 @@ class BlacklistStatus:
     ):
         """Get the action callback if a blacklisted status code is set
 
+        @type action: str
+        @param action: The action taken when detects a status in blacklist
+        @type actionParam: str
+        @param actionParam: The parameter for the action, if it requires
+        @type actionCallbacks: dict
+        @param actionCallbacks: The action callbacks
         @returns Callable: A callback function for the blacklisted status code
         """
         if not action:
