@@ -34,4 +34,4 @@ class BaseWordlist:
         
         @returns list: The builded wordlist
         """
-        raise NotImplementedError("setWordlist method should be overrided")
+        raise NotImplementedError("build wordlist method should be overrided")
