@@ -10,7 +10,7 @@
 #
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
-from .dictionaries import *
+from .Dictionary import Dictionary
 from .scanners import *
 from ..conn.requests import *
 from ..exceptions.RequestExceptions import RequestException, InvalidHostname

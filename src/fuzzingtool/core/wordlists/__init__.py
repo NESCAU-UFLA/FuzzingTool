@@ -10,7 +10,5 @@
 #
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
-from .Payloader import Payloader
-from .Dictionary import Dictionary
 from .default import *
 from .custom import *

@@ -10,7 +10,7 @@
 #
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
-from ..encoders import *
+from .encoders import *
 
 class Payloader:
     """Class that handle with the payload options

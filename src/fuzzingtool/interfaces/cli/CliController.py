@@ -17,7 +17,7 @@ from ... import version
 from ...utils.FileHandler import fileHandler as fh
 from ...core.Fuzzer import Fuzzer
 from ...core.BlacklistStatus import BlacklistStatus
-from ...core.dictionaries.Payloader import Payloader
+from ...core.Payloader import Payloader
 from ...core.scanners.Matcher import Matcher
 from ...conn import *
 from ...factories.HttpFactory import HttpFactory
@@ -75,8 +75,8 @@ class CliController:
         if '-h' in argv[1] or '--help' in argv[1]:
             if '=' in argv[1]:
                 askedHelp = argv[1].split('=')[1]
-                if 'dictionaries' in askedHelp:
-                    showDictionariesHelp()
+                if 'wordlists' in askedHelp:
+                    showWordlistsHelp()
                 elif 'encoders' in askedHelp:
                     showEncodersHelp()
                 elif 'scanners' in askedHelp:

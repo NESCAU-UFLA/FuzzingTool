@@ -12,9 +12,9 @@
 
 from .BaseFactories import BasePluginFactory
 from ..utils.utils import getPluginNamesFromCategory
-from ..core.dictionaries import *
 from ..core.encoders import *
 from ..core.scanners import *
+from ..core.wordlists import *
 from ..exceptions.MainExceptions import InvalidPluginName, MissingParameter, BadArgumentFormat
 
 from importlib import import_module

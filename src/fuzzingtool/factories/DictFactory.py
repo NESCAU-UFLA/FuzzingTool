@@ -14,20 +14,21 @@ from .BaseFactories import BaseDictFactory
 from .PluginFactory import PluginFactory
 from ..conn.RequestParser import getHost, getPureUrl
 from ..conn.requests.Request import Request
-from ..core.dictionaries import *
+from ..core.Dictionary import Dictionary
+from ..core.wordlists import *
 from ..exceptions.MainExceptions import InvalidPluginName, MissingParameter
 
 class DictFactory(BaseDictFactory):
     def creator(name: str, params: str, requester: Request):
         try:
-            Wordlist = PluginFactory.classCreator(name, 'dictionaries')
+            Wordlist = PluginFactory.classCreator(name, 'wordlists')
             if (not params and
                 Wordlist.__params__ in ["TARGET_HOST", "TARGET_URL"]):
                 if "TARGET_HOST" in Wordlist.__params__:
                     params = getHost(getPureUrl(requester.getUrlDict()))
                 if "TARGET_URL" in Wordlist.__params__:
                     params = getPureUrl(requester.getUrlDict())
-            wordlist = PluginFactory.objectCreator(name, 'dictionaries', params)
+            wordlist = PluginFactory.objectCreator(name, 'wordlists', params)
         except InvalidPluginName:
             try:
                 if name.startswith('[') and name.endswith(']'):

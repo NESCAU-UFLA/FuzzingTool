@@ -49,7 +49,7 @@ def showHelpMenu():
     co.helpContent(5, "--timeout TIMEOUT", "Define the request timeout (in seconds)")
     co.helpContent(5, "--unfollow-redirects", "Stop to follow redirects")
     co.helpTitle(3, "Payload options:")
-    co.helpContent(5, "-w WORDLIST", "Define the wordlist dictionary (--help=dictionaries for more info)")
+    co.helpContent(5, "-w WORDLIST", "Define the wordlist with the payloads (--help=wordlists for more info)")
     co.helpContent(5, "-e ENCODER", "Define the encoder used on payloads (--help=encoders for more info)")
     co.helpContent(5, "--prefix PREFIX", "Define the prefix(es) used with the payload")
     co.helpContent(5, "--suffix SUFFIX", "Define the suffix(es) used with the payload")
@@ -92,13 +92,13 @@ def showCustomPackageHelp(category: str):
             params = f"={Plugin.__params__}"
         co.helpContent(5, f"{Plugin.__name__}{params}", f"{Plugin.__desc__}{typeFuzzing}\n")
 
-def showDictionariesHelp():
-    co.helpTitle(0, "Dictionary options: (-w)")
+def showWordlistsHelp():
+    co.helpTitle(0, "Wordlist options: (-w)")
     co.helpTitle(2, "Default: The default dictionaries are selected by default when no custom are choiced\n")
     co.helpContent(5, "FILEPATH", "Set the path of the wordlist file")
     co.helpContent(5, "[PAYLOAD1,PAYLOAD2,]", "Set the payloads list to be used as wordlist")
-    co.helpTitle(2, "Custom (Dictionary=PARAM): Set the custom dictionary and his parameter\n")
-    showCustomPackageHelp('dictionaries')
+    co.helpTitle(2, "Custom (Wordlist=PARAM): Set the custom dictionary and his parameter\n")
+    showCustomPackageHelp('wordlists')
     co.helpTitle(0, "Examples:\n")
     co.print("FuzzingTool -u https://$.domainexample.com/ -w /path/to/wordlist/subdomains.txt -t 30 --timeout 5 -V2\n")
     co.print("FuzzingTool -u https://$.domainexample.com/ -w [wp-admin,admin,webmail,www,cpanel] -t 30 --timeout 5 -V2\n")
