@@ -103,11 +103,10 @@ class CliController:
         parser = CliParser(argv)
         self.__initRequesters(parser)
         self.globalScanner = parser.scanner
-        self.matcher = Matcher(
-            AB.buildMatcherAllowedStatus(parser.matchStatus),
-            AB.buildMatcherComparator(
-                parser.matchLength, parser.matchTime
-            )
+        self.matcher = Matcher.fromString(
+            parser.matchStatus,
+            parser.matchLength,
+            parser.matchTime
         )
         self.verbose = parser.verbose
         co.setVerbosityOutput(self.isVerboseMode())
@@ -398,7 +397,7 @@ class CliController:
     def getDataComparator(self):
         """Check if the user wants to insert custom data comparator to validate the responses
         
-        @returns dict: The data comparator dictionary
+        @returns dict: The data comparator dictionary for the Matcher object
         """
         payload = ' ' # Set an arbitraty payload
         co.infoBox(f"Making first request with '{payload}' as payload ...")
@@ -427,10 +426,10 @@ class CliController:
             if not time:
                 time = defaultTime
             try:
-                comparator['Time'] = float(time)
+                time = float(time)
             except ValueError:
                 co.errorBox(f"The time ({time}) must be a number")
-        return AB.buildMatcherComparator(length, time)
+        return Matcher.buildComparator(length, time)
 
     def showFooter(self):
         """Show the footer content of the software, after maked the fuzzing.

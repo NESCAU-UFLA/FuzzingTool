@@ -10,6 +10,8 @@
 #
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
+from ...utils.utils import splitStrToList
+
 class Matcher:
     """A matcher validator
 
@@ -17,6 +19,59 @@ class Matcher:
         comparator: The dictionary with the default entries to be compared with the current request
         allowedStatus: The dictionary with the allowed status codes (and range)
     """
+    @staticmethod
+    def buildAllowedStatus(allowedStatus: str):
+        """Build the matcher attribute for allowed status
+
+        @type allowedStatus: str
+        @param allowedStatus: The allowed status codes to match results
+        @returns dict: The allowed status code, list and range, parsed into a dict
+        """
+        def getAllowedStatus(status: str, allowedList: list, allowedRange: list):
+            """Get the allowed status code list and range
+
+            @type status: str
+            @param status: The status cod given in the terminal
+            @type allowedList: list
+            @param allowedList: The allowed status codes list
+            @type allowedRange: list
+            @param allowedRange: The range of allowed status codes
+            """
+            try:
+                if '-' not in status:
+                    allowedList.append(int(status))
+                else:
+                    codeLeft, codeRight = (int(code) for code in status.split('-', 1))
+                    if codeRight < codeLeft:
+                        codeLeft, codeRight = codeRight, codeLeft
+                    allowedRange[:] = [codeLeft, codeRight]
+            except:
+                raise Exception(f"The match status argument ({status}) must be integer")
+
+        allowedList = [200] if not allowedStatus else []
+        allowedRange = []
+        for status in splitStrToList(allowedStatus):
+            getAllowedStatus(status, allowedList, allowedRange)
+        return {
+            'List': allowedList,
+            'Range': allowedRange,
+        }
+
+    @staticmethod
+    def buildComparator(length: int, time: float):
+        """Build the matcher attribute for data comparator
+
+        @type length: int
+        @param length: The length attribute for match results
+        @type time: float
+        @param time: The time attribute for match results
+        @returns dict: The data comparators parsed into a dict
+        """
+        return {
+            'Length': None if not length else length,
+            'Time': None if not time else time,
+        }
+
     def __init__(self,
         allowedStatus: dict = {
             'List': [200],
@@ -30,10 +85,25 @@ class Matcher:
         self._allowedStatus = allowedStatus
         self._comparator = comparator
 
+    @classmethod
+    def fromString(cls, allowedStatus: str, length: int, time: float):
+        return cls(
+            Matcher.buildAllowedStatus(allowedStatus),
+            Matcher.buildComparator(length, time)
+        )
+
     def getAllowedStatus(self):
+        """The allowed status getter
+
+        @returns dict: The allowed status dict
+        """
         return self._allowedStatus
     
     def getComparator(self):
+        """The data comparator getter
+
+        @returns dict: The data comparator dict
+        """
         return self._comparator
 
     def comparatorIsSet(self):
