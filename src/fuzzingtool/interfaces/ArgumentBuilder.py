@@ -103,16 +103,3 @@ class ArgumentBuilder:
         @returns list: The string parsed into a list
         """
         return splitStrToList(string)
-
-    @staticmethod
-    def buildBlacklistStatus(status: str):
-        """Build the blacklisted status codes
-
-        @type status: str
-        @param status: The blacklisted status codes
-        @returns list: The parsed blacklisted status codes
-        """
-        try:
-            return [int(status) for status in splitStrToList(status)]
-        except:
-            raise Exception("Status code must be an integer")

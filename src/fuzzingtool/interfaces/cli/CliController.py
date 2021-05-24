@@ -16,6 +16,7 @@ from ..ArgumentBuilder import ArgumentBuilder as AB
 from ... import version
 from ...utils.FileHandler import fileHandler as fh
 from ...core.Fuzzer import Fuzzer
+from ...core.BlacklistStatus import BlacklistStatus
 from ...core.dictionaries.Payloader import Payloader
 from ...core.scanners.Matcher import Matcher
 from ...conn import *
@@ -110,10 +111,18 @@ class CliController:
         )
         self.verbose = parser.verbose
         co.setVerbosityOutput(self.isVerboseMode())
-        self.blacklistedStatus = parser.blacklistedStatus
-        self.blacklistAction = lambda status : None
-        if self.blacklistedStatus:
-            self.blacklistAction = self.getBlacklistedStatusAction(parser.blacklistAction)
+        blacklistedStatus = parser.blacklistedStatus
+        action = parser.blacklistAction
+        self.blacklistStatus = BlacklistStatus(
+            status=blacklistedStatus,
+            action=action,
+            actionParam=parser.blacklistActionParam,
+            actionCallbacks={
+                'skip': self._skipCallback,
+                'wait': self._waitCallback,
+            },
+        )
+        co.infoBox(f"Blacklisted status codes: {blacklistedStatus} with action {action}")
         self.delay = parser.delay
         self.numberOfThreads = parser.numberOfThreads
         if self.globalScanner:
@@ -121,54 +130,6 @@ class CliController:
             self.scanner = self.globalScanner
             co.setMessageCallback(self.scanner.cliCallback)
         self.__initDictionary(parser)
-
-    def getBlacklistedStatusAction(self, action: str):
-        """Get the action callback if a blacklisted status code is set
-
-        @returns Callable: A callback function for the blacklisted status code
-        """
-        def skipTarget(status: int):
-            """The skip target callback for the blacklistAction
-
-            @type status: int
-            @param status: The identified status code into the blacklist
-            """
-            self.skipTarget = f"Status code {str(status)} detected"
-        
-        def wait(status: int):
-            """The wait (pause) callback for the blacklistAction
-
-            @type status: int
-            @param status: The identified status code into the blacklist
-            """
-            if not self.fuzzer.isPaused():
-                if not self.isVerboseMode():
-                    co.print("")
-                co.warningBox(f"Status code {str(status)} detected. Pausing threads ...")
-                self.fuzzer.pause()
-                if not self.isVerboseMode():
-                    co.print("")
-                co.infoBox(f"Waiting for {self.waitingTime} seconds ...")
-                time.sleep(self.waitingTime)
-                co.infoBox("Resuming target ...")
-                self.fuzzer.resume()
-
-        if 'skip' in action:
-            co.infoBox(f"Blacklisted status codes: {str(self.blacklistedStatus)} with action {action}")
-            return skipTarget
-        if 'wait' in action:
-            try:
-                action, timeToWait = action.split('=')
-            except ValueError:
-                raise Exception("Must set a time to wait")
-            try:
-                self.waitingTime = float(timeToWait)
-            except ValueError:
-                raise Exception("Time to wait must be a number")
-            co.infoBox(f"Blacklisted status codes: {str(self.blacklistedStatus)} with action {action} for {timeToWait} seconds")
-            return wait
-        else:
-            raise Exception("Invalid type of blacklist action")
 
     def checkConnectionAndRedirections(self):
         """Test the connection to target.
@@ -280,80 +241,24 @@ class CliController:
         """Prepare the fuzzer for the fuzzing tests.
            Refill the dictionary with the wordlist content
         """
-        if not self.globalDict:
-            self.dict = self.dicts.get()
-            self.totalRequests = len(self.dict)
+        if not self.globalDictionary:
+            self.dictionary = self.dictionaries.get()
+            self.totalRequests = len(self.dictionary)
         else:
-            self.dict.reload()
+            self.dictionary.reload()
         self.fuzzer = Fuzzer(
             requester=self.requester,
-            dictionary=self.dict,
+            dictionary=self.dictionary,
             scanner=self.scanner,
             delay=self.delay,
             numberOfThreads=self.numberOfThreads,
-            resultCallback=self.resultCallback,
-            exceptionCallbacks=[self.invalidHostnameCallback, self.requestExceptionCallback],
+            resultCallback=self._resultCallback,
+            exceptionCallbacks=[self._invalidHostnameCallback, self._requestExceptionCallback],
         )
         self.fuzzer.start()
         while self.fuzzer.join():
             if self.skipTarget:
                 raise SkipTargetException(self.skipTarget)
-
-    def resultCallback(self, result: dict, validate: bool):
-        """Callback function for the results output
-
-        @type result: dict
-        @param result: The FuzzingTool result
-        @type validate: bool
-        @param validate: A validator flag for the result, gived by the scanner
-        """
-        if self.blacklistedStatus and result['Status'] in self.blacklistedStatus:
-            self.blacklistAction(result['Status'])
-        else:
-            if self.verbose[0]:
-                if validate:
-                    self.results.append(result)
-                co.printResult(result, validate)
-            else:
-                if validate:
-                    self.results.append(result)
-                    co.printResult(result, validate)
-                co.progressStatus(
-                    result['Request'], self.totalRequests
-                )
-    
-    def requestExceptionCallback(self, e: RequestException):
-        """Callback that handle with the request exceptions
-        
-        @type e: RequestException
-        @param e: The request exception
-        """
-        if self.ignoreErrors:
-            if not self.verbose[0]:
-                co.progressStatus(
-                    self.requester.getRequestIndex(), self.totalRequests
-                )
-            else:
-                if self.verbose[1]:
-                    co.notWorkedBox(str(e))
-            with self.lock:
-                fh.logger.write(str(e))
-        else:
-            self.skipTarget = str(e)
-
-    def invalidHostnameCallback(self, e: InvalidHostname):
-        """Callback that handle with the subdomain hostname resolver exceptions
-        
-        @type e: InvalidHostname
-        @param e: The invalid hostname exception
-        """
-        if self.verbose[0]:
-            if self.verbose[1]:
-                co.notWorkedBox(str(e))
-        else:
-            co.progressStatus(
-                self.requester.getRequestIndex(), self.totalRequests
-            )
 
     def getDefaultScanner(self):
         """Check what's the scanners that will be used
@@ -456,6 +361,88 @@ class CliController:
                     co.infoBox(f"No matched results was found on target {key}")
                 requesterIndex += 1
 
+    def _skipCallback(self, status: int):
+        """The skip target callback for the blacklistAction
+
+        @type status: int
+        @param status: The identified status code into the blacklist
+        """
+        self.skipTarget = f"Status code {str(status)} detected"
+    
+    def _waitCallback(self, status: int):
+        """The wait (pause) callback for the blacklistAction
+
+        @type status: int
+        @param status: The identified status code into the blacklist
+        """
+        if not self.fuzzer.isPaused():
+            if not self.isVerboseMode():
+                co.print("")
+            co.warningBox(f"Status code {str(status)} detected. Pausing threads ...")
+            self.fuzzer.pause()
+            if not self.isVerboseMode():
+                co.print("")
+            co.infoBox(f"Waiting for {self.blacklistStatus.actionParam} seconds ...")
+            time.sleep(self.blacklistStatus.actionParam)
+            co.infoBox("Resuming target ...")
+            self.fuzzer.resume()
+
+    def _resultCallback(self, result: dict, validate: bool):
+        """Callback function for the results output
+
+        @type result: dict
+        @param result: The FuzzingTool result
+        @type validate: bool
+        @param validate: A validator flag for the result, gived by the scanner
+        """
+        if self.blacklistStatus.codes and result['Status'] in self.blacklistStatus.codes:
+            self.blacklistStatus.actionCallback(result['Status'])
+        else:
+            if self.verbose[0]:
+                if validate:
+                    self.results.append(result)
+                co.printResult(result, validate)
+            else:
+                if validate:
+                    self.results.append(result)
+                    co.printResult(result, validate)
+                co.progressStatus(
+                    result['Request'], self.totalRequests
+                )
+    
+    def _requestExceptionCallback(self, e: RequestException):
+        """Callback that handle with the request exceptions
+        
+        @type e: RequestException
+        @param e: The request exception
+        """
+        if self.ignoreErrors:
+            if not self.verbose[0]:
+                co.progressStatus(
+                    self.requester.getRequestIndex(), self.totalRequests
+                )
+            else:
+                if self.verbose[1]:
+                    co.notWorkedBox(str(e))
+            with self.lock:
+                fh.logger.write(str(e))
+        else:
+            self.skipTarget = str(e)
+
+    def _invalidHostnameCallback(self, e: InvalidHostname):
+        """Callback that handle with the subdomain hostname resolver exceptions
+        
+        @type e: InvalidHostname
+        @param e: The invalid hostname exception
+        """
+        if self.verbose[0]:
+            if self.verbose[1]:
+                co.notWorkedBox(str(e))
+        else:
+            co.progressStatus(
+                self.requester.getRequestIndex(), self.totalRequests
+            )
+
     def __initRequesters(self, parser: CliParser):
         """Initialize the requesters
 
@@ -520,15 +507,15 @@ class CliController:
                 dictionary.setEncoder(parser.encoder)
             return dictionary
         
-        self.globalDict = None
-        self.dicts = None
+        self.globalDictionary = None
+        self.dictionaries = []
         if len(parser.dictionaries) != len(self.requesters):
             name, params = parser.dictionaries[0]
-            self.globalDict = buildDictionary(name, params, None)
-            self.dict = self.globalDict
-            self.totalRequests = len(self.dict)
+            self.globalDictionary = buildDictionary(name, params, None)
+            self.dictionary = self.globalDictionary
+            self.totalRequests = len(self.dictionary)
         else:
-            self.dicts = Queue()
+            self.dictionaries = Queue()
             for i, dictionary in enumerate(parser.dictionaries):
                 name, params = dictionary
-                self.dicts.put(buildDictionary(name, params, self.requesters[i]))
+                self.dictionaries.put(buildDictionary(name, params, self.requesters[i]))

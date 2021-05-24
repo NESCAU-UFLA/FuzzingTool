@@ -396,14 +396,20 @@ class CliParser:
     def setBlacklistedStatus(self):
         """Check if the --blacklist-status argument is present, and set the blacklisted status and action"""
         self.blacklistedStatus = ''
+        self.blacklistAction = ''
+        self.blacklistActionParam = ''
         if '--blacklist-status' in self.__argv:
             status = self.__argv[self.__argv.index('--blacklist-status')+1]
             if ':' in status:
-                status, self.blacklistAction = status.split(':', 1)
-                self.blacklistAction = self.blacklistAction.lower()
+                status, blacklistAction = status.split(':', 1)
+                blacklistAction = blacklistAction.lower()
+                if '=' in blacklistAction:
+                    self.blacklistAction, self.blacklistActionParam = blacklistAction.split('=')
+                else:
+                    self.blacklistAction = blacklistAction
             else:
                 self.blacklistAction = 'skip'
-            self.blacklistedStatus = AB.buildBlacklistStatus(status)
+            self.blacklistedStatus = status
 
     def setReporter(self):
         """Check if the -o argument is present, and set the report metadata (name and type)"""
