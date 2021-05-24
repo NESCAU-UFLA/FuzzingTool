@@ -176,7 +176,7 @@ class CliController:
            If data fuzzing is detected, check for redirections
         """
         for requester in self.requesters:
-            co.infoBox(f"Checking connection and redirections on {requester.getUrl()} ...")
+            co.infoBox(f"Validating {requester.getUrl()} ...")
             co.infoBox("Testing connection ...")
             try:
                 requester.testConnection()
@@ -251,7 +251,7 @@ class CliController:
 
     def prepareTarget(self, requester: Request):
         """Prepare the target variables for the fuzzing tests.
-           Both error logger and default scanners are seted
+           Both error logger and default scanners are setted
         
         @type requester: Request
         @param requester: The requester for the target
@@ -404,12 +404,11 @@ class CliController:
         co.infoBox(f"Making first request with '{payload}' as payload ...")
         try:
             # Make the first request to get some info about the target
-            response = self.requester.request(payload)
+            firstResult = self.scanner.getResult(
+                response=self.requester.request(payload)
+            )
         except RequestException as e:
             raise SkipTargetException(f"{str(e)}")
-        firstResult = self.scanner.getResult(
-            response=response
-        )
         co.printResult(firstResult, False)
         length = None
         defaultLength = int(firstResult['Length'])+300
@@ -493,20 +492,20 @@ class CliController:
         @type parser: CliParser
         @param parser: The command line interface arguments object
         """
-        def buildDictionary(name: str, params: str, i: int):
+        def buildDictionary(name: str, params: str, requester: Request):
             """Build the dictionary
 
             @type name: str
             @param name: The dictionary name
             @type params: str
             @param params: The dictionary parameters
-            @type i: int
-            @param i: The dictionary index to map his requester
+            @type requester: Request
+            @param requester: The requester for the given dictionary
             @returns Dictionary: The dictionary object
             """
             co.infoBox(f"Building dictionary from {name} wordlist ...")
             try:
-                dictionary = DictFactory.creator(name, params, self.requesters[i])
+                dictionary = DictFactory.creator(name, params, requester)
             except Exception as e:
                 raise Exception(str(e))
             co.infoBox(f"Dictionary is done, loaded {len(dictionary)} payloads")
@@ -526,11 +525,11 @@ class CliController:
         self.dicts = None
         if len(parser.dictionaries) != len(self.requesters):
             name, params = parser.dictionaries[0]
-            self.globalDict = buildDictionary(name, params, 0)
+            self.globalDict = buildDictionary(name, params, None)
             self.dict = self.globalDict
             self.totalRequests = len(self.dict)
         else:
             self.dicts = Queue()
             for i, dictionary in enumerate(parser.dictionaries):
                 name, params = dictionary
-                self.dicts.put(buildDictionary(name, params, i))
+                self.dicts.put(buildDictionary(name, params, self.requesters[i]))
