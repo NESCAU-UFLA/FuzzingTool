@@ -452,7 +452,18 @@ class CliController:
         @type parser: CliParser
         @param parser: The command line interface arguments object
         """
-        for target in parser.targets:
+        targets = []
+        if parser.targetsFromUrl:
+            targets.extend(AB.buildTargetsFromArgs(
+                parser.targetsFromUrl, parser.method, parser.data
+            ))
+        if parser.targetsFromRawHttp:
+            targets.extend(AB.buildTargetsFromRawHttp(
+                parser.targetsFromRawHttp, parser.scheme
+            ))
+        if not targets:
+            raise Exception("A target is needed to make the fuzzing")
+        for target in targets:
             co.infoBox(f"Set target URL: {target['url']}")
             co.infoBox(f"Set request method: {target['methods']}")
             if target['data']:

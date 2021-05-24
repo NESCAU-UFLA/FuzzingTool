@@ -143,48 +143,38 @@ class CliParser:
 
     def setRequestArguments(self):
         """Set the request arguments"""
-        self.targets = []
-        self.targetsPositions = []
-        self.extendTargetsFromRawHttp()
-        self.extendTargetsFromArgs()
-        if not self.targets:
-            raise Exception("A target is needed to make the fuzzing")
+        self.setTargetsFromArgs()
+        self.setTargetsFromRawHttp()
         self.setCookie()
         self.setProxy()
         self.setProxies()
         self.setTimeout()
         self.setFollowRedirects()
 
-    def extendTargetsFromRawHttp(self):
-        """Updated the targets list based on raw https"""
-        headerFilenames = []
-        for i in getIndexesToParse(self.__argv, '-r'):
-            headerFilenames.append(self.__argv[i+1])
-            self.targetsPositions.append(i)
-        if headerFilenames:
-            # Check if a scheme is specified, otherwise set http as default
-            if '--scheme' in self.__argv:
-                scheme = self.__argv[self.__argv.index('--scheme')+1]
-            else:
-                scheme = 'http'
-            self.targets.extend(AB.buildTargetsFromRawHttp(headerFilenames, scheme))
-    
-    def extendTargetsFromArgs(self):
-        """Updated the targets list based on the urls"""
-        urls = []
+    def setTargetsFromArgs(self):
+        """Set the targets from url"""
+        self.targetsFromUrl = []
         for i in getIndexesToParse(self.__argv, '-u'):
-            urls.append(self.__argv[i+1])
-            self.targetsPositions.append(i)
-        if urls:
-            if '-X' in self.__argv:
-                method = self.__argv[self.__argv.index('-X')+1]
-            else:
-                method = ''
-            if '-d' in self.__argv:
-                data = self.__argv[self.__argv.index('-d')+1]
-            else:
-                data = ''
-            self.targets.extend(AB.buildTargetsFromArgs(urls, method, data))
+            self.targetsFromUrl.append(self.__argv[i+1])
+        if '-X' in self.__argv:
+            self.method = self.__argv[self.__argv.index('-X')+1]
+        else:
+            self.method = ''
+        if '-d' in self.__argv:
+            self.data = self.__argv[self.__argv.index('-d')+1]
+        else:
+            self.data = ''
+
+    def setTargetsFromRawHttp(self):
+        """Set the targets from raw http"""
+        self.targetsFromRawHttp = []
+        for i in getIndexesToParse(self.__argv, '-r'):
+            self.targetsFromRawHttp.append(self.__argv[i+1])
+        # Check if a scheme is specified, otherwise set http as default
+        if '--scheme' in self.__argv:
+            self.scheme = self.__argv[self.__argv.index('--scheme')+1]
+        else:
+            self.scheme = 'http'
 
     def setCookie(self):
         """Check if the --cookie argument is present, and set it"""
