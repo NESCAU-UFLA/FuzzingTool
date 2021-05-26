@@ -30,13 +30,15 @@ class PluginFactory(BasePluginFactory):
         return getattr(Plugin, name)
 
     def objectCreator(name: str, category: str, params: str = ''):
-        Plugin = PluginFactory.classCreator(name, category)
+        try:
+            Plugin = PluginFactory.classCreator(name, category)
+        except InvalidPluginName as e:
+            raise Exception(str(e))
         if not Plugin.__params__:
             return Plugin()
-        else:
-            try:
-                return Plugin(params)
-            except MissingParameter as e:
-                raise Exception(f"Plugin {name} missing parameter: {str(e)}")
-            except BadArgumentFormat as e:
-                raise Exception(f"Bad plugin {name} argument format: {str(e)}")
+        try:
+            return Plugin(params)
+        except MissingParameter as e:
+            raise Exception(f"Plugin {name} missing parameter: {str(e)}")
+        except BadArgumentFormat as e:
+            raise Exception(f"Plugin {name} bad argument format: {str(e)}")
