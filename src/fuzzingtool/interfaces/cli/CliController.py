@@ -83,9 +83,7 @@ class CliController:
                     showScannersHelp()
                 else:
                     co.errorBox("Invalid help argument")
-            else:
-                showHelpMenu()
-            exit(0)
+                exit(0)
         if argv[1] == '-v' or argv[1] == '--version':
             exit(f"FuzzingTool v{version()}")
         co.print(banner())
@@ -478,7 +476,7 @@ class CliController:
                 methods=target['methods'],
                 data=target['data'],
                 headers=target['header'],
-                followRedirects=parser.unfollowRedirects,
+                followRedirects=parser.followRedirects,
                 proxy=parser.proxy,
                 proxies=fh.read(parser.proxies) if parser.proxies else [],
                 timeout=parser.timeout,
@@ -523,13 +521,13 @@ class CliController:
         
         self.globalDictionary = None
         self.dictionaries = []
-        if len(parser.dictionaries) != len(self.requesters):
-            name, params = parser.dictionaries[0]
+        if len(parser.wordlists) != len(self.requesters):
+            name, params = parser.wordlists[0]
             self.globalDictionary = buildDictionary(name, params, None)
             self.dictionary = self.globalDictionary
             self.totalRequests = len(self.dictionary)
         else:
             self.dictionaries = Queue()
-            for i, dictionary in enumerate(parser.dictionaries):
+            for i, dictionary in enumerate(parser.wordlists):
                 name, params = dictionary
                 self.dictionaries.put(buildDictionary(name, params, self.requesters[i]))

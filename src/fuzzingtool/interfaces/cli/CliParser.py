@@ -12,13 +12,15 @@
 
 from .CliOutput import cliOutput as co
 from ..ArgumentBuilder import ArgumentBuilder as AB
-from ...utils.utils import getIndexesToParse, getPluginNamesFromCategory
+from ...utils.utils import getIndexesToParse, getPluginNamesFromCategory, splitStrToList
 from ...utils.FileHandler import fileHandler as fh
 from ...factories.PluginFactory import PluginFactory
 from ...core.scanners.Matcher import Matcher
 from ...exceptions.MainExceptions import InvalidPluginName
 
-def parsePlugin(plugin: str):
+import argparse
+
+def parseOptionWithArgs(plugin: str):
     """Parse the plugin name into name and parameter
 
     @type plugin: str
@@ -31,48 +33,6 @@ def parsePlugin(plugin: str):
         plugin = plugin
         param = ''
     return (plugin, param)
-
-def showHelpMenu():
-    co.helpTitle(0, "Parameters:")
-    co.helpTitle(3, "Misc:")
-    co.helpContent(5, "-h, --help", "Show the help menu and exit")
-    co.helpContent(5, "-v, --version", "Show the current version and exit")
-    co.helpTitle(3, "Request options:")
-    co.helpContent(5, "-r FILE", "Define the file with the raw HTTP request (scheme not specified)")
-    co.helpContent(5, "--scheme SCHEME", "Define the scheme used in the URL (default http)")
-    co.helpContent(5, "-u URL", "Define the target URL")
-    co.helpContent(5, "-X METHOD", "Define the request http verbs (method)")
-    co.helpContent(5, "-d DATA", "Define the request body data")
-    co.helpContent(5, "--proxy IP:PORT", "Define the proxy")
-    co.helpContent(5, "--proxies FILE", "Define the file with a list of proxies")
-    co.helpContent(5, "--cookie COOKIE", "Define the HTTP Cookie header value")
-    co.helpContent(5, "--timeout TIMEOUT", "Define the request timeout (in seconds)")
-    co.helpContent(5, "--unfollow-redirects", "Stop to follow redirects")
-    co.helpTitle(3, "Payload options:")
-    co.helpContent(5, "-w WORDLIST", "Define the wordlist with the payloads (--help=wordlists for more info)")
-    co.helpContent(5, "-e ENCODER", "Define the encoder used on payloads (--help=encoders for more info)")
-    co.helpContent(5, "--prefix PREFIX", "Define the prefix(es) used with the payload")
-    co.helpContent(5, "--suffix SUFFIX", "Define the suffix(es) used with the payload")
-    co.helpContent(5, "--upper", "Set the uppercase case for the payloads")
-    co.helpContent(5, "--lower", "Set the lowercase case for the payloads")
-    co.helpContent(5, "--capitalize", "Set the capitalize case for the payloads")
-    co.helpTitle(3, "Match options:")
-    co.helpContent(5, "-Mc STATUS", "Match responses based on their status codes")
-    co.helpContent(5, "-Ms SIZE", "Match responses based on their length (in bytes)")
-    co.helpContent(5, "-Mt TIME", "Match responses based on their elapsed time (in seconds)")
-    co.helpContent(5, "--scanner SCANNER", "Define the custom scanner (--help=scanners for more info)")
-    co.helpTitle(3, "More options:")
-    co.helpContent(5, "(-V, -V1) | -V2", "Enable the verbose mode (common or full verbose)")
-    co.helpContent(5, "--delay DELAY", "Define the delay between each request (in seconds)")
-    co.helpContent(5, "-t NUMBEROFTHREADS", "Define the number of threads used in the tests")
-    co.helpContent(5, "-o REPORT", "Define the report format (accept txt, csv and json)")
-    co.helpContent(5, "--blacklist-status STATUS:ACTION", "Blacklist status codes from response, and take an action when one is detected. Available actions: skip (to skip the current target), wait=SECONDS (to pause the app for some seconds)")
-    co.helpTitle(0, "Examples:\n")
-    co.print("FuzzingTool -u http://127.0.0.1/post.php?id= -w /path/to/wordlist/sqli.txt -Mt 20 -Mc 500-600 -t 30 -o fuzzingGet.csv\n")
-    co.print("FuzzingTool -w /path/to/wordlist/sqli.txt -u http://127.0.0.1/controller/user.php -d 'login&passw&user=login' -Ms 1200\n")
-    co.print("FuzzingTool -w /path/to/wordlist/paths.txt -u http://127.0.0.1/$ -u http://192.168.0.133/$ --suffix .php,.html --unfollow-redirects -Mc 200,302,303\n")
-    co.print("FuzzingTool -w /path/to/wordlist/subdomains.txt -u https://$.domainexample.com/ -t 100 -Ms 1500 --timeout 5\n")
-    co.print("FuzzingTool -r /path/to/raw-http1.txt -r /path/to/raw-http2.txt --scheme https -w /path/to/wordlist/sqli.txt -V -o json\n")
 
 def showCustomPackageHelp(category: str):
     """Show the custom package help
@@ -131,9 +91,9 @@ class CliParser:
         @type argv: list
         @param argv: The system arguments list
         """
-        self.__argv = argv
+        self.options = self.__getOptions()
         self.setArguments()
-    
+
     def setArguments(self):
         """Set all the app arguments"""
         self.setRequestArguments()
@@ -145,246 +105,83 @@ class CliParser:
         """Set the request arguments"""
         self.setTargetsFromArgs()
         self.setTargetsFromRawHttp()
-        self.setCookie()
-        self.setProxy()
-        self.setProxies()
-        self.setTimeout()
-        self.setFollowRedirects()
+        self.cookie = self.options.cookie
+        self.proxy = self.options.proxy
+        self.proxies = self.options.proxies
+        self.timeout = self.options.timeout
+        self.followRedirects = self.options.followRedirects
 
     def setTargetsFromArgs(self):
         """Set the targets from url"""
-        self.targetsFromUrl = []
-        for i in getIndexesToParse(self.__argv, '-u'):
-            self.targetsFromUrl.append(self.__argv[i+1])
-        if '-X' in self.__argv:
-            self.method = self.__argv[self.__argv.index('-X')+1]
-        else:
-            self.method = ''
-        if '-d' in self.__argv:
-            self.data = self.__argv[self.__argv.index('-d')+1]
-        else:
-            self.data = ''
+        self.targetsFromUrl = self.options.url
+        self.method = self.options.method
+        self.data = self.options.data
 
     def setTargetsFromRawHttp(self):
         """Set the targets from raw http"""
-        self.targetsFromRawHttp = []
-        for i in getIndexesToParse(self.__argv, '-r'):
-            self.targetsFromRawHttp.append(self.__argv[i+1])
-        # Check if a scheme is specified, otherwise set http as default
-        if '--scheme' in self.__argv:
-            self.scheme = self.__argv[self.__argv.index('--scheme')+1]
-        else:
-            self.scheme = 'http'
-
-    def setCookie(self):
-        """Check if the --cookie argument is present, and set it"""
-        self.cookie = ''
-        if '--cookie' in self.__argv:
-            self.cookie = self.__argv[self.__argv.index('--cookie')+1]
-            co.infoBox(f"Set cookie: {self.cookie}")
-
-    def setProxy(self):
-        """Check if the --proxy argument is present, and set it"""
-        self.proxy = ''
-        if '--proxy' in self.__argv:
-            self.proxy = self.__argv[self.__argv.index('--proxy')+1]
-            co.infoBox(f"Set proxy: {self.proxy}")
-
-    def setProxies(self):
-        """Check if the --proxies argument is present, and read the proxies from a file"""
-        self.proxies = ''
-        if '--proxies' in self.__argv:
-            self.proxies = self.__argv[self.__argv.index('--proxies')+1]
-
-    def setTimeout(self):
-        """Check if the --timeout argument is present, and set the request timeout"""
-        self.timeout = 0
-        if '--timeout' in self.__argv:
-            timeout = self.__argv[self.__argv.index('--timeout')+1]
-            try:
-                self.timeout = int(timeout)
-            except:
-                raise Exception(f"The request timeout ({timeout}) must be an integer")
-            co.infoBox(f"Set request timeout: {timeout} seconds")
-
-    def setFollowRedirects(self):
-        """Check if the --unfollow-redirects argument is present, and set the follow redirects flag"""
-        self.unfollowRedirects = True
-        if '--unfollow-redirects' in self.__argv:
-            self.unfollowRedirects = False
-            co.infoBox(f"Stop to following redirects")
+        self.targetsFromRawHttp = self.options.rawHttp
+        self.scheme = self.options.scheme
 
     def setDictionaryArguments(self):
         """Set the dictionary arguments"""
-        self.setDictionary()
-        self.setPrefixAndSuffix()
-        self.setCase()
-        self.setEncoder()
-
-    def setDictionary(self):
-        """Set the fuzzing dictionary"""
-        dictPositions = getIndexesToParse(self.__argv, '-w')
-        if not dictPositions:
-            raise Exception("An wordlist is needed to make the fuzzing")
-        dictionaries = [self.__argv[(i+1)] for i in dictPositions]
-        self.dictionaries = []
-        for dictionary in dictionaries:
-            self.dictionaries.append(parsePlugin(dictionary))
-
-    def setPrefixAndSuffix(self):
-        """Check if the --prefix argument is present, and set the prefix
-           Check if the --suffix argument is present, and set the suffix
-        """
-        prefix = ''
-        suffix = ''
-        if '--prefix' in self.__argv:
-            prefix = self.__argv[self.__argv.index('--prefix')+1]
-            co.infoBox(f"Set prefix: {prefix}")
-        if '--suffix' in self.__argv:
-            suffix = self.__argv[self.__argv.index('--suffix')+1]
-            co.infoBox(f"Set suffix: {suffix}")
-        self.prefix = AB.buildPrefixSuffix(prefix)
-        self.suffix = AB.buildPrefixSuffix(suffix)
-
-    def setCase(self):
-        """Check if the --upper argument is present, and set the uppercase case mode
-           Check if the --lower argument is present, and set the lowercase case mode
-           Check if the --capitalize argument is present, and set the capitalize case mode
-        """
-        self.lowercase = False
-        self.uppercase = False
-        self.capitalize = False
-        if '--lower' in self.__argv:
-            self.lowercase = True
-            co.infoBox("Set payload case: lowercase")
-        elif '--upper' in self.__argv:
-            self.uppercase = True
-            co.infoBox("Set payload case: uppercase")
-        elif '--capitalize' in self.__argv:
-            self.capitalize = True
-            co.infoBox("Set payload case: capitalize")
-
-    def setEncoder(self):
-        """Check if the -e argument is present, and set the encoder"""
-        self.encoder = None
-        if '-e' in self.__argv:
-            encoder = self.__argv[self.__argv.index('-e')+1]
-            encoder, param = parsePlugin(encoder)
+        self.wordlists = [parseOptionWithArgs(wordlist) for wordlist in self.options.wordlist]
+        self.prefix = splitStrToList(self.options.prefix)
+        self.suffix = splitStrToList(self.options.suffix)
+        self.uppercase = self.options.upper
+        self.lowercase = self.options.lower
+        self.capitalize = self.options.capitalize
+        encoder = self.options.encoder
+        if encoder:
+            encoder, param = parseOptionWithArgs(encoder)
             try:
-                self.encoder = PluginFactory.objectCreator(
+                encoder = PluginFactory.objectCreator(
                     encoder, 'encoders', param
                 )
             except Exception as e:
                 raise Exception(str(e))
-            co.infoBox(f"Set encoder: {encoder}")
+        self.encoder = encoder
 
     def setMatchArguments(self):
         """Set the match arguments"""
-        self.setMatcher()
-        self.setScanner()
-
-    def setMatcher(self):
-        """Set the matcher attributes"""
-        def getMatchStatus():
-            status = None
-            if '-Mc' in self.__argv:
-                status = self.__argv[self.__argv.index('-Mc')+1]
-                if '200' not in status:
-                    if co.askYesNo('warning', "Status code 200 (OK) wasn't included. Do you want to include it to the allowed status codes?"):
-                        status += ",200"
-                co.infoBox(f"Set the allowed status codes: {status}")
-            return status
-        
-        def getMatchLength():
-            length = None
-            if '-Ms' in self.__argv:
-                length = self.__argv[self.__argv.index('-Ms')+1]
-                try:
-                    length = int(length)
-                except:
-                    raise Exception(f"The match length argument ({length}) must be an integer")
-                co.infoBox(f"Exclude by length: {str(length)} bytes")
-            return length
-
-        def getMatchTime():
-            time = None
-            if '-Mt' in self.__argv:
-                time = self.__argv[self.__argv.index('-Mt')+1]
-                try:
-                    time = float(time)
-                except:
-                    raise Exception(f"The match time argument ({time}) must be a number")
-                co.infoBox(f"Exclude by time: {str(time)} seconds")
-            return time
-
-        self.matchStatus = getMatchStatus()
-        self.matchLength = getMatchLength()
-        self.matchTime = getMatchTime()
-
-    def setScanner(self):
-        """Check if the --scanner argument is present, and set it"""
-        self.scanner = None
-        if '--scanner' in self.__argv:
-            scanner = self.__argv[self.__argv.index('--scanner')+1]
-            scanner, param = parsePlugin(scanner)
+        matchStatus = self.options.matchStatus
+        if matchStatus:
+            if '200' not in matchStatus:
+                if co.askYesNo('warning', "Status code 200 (OK) wasn't included. Do you want to include it to the allowed status codes?"):
+                    matchStatus += ",200"
+        self.matchStatus = matchStatus
+        self.matchLength = self.options.matchLength
+        self.matchTime = self.options.matchTime
+        scanner = self.options.scanner
+        if scanner:
+            scanner, param = parseOptionWithArgs(scanner)
             try:
-                self.scanner = PluginFactory.objectCreator(
+                scanner = PluginFactory.objectCreator(
                     scanner, 'scanners', param
                 )
             except Exception as e:
                 co.errorBox(str(e))
-            co.infoBox(f"Set scanner: {scanner}")
+        self.scanner = scanner
 
     def setGeneralArguments(self):
         """Set the general arguments"""
-        self.setVerboseMode()
-        self.setDelay()
-        self.setNumThreads()
-        self.setBlacklistedStatus()
-        self.setReporter()
-
-    def setVerboseMode(self):
-        """Check if the -V or --verbose argument is present, and set the verbose mode"""
-        if '-V' in self.__argv or '-V1' in self.__argv:
+        if self.options.commonVerbose:
             self.verbose = [True, False]
-            verbosity = "normal"
-        elif '-V2' in self.__argv:
+        elif self.options.detailedVerbose:
             self.verbose = [True, True]
-            verbosity = "detailed"
         else:
             self.verbose = [False, False]
-            verbosity = "quiet"
-        co.infoBox(f"Set output mode: {verbosity}")
-
-    def setDelay(self):
-        """Check if the --delay argument is present, and set it"""
-        self.delay = 0
-        if '--delay' in self.__argv:
-            delay = self.__argv[self.__argv.index('--delay')+1]
-            try:
-                self.delay = float(delay)
-            except:
-                raise Exception(f"The delay ({delay}) must be a number")
-            co.infoBox(f"Set delay: {str(delay)} second(s)")
-
-    def setNumThreads(self):
-        """Check if the -t argument is present, and set it"""
-        self.numberOfThreads = 1
-        if '-t' in self.__argv:
-            numberOfThreads = self.__argv[self.__argv.index('-t')+1]
-            try:
-                self.numberOfThreads = int(numberOfThreads)
-            except:
-                raise Exception(f"The number of threads ({numberOfThreads}) must be an integer")
-        co.infoBox(f"Set number of threads: {str(self.numberOfThreads)} thread(s)")
+        self.delay = self.options.delay
+        self.numberOfThreads = self.options.numberOfThreads
+        self.setBlacklistedStatus()
+        fh.reporter.setMetadata(self.options.reportName)
 
     def setBlacklistedStatus(self):
         """Check if the --blacklist-status argument is present, and set the blacklisted status and action"""
         self.blacklistedStatus = ''
         self.blacklistAction = ''
         self.blacklistActionParam = ''
-        if '--blacklist-status' in self.__argv:
-            status = self.__argv[self.__argv.index('--blacklist-status')+1]
+        if self.options.blacklistStatus:
+            status = self.options.blacklistStatus
             if ':' in status:
                 status, blacklistAction = status.split(':', 1)
                 blacklistAction = blacklistAction.lower()
@@ -396,9 +193,200 @@ class CliParser:
                 self.blacklistAction = 'skip'
             self.blacklistedStatus = status
 
-    def setReporter(self):
-        """Check if the -o argument is present, and set the report metadata (name and type)"""
-        if '-o' in self.__argv:
-            report = self.__argv[self.__argv.index('-o')+1]
-            fh.reporter.setMetadata(report)
-            co.infoBox(f"Set report: {report}")
+    def __getOptions(self):
+        parser = argparse.ArgumentParser(
+            usage=argparse.SUPPRESS,
+            epilog="For usage examples, see: https://github.com/NESCAU-UFLA/FuzzingTool/wiki/Usage-Examples",
+            formatter_class=lambda prog: argparse.HelpFormatter(
+                prog, indent_increment=4, max_help_position=30, width=100
+            )
+        )
+        self.__buildRequestOpts(parser)
+        self.__buildDictionaryOpts(parser)
+        self.__buildMatchOpts(parser)
+        self.__buildMoreOpts(parser)
+        return parser.parse_args()
+    
+    def __buildRequestOpts(self, parser):
+        requestOpts = parser.add_argument_group('Request options')
+        requestOpts.add_argument('-u',
+            action='append',
+            dest='url',
+            help="Define the target URL",
+            metavar='URL',
+        )
+        requestOpts.add_argument('-r',
+            action='append',
+            dest='rawHttp',
+            help="Define the file with the raw HTTP request (scheme not specified)",
+            metavar='FILE',
+        )
+        requestOpts.add_argument('--scheme',
+            action='store',
+            dest='scheme',
+            help="Define the scheme used in the URL (default http)",
+            metavar='SCHEME',
+            default="http",
+        )
+        requestOpts.add_argument('-X',
+            action='store',
+            dest='method',
+            help="Define the request http verbs (method)",
+            metavar='METHOD',
+        )
+        requestOpts.add_argument('-d',
+            action='store',
+            dest='data',
+            help="Define the request body data",
+            metavar='DATA',
+        )
+        requestOpts.add_argument('--proxy',
+            action='store',
+            dest='proxy',
+            help="Define the proxy",
+            metavar='IP:PORT',
+        )
+        requestOpts.add_argument('--proxies',
+            action='store',
+            dest='proxies',
+            help="Define the file with a list of proxies",
+            metavar='FILE',
+        )
+        requestOpts.add_argument('--cookie',
+            action='store',
+            dest='cookie',
+            help="Define the HTTP Cookie header value",
+            metavar='COOKIE',
+        )
+        requestOpts.add_argument('--timeout',
+            action='store',
+            dest='timeout',
+            help="Define the request timeout (in seconds)",
+            metavar='TIMEOUT',
+            type=int,
+            default=0,
+        )
+        requestOpts.add_argument('--follow-redirects',
+            action='store_true',
+            dest='followRedirects',
+            help="Force to follow redirects",
+            default=False,
+        )
+    
+    def __buildDictionaryOpts(self, parser):
+        dictionaryOpts = parser.add_argument_group('Dictionary options')
+        dictionaryOpts.add_argument('-w',
+            action='append',
+            dest='wordlist',
+            help="Define the wordlist with the payloads (--help=wordlists for more info)",
+            metavar='WORDLIST',
+        )
+        dictionaryOpts.add_argument('-e',
+            action='store',
+            dest='encoder',
+            help="Define the encoder used on payloads (--help=encoders for more info)",
+            metavar='ENCODER',
+        )
+        dictionaryOpts.add_argument('--prefix',
+            action='store',
+            dest='prefix',
+            help="Define the prefix(es) used with the payload",
+            metavar='PREFIX',
+        )
+        dictionaryOpts.add_argument('--suffix',
+            action='store',
+            dest='suffix',
+            help="Define the suffix(es) used with the payload",
+            metavar='SUFFIX',
+        )
+        dictionaryOpts.add_argument('--upper',
+            action='store_true',
+            dest='upper',
+            help="Set the uppercase case for the payloads",
+            default=False,
+        )
+        dictionaryOpts.add_argument('--lower',
+            action='store_true',
+            dest='lower',
+            help="Set the lowercase case for the payloads",
+            default=False,
+        )
+        dictionaryOpts.add_argument('--capitalize',
+            action='store_true',
+            dest='capitalize',
+            help="Set the capitalize case for the payloads",
+            default=False,
+        )
+
+    def __buildMatchOpts(self, parser):
+        matchOpts = parser.add_argument_group('Match options')
+        matchOpts.add_argument('-Mc',
+            action='store',
+            dest='matchStatus',
+            help="Match responses based on their status codes",
+            metavar='STATUS',
+        )
+        matchOpts.add_argument('-Ms',
+            action='store',
+            dest='matchLength',
+            help="Match responses based on their length (in bytes)",
+            metavar='SIZE',
+            type=int,
+        )
+        matchOpts.add_argument('-Mt',
+            action='store',
+            dest='matchTime',
+            help="Match responses based on their elapsed time (in seconds)",
+            metavar='TIME',
+            type=float,
+        )
+        matchOpts.add_argument('--scanner',
+            action='store',
+            dest='scanner',
+            help="Define the custom scanner (--help=scanners for more info)",
+            metavar='SCANNER',
+        )
+
+    def __buildMoreOpts(self, parser):
+        moreOpts = parser.add_argument_group('More options')
+        moreOpts.add_argument('-V', '-V1',
+            action='store_true',
+            dest='commonVerbose',
+            help="Set the common verbose output mode",
+            default=False,
+        )
+        moreOpts.add_argument('-V2',
+            action='store_true',
+            dest='detailedVerbose',
+            help="Set the detailed verbose output mode",
+            default=False,
+        )
+        moreOpts.add_argument('-t',
+            action='store',
+            dest='numberOfThreads',
+            help="Define the number of threads used in the tests",
+            metavar='NUMBEROFTHREADS',
+            type=int,
+            default=1,
+        )
+        moreOpts.add_argument('--delay',
+            action='store',
+            dest='delay',
+            help="Define delay between each request",
+            metavar='DELAY',
+            type=float,
+            default=0,
+        )
+        moreOpts.add_argument('-o',
+            action='store',
+            dest='reportName',
+            help="Define the report name and/or format (accept txt, csv and json)",
+            metavar='REPORT',
+            default='txt'
+        )
+        moreOpts.add_argument('--blacklist-status',
+            action='store',
+            dest='blacklistStatus',
+            help="Blacklist status codes from response, and take an action when one is detected. Available actions: skip (to skip the current target), wait=SECONDS (to pause the app for some seconds)",
+            metavar='STATUS:ACTION',
+        )
