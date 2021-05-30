@@ -366,7 +366,7 @@ class Request:
         else:
             dataDict[key] = ''
 
-    def __setupProxy(proxy: str):
+    def __setupProxy(self, proxy: str):
         return {
             'http': f"http://{proxy}",
             'https': f"https://{proxy}",
