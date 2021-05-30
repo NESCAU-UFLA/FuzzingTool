@@ -24,7 +24,9 @@ class PathScanner(BaseScanner):
         result = super().getResult(response)
         response = response.getResponse()
         result['Redirected'] = ''
-        if '301' in str(response.history) or '302' in str(response.history):
+        if result['Status'] == 301 or result['Status'] == 302:
+            result['Redirected'] = response.headers['Location']
+        elif '301' in str(response.history) or '302' in str(response.history):
             result['Redirected'] = response.url
         return result
 
