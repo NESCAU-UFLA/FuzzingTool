@@ -280,6 +280,7 @@ class CliParser:
             dest='wordlist',
             help="Define the wordlist with the payloads (--help=wordlists for more info)",
             metavar='WORDLIST',
+            required=True,
         )
         dictionaryOpts.add_argument('-e',
             action='store',
