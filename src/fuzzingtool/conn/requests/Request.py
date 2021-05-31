@@ -133,6 +133,13 @@ class Request:
             return True
         return False
 
+    def isUrlDiscovery(self):
+        """Checks if the fuzzing is for url discovery (path or subdomain)
+
+        @returns bool: If is url discovery fuzzing type
+        """
+        return (self.isUrlFuzzing() and not '?' in self._url['content'])
+
     def getRequestIndex(self):
         """The request index getter
 

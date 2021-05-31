@@ -223,13 +223,6 @@ class CliController:
                     self.getDataComparator()
                 ))
                 self.startedTime += (time.time() - before)
-            if ((self.requester.isUrlFuzzing() and
-                not '?' in self.requester.getUrl()) and
-                self.matcher.allowedStatusIsDefault()):
-                self.scanner.updateMatcher(Matcher(
-                    Matcher.buildAllowedStatus("200-399,401,403"),
-                    self.matcher.getComparator(),
-                ))
 
     def prepareFuzzer(self):
         """Prepare the fuzzer for the fuzzing tests.
@@ -259,8 +252,7 @@ class CliController:
         
         @returns BaseScanner: The scanner used in the fuzzing tests
         """
-        if (self.requester.isUrlFuzzing() and
-            not '?' in self.requester.getUrl()):
+        if self.requester.isUrlDiscovery():
             if isinstance(self.requester, SubdomainRequest):
                 from ...core.scanners.default.SubdomainScanner import SubdomainScanner
                 scanner = SubdomainScanner()
@@ -272,6 +264,12 @@ class CliController:
             scanner = DataScanner()
         scanner.updateMatcher(self.matcher)
         co.setMessageCallback(scanner.cliCallback)
+        if (self.requester.isUrlDiscovery() and
+            self.matcher.allowedStatusIsDefault()):
+            scanner.updateMatcher(Matcher(
+                Matcher.buildAllowedStatus("200-399,401,403"),
+                self.matcher.getComparator(),
+            ))
         return scanner
 
     def checkIgnoreErrors(self, host: str):
