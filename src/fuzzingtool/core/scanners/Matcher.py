@@ -48,11 +48,17 @@ class Matcher:
             except:
                 raise Exception(f"The match status argument ({status}) must be integer")
 
-        allowedList = [200] if not allowedStatus else []
+        if not allowedStatus:
+            isDefault = True
+            allowedList = [200]
+        else:
+            isDefault = False
+            allowedList = []
         allowedRange = []
         for status in splitStrToList(allowedStatus):
             getAllowedStatus(status, allowedList, allowedRange)
         return {
+            'IsDefault': isDefault,
             'List': allowedList,
             'Range': allowedRange,
         }
@@ -74,6 +80,7 @@ class Matcher:
 
     def __init__(self,
         allowedStatus: dict = {
+            'IsDefault': True,
             'List': [200],
             'Range': [],
         },
@@ -105,6 +112,13 @@ class Matcher:
         @returns dict: The data comparator dict
         """
         return self._comparator
+
+    def allowedStatusIsDefault(self):
+        """Check if the allowed status is set as default config
+
+        @returns bool: If the allowed status is the default or not
+        """
+        return self._allowedStatus['IsDefault']
 
     def comparatorIsSet(self):
         """Check if any of the comparators are seted
