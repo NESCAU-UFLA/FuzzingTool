@@ -12,7 +12,6 @@
 
 from .Request import Request
 from ..RequestParser import getHost, requestParser as parser
-
 from ...exceptions.RequestExceptions import RequestException, InvalidHostname
 
 import socket
