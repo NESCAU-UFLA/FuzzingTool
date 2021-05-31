@@ -10,7 +10,7 @@
 #
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
-from .CliParser import *
+from .CliArgumentParser import *
 from .CliOutput import cliOutput as co
 from ..ArgumentBuilder import ArgumentBuilder as AB
 from ... import version
@@ -28,7 +28,6 @@ from ...exceptions.RequestExceptions import InvalidHostname, RequestException
 from queue import Queue
 import time
 import threading
-from sys import argv
 
 def banner():
     banner = ("\033[36m   ____                        _____       _\n"+
@@ -69,24 +68,6 @@ class CliController:
         """The main function.
            Prepares the application environment and starts the fuzzing
         """
-        if len(argv) < 2:
-            co.print(banner())
-            co.errorBox("Invalid format! Use -h on 2nd parameter to show the help menu.")
-        if '-h' in argv[1] or '--help' in argv[1]:
-            if '=' in argv[1]:
-                askedHelp = argv[1].split('=')[1]
-                if 'wordlists' in askedHelp:
-                    showWordlistsHelp()
-                elif 'encoders' in askedHelp:
-                    showEncodersHelp()
-                elif 'scanners' in askedHelp:
-                    showScannersHelp()
-                else:
-                    co.errorBox("Invalid help argument")
-                exit(0)
-        if argv[1] == '-v' or argv[1] == '--version':
-            exit(f"FuzzingTool v{version()}")
-        co.print(banner())
         try:
             self.init()
             self.checkConnectionAndRedirections()
@@ -101,7 +82,8 @@ class CliController:
         """The initialization function.
            Set the application variables including plugins requires
         """
-        parser = CliParser(argv)
+        parser = CliArgumentParser()
+        co.print(banner())
         self.__initRequesters(parser)
         self.globalScanner = parser.scanner
         self.matcher = Matcher.fromString(
@@ -444,10 +426,10 @@ class CliController:
                 self.requester.getRequestIndex(), self.totalRequests
             )
 
-    def __initRequesters(self, parser: CliParser):
+    def __initRequesters(self, parser: CliArgumentParser):
         """Initialize the requesters
 
-        @type parser: CliParser
+        @type parser: CliArgumentParser
         @param parser: The command line interface arguments object
         """
         targets = []
@@ -484,10 +466,10 @@ class CliController:
             )
             self.requesters.append(requester)
 
-    def __initDictionary(self, parser: CliParser):
+    def __initDictionary(self, parser: CliArgumentParser):
         """Initialize the dictionary
 
-        @type parser: CliParser
+        @type parser: CliArgumentParser
         @param parser: The command line interface arguments object
         """
         def buildDictionary(name: str, params: str, requester: Request):

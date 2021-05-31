@@ -12,12 +12,14 @@
 
 from .CliOutput import cliOutput as co
 from ..ArgumentBuilder import ArgumentBuilder as AB
+from ... import version
 from ...utils.utils import getIndexesToParse, getPluginNamesFromCategory, splitStrToList
 from ...utils.FileHandler import fileHandler as fh
 from ...factories.PluginFactory import PluginFactory
 from ...core.scanners.Matcher import Matcher
 from ...exceptions.MainExceptions import InvalidPluginName
 
+from sys import argv
 import argparse
 
 def parseOptionWithArgs(plugin: str):
@@ -83,15 +85,36 @@ def showScannersHelp():
     co.helpTitle(0, "Examples:\n")
     co.print("FuzzingTool -u https://domainexample.com/search.php?query= -w /path/to/wordlist/xss.txt --scanner Reflected -t 30 -o csv\n")
 
-class CliParser:
+class CliArgumentParser:
     """Class that handle with the sys argument parsing"""
-    def __init__(self, argv: list):
-        """Class constructor
-
-        @type argv: list
-        @param argv: The system arguments list
-        """
-        self.options = self.__getOptions()
+    def __init__(self):
+        if len(argv) < 2:
+            raise Exception("Invalid format! Use -h on 2nd parameter to show the help menu.")
+        if '-h' in argv[1] or '--help' in argv[1]:
+            if '=' in argv[1]:
+                askedHelp = argv[1].split('=')[1]
+                if 'wordlists' in askedHelp:
+                    showWordlistsHelp()
+                elif 'encoders' in askedHelp:
+                    showEncodersHelp()
+                elif 'scanners' in askedHelp:
+                    showScannersHelp()
+                else:
+                    raise Exception(f"Help argument '{askedHelp}' not available")
+                exit(0)
+        parser = argparse.ArgumentParser(
+            usage=argparse.SUPPRESS,
+            description="Usage: FuzzingTool [-u|-r TARGET]+ [-w WORDLIST]+ [options]*",
+            epilog="For usage examples, see: https://github.com/NESCAU-UFLA/FuzzingTool/wiki/Usage-Examples",
+            formatter_class=lambda prog: argparse.HelpFormatter(
+                prog, indent_increment=4, max_help_position=30, width=100
+            )
+        )
+        parser.add_argument('-v', '--version',
+            action='version',
+            version=f"FuzzingTool v{version()}"
+        )
+        self.options = self.__getOptions(parser)
         self.setArguments()
 
     def setArguments(self):
@@ -193,21 +216,14 @@ class CliParser:
                 self.blacklistAction = 'skip'
             self.blacklistedStatus = status
 
-    def __getOptions(self):
-        parser = argparse.ArgumentParser(
-            usage=argparse.SUPPRESS,
-            epilog="For usage examples, see: https://github.com/NESCAU-UFLA/FuzzingTool/wiki/Usage-Examples",
-            formatter_class=lambda prog: argparse.HelpFormatter(
-                prog, indent_increment=4, max_help_position=30, width=100
-            )
-        )
+    def __getOptions(self, parser: argparse.ArgumentParser):
         self.__buildRequestOpts(parser)
         self.__buildDictionaryOpts(parser)
         self.__buildMatchOpts(parser)
         self.__buildMoreOpts(parser)
         return parser.parse_args()
     
-    def __buildRequestOpts(self, parser):
+    def __buildRequestOpts(self, parser: argparse.ArgumentParser):
         requestOpts = parser.add_argument_group('Request options')
         requestOpts.add_argument('-u',
             action='append',
@@ -273,7 +289,7 @@ class CliParser:
             default=False,
         )
     
-    def __buildDictionaryOpts(self, parser):
+    def __buildDictionaryOpts(self, parser: argparse.ArgumentParser):
         dictionaryOpts = parser.add_argument_group('Dictionary options')
         dictionaryOpts.add_argument('-w',
             action='append',
@@ -319,7 +335,7 @@ class CliParser:
             default=False,
         )
 
-    def __buildMatchOpts(self, parser):
+    def __buildMatchOpts(self, parser: argparse.ArgumentParser):
         matchOpts = parser.add_argument_group('Match options')
         matchOpts.add_argument('-Mc',
             action='store',
@@ -348,7 +364,7 @@ class CliParser:
             metavar='SCANNER',
         )
 
-    def __buildMoreOpts(self, parser):
+    def __buildMoreOpts(self, parser: argparse.ArgumentParser):
         moreOpts = parser.add_argument_group('More options')
         moreOpts.add_argument('-V', '-V1',
             action='store_true',
