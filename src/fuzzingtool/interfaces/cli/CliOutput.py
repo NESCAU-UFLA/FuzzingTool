@@ -126,7 +126,6 @@ class CliOutput:
         @type getMessageCallback: Callable
         @param getMessageCallback: The get message callback for the results
         """
-        self.printResult = self.printForBoxMode
         try:
             self.__getMessage = getMessageCallback
         except NotImplementedError as e:
@@ -208,7 +207,7 @@ class CliOutput:
 
         @type msg: str
         @param msg: The message
-        @returns int|float: The data asked
+        @returns mixed: The data asked
         """
         print(self.__getTime()+self.__getInfo(msg)+': ', end='')
         return input()
@@ -229,7 +228,7 @@ class CliOutput:
             sys.stdout.flush()
             print('\r'+self.__getTime()+self.__getInfo(status), end='')
 
-    def printForBoxMode(self, result: dict, vulnValidator: bool):
+    def printResult(self, result: dict, vulnValidator: bool):
         """Custom output print for box mode
 
         @type result: dict
