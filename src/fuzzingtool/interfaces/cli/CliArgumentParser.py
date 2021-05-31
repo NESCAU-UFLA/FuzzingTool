@@ -90,18 +90,17 @@ class CliArgumentParser:
     def __init__(self):
         if len(argv) < 2:
             raise Exception("Invalid format! Use -h on 2nd parameter to show the help menu.")
-        if '-h' in argv[1] or '--help' in argv[1]:
-            if '=' in argv[1]:
-                askedHelp = argv[1].split('=')[1]
-                if 'wordlists' in askedHelp:
-                    showWordlistsHelp()
-                elif 'encoders' in askedHelp:
-                    showEncodersHelp()
-                elif 'scanners' in askedHelp:
-                    showScannersHelp()
-                else:
-                    raise Exception(f"Help argument '{askedHelp}' not available")
-                exit(0)
+        if '-h=' in argv[1] or '--help=' in argv[1]:
+            askedHelp = argv[1].split('=')[1]
+            if 'wordlists' in askedHelp:
+                showWordlistsHelp()
+            elif 'encoders' in askedHelp:
+                showEncodersHelp()
+            elif 'scanners' in askedHelp:
+                showScannersHelp()
+            else:
+                raise Exception(f"Help argument '{askedHelp}' not available")
+            exit(0)
         parser = argparse.ArgumentParser(
             usage=argparse.SUPPRESS,
             description="Usage: FuzzingTool [-u|-r TARGET]+ [-w WORDLIST]+ [options]*",
