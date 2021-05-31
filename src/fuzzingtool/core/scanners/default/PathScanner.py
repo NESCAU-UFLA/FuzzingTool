@@ -12,7 +12,7 @@
 
 from ..BaseScanner import BaseScanner
 from ..Matcher import Matcher
-from ....conn.responses.Response import Response
+from ...Result import Result
 from ....conn.RequestParser import getPath
 from ....interfaces.cli.CliOutput import Colors, getFormatedResult
 
@@ -20,33 +20,28 @@ class PathScanner(BaseScanner):
     __name__ = "PathScanner"
     __author__ = ("Vitor Oriel C N Borges")
 
-    def getResult(self, response: Response):
-        result = super().getResult(response)
-        response = response.getResponse()
-        result['Redirected'] = ''
-        if result['Status'] == 301 or result['Status'] == 302:
-            result['Redirected'] = response.headers['Location']
-        elif '301' in str(response.history) or '302' in str(response.history):
-            result['Redirected'] = response.url
+    def getResult(self, response: object, requestIndex: int, payload: str, RTT: float, *args):
+        result = super().getResult(response, requestIndex, payload, RTT)
+        result._custom['redirected'] = ''
+        if result.status > 300 and result.status < 400:
+            result._custom['redirected'] = response.headers['Location']
         return result
 
     def scan(self, result: dict):
         return True
     
     def cliCallback(self, result: dict):
-        status = result['Status']
+        status = result.status
         statusColor = ''
-        redirected = ''
-        if self._matchStatus(status):
-            if status == 200:
-                statusColor = f'{Colors.BOLD}{Colors.GREEN}'
-            else:
-                statusColor = f'{Colors.BOLD}{Colors.LIGHT_YELLOW}'
-            redirected = result['Redirected']
-            if redirected:
-                redirected = f" {Colors.LIGHT_YELLOW}Redirected to {redirected}{Colors.RESET}"
+        if status in [200, 201, 204]:
+            statusColor = f'{Colors.BOLD}{Colors.GREEN}'
+        elif status > 300 and status < 400:
+            statusColor = f'{Colors.BOLD}{Colors.LIGHT_YELLOW}'
+        redirected = result._custom['redirected']
+        if redirected:
+            redirected = f" {Colors.LIGHT_YELLOW}Redirected to {redirected}{Colors.RESET}"
         path, RTT, length = getFormatedResult(
-            getPath(result['Url']), result['Time Taken'], result['Length']
+            getPath(result.url), result.RTT, result.length
         )
         return (
             f"{path} {Colors.GRAY}["+

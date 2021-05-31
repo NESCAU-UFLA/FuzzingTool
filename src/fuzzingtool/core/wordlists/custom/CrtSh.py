@@ -12,7 +12,6 @@
 
 from ..BaseWordlist import BaseWordlist
 from ....conn.requests.Request import Request
-from ....conn.responses.Response import Response
 from ....exceptions.RequestExceptions import RequestException
 from ....exceptions.MainExceptions import MissingParameter
 
@@ -49,7 +48,7 @@ class CrtSh(BaseWordlist):
             },
         )
         try:
-            response = requester.request("")
+            response, *_ = requester.request("")
         except RequestException as e:
             raise Exception(str(e))
         if 'None found' in response.text:

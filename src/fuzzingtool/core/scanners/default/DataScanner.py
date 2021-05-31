@@ -12,17 +12,17 @@
 
 from ..BaseScanner import BaseScanner
 from ..Matcher import Matcher
-from ....conn.responses.Response import Response
+from ...Result import Result
 from ....interfaces.cli.CliOutput import Colors, getFormatedResult
 
 class DataScanner(BaseScanner):
     __name__ = "DataScanner"
     __author__ = ("Vitor Oriel C N Borges")
 
-    def getResult(self, response: Response):
-        result = super().getResult(response)
-        result['Payload Length'] = len(result['Payload'])
-        result['Body'] = response.text
+    def getResult(self, response: object, requestIndex: int, payload: str, RTT: float, *args):
+        result = super().getResult(response, requestIndex, payload, RTT)
+        result._custom['Payload Length'] = len(result.payload)
+        result._custom['Body'] = response.text
         return result
 
     def scan(self, result: dict):
@@ -30,13 +30,13 @@ class DataScanner(BaseScanner):
     
     def cliCallback(self, result: dict):
         payload, RTT, length = getFormatedResult(
-            result['Payload'], result['Time Taken'], result['Length']
+            result.payload, result.RTT, result.length
         )
-        words = '{:>6}'.format(result['Words'])
-        lines = '{:>5}'.format(result['Lines'])
+        words = '{:>6}'.format(result.words)
+        lines = '{:>5}'.format(result.lines)
         return (
             f"{payload} {Colors.GRAY}["+
-            f"{Colors.LIGHT_GRAY}Code{Colors.RESET} {result['Status']} | "+
+            f"{Colors.LIGHT_GRAY}Code{Colors.RESET} {result.status} | "+
             f"{Colors.LIGHT_GRAY}RTT{Colors.RESET} {RTT} | "+
             f"{Colors.LIGHT_GRAY}Size{Colors.RESET} {length} | "+
             f"{Colors.LIGHT_GRAY}Words{Colors.RESET} {words} | "+

@@ -100,11 +100,13 @@ class Fuzzer:
     def run(self):
         """Run the threads"""
         while not self.__dict.isEmpty():
-            payload = next(self.__dict)
-            for p in payload:
+            payloads = next(self.__dict)
+            for payload in payloads:
                 try:
+                    response, RTT, *args = self.__requester.request(payload)
                     result = self.__scanner.getResult(
-                        response=self.__requester.request(p)
+                        response, self.__requester.getRequestIndex(),
+                        payload, RTT, *args
                     )
                     self.resultsCallback(
                         result,

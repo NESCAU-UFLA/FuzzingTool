@@ -12,16 +12,16 @@
 
 from ..BaseScanner import BaseScanner
 from ..Matcher import Matcher
-from ....conn.responses.Response import Response
+from ...Result import Result
 from ....interfaces.cli.CliOutput import Colors, getFormatedResult
 
 class SubdomainScanner(BaseScanner):
     __name__ = "SubdomainScanner"
     __author__ = ("Vitor Oriel C N Borges")
 
-    def getResult(self, response: Response):
-        result = super().getResult(response)
-        result['IP'] = response.custom['IP']
+    def getResult(self, response: object, requestIndex: int, payload: str, RTT: float, *args):
+        result = super().getResult(response, requestIndex, payload, RTT)
+        result._custom['ip'] = args[0]
         return result
 
     def scan(self, result: dict):
@@ -29,13 +29,13 @@ class SubdomainScanner(BaseScanner):
 
     def cliCallback(self, result: dict):
         url, RTT, length = getFormatedResult(
-            result['Url'], result['Time Taken'], result['Length']
+            result.url, result.RTT, result.length
         )
-        ip = '{:>15}'.format(result['IP'])
+        ip = '{:>15}'.format(result._custom['ip'])
         return (
             f"{url} {Colors.GRAY}["+
             f'{Colors.LIGHT_GRAY}IP{Colors.RESET} {ip}'" | "+
-            f"{Colors.LIGHT_GRAY}Code{Colors.RESET} {result['Status']} | "+
+            f"{Colors.LIGHT_GRAY}Code{Colors.RESET} {result.status} | "+
             f"{Colors.LIGHT_GRAY}RTT{Colors.RESET} {RTT} | "+
             f"{Colors.LIGHT_GRAY}Size{Colors.RESET} {length}{Colors.GRAY}]{Colors.RESET}"
         )

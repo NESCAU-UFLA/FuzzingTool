@@ -12,7 +12,7 @@
 
 from .Request import Request
 from ..RequestParser import getHost, requestParser as parser
-from ..responses.Response import Response
+
 from ...exceptions.RequestExceptions import RequestException, InvalidHostname
 
 import socket
@@ -22,9 +22,6 @@ class SubdomainRequest(Request):
     def __init__(self, url, **kwargs):
         """Class constructor"""
         super().__init__(url, **kwargs)
-    
-    def resetRequestIndex(self):
-        self._requestIndex = 0
 
     def resolveHostname(self, hostname: str):
         """Resolve the ip for the given hostname
@@ -42,6 +39,4 @@ class SubdomainRequest(Request):
     def request(self, payload: str):
         parser.setPayload(payload)
         ip = self.resolveHostname(getHost(parser.getUrl(self._url)))
-        response = super().request(payload)
-        response.custom['IP'] = ip
-        return response
+        return (*(super().request(payload)), ip)

@@ -11,7 +11,7 @@
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
 from ..RequestParser import *
-from ..responses.Response import Response
+
 from ...exceptions.RequestExceptions import RequestException, InvalidHostname
 
 import random
@@ -173,7 +173,7 @@ class Request:
 
     def resetRequestIndex(self):
         """Resets the request index"""
-        self._requestIndex = 1
+        self._requestIndex = 0
 
     def testConnection(self):
         """Test the connection with the target, and raise an exception if couldn't connect"""
@@ -206,8 +206,8 @@ class Request:
         
         @returns bool: The flag to say if occur a redirection or not
         """
-        response = self.request(' ')
-        if '302' in str(response.getResponse().history):
+        response, *_ = self.request(' ')
+        if '302' in str(response.history):
             return True
         return False
 
@@ -224,7 +224,7 @@ class Request:
         try:
             before = time.time()
             response = self.__request(method, url, headers, data)
-            timeTaken = (time.time() - before)
+            RTT = (time.time() - before)
         except requests.exceptions.ProxyError:
             raise RequestException("Can't connect to the proxy")
         except requests.exceptions.TooManyRedirects:
@@ -250,8 +250,7 @@ class Request:
         except ValueError as e:
             raise RequestException(str(e))
         else:
-            response.setRequestData(url, method, payload, timeTaken, self._requestIndex)
-            return response
+            return (response, RTT)
         finally:
             self._requestIndex += 1
 
@@ -412,7 +411,7 @@ class Request:
         @param data: The data to be send with the request
         @returns Response: The response object of the request
         """
-        return Response(self.__session.send(
+        return self.__session.send(
             self.__session.prepare_request(requests.Request(
                 method,
                 url,
@@ -423,7 +422,7 @@ class Request:
             proxies=self.__proxy,
             timeout=self.__timeout,
             allow_redirects=self.__followRedirects,
-        ))
+        )
     
     def __commonRequest(self,
         method: str,
@@ -443,7 +442,7 @@ class Request:
         @param data: The data to be send with the request
         @returns Response: The response object of the request
         """
-        return Response(requests.request(
+        return requests.request(
             method,
             url,
             data=data['BODY'],
@@ -452,4 +451,4 @@ class Request:
             proxies=self.__proxy,
             timeout=self.__timeout,
             allow_redirects=self.__followRedirects,
-        ))
+        )

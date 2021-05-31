@@ -11,7 +11,7 @@
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
 from ..default.DataScanner import DataScanner
-from ....conn.responses.Response import Response
+from ...Result import Result
 from ....interfaces.cli.CliOutput import Colors, getFormatedResult
 
 class Reflected(DataScanner):
@@ -30,29 +30,29 @@ class Reflected(DataScanner):
         super().__init__()
         self.__reflected = {}
 
-    def getResult(self, response: Response):
-        return super().getResult(response)
+    def getResult(self, response: object, requestIndex: int, payload: str, RTT: float, *args):
+        return super().getResult(response, requestIndex, payload, RTT)
 
     def scan(self, result: dict):
-        reflected = result['Payload'] in result['Body']
-        self.__reflected[result['Request']] = reflected
+        reflected = result.payload in result._custom['Body']
+        self.__reflected[result.index] = reflected
         return reflected
     
     def cliCallback(self, result: dict):
         reflected = f"{Colors.LIGHT_YELLOW}{Colors.BOLD}IDK"
-        if result['Request'] in self.__reflected:
-            if self.__reflected[result['Request']]:
+        if result.index in self.__reflected:
+            if self.__reflected[result.index]:
                 reflected = f"{Colors.GREEN}{Colors.BOLD}YES"
             else:
                 reflected = f"{Colors.LIGHT_RED}{Colors.BOLD}NO "
-                del self.__reflected[result['Request']]
+                del self.__reflected[result.index]
         payload, RTT, length = getFormatedResult(
-            result['Payload'], result['Time Taken'], result['Length']
+            result.payload, result.RTT, result.length
         )
         return (
             f"{payload} {Colors.GRAY}["+
             f"{Colors.LIGHT_GRAY}Reflected{Colors.RESET} {reflected}{Colors.RESET} | "+
-            f"{Colors.LIGHT_GRAY}Code{Colors.RESET} {result['Status']} | "+
+            f"{Colors.LIGHT_GRAY}Code{Colors.RESET} {result.status} | "+
             f"{Colors.LIGHT_GRAY}RTT{Colors.RESET} {RTT} | "+
             f"{Colors.LIGHT_GRAY}Size{Colors.RESET} {length}{Colors.GRAY}]{Colors.RESET}"
         )

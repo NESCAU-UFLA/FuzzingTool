@@ -10,6 +10,8 @@
 #
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
+from ..core.Result import Result
+
 import csv
 import json
 from datetime import datetime
@@ -106,10 +108,10 @@ class Reporter:
             self.__file = open(reportFullPath, 'w')
         return reportFullPath
 
-    def write(self, results: dict):
+    def write(self, results: list):
         """Write the vulnerable input and response content into a report
-
-        @param type: dict
+        
+        @type results: list
         @param results: The list with probably vulnerable content
         """
         if self.__metadata['Type'] == 'txt':
@@ -120,38 +122,38 @@ class Reporter:
             self.__jsonWriter(results)
         self.__file.close()
 
-    def __txtWriter(self, reportContent: list):
+    def __txtWriter(self, results: list):
         """The txt report writer
 
-        @param type: list
-        @param reportContent: The list with probably vulnerable content
+        @type results: list
+        @param results: The list with probably vulnerable content
         """
-        for content in reportContent:
-            for key, value in content.items():
+        for content in results:
+            for key, value in content:
                 self.__file.write(f'{key}: {str(value)}\n')
             self.__file.write('\n')
     
-    def __csvWriter(self, reportContent: list):
+    def __csvWriter(self, results: list):
         """The csv report writer
 
-        @param type: list
-        @param reportContent: The list with probably vulnerable content
+        @type results: list
+        @param results: The list with probably vulnerable content
         """
         writer = csv.DictWriter(
             self.__file,
-            fieldnames=[key for key in reportContent[0].keys()]
+            fieldnames=[key for key in dict(results[0]).keys()]
         )
         writer.writeheader()
-        for content in reportContent:
-            writer.writerow(content)
+        for content in results:
+            writer.writerow(dict(content))
 
-    def __jsonWriter(self, reportContent: list):
+    def __jsonWriter(self, results: list):
         """The json report writer
 
-        @param type: list
-        @param reportContent: The list with probably vulnerable content
+        @type results: list
+        @param results: The list with probably vulnerable content
         """
-        json.dump(reportContent, self.__file)
+        json.dump([dict(result) for result in results], self.__file)
 
 class FileHandler:
     """Class that handle with the files

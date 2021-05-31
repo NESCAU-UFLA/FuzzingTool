@@ -12,4 +12,3 @@
 
 from .RequestParser import *
 from .requests import *
-from .responses import *

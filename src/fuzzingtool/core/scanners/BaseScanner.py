@@ -11,7 +11,7 @@
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
 from .Matcher import Matcher
-from ...conn.responses.Response import Response
+from ..Result import Result
 
 class BaseScanner(Matcher):
     """Base scanner"""
@@ -27,27 +27,14 @@ class BaseScanner(Matcher):
         super().setAllowedStatus(matcher.getAllowedStatus())
         super().setComparator(matcher.getComparator())
 
-    def getResult(self, response: Response):
-        """Get the response data parsed into a dictionary
+    def getResult(self, response: object, requestIndex: int, payload: str, RTT: float, *args):
+        """Get the FuzzingTool Result object
         
         @type response: Response
         @param response: The response given in the reuest
-        @returns dict: The formated result into a dictionary
+        @returns Result: The FuzzingTool Result object
         """
-        result = {
-            'Request': str(response.requestIndex),
-            'Url': response.requestUrl,
-            'Method': response.requestMethod,
-            'Payload': response.requestPayload,
-            'Time Taken': response.RTT,
-            'Request Time': float('%.6f'%(response.RTT-response.elapsedTime)),
-            'Response Time': response.elapsedTime,
-            'Status': response.status,
-            'Length': response.length,
-            'Words': response.quantityOfWords,
-            'Lines': response.quantityOfLines,
-        }
-        return result
+        return Result(response, requestIndex, payload, RTT)
 
     def scan(self, result: dict):
         """Scan the result

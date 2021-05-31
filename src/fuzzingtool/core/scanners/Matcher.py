@@ -10,6 +10,7 @@
 #
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
+from ..Result import Result
 from ...utils.utils import splitStrToList
 
 class Matcher:
@@ -143,18 +144,18 @@ class Matcher:
         """
         self._comparator = comparator
 
-    def match(self, result: dict):
+    def match(self, result: Result):
         """Check if the request content has some predefined characteristics based on a payload, it'll be considered as vulnerable
         
-        @type result: dict
+        @type result: Result
         @param result: The actual result dictionary
         @returns bool: A vulnerability flag
         """
-        if self._matchStatus(result['Status']):
+        if self._matchStatus(result.status):
             if self._comparator['Length']:
-                return self._matchLength(int(result['Length']))
+                return self._matchLength(int(result.length))
             if self._comparator['Time']:
-                return self._matchTime(result['Time Taken'])
+                return self._matchTime(result.RTT)
             return True
         return False
     

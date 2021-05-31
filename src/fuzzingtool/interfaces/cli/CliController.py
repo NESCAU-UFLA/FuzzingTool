@@ -15,10 +15,7 @@ from .CliOutput import cliOutput as co
 from ..ArgumentBuilder import ArgumentBuilder as AB
 from ... import version
 from ...utils.FileHandler import fileHandler as fh
-from ...core.Fuzzer import Fuzzer
-from ...core.BlacklistStatus import BlacklistStatus
-from ...core.Payloader import Payloader
-from ...core.scanners.Matcher import Matcher
+from ...core import *
 from ...conn import *
 from ...factories.HttpFactory import HttpFactory
 from ...factories.DictFactory import DictFactory
@@ -388,8 +385,8 @@ class CliController:
         @type validate: bool
         @param validate: A validator flag for the result, gived by the scanner
         """
-        if self.blacklistStatus and result['Status'] in self.blacklistStatus.codes:
-            self.blacklistStatus.actionCallback(result['Status'])
+        if self.blacklistStatus and result.status in self.blacklistStatus.codes:
+            self.blacklistStatus.actionCallback(result.status)
         else:
             if self.verbose[0]:
                 if validate:
@@ -400,7 +397,7 @@ class CliController:
                     self.results.append(result)
                     co.printResult(result, validate)
                 co.progressStatus(
-                    result['Request'], self.totalRequests
+                    result.index, self.totalRequests
                 )
     
     def _requestExceptionCallback(self, e: RequestException):

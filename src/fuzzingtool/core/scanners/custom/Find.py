@@ -11,7 +11,7 @@
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
 from ..default.DataScanner import DataScanner
-from ....conn.responses.Response import Response
+from ...Result import Result
 from ....interfaces.cli.CliOutput import Colors, getFormatedResult
 from ....exceptions.MainExceptions import MissingParameter, BadArgumentFormat
 
@@ -40,29 +40,29 @@ class Find(DataScanner):
             raise BadArgumentFormat("invalid regex")
         self.__found = {}
 
-    def getResult(self, response: Response):
-        return super().getResult(response)
+    def getResult(self, response: object, requestIndex: int, payload: str, RTT: float, *args):
+        return super().getResult(response, requestIndex, payload, RTT)
 
     def scan(self, result: dict):
-        found = True if self.__regexer.search(result['Body']) else False
-        self.__found[result['Request']] = found
+        found = True if self.__regexer.search(result._custom['Body']) else False
+        self.__found[result.index] = found
         return found
     
     def cliCallback(self, result: dict):
         found = f"{Colors.LIGHT_YELLOW}{Colors.BOLD}IDK"
-        if result['Request'] in self.__found:
-            if self.__found[result['Request']]:
+        if result.index in self.__found:
+            if self.__found[result.index]:
                 found = f"{Colors.GREEN}{Colors.BOLD}YES"
             else:
                 found = f"{Colors.LIGHT_RED}{Colors.BOLD}NO "
-                del self.__found[result['Request']]
+                del self.__found[result.index]
         payload, RTT, length = getFormatedResult(
-            result['Payload'], result['Time Taken'], result['Length']
+            result.payload, result.RTT, result.length
         )
         return (
             f"{payload} {Colors.GRAY}["+
             f"{Colors.LIGHT_GRAY}Regex found{Colors.RESET} {found}{Colors.RESET} | "+
-            f"{Colors.LIGHT_GRAY}Code{Colors.RESET} {result['Status']} | "+
+            f"{Colors.LIGHT_GRAY}Code{Colors.RESET} {result.status} | "+
             f"{Colors.LIGHT_GRAY}RTT{Colors.RESET} {RTT} | "+
             f"{Colors.LIGHT_GRAY}Size{Colors.RESET} {length}{Colors.GRAY}]{Colors.RESET}"
         )
