@@ -18,8 +18,12 @@ import socket
 
 class SubdomainRequest(Request):
     """Class that handle with the requests for subdomain fuzzing"""
-    def __init__(self, url, **kwargs):
-        """Class constructor"""
+    def __init__(self, url: str, **kwargs):
+        """Class constructor
+        
+        @type url: str
+        @param url: The target URL
+        """
         super().__init__(url, **kwargs)
 
     def resolveHostname(self, hostname: str):
