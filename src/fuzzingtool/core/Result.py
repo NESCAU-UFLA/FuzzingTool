@@ -14,6 +14,19 @@ class Result:
     """The FuzzingTool result handler
 
     Attributes:
+        index: The index of the result (same as the request index)
+        url: The requested target URL
+        method: The method used in the request
+        payload: The payload used in the request
+        RTT: The elapsed time on both request and response
+        requestTime: The elapsed time only for the request
+        responseTime: The elapsed time only for the response
+        status: The response HTTP status code
+        length: The length of the response body content
+        words: The quantitty of words in the response body
+        lines: The quantity of lines in the response body
+        custom: A dictionary to store custom data from the plugins
+        response: The raw response object
     """
     def __init__(self,
         response: object,
@@ -21,6 +34,17 @@ class Result:
         payload: str,
         RTT: float,
     ):
+        """Class constructor
+
+        @type response: Response
+        @param response: The response given in the reuest
+        @type requestIndex: int
+        @param requestIndex: The index of the request
+        @type payload: str
+        @param payload: The payload used in the request
+        @type RTT: float
+        @param RTT: The elapsed time on both request and response
+        """
         self.index = str(requestIndex)
         self.url = response.url
         self.method = response.request.method

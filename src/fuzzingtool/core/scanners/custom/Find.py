@@ -43,12 +43,12 @@ class Find(DataScanner):
     def getResult(self, response: object, requestIndex: int, payload: str, RTT: float, *args):
         return super().getResult(response, requestIndex, payload, RTT)
 
-    def scan(self, result: dict):
+    def scan(self, result: Result):
         found = True if self.__regexer.search(result._custom['Body']) else False
         self.__found[result.index] = found
         return found
     
-    def cliCallback(self, result: dict):
+    def cliCallback(self, result: Result):
         found = f"{Colors.LIGHT_YELLOW}{Colors.BOLD}IDK"
         if result.index in self.__found:
             if self.__found[result.index]:

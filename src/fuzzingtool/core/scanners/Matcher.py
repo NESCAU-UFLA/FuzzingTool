@@ -148,7 +148,7 @@ class Matcher:
         """Check if the request content has some predefined characteristics based on a payload, it'll be considered as vulnerable
         
         @type result: Result
-        @param result: The actual result dictionary
+        @param result: The actual result object
         @returns bool: A vulnerability flag
         """
         if self._matchStatus(result.status):

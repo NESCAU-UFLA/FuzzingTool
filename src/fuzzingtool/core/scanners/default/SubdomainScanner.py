@@ -24,10 +24,10 @@ class SubdomainScanner(BaseScanner):
         result._custom['ip'] = args[0]
         return result
 
-    def scan(self, result: dict):
+    def scan(self, result: Result):
         return True
 
-    def cliCallback(self, result: dict):
+    def cliCallback(self, result: Result):
         url, RTT, length = getFormatedResult(
             result.url, result.RTT, result.length
         )

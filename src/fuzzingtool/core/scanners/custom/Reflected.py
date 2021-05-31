@@ -33,12 +33,12 @@ class Reflected(DataScanner):
     def getResult(self, response: object, requestIndex: int, payload: str, RTT: float, *args):
         return super().getResult(response, requestIndex, payload, RTT)
 
-    def scan(self, result: dict):
+    def scan(self, result: Result):
         reflected = result.payload in result._custom['Body']
         self.__reflected[result.index] = reflected
         return reflected
     
-    def cliCallback(self, result: dict):
+    def cliCallback(self, result: Result):
         reflected = f"{Colors.LIGHT_YELLOW}{Colors.BOLD}IDK"
         if result.index in self.__reflected:
             if self.__reflected[result.index]:

@@ -25,10 +25,10 @@ class DataScanner(BaseScanner):
         result._custom['Body'] = response.text
         return result
 
-    def scan(self, result: dict):
+    def scan(self, result: Result):
         return True
     
-    def cliCallback(self, result: dict):
+    def cliCallback(self, result: Result):
         payload, RTT, length = getFormatedResult(
             result.payload, result.RTT, result.length
         )

@@ -32,24 +32,30 @@ class BaseScanner(Matcher):
         
         @type response: Response
         @param response: The response given in the reuest
+        @type requestIndex: int
+        @param requestIndex: The index of the request
+        @type payload: str
+        @param payload: The payload used in the request
+        @type RTT: float
+        @param RTT: The elapsed time on both request and response
         @returns Result: The FuzzingTool Result object
         """
         return Result(response, requestIndex, payload, RTT)
 
-    def scan(self, result: dict):
+    def scan(self, result: Result):
         """Scan the result
 
-        @type result: dict
-        @param result: The result dict
+        @type result: Result
+        @param result: The result object
         @reeturns bool: A match flag
         """
         raise NotImplementedError("scan method should be overrided")
 
-    def cliCallback(self, result: dict):
+    def cliCallback(self, result: Result):
         """Get the formated message to be used on output
 
-        @type result: dict
-        @param result: The result dict
+        @type result: Result
+        @param result: The result object
         @returns str: The message
         """
         raise NotImplementedError("getMessage method should be overrided")

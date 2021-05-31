@@ -27,10 +27,10 @@ class PathScanner(BaseScanner):
             result._custom['redirected'] = response.headers['Location']
         return result
 
-    def scan(self, result: dict):
+    def scan(self, result: Result):
         return True
     
-    def cliCallback(self, result: dict):
+    def cliCallback(self, result: Result):
         status = result.status
         statusColor = ''
         if status in [200, 201, 204]:
