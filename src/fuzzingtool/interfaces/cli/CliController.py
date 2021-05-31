@@ -30,6 +30,10 @@ import time
 import threading
 
 def banner():
+    """Gets the program banner
+
+    @returns str: The program banner
+    """
     banner = ("\033[36m   ____                        _____       _\n"+
               "\033[36m  |  __|_ _ ___ ___ _ ___ ___ |_   _|_ ___| |"+f"\033[0m Version {version()}\n"+
               "\033[36m  |  __| | |- _|- _|'|   | . |  | | . | . | |\n"+
@@ -222,7 +226,7 @@ class CliController:
 
     def prepareFuzzer(self):
         """Prepare the fuzzer for the fuzzing tests.
-           Refill the dictionary with the wordlist content
+           Refill the dictionary with the wordlist content if a global dictionary was given
         """
         if not self.globalDictionary:
             self.dictionary = self.dictionaries.get()

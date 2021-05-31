@@ -216,6 +216,12 @@ class CliArgumentParser:
             self.blacklistedStatus = status
 
     def __getOptions(self, parser: argparse.ArgumentParser):
+        """Builds and get the FuzzingTool arguments
+
+        @type parser: ArgumentParser
+        @param parser: The argument parser object
+        @returns Namespace(...args): The parsed arguments
+        """
         self.__buildRequestOpts(parser)
         self.__buildDictionaryOpts(parser)
         self.__buildMatchOpts(parser)
@@ -223,6 +229,11 @@ class CliArgumentParser:
         return parser.parse_args()
     
     def __buildRequestOpts(self, parser: argparse.ArgumentParser):
+        """Builds the arguments for request options
+
+        @type parser: ArgumentParser
+        @param parser: The argument parser object
+        """
         requestOpts = parser.add_argument_group('Request options')
         requestOpts.add_argument('-u',
             action='append',
@@ -289,6 +300,11 @@ class CliArgumentParser:
         )
     
     def __buildDictionaryOpts(self, parser: argparse.ArgumentParser):
+        """Builds the arguments for dictionary options
+
+        @type parser: ArgumentParser
+        @param parser: The argument parser object
+        """
         dictionaryOpts = parser.add_argument_group('Dictionary options')
         dictionaryOpts.add_argument('-w',
             action='append',
@@ -335,6 +351,11 @@ class CliArgumentParser:
         )
 
     def __buildMatchOpts(self, parser: argparse.ArgumentParser):
+        """Builds the arguments for match options
+
+        @type parser: ArgumentParser
+        @param parser: The argument parser object
+        """
         matchOpts = parser.add_argument_group('Match options')
         matchOpts.add_argument('-Mc',
             action='store',
@@ -364,6 +385,11 @@ class CliArgumentParser:
         )
 
     def __buildMoreOpts(self, parser: argparse.ArgumentParser):
+        """Builds the arguments for non categorized options
+
+        @type parser: ArgumentParser
+        @param parser: The argument parser object
+        """
         moreOpts = parser.add_argument_group('More options')
         moreOpts.add_argument('-V', '-V1',
             action='store_true',
