@@ -508,7 +508,7 @@ class CliController:
                     co.warningBox(str(e))
             if not buildedWordlist:
                 raise Exception("The wordlist is empty")
-            dictionary = Dictionary(buildedWordlist)
+            dictionary = Dictionary(set(buildedWordlist))
             co.infoBox(f"Dictionary is done, loaded {len(dictionary)} payloads")
             dictionary.setPrefix(parser.prefix)
             dictionary.setSuffix(parser.suffix)

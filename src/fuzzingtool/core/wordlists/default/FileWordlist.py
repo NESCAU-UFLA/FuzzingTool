@@ -23,6 +23,6 @@ class FileWordlist(BaseWordlist):
 
     def _build(self):
         try:
-            return set(fh.read(self.filePath))
+            return fh.read(self.filePath)
         except Exception as e:
             raise e
