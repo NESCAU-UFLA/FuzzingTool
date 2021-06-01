@@ -36,7 +36,7 @@ class SubdomainRequest(Request):
         try:
             return socket.gethostbyname(hostname)
         except:
-            self._requestIndex += 1
+            self.index += 1
             raise InvalidHostname(f"Can't resolve hostname {hostname}")
 
     def request(self, payload: str):

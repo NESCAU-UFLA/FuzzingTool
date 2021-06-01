@@ -85,7 +85,7 @@ class Request:
             self.__request = self.__sessionRequest
         else:
             self.__request = self.__commonRequest
-        self._requestIndex = 0
+        self.index = 0
         self.methods = methods
         if cookie:
             self.setHeaderContent('Cookie', cookie)
@@ -145,7 +145,7 @@ class Request:
 
         @returns int: The request index
         """
-        return self._requestIndex
+        return self.index
 
     def setMethod(self, method: str):
         """The request method setter
@@ -173,7 +173,7 @@ class Request:
 
     def resetRequestIndex(self):
         """Resets the request index"""
-        self._requestIndex = 0
+        self.index = 0
 
     def testConnection(self):
         """Test the connection with the target, and raise an exception if couldn't connect"""
@@ -252,7 +252,7 @@ class Request:
         else:
             return (response, RTT)
         finally:
-            self._requestIndex += 1
+            self.index += 1
 
     def __setupUrl(self, url: str):
         """The URL setup

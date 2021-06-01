@@ -297,14 +297,16 @@ class CliController:
         co.infoBox(f"Making first request with '{payload}' as payload ...")
         try:
             # Make the first request to get some info about the target
-            firstResult = self.scanner.getResult(
-                response=self.requester.request(payload)
-            )
+            response, RTT, *_ = self.requester.request(payload)
         except RequestException as e:
             raise SkipTargetException(f"{str(e)}")
+        firstResult = self.scanner.getResult(
+            response, self.requester.index,
+            payload, RTT,
+        )
         co.printResult(firstResult, False)
         length = None
-        defaultLength = int(firstResult['Length'])+300
+        defaultLength = int(firstResult.length)+300
         if co.askYesNo('info', "Do you want to exclude responses based on custom length?"):
             length = co.askData(f"Insert the length (default {defaultLength})")
             if not length:
@@ -314,7 +316,7 @@ class CliController:
             except ValueError:
                 co.errorBox(f"The length ({length}) must be an integer")
         time = None
-        defaultTime = firstResult['Time Taken']+5.0
+        defaultTime = firstResult.RTT+5.0
         if co.askYesNo('info', "Do you want to exclude responses based on custom time?"):
             time = co.askData(f"Insert the time (in seconds, default {defaultTime} seconds)")
             if not time:
@@ -413,7 +415,7 @@ class CliController:
         if self.ignoreErrors:
             if not self.verbose[0]:
                 co.progressStatus(
-                    self.requester.getRequestIndex(), self.totalRequests
+                    self.requester.index, self.totalRequests
                 )
             else:
                 if self.verbose[1]:
@@ -434,7 +436,7 @@ class CliController:
                 co.notWorkedBox(str(e))
         else:
             co.progressStatus(
-                self.requester.getRequestIndex(), self.totalRequests
+                self.requester.index, self.totalRequests
             )
 
     def __initRequesters(self, parser: CliArgumentParser):

@@ -105,7 +105,7 @@ class Fuzzer:
                 try:
                     response, RTT, *args = self.__requester.request(payload)
                     result = self.__scanner.getResult(
-                        response, self.__requester.getRequestIndex(),
+                        response, self.__requester.index,
                         payload, RTT, *args
                     )
                     self.resultsCallback(
