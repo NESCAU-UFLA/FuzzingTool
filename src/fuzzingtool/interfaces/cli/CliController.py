@@ -276,15 +276,14 @@ class CliController:
         @type host: str
         @param host: The target hostname
         """
-        fh.logger.close()
         if self.requester.isUrlFuzzing():
             self.ignoreErrors = True
-            logPath = fh.logger.open(host)
+            logPath = fh.logger.setup(host)
             co.infoBox(f'The logs will be saved on \'{logPath}\'')
         else:
             if co.askYesNo('info', "Do you want to ignore errors on this target, and save them into a log file?"):
                 self.ignoreErrors = True
-                logPath = fh.logger.open(host)
+                logPath = fh.logger.setup(host)
                 co.infoBox(f'The logs will be saved on \'{logPath}\'')
             else:
                 self.ignoreErrors = False
@@ -400,11 +399,16 @@ class CliController:
                     result.index, self.totalRequests
                 )
     
-    def _requestExceptionCallback(self, e: RequestException):
+    def _requestExceptionCallback(self,
+        e: RequestException,
+        payload: str
+    ):
         """Callback that handle with the request exceptions
         
         @type e: RequestException
         @param e: The request exception
+        @type payload: str
+        @param payload: The payload used in the request
         """
         if self.ignoreErrors:
             if not self.verbose[0]:
@@ -415,7 +419,7 @@ class CliController:
                 if self.verbose[1]:
                     co.notWorkedBox(str(e))
             with self.lock:
-                fh.logger.write(str(e))
+                fh.logger.write(str(e), payload)
         else:
             self.skipTarget = str(e)
 

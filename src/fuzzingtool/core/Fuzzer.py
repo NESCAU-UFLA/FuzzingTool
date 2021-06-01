@@ -115,7 +115,7 @@ class Fuzzer:
                 except InvalidHostname as e:
                     self.exceptionCallbacks[0](e)
                 except RequestException as e:
-                    self.exceptionCallbacks[1](e)
+                    self.exceptionCallbacks[1](e, payload)
                 finally:
                     time.sleep(self.__delay)
             if self.isPaused():

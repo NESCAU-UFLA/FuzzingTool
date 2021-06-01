@@ -20,44 +20,38 @@ from pathlib import Path
 OUTPUT_DIRECTORY = f'{Path.home()}/.FuzzingTool'
 
 class Logger:
-    def __init__(self):
-        self.__file = None
-
-    def __del__(self):
-        self.close()
-
-    def open(self, host: str):
-        """Open the log file to save the current logs
+    def setup(self, host: str):
+        """Setup the log path to save the current logs
         
         @type host: str
         @param host: The target hostname
         @returns str: The log path and name
         """
-        now = datetime.now()
-        logFileName = f'log-{now.strftime("%Y-%m-%d_%H:%M")}.log'
+        dateNow = datetime.now()
+        logFileName = f"log-{dateNow.strftime('%Y-%m-%d_%H:%M')}.log"
         logDir = f'{OUTPUT_DIRECTORY}/{host}/logs'
-        logFullPath = f'{logDir}/{logFileName}'
+        self.__logFullPath = f'{logDir}/{logFileName}'
         try:
-            self.__file = open(logFullPath, 'w')
+            logFile = open(self.__logFullPath, 'w+')
         except FileNotFoundError:
             Path(logDir).mkdir(parents=True, exist_ok=True)
-            self.__file = open(logFullPath, 'w')
-        return logFullPath
+            logFile = open(self.__logFullPath, 'w+')
+        logFile.write(f"Log for {host} on {dateNow.strftime('%Y/%m/%d %H:%M')}\n\n")
+        logFile.close()
+        return self.__logFullPath
 
-    def write(self, exception: str):
+    def write(self, exception: str, payload: str):
         """Write the exception on the log file
 
         @type exception: str
         @param exception: The exception to be saved on the log file
+        @type payload: str
+        @param payload: The payload used in the request
         """
-        now = datetime.now()
-        time = now.strftime("%H:%M:%S")
-        self.__file.write(f'{time} | {exception}\n')
-    
-    def close(self):
-        """Closes the log file if it's open"""
-        if self.__file:
-            self.__file.close()
+        time = datetime.now().strftime("%H:%M:%S")
+        logFile = open(self.__logFullPath, 'a')
+        logFile.write(f'{time} | {exception} using payload: {payload}\n')
+        logFile.close()
 
 class Reporter:
     def __init__(self):
@@ -68,7 +62,7 @@ class Reporter:
         self.__file = None
     
     def setMetadata(self, report: str):
-        """The report setter
+        """The report metadata setter
 
         @type report: str
         @param report: The report format and name
@@ -87,8 +81,7 @@ class Reporter:
         }
     
     def open(self, host: str):
-        """Opens the report file 
-           for store the probably vulnerable response data
+        """Opens the report file to store the FuzzingTool matcher results
         
         @type host: str
         @param host: The target hostname
@@ -112,7 +105,7 @@ class Reporter:
         """Write the vulnerable input and response content into a report
         
         @type results: list
-        @param results: The list with probably vulnerable content
+        @param results: The list with the FuzzingTool matched results
         """
         if self.__metadata['Type'] == 'txt':
             self.__txtWriter(results)
@@ -126,7 +119,7 @@ class Reporter:
         """The txt report writer
 
         @type results: list
-        @param results: The list with probably vulnerable content
+        @param results: The list with the FuzzingTool matched results
         """
         for content in results:
             for key, value in content:
@@ -137,7 +130,7 @@ class Reporter:
         """The csv report writer
 
         @type results: list
-        @param results: The list with probably vulnerable content
+        @param results: The list with the FuzzingTool matched results
         """
         writer = csv.DictWriter(
             self.__file,
@@ -151,7 +144,7 @@ class Reporter:
         """The json report writer
 
         @type results: list
-        @param results: The list with probably vulnerable content
+        @param results: The list with the FuzzingTool matched results
         """
         json.dump([dict(result) for result in results], self.__file)
 
@@ -191,6 +184,6 @@ class FileHandler:
             with open(f'{fileName}', 'r') as thisFile:
                 return [line.rstrip('\n') for line in thisFile if not line.startswith('#!')]
         except FileNotFoundError:
-            raise Exception(f"File '{fileName}' not found.")
+            raise Exception(f"File '{fileName}' not found")
 
 fileHandler = FileHandler.getInstance()
