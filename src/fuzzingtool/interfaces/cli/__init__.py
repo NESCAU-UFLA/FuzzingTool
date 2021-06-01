@@ -12,4 +12,4 @@
 
 from .CliArgumentParser import CliArgumentParser
 from .CliController import CliController
-from .CliOutput import cliOutput, CliOutput, Colors
+from .CliOutput import CliOutput, Colors

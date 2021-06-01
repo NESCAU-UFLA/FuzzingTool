@@ -10,7 +10,7 @@
 #
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
-from .CliOutput import cliOutput as co
+from .CliOutput import CliOutput as CO
 from ..ArgumentBuilder import ArgumentBuilder as AB
 from ... import version
 from ...utils.utils import getIndexesToParse, getPluginNamesFromCategory, splitStrToList
@@ -51,38 +51,38 @@ def showCustomPackageHelp(category: str):
             params = ''
         else:
             params = f"={Plugin.__params__}"
-        co.helpContent(5, f"{Plugin.__name__}{params}", f"{Plugin.__desc__}{typeFuzzing}\n")
+        CO.helpContent(5, f"{Plugin.__name__}{params}", f"{Plugin.__desc__}{typeFuzzing}\n")
 
 def showWordlistsHelp():
-    co.helpTitle(0, "Wordlist options: (-w)")
-    co.helpTitle(2, "Default: The default dictionaries are selected by default when no custom are choiced\n")
-    co.helpContent(5, "FILEPATH", "Set the path of the wordlist file")
-    co.helpContent(5, "[PAYLOAD1,PAYLOAD2,]", "Set the payloads list to be used as wordlist")
-    co.helpTitle(2, "Custom (Wordlist=PARAM): Set the custom dictionary and his parameter\n")
+    CO.helpTitle(0, "Wordlist options: (-w)")
+    CO.helpTitle(2, "Default: The default dictionaries are selected by default when no custom are choiced\n")
+    CO.helpContent(5, "FILEPATH", "Set the path of the wordlist file")
+    CO.helpContent(5, "[PAYLOAD1,PAYLOAD2,]", "Set the payloads list to be used as wordlist")
+    CO.helpTitle(2, "Custom (Wordlist=PARAM): Set the custom dictionary and his parameter\n")
     showCustomPackageHelp('wordlists')
-    co.helpTitle(0, "Examples:\n")
-    co.print("FuzzingTool -u https://$.domainexample.com/ -w /path/to/wordlist/subdomains.txt -t 30 --timeout 5 -V2\n")
-    co.print("FuzzingTool -u https://$.domainexample.com/ -w [wp-admin,admin,webmail,www,cpanel] -t 30 --timeout 5 -V2\n")
-    co.print("FuzzingTool -u https://$.domainexample.com/ -w CrtSh=domainexample.com -t 30 --timeout 5 -V2\n")
-    co.print("FuzzingTool -u https://domainexample.com/$ -w Overflow=5000,:../:etc/passwd -t 30 --timeout 5 -V2\n")
+    CO.helpTitle(0, "Examples:\n")
+    CO.print("FuzzingTool -u https://$.domainexample.com/ -w /path/to/wordlist/subdomains.txt -t 30 --timeout 5 -V2\n")
+    CO.print("FuzzingTool -u https://$.domainexample.com/ -w [wp-admin,admin,webmail,www,cpanel] -t 30 --timeout 5 -V2\n")
+    CO.print("FuzzingTool -u https://$.domainexample.com/ -w CrtSh=domainexample.com -t 30 --timeout 5 -V2\n")
+    CO.print("FuzzingTool -u https://domainexample.com/$ -w Overflow=5000,:../:etc/passwd -t 30 --timeout 5 -V2\n")
 
 def showEncodersHelp():
-    co.helpTitle(0, "Encoder options: (-e)")
-    co.helpTitle(2, "Set the encoder used on the payloads\n")
+    CO.helpTitle(0, "Encoder options: (-e)")
+    CO.helpTitle(2, "Set the encoder used on the payloads\n")
     showCustomPackageHelp('encoders')
-    co.helpTitle(0, "Examples:\n")
-    co.print("FuzzingTool -u https://domainexample.com/page.php?id= -w /path/to/wordlist/sqli.txt -e Url=2 -t 30 --scanner Find=SQL\n")
+    CO.helpTitle(0, "Examples:\n")
+    CO.print("FuzzingTool -u https://domainexample.com/page.php?id= -w /path/to/wordlist/sqli.txt -e Url=2 -t 30 --scanner Find=SQL\n")
 
 def showScannersHelp():
-    co.helpTitle(0, "Scanner options:")
-    co.helpTitle(2, "Default: The default scanners are selected automatically during the tests, if a custom scanner wasn't gived\n")
-    co.helpContent(5, "DataScanner", "Scanner for the data fuzzing")
-    co.helpContent(5, "PathScanner", "Scanner for the path URL fuzzing")
-    co.helpContent(5, "SubdomainScanner", "Scanner for the subdomain URL fuzzing")
-    co.helpTitle(2, "Custom (--scaner SCANNER): Set the custom scanner\n")
+    CO.helpTitle(0, "Scanner options:")
+    CO.helpTitle(2, "Default: The default scanners are selected automatically during the tests, if a custom scanner wasn't gived\n")
+    CO.helpContent(5, "DataScanner", "Scanner for the data fuzzing")
+    CO.helpContent(5, "PathScanner", "Scanner for the path URL fuzzing")
+    CO.helpContent(5, "SubdomainScanner", "Scanner for the subdomain URL fuzzing")
+    CO.helpTitle(2, "Custom (--scaner SCANNER): Set the custom scanner\n")
     showCustomPackageHelp('scanners')
-    co.helpTitle(0, "Examples:\n")
-    co.print("FuzzingTool -u https://domainexample.com/search.php?query= -w /path/to/wordlist/xss.txt --scanner Reflected -t 30 -o csv\n")
+    CO.helpTitle(0, "Examples:\n")
+    CO.print("FuzzingTool -u https://domainexample.com/search.php?query= -w /path/to/wordlist/xss.txt --scanner Reflected -t 30 -o csv\n")
 
 class CliArgumentParser:
     """Class that handle with the sys argument parsing"""
@@ -91,14 +91,14 @@ class CliArgumentParser:
             raise Exception("Invalid format! Use -h on 2nd parameter to show the help menu.")
         if '-h=' in argv[1] or '--help=' in argv[1]:
             askedHelp = argv[1].split('=')[1]
-            if 'wordlists' in askedHelp:
+            if 'wordlists' == askedHelp:
                 showWordlistsHelp()
-            elif 'encoders' in askedHelp:
+            elif 'encoders' == askedHelp:
                 showEncodersHelp()
-            elif 'scanners' in askedHelp:
+            elif 'scanners' == askedHelp:
                 showScannersHelp()
             else:
-                raise Exception(f"Help argument '{askedHelp}' not available")
+                CO.print(f"Help argument '{askedHelp}' not available")
             exit(0)
         parser = argparse.ArgumentParser(
             usage=argparse.SUPPRESS,
@@ -167,7 +167,7 @@ class CliArgumentParser:
         matchStatus = self.options.matchStatus
         if matchStatus:
             if '200' not in matchStatus:
-                if co.askYesNo('warning', "Status code 200 (OK) wasn't included. Do you want to include it to the allowed status codes?"):
+                if CO.askYesNo('warning', "Status code 200 (OK) wasn't included. Do you want to include it to the allowed status codes?"):
                     matchStatus += ",200"
         self.matchStatus = matchStatus
         self.matchLength = self.options.matchLength
@@ -180,7 +180,7 @@ class CliArgumentParser:
                     scanner, 'scanners', param
                 )
             except Exception as e:
-                co.errorBox(str(e))
+                CO.errorBox(str(e))
         self.scanner = scanner
 
     def setGeneralArguments(self):

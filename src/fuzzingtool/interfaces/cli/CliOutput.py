@@ -76,17 +76,7 @@ class Colors:
 
 class CliOutput:
     """Class that handle with the outputs
-       Singleton Class
-    """
-    __instance = None
-
-    @staticmethod
-    def getInstance():
-        if CliOutput.__instance == None:
-            CliOutput()
-        return CliOutput.__instance
-
-    """
+    
     Attributes:
         lock: The threads locker
         breakLine: A string to break line
@@ -98,11 +88,45 @@ class CliOutput:
         worked: The worked label
         notWorked: The not worked label
     """
-    def __init__(self):
-        if CliOutput.__instance != None:
-            raise Exception("This class is a singleton!")
+    @staticmethod
+    def print(msg: str):
+        """Print the message
+
+        @type msg: str
+        @param msg: The message
+        """
+        print(msg)
+
+    @staticmethod
+    def helpTitle(numSpaces: int, title: str):
+        """Output the help title
+
+        @type numSpaces: int
+        @param numSpaces: The number of spaces before the title
+        @type title: str
+        @param title: The title or subtitle
+        """
+        print("\n"+' '*numSpaces+title)
+
+    @staticmethod
+    def helpContent(numSpaces: int, command: str, desc: str):
+        """Output the help content
+
+        @type numSpaces: int
+        @param numSpaces: The number of spaces before the content
+        @type command: str
+        @param command: The command to be used in the execution argument
+        @type desc: str
+        @param desc: The description of the command
+        """
+        maxCommandSizeWithSpace = 27
+        if (len(command)+numSpaces) <= maxCommandSizeWithSpace:
+            print(' '*numSpaces+("{:<"+str(maxCommandSizeWithSpace-numSpaces)+"}").format(command)+' '+desc)
         else:
-            CliOutput.__instance = self
+            print(' '*numSpaces+("{:<"+str(maxCommandSizeWithSpace-numSpaces)+"}").format(command))
+            print(' '*(maxCommandSizeWithSpace)+' '+desc)
+
+    def __init__(self):
         self.__lock = None
         self.__breakLine = ''
         self.__lastInline = False
@@ -254,41 +278,6 @@ class CliOutput:
                     sys.stdout.flush()
             self.workedBox(msg)
 
-    def helpTitle(self, numSpaces: int, title: str):
-        """Output the help title
-
-        @type numSpaces: int
-        @param numSpaces: The number of spaces before the title
-        @type title: str
-        @param title: The title or subtitle
-        """
-        print("\n"+' '*numSpaces+title)
-
-    def helpContent(self, numSpaces: int, command: str, desc: str):
-        """Output the help content
-
-        @type numSpaces: int
-        @param numSpaces: The number of spaces before the content
-        @type command: str
-        @param command: The command to be used in the execution argument
-        @type desc: str
-        @param desc: The description of the command
-        """
-        maxCommandSizeWithSpace = 27
-        if (len(command)+numSpaces) <= maxCommandSizeWithSpace:
-            print(' '*numSpaces+("{:<"+str(maxCommandSizeWithSpace-numSpaces)+"}").format(command)+' '+desc)
-        else:
-            print(' '*numSpaces+("{:<"+str(maxCommandSizeWithSpace-numSpaces)+"}").format(command))
-            print(' '*(maxCommandSizeWithSpace)+' '+desc)
-    
-    def print(self, msg: str):
-        """Print the message
-
-        @type msg: str
-        @param msg: The message
-        """
-        print(msg)
-
     def __getTime(self):
         """Get a time label
 
@@ -357,5 +346,3 @@ class CliOutput:
         sys.stdout.write("\033[1K")
         sys.stdout.write("\033[0G")
         sys.stdout.flush()
-
-cliOutput = None

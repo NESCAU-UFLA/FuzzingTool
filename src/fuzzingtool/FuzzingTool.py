@@ -18,4 +18,4 @@ def main_cli():
     parser = CliArgumentParser()
     if parser.disableColors:
         Colors.disable()
-    CliController().main(parser, CliOutput.getInstance())
+    CliController().main(parser)

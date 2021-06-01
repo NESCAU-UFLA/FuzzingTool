@@ -11,7 +11,7 @@
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
 from .CliArgumentParser import *
-from .CliOutput import cliOutput as co, CliOutput, Colors
+from .CliOutput import CliOutput, Colors
 from ..ArgumentBuilder import ArgumentBuilder as AB
 from ... import version
 from ...utils.FileHandler import fileHandler as fh
@@ -65,23 +65,21 @@ class CliController:
         """
         return self.verbose[0]
 
-    def main(self, parser: CliArgumentParser, output: CliOutput):
+    def main(self, parser: CliArgumentParser):
         """The main function.
            Prepares the application environment and starts the fuzzing
         
         @type parser: CliArgumentParser
         @param parser: The command line interface arguments object
         """
-        global co
-        co = output
         try:
             self.init(parser)
             self.checkConnectionAndRedirections()
         except KeyboardInterrupt:
-            co.abortBox("Test aborted by the user")
+            self.co.abortBox("Test aborted by the user")
             exit(0)
         except Exception as e:
-            co.errorBox(str(e))
+            self.co.errorBox(str(e))
         self.start()
 
     def init(self, parser: CliArgumentParser):
@@ -91,7 +89,8 @@ class CliController:
         @type parser: CliArgumentParser
         @param parser: The command line interface arguments object
         """
-        co.print(banner())
+        self.co = CliOutput() # Abbreviation to cli output
+        CliOutput.print(banner())
         self.__initRequesters(parser)
         self.globalScanner = parser.scanner
         self.globalMatcher = Matcher.fromString(
@@ -100,7 +99,7 @@ class CliController:
             parser.matchTime
         )
         self.verbose = parser.verbose
-        co.setVerbosityOutput(self.isVerboseMode())
+        self.co.setVerbosityOutput(self.isVerboseMode())
         if parser.blacklistedStatus:
             blacklistedStatus = parser.blacklistedStatus
             action = parser.blacklistAction
@@ -113,12 +112,12 @@ class CliController:
                     'wait': self._waitCallback,
                 },
             )
-            co.infoBox(f"Blacklisted status codes: {blacklistedStatus} with action {action}")
+            self.co.infoBox(f"Blacklisted status codes: {blacklistedStatus} with action {action}")
         self.delay = parser.delay
         self.numberOfThreads = parser.numberOfThreads
         if self.globalScanner:
             self.localScanner = self.globalScanner
-            co.setMessageCallback(self.localScanner.cliCallback)
+            self.co.setMessageCallback(self.localScanner.cliCallback)
         self.__initDictionary(parser)
 
     def checkConnectionAndRedirections(self):
@@ -126,16 +125,16 @@ class CliController:
            If data fuzzing is detected, check for redirections
         """
         for requester in self.requesters:
-            co.infoBox(f"Validating {requester.getUrl()} ...")
-            co.infoBox("Testing connection ...")
+            self.co.infoBox(f"Validating {requester.getUrl()} ...")
+            self.co.infoBox("Testing connection ...")
             try:
                 requester.testConnection()
             except RequestException as e:
-                if not co.askYesNo('warning', f"{str(e)}. Continue anyway?"):
-                    co.infoBox(f"Target removed from list.")
+                if not self.co.askYesNo('warning', f"{str(e)}. Continue anyway?"):
+                    self.co.infoBox(f"Target removed from list.")
                     self.requesters.remove(requester)
             else:
-                co.infoBox("Connection status: OK")
+                self.co.infoBox("Connection status: OK")
                 if requester.isDataFuzzing():
                     self.checkRedirections(requester)
         if len(self.requesters) == 0:
@@ -148,22 +147,22 @@ class CliController:
         @type requester: Request
         @param requester: The requester for the target
         """
-        co.infoBox("Testing redirections ...")
+        self.co.infoBox("Testing redirections ...")
         for method in requester.methods:
             requester.setMethod(method)
-            co.infoBox(f"Testing with {method} method ...")
+            self.co.infoBox(f"Testing with {method} method ...")
             try:
                 if requester.hasRedirection():
-                    if co.askYesNo('warning', "You was redirected to another page. Remove this method?"):
+                    if self.co.askYesNo('warning', "You was redirected to another page. Remove this method?"):
                         requester.methods.remove(method)
-                        co.infoBox(f"Method {method} removed from list")
+                        self.co.infoBox(f"Method {method} removed from list")
                 else:
-                    co.infoBox("No redirections")
+                    self.co.infoBox("No redirections")
             except RequestException as e:
-                co.warningBox(f"{str(e)}. Removing method {method}")
+                self.co.warningBox(f"{str(e)}. Removing method {method}")
         if len(requester.methods) == 0:
             self.requesters.remove(requester)
-            co.warningBox("No methods left on this target, removed from targets list")
+            self.co.warningBox("No methods left on this target, removed from targets list")
 
     def start(self):
         """Starts the fuzzing application.
@@ -175,29 +174,29 @@ class CliController:
             for requester in self.requesters:
                 try:
                     self.prepareTarget(requester)
-                    co.infoBox(f"Starting test on '{self.requester.getUrl()}' ...")
+                    self.co.infoBox(f"Starting test on '{self.requester.getUrl()}' ...")
                     for method in self.requester.methods:
                         self.requester.resetRequestIndex()
                         self.requester.setMethod(method)
-                        co.infoBox(f"Set method for fuzzing: {method}")
+                        self.co.infoBox(f"Set method for fuzzing: {method}")
                         self.prepareFuzzer()
                         if not self.isVerboseMode():
-                            co.print("")
+                            CliOutput.print("")
                 except SkipTargetException as e:
                     if self.fuzzer and self.fuzzer.isRunning():
                         if not self.isVerboseMode():
-                            co.print("")
-                        co.warningBox("Skip target detected, stopping threads ...")
+                            CliOutput.print("")
+                        self.co.warningBox("Skip target detected, stopping threads ...")
                         self.fuzzer.stop()
-                    co.abortBox(f"{str(e)}. Target skipped")
+                    self.co.abortBox(f"{str(e)}. Target skipped")
         except KeyboardInterrupt:
             if self.fuzzer and self.fuzzer.isRunning():
-                co.abortBox("Test aborted, stopping threads ...")
+                self.co.abortBox("Test aborted, stopping threads ...")
                 self.fuzzer.stop()
-            co.abortBox("Test aborted by the user")
+            self.co.abortBox("Test aborted by the user")
         finally:
             self.showFooter()
-            co.infoBox("Test completed")
+            self.co.infoBox("Test completed")
 
     def prepareTarget(self, requester: Request):
         """Prepare the target variables for the fuzzing tests.
@@ -208,7 +207,7 @@ class CliController:
         """
         self.requester = requester
         targetHost = getHost(getPureUrl(requester.getUrlDict()))
-        co.infoBox(f"Preparing target {targetHost} ...")
+        self.co.infoBox(f"Preparing target {targetHost} ...")
         before = time.time()
         self.checkIgnoreErrors(targetHost)
         self.startedTime += (time.time() - before)
@@ -223,7 +222,7 @@ class CliController:
             self.localScanner = self.getDefaultScanner()
             if (self.requester.isDataFuzzing() and
                 not self.globalMatcher.comparatorIsSet()):
-                co.infoBox("DataFuzzing detected, checking for a data comparator ...")
+                self.co.infoBox("DataFuzzing detected, checking for a data comparator ...")
                 before = time.time()
                 self.localMatcher.setComparator(
                     self.getDataComparator()
@@ -273,7 +272,7 @@ class CliController:
         else:
             from ...core.scanners.default.DataScanner import DataScanner
             scanner = DataScanner()
-        co.setMessageCallback(scanner.cliCallback)
+        self.co.setMessageCallback(scanner.cliCallback)
         return scanner
 
     def checkIgnoreErrors(self, host: str):
@@ -286,12 +285,12 @@ class CliController:
         if self.requester.isUrlFuzzing():
             self.ignoreErrors = True
             logPath = fh.logger.setup(host)
-            co.infoBox(f'The logs will be saved on \'{logPath}\'')
+            self.co.infoBox(f'The logs will be saved on \'{logPath}\'')
         else:
-            if co.askYesNo('info', "Do you want to ignore errors on this target, and save them into a log file?"):
+            if self.co.askYesNo('info', "Do you want to ignore errors on this target, and save them into a log file?"):
                 self.ignoreErrors = True
                 logPath = fh.logger.setup(host)
-                co.infoBox(f'The logs will be saved on \'{logPath}\'')
+                self.co.infoBox(f'The logs will be saved on \'{logPath}\'')
             else:
                 self.ignoreErrors = False
 
@@ -301,34 +300,34 @@ class CliController:
         @returns dict: The data comparator dictionary for the Matcher object
         """
         payload = ' ' # Set an arbitraty payload
-        co.infoBox(f"Making first request with '{payload}' as payload ...")
+        self.co.infoBox(f"Making first request with '{payload}' as payload ...")
         try:
             # Make the first request to get some info about the target
             response, RTT, *_ = self.requester.request(payload)
         except RequestException as e:
             raise SkipTargetException(f"{str(e)}")
         firstResult = Result(response, RTT)
-        co.printResult(firstResult, False)
+        self.co.printResult(firstResult, False)
         length = None
         defaultLength = int(firstResult.length)+300
-        if co.askYesNo('info', "Do you want to exclude responses based on custom length?"):
-            length = co.askData(f"Insert the length (default {defaultLength})")
+        if self.co.askYesNo('info', "Do you want to exclude responses based on custom length?"):
+            length = self.co.askData(f"Insert the length (default {defaultLength})")
             if not length:
                 length = defaultLength
             try:
                 length = int(length)
             except ValueError:
-                co.errorBox(f"The length ({length}) must be an integer")
+                self.co.errorBox(f"The length ({length}) must be an integer")
         time = None
         defaultTime = firstResult.RTT+5.0
-        if co.askYesNo('info', "Do you want to exclude responses based on custom time?"):
-            time = co.askData(f"Insert the time (in seconds, default {defaultTime} seconds)")
+        if self.co.askYesNo('info', "Do you want to exclude responses based on custom time?"):
+            time = self.co.askData(f"Insert the time (in seconds, default {defaultTime} seconds)")
             if not time:
                 time = defaultTime
             try:
                 time = float(time)
             except ValueError:
-                co.errorBox(f"The time ({time}) must be a number")
+                self.co.errorBox(f"The time ({time}) must be a number")
         return Matcher.buildComparator(length, time)
 
     def showFooter(self):
@@ -337,7 +336,7 @@ class CliController:
         """
         if self.fuzzer:
             if self.startedTime:
-                co.infoBox(f"Time taken: {float('%.2f'%(time.time() - self.startedTime))} seconds")
+                self.co.infoBox(f"Time taken: {float('%.2f'%(time.time() - self.startedTime))} seconds")
             requesterIndex = 0
             for key, value in self.allResults.items():
                 if value:
@@ -345,15 +344,15 @@ class CliController:
                         if not self.globalScanner:
                             self.requester = self.requesters[requesterIndex]
                             self.getDefaultScanner()
-                        co.infoBox(f"Found {len(value)} matched results on target {key}:")
+                        self.co.infoBox(f"Found {len(value)} matched results on target {key}:")
                         for result in value:
-                            co.printResult(result, True)
+                            self.co.printResult(result, True)
                     reportPath = fh.reporter.open(key)
-                    co.infoBox(f'Saving results for {key} on \'{reportPath}\' ...')
+                    self.co.infoBox(f'Saving results for {key} on \'{reportPath}\' ...')
                     fh.reporter.write(value)
-                    co.infoBox('Results saved')
+                    self.co.infoBox('Results saved')
                 else:
-                    co.infoBox(f"No matched results was found on target {key}")
+                    self.co.infoBox(f"No matched results was found on target {key}")
                 requesterIndex += 1
 
     def _skipCallback(self, status: int):
@@ -372,14 +371,14 @@ class CliController:
         """
         if not self.fuzzer.isPaused():
             if not self.isVerboseMode():
-                co.print("")
-            co.warningBox(f"Status code {str(status)} detected. Pausing threads ...")
+                CliOutput.print("")
+            self.co.warningBox(f"Status code {str(status)} detected. Pausing threads ...")
             self.fuzzer.pause()
             if not self.isVerboseMode():
-                co.print("")
-            co.infoBox(f"Waiting for {self.blacklistStatus.actionParam} seconds ...")
+                CliOutput.print("")
+            self.co.infoBox(f"Waiting for {self.blacklistStatus.actionParam} seconds ...")
             time.sleep(self.blacklistStatus.actionParam)
-            co.infoBox("Resuming target ...")
+            self.co.infoBox("Resuming target ...")
             self.fuzzer.resume()
 
     def _resultCallback(self, result: dict, validate: bool):
@@ -396,12 +395,12 @@ class CliController:
             if self.verbose[0]:
                 if validate:
                     self.results.append(result)
-                co.printResult(result, validate)
+                self.co.printResult(result, validate)
             else:
                 if validate:
                     self.results.append(result)
-                    co.printResult(result, validate)
-                co.progressStatus(
+                    self.co.printResult(result, validate)
+                self.co.progressStatus(
                     result.index, self.totalRequests
                 )
     
@@ -418,12 +417,12 @@ class CliController:
         """
         if self.ignoreErrors:
             if not self.verbose[0]:
-                co.progressStatus(
+                self.co.progressStatus(
                     self.requester.index, self.totalRequests
                 )
             else:
                 if self.verbose[1]:
-                    co.notWorkedBox(str(e))
+                    self.co.notWorkedBox(str(e))
             with self.lock:
                 fh.logger.write(str(e), payload)
         else:
@@ -437,9 +436,9 @@ class CliController:
         """
         if self.verbose[0]:
             if self.verbose[1]:
-                co.notWorkedBox(str(e))
+                self.co.notWorkedBox(str(e))
         else:
-            co.progressStatus(
+            self.co.progressStatus(
                 self.requester.index, self.totalRequests
             )
 
@@ -461,10 +460,10 @@ class CliController:
         if not targets:
             raise Exception("A target is needed to make the fuzzing")
         for target in targets:
-            co.infoBox(f"Set target URL: {target['url']}")
-            co.infoBox(f"Set request method: {target['methods']}")
+            self.co.infoBox(f"Set target URL: {target['url']}")
+            self.co.infoBox(f"Set request method: {target['methods']}")
             if target['data']:
-                co.infoBox(f"Set request data: {target['data']}")
+                self.co.infoBox(f"Set request data: {target['data']}")
             if checkForSubdomainFuzz(target['url']):
                 requestType = 'SubdomainRequest'
             else:
@@ -501,15 +500,15 @@ class CliController:
             buildedWordlist = []
             for wordlist in wordlists:
                 name, params = wordlist
-                co.infoBox(f"Building dictionary from {name} wordlist ...")
+                self.co.infoBox(f"Building dictionary from {name} wordlist ...")
                 try:
                     buildedWordlist.extend(WordlistFactory.creator(name, params, requester))
                 except Exception as e:
-                    co.warningBox(str(e))
+                    self.co.warningBox(str(e))
             if not buildedWordlist:
                 raise Exception("The wordlist is empty")
             dictionary = Dictionary(set(buildedWordlist))
-            co.infoBox(f"Dictionary is done, loaded {len(dictionary)} payloads")
+            self.co.infoBox(f"Dictionary is done, loaded {len(dictionary)} payloads")
             dictionary.setPrefix(parser.prefix)
             dictionary.setSuffix(parser.suffix)
             if parser.lowercase:
