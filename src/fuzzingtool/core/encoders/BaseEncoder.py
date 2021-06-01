@@ -10,7 +10,9 @@
 #
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
-class BaseEncoder():
+from abc import ABC, abstractmethod
+
+class BaseEncoder(ABC):
     """Base encoder
     
     Attributes:
@@ -19,18 +21,20 @@ class BaseEncoder():
     def __init__(self):
         self.charset = 'utf-8'
 
+    @abstractmethod
     def encode(self, payload: str):
         """Encode a payload into an specific encoding type
 
         @type payload: str
         @param payload: The payload used in the request
         """
-        raise NotImplementedError("encode method should be overrided")
+        pass
     
+    @abstractmethod
     def decode(self, payload: str):
         """Decode a payload for the original version
 
         @type payload: str
         @param payload: The payload used in the request
         """
-        raise NotImplementedError("decode method should be overrided")
+        pass

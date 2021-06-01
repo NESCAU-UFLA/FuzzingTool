@@ -12,19 +12,20 @@
 
 from ..Result import Result
 
-class BaseScanner():
-    """Base scanner"""
-    def __init__(self):
-        super().__init__()
+from abc import ABC, abstractmethod
 
+class BaseScanner(ABC):
+    """Base scanner"""
+    @abstractmethod
     def inspectResult(self, result: Result, *args):
         """Inspects the FuzingTool result to add new information if needed
         
         @type result: Result
         @param result: The result object
         """
-        raise NotImplementedError("inspectResult method should be overrided")
+        pass
 
+    @abstractmethod
     def scan(self, result: Result):
         """Scan the FuzzingTool result
 
@@ -32,8 +33,9 @@ class BaseScanner():
         @param result: The result object
         @reeturns bool: A match flag
         """
-        raise NotImplementedError("scan method should be overrided")
+        pass
 
+    @abstractmethod
     def cliCallback(self, result: Result):
         """Get the formated message to be used on output
 
@@ -41,4 +43,4 @@ class BaseScanner():
         @param result: The result object
         @returns str: The message
         """
-        raise NotImplementedError("getMessage method should be overrided")
+        pass

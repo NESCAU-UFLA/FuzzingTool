@@ -10,7 +10,9 @@
 #
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
-class BaseWordlist:
+from abc import ABC, abstractmethod
+
+class BaseWordlist(ABC):
     """Base wordlist
 
     Attributes:
@@ -29,9 +31,10 @@ class BaseWordlist:
         """
         return self.__wordlist
 
+    @abstractmethod
     def _build(self):
         """The wordlist builder
         
         @returns list: The builded wordlist
         """
-        raise NotImplementedError("build wordlist method should be overrided")
+        pass
