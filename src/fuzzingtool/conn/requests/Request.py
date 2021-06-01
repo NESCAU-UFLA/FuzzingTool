@@ -373,6 +373,11 @@ class Request:
             dataDict[key] = ''
 
     def __setupProxy(self, proxy: str):
+        """Setup the proxy
+
+        @type proxy: str
+        @param proxy: The proxy used in the request
+        """
         return {
             'http': f"http://{proxy}",
             'https': f"https://{proxy}",
