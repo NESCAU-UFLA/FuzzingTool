@@ -16,7 +16,6 @@ from ... import version
 from ...utils.utils import getIndexesToParse, getPluginNamesFromCategory, splitStrToList
 from ...utils.FileHandler import fileHandler as fh
 from ...factories.PluginFactory import PluginFactory
-from ...core.scanners.Matcher import Matcher
 from ...exceptions.MainExceptions import InvalidPluginName
 
 from sys import argv

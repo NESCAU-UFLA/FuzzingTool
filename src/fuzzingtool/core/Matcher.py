@@ -10,8 +10,8 @@
 #
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
-from ..Result import Result
-from ...utils.utils import splitStrToList
+from .Result import Result
+from ..utils.utils import splitStrToList
 
 class Matcher:
     """A matcher validator

@@ -11,7 +11,6 @@
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
 from ..BaseScanner import BaseScanner
-from ..Matcher import Matcher
 from ...Result import Result
 from ....conn.RequestParser import getPath
 from ....interfaces.cli.CliOutput import Colors, getFormatedResult

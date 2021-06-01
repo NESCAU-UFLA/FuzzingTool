@@ -10,22 +10,12 @@
 #
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
-from .Matcher import Matcher
 from ..Result import Result
 
-class BaseScanner(Matcher):
+class BaseScanner():
     """Base scanner"""
     def __init__(self):
         super().__init__()
-
-    def updateMatcher(self, matcher: Matcher):
-        """Update the self matcher attributes based on another Matcher attributes
-
-        @type matcher: Matcher
-        @param matcher: The other matcher to copy the attributes
-        """
-        super().setAllowedStatus(matcher.getAllowedStatus())
-        super().setComparator(matcher.getComparator())
 
     def inspectResult(self, result: Result, *args):
         """Inspects the FuzingTool result to add new information if needed

@@ -13,5 +13,6 @@
 from .BlacklistStatus import BlacklistStatus
 from .Dictionary import Dictionary
 from .Fuzzer import Fuzzer
+from .Matcher import Matcher
 from .Payloader import Payloader
 from .Result import Result

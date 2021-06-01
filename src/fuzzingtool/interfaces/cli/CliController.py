@@ -87,7 +87,7 @@ class CliController:
         co.print(banner())
         self.__initRequesters(parser)
         self.globalScanner = parser.scanner
-        self.matcher = Matcher.fromString(
+        self.globalMatcher = Matcher.fromString(
             parser.matchStatus,
             parser.matchLength,
             parser.matchTime
@@ -110,9 +110,8 @@ class CliController:
         self.delay = parser.delay
         self.numberOfThreads = parser.numberOfThreads
         if self.globalScanner:
-            self.globalScanner.updateMatcher(self.matcher)
-            self.scanner = self.globalScanner
-            co.setMessageCallback(self.scanner.cliCallback)
+            self.localScanner = self.globalScanner
+            co.setMessageCallback(self.localScanner.cliCallback)
         self.__initDictionary(parser)
 
     def checkConnectionAndRedirections(self):
@@ -209,16 +208,19 @@ class CliController:
         self.results = []
         self.allResults[targetHost] = self.results
         self.skipTarget = None
+        self.localMatcher = Matcher(
+            allowedStatus=self.globalMatcher.getAllowedStatus(),
+            comparator=self.globalMatcher.getComparator()
+        )
         if not self.globalScanner:
-            self.scanner = self.getDefaultScanner()
+            self.localScanner = self.getDefaultScanner()
             if (self.requester.isDataFuzzing() and
-                not self.matcher.comparatorIsSet()):
+                not self.globalMatcher.comparatorIsSet()):
                 co.infoBox("DataFuzzing detected, checking for a data comparator ...")
                 before = time.time()
-                self.scanner.updateMatcher(Matcher(
-                    self.matcher.getAllowedStatus(),
+                self.localMatcher.setComparator(
                     self.getDataComparator()
-                ))
+                )
                 self.startedTime += (time.time() - before)
 
     def prepareFuzzer(self):
@@ -233,7 +235,8 @@ class CliController:
         self.fuzzer = Fuzzer(
             requester=self.requester,
             dictionary=self.dictionary,
-            scanner=self.scanner,
+            matcher=self.localMatcher,
+            scanner=self.localScanner,
             delay=self.delay,
             numberOfThreads=self.numberOfThreads,
             resultCallback=self._resultCallback,
@@ -256,17 +259,14 @@ class CliController:
             else:
                 from ...core.scanners.default.PathScanner import PathScanner
                 scanner = PathScanner()
+            if self.globalMatcher.allowedStatusIsDefault():
+                self.localMatcher.setAllowedStatus(
+                    Matcher.buildAllowedStatus("200-399,401,403")
+                )
         else:
             from ...core.scanners.default.DataScanner import DataScanner
             scanner = DataScanner()
-        scanner.updateMatcher(self.matcher)
         co.setMessageCallback(scanner.cliCallback)
-        if (self.requester.isUrlDiscovery() and
-            self.matcher.allowedStatusIsDefault()):
-            scanner.updateMatcher(Matcher(
-                Matcher.buildAllowedStatus("200-399,401,403"),
-                self.matcher.getComparator(),
-            ))
         return scanner
 
     def checkIgnoreErrors(self, host: str):

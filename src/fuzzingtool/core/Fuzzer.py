@@ -11,6 +11,7 @@
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
 from .Dictionary import Dictionary
+from .Matcher import Matcher
 from .Result import Result
 from .scanners import *
 from ..conn.requests import *
@@ -25,15 +26,17 @@ class Fuzzer:
     
     Attributes:
         requester: The requester object to deal with the requests
+        dict: The dictionary object to handle with the payloads
+        matcher: A matcher object, used to match the results
+        scanner: A scanner object, used to validate the results
         delay: The delay between each test
         numberOfThreads: The number of threads used in the application
-        scanner: A scanner object, used to validate the results
-        dict: The dictionary object to handle with the payloads
         running: A flag to say if the application is running or not
     """
     def __init__(self,
         requester: Request,
         dictionary: Dictionary,
+        matcher: Matcher,
         scanner: BaseScanner,
         delay: float,
         numberOfThreads: int,
@@ -46,6 +49,8 @@ class Fuzzer:
         @param requester: The requester object to deal with the requests
         @type dict: Dictionary
         @param dict: The dicttionary object to deal with the payload dictionary
+        @type matcher: Matcher
+        @param matcher: The matcher for the results
         @type scanner: BaseScanner
         @param scanner: The fuzzing results scanner
         @type delay: float
@@ -58,10 +63,11 @@ class Fuzzer:
         @param exceptionCallbacks: The list that handles with exception callbacks
         """
         self.__requester = requester
+        self.__dict = dictionary
+        self.__matcher = matcher
+        self.__scanner = scanner
         self.__delay = delay
         self.__numberOfThreads = numberOfThreads
-        self.__scanner = scanner
-        self.__dict = dictionary
         self.__running = True
         self.resultsCallback = resultCallback
         self.exceptionCallbacks = exceptionCallbacks
@@ -109,7 +115,7 @@ class Fuzzer:
                     self.__scanner.inspectResult(result, *args)
                     self.resultsCallback(
                         result,
-                        self.__scanner.scan(result) if self.__scanner.match(result) else False
+                        self.__scanner.scan(result) if self.__matcher.match(result) else False
                     )
                 except InvalidHostname as e:
                     self.exceptionCallbacks[0](e)

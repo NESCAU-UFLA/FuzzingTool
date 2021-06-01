@@ -10,6 +10,5 @@
 #
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
-from .Matcher import Matcher
 from .default import *
 from .custom import *
