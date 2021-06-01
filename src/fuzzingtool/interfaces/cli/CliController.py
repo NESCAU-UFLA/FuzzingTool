@@ -32,10 +32,10 @@ def banner():
     @returns str: The program banner
     """
     banner = (f"{Colors.BLUE_GRAY}   ____                        _____       _\n"+
-              f"{Colors.BLUE_GRAY}  |  __|_ _ ___ ___ _ ___ ___ |_   _|_ ___| |\033[0m Version {version()}\n"+
+              f"{Colors.BLUE_GRAY}  |  __|_ _ ___ ___ _ ___ ___ |_   _|_ ___| |{Colors.RESET} Version {version()}\n"+
               f"{Colors.BLUE_GRAY}  |  __| | |- _|- _|'|   | . |  | | . | . | |\n"+
               f"{Colors.BLUE_GRAY}  |_|  |___|___|___|_|_|_|_  |  |_|___|___|_|\n"+
-              f"{Colors.BLUE_GRAY}                         |___|\033[0m\n\n"+
+              f"{Colors.BLUE_GRAY}                         |___|{Colors.RESET}\n\n"+
               f"  [!] Disclaimer: We're not responsible for the misuse of this tool.\n"+
               f"      This project was created for educational purposes\n"+
               f"      and should not be used in environments without legal authorization.\n")
