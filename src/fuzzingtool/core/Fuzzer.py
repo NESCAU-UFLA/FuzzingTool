@@ -11,6 +11,7 @@
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
 from .Dictionary import Dictionary
+from .Result import Result
 from .scanners import *
 from ..conn.requests import *
 from ..exceptions.RequestExceptions import RequestException, InvalidHostname
@@ -104,10 +105,8 @@ class Fuzzer:
             for payload in payloads:
                 try:
                     response, RTT, *args = self.__requester.request(payload)
-                    result = self.__scanner.getResult(
-                        response, self.__requester.index,
-                        payload, RTT, *args
-                    )
+                    result = Result(response, RTT, self.__requester.index, payload)
+                    self.__scanner.inspectResult(result, *args)
                     self.resultsCallback(
                         result,
                         self.__scanner.scan(result) if self.__scanner.match(result) else False

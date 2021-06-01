@@ -300,10 +300,7 @@ class CliController:
             response, RTT, *_ = self.requester.request(payload)
         except RequestException as e:
             raise SkipTargetException(f"{str(e)}")
-        firstResult = self.scanner.getResult(
-            response, self.requester.index,
-            payload, RTT,
-        )
+        firstResult = Result(response, RTT)
         co.printResult(firstResult, False)
         length = None
         defaultLength = int(firstResult.length)+300

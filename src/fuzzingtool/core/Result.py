@@ -30,20 +30,20 @@ class Result:
     """
     def __init__(self,
         response: object,
-        requestIndex: int,
-        payload: str,
         RTT: float,
+        requestIndex: int = 0,
+        payload: str = '',
     ):
         """Class constructor
 
         @type response: Response
         @param response: The response given in the reuest
+        @type RTT: float
+        @param RTT: The elapsed time on both request and response
         @type requestIndex: int
         @param requestIndex: The index of the request
         @type payload: str
         @param payload: The payload used in the request
-        @type RTT: float
-        @param RTT: The elapsed time on both request and response
         """
         self.index = str(requestIndex)
         self.url = response.url

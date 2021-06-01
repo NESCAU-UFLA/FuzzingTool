@@ -19,10 +19,8 @@ class SubdomainScanner(BaseScanner):
     __name__ = "SubdomainScanner"
     __author__ = ("Vitor Oriel C N Borges")
 
-    def getResult(self, response: object, requestIndex: int, payload: str, RTT: float, *args):
-        result = super().getResult(response, requestIndex, payload, RTT)
+    def inspectResult(self, result: Result, *args):
         result._custom['ip'] = args[0]
-        return result
 
     def scan(self, result: Result):
         return True

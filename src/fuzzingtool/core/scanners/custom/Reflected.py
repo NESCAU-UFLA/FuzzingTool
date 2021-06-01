@@ -30,8 +30,8 @@ class Reflected(DataScanner):
         super().__init__()
         self.__reflected = {}
 
-    def getResult(self, response: object, requestIndex: int, payload: str, RTT: float, *args):
-        return super().getResult(response, requestIndex, payload, RTT)
+    def inspectResult(self, result: Result, *args):
+        super().inspectResult(result, *args)
 
     def scan(self, result: Result):
         reflected = result.payload in result._custom['Body']

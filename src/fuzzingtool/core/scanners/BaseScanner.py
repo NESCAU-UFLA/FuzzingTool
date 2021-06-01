@@ -27,23 +27,16 @@ class BaseScanner(Matcher):
         super().setAllowedStatus(matcher.getAllowedStatus())
         super().setComparator(matcher.getComparator())
 
-    def getResult(self, response: object, requestIndex: int, payload: str, RTT: float, *args):
-        """Get the FuzzingTool Result object
+    def inspectResult(self, result: Result, *args):
+        """Inspects the FuzingTool result to add new information if needed
         
-        @type response: Response
-        @param response: The response given in the reuest
-        @type requestIndex: int
-        @param requestIndex: The index of the request
-        @type payload: str
-        @param payload: The payload used in the request
-        @type RTT: float
-        @param RTT: The elapsed time on both request and response
-        @returns Result: The FuzzingTool Result object
+        @type result: Result
+        @param result: The result object
         """
-        return Result(response, requestIndex, payload, RTT)
+        raise NotImplementedError("inspectResult method should be overrided")
 
     def scan(self, result: Result):
-        """Scan the result
+        """Scan the FuzzingTool result
 
         @type result: Result
         @param result: The result object

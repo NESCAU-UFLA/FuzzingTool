@@ -40,8 +40,8 @@ class Find(DataScanner):
             raise BadArgumentFormat("invalid regex")
         self.__found = {}
 
-    def getResult(self, response: object, requestIndex: int, payload: str, RTT: float, *args):
-        return super().getResult(response, requestIndex, payload, RTT)
+    def inspectResult(self, result: Result, *args):
+        super().inspectResult(result, *args)
 
     def scan(self, result: Result):
         found = True if self.__regexer.search(result._custom['Body']) else False
