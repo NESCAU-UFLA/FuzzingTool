@@ -191,6 +191,7 @@ class CliArgumentParser:
             self.verbose = [True, True]
         else:
             self.verbose = [False, False]
+        self.disableColors = self.options.disableColors
         self.delay = self.options.delay
         self.numberOfThreads = self.options.numberOfThreads
         self.setBlacklistedStatus()
@@ -400,6 +401,12 @@ class CliArgumentParser:
             action='store_true',
             dest='detailedVerbose',
             help="Set the detailed verbose output mode",
+            default=False,
+        )
+        moreOpts.add_argument('--no-colors',
+            action='store_true',
+            dest='disableColors',
+            help="Disable the colors of the program",
             default=False,
         )
         moreOpts.add_argument('-t',

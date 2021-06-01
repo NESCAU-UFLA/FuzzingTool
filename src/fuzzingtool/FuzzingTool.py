@@ -12,7 +12,10 @@
 #
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
-from .interfaces.cli.CliController import CliController
+from .interfaces.cli import *
 
 def main_cli():
-    CliController().main()
+    parser = CliArgumentParser()
+    if parser.disableColors:
+        Colors.disable()
+    CliController().main(parser, CliOutput.getInstance())

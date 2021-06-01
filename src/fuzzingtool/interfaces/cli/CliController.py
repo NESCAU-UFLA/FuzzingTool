@@ -11,7 +11,7 @@
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
 from .CliArgumentParser import *
-from .CliOutput import cliOutput as co
+from .CliOutput import cliOutput as co, CliOutput, Colors
 from ..ArgumentBuilder import ArgumentBuilder as AB
 from ... import version
 from ...utils.FileHandler import fileHandler as fh
@@ -31,14 +31,14 @@ def banner():
 
     @returns str: The program banner
     """
-    banner = ("\033[36m   ____                        _____       _\n"+
-              "\033[36m  |  __|_ _ ___ ___ _ ___ ___ |_   _|_ ___| |"+f"\033[0m Version {version()}\n"+
-              "\033[36m  |  __| | |- _|- _|'|   | . |  | | . | . | |\n"+
-              "\033[36m  |_|  |___|___|___|_|_|_|_  |  |_|___|___|_|\n"+
-              "\033[36m                         |___|\033[0m\n\n"+
-              "  [!] Disclaimer: We're not responsible for the misuse of this tool.\n"+
-              "      This project was created for educational purposes\n"+
-              "      and should not be used in environments without legal authorization.\n")
+    banner = (f"{Colors.BLUE_GRAY}   ____                        _____       _\n"+
+              f"{Colors.BLUE_GRAY}  |  __|_ _ ___ ___ _ ___ ___ |_   _|_ ___| |\033[0m Version {version()}\n"+
+              f"{Colors.BLUE_GRAY}  |  __| | |- _|- _|'|   | . |  | | . | . | |\n"+
+              f"{Colors.BLUE_GRAY}  |_|  |___|___|___|_|_|_|_  |  |_|___|___|_|\n"+
+              f"{Colors.BLUE_GRAY}                         |___|\033[0m\n\n"+
+              f"  [!] Disclaimer: We're not responsible for the misuse of this tool.\n"+
+              f"      This project was created for educational purposes\n"+
+              f"      and should not be used in environments without legal authorization.\n")
     return banner
 
 class CliController:
@@ -65,12 +65,17 @@ class CliController:
         """
         return self.verbose[0]
 
-    def main(self):
+    def main(self, parser: CliArgumentParser, output: CliOutput):
         """The main function.
            Prepares the application environment and starts the fuzzing
+        
+        @type parser: CliArgumentParser
+        @param parser: The command line interface arguments object
         """
+        global co
+        co = output
         try:
-            self.init()
+            self.init(parser)
             self.checkConnectionAndRedirections()
         except KeyboardInterrupt:
             co.abortBox("Test aborted by the user")
@@ -79,11 +84,13 @@ class CliController:
             co.errorBox(str(e))
         self.start()
 
-    def init(self):
+    def init(self, parser: CliArgumentParser):
         """The initialization function.
            Set the application variables including plugins requires
+        
+        @type parser: CliArgumentParser
+        @param parser: The command line interface arguments object
         """
-        parser = CliArgumentParser()
         co.print(banner())
         self.__initRequesters(parser)
         self.globalScanner = parser.scanner

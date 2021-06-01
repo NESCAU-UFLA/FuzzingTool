@@ -70,6 +70,10 @@ class Colors:
     LIGHT_GREEN = '\u001b[38;5;48m'
     BOLD = '\033[1m'
 
+    @staticmethod
+    def disable():
+        Colors.RESET = Colors.GRAY = Colors.YELLOW = Colors.RED = Colors.GREEN = Colors.BLUE = Colors.BLUE_GRAY = Colors.CYAN = Colors.LIGHT_GRAY = Colors.LIGHT_YELLOW = Colors.LIGHT_RED = Colors.LIGHT_GREEN = Colors.BOLD = ''
+
 class CliOutput:
     """Class that handle with the outputs
        Singleton Class
@@ -354,4 +358,4 @@ class CliOutput:
         sys.stdout.write("\033[0G")
         sys.stdout.flush()
 
-cliOutput = CliOutput.getInstance()
+cliOutput = None
