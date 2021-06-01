@@ -29,11 +29,22 @@ class PathScanner(BaseScanner):
     
     def cliCallback(self, result: Result):
         status = result.status
-        statusColor = ''
-        if status in [200, 201, 204]:
-            statusColor = f'{Colors.BOLD}{Colors.GREEN}'
-        elif status > 300 and status < 400:
-            statusColor = f'{Colors.BOLD}{Colors.LIGHT_YELLOW}'
+        statusColor = Colors.BOLD
+        if status == 404:
+            statusColor = ''
+        elif status >= 200 and status < 300:
+            statusColor += Colors.GREEN
+        elif status >= 300 and status < 400:
+            statusColor += Colors.LIGHT_YELLOW
+        elif status >= 400 and status < 500:
+            if status == 401 or status == 403:
+                statusColor += Colors.CYAN
+            else:
+                statusColor += Colors.BLUE
+        elif status >= 500 and status < 600:
+            statusColor += Colors.RED
+        else:
+            statusColor = ''
         redirected = result._custom['redirected']
         if redirected:
             redirected = f" {Colors.LIGHT_YELLOW}Redirected to {redirected}{Colors.RESET}"

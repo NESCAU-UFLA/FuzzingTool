@@ -61,7 +61,9 @@ class Colors:
     YELLOW = '\033[33m'
     RED = '\u001b[31;1m'
     GREEN = '\u001b[32;1m'
+    BLUE = '\u001b[34m'
     BLUE_GRAY = '\033[36m'
+    CYAN = '\u001b[36m'
     LIGHT_GRAY = '\u001b[38;5;250m'
     LIGHT_YELLOW = '\u001b[33;1m'
     LIGHT_RED = "\033[91m"
