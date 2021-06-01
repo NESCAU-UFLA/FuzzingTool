@@ -10,7 +10,7 @@
 #
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
-from .BaseFactories import BaseDictFactory
+from .BaseFactories import BaseWordlistFactory
 from .PluginFactory import PluginFactory
 from ..conn.RequestParser import getHost, getPureUrl
 from ..conn.requests.Request import Request
@@ -18,7 +18,7 @@ from ..core.Dictionary import Dictionary
 from ..core.wordlists import *
 from ..exceptions.MainExceptions import InvalidPluginName, MissingParameter
 
-class DictFactory(BaseDictFactory):
+class WordlistFactory(BaseWordlistFactory):
     def creator(name: str, params: str, requester: Request):
         try:
             Wordlist = PluginFactory.classCreator(name, 'wordlists')
@@ -40,4 +40,4 @@ class DictFactory(BaseDictFactory):
                 raise Exception(f"Missing parameter: {str(e)}")
         if len(wordlist) == 0:
             raise Exception("The generated wordlist is empty")
-        return Dictionary(wordlist.get())
+        return wordlist.get()

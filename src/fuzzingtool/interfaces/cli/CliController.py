@@ -18,7 +18,7 @@ from ...utils.FileHandler import fileHandler as fh
 from ...core import *
 from ...conn import *
 from ...factories.HttpFactory import HttpFactory
-from ...factories.DictFactory import DictFactory
+from ...factories.WordlistFactory import WordlistFactory
 from ...exceptions.MainExceptions import SkipTargetException
 from ...exceptions.RequestExceptions import InvalidHostname, RequestException
 
@@ -482,22 +482,26 @@ class CliController:
         @type parser: CliArgumentParser
         @param parser: The command line interface arguments object
         """
-        def buildDictionary(name: str, params: str, requester: Request):
+        def buildDictionary(wordlists: list, requester: Request):
             """Build the dictionary
 
-            @type name: str
-            @param name: The dictionary name
-            @type params: str
-            @param params: The dictionary parameters
+            @type wordlists: list
+            @param wordlists: The wordlists used in the dictionary
             @type requester: Request
             @param requester: The requester for the given dictionary
             @returns Dictionary: The dictionary object
             """
-            co.infoBox(f"Building dictionary from {name} wordlist ...")
-            try:
-                dictionary = DictFactory.creator(name, params, requester)
-            except Exception as e:
-                raise Exception(str(e))
+            buildedWordlist = []
+            for wordlist in wordlists:
+                name, params = wordlist
+                co.infoBox(f"Building dictionary from {name} wordlist ...")
+                try:
+                    buildedWordlist.extend(WordlistFactory.creator(name, params, requester))
+                except Exception as e:
+                    co.warningBox(str(e))
+            if not buildedWordlist:
+                raise Exception("The wordlist is empty")
+            dictionary = Dictionary(buildedWordlist)
             co.infoBox(f"Dictionary is done, loaded {len(dictionary)} payloads")
             dictionary.setPrefix(parser.prefix)
             dictionary.setSuffix(parser.suffix)
@@ -513,13 +517,16 @@ class CliController:
         
         self.globalDictionary = None
         self.dictionaries = []
-        if len(parser.wordlists) != len(self.requesters):
-            name, params = parser.wordlists[0]
-            self.globalDictionary = buildDictionary(name, params, None)
+        lenWordlists = len(parser.wordlists)
+        lenRequesters = len(self.requesters)
+        if lenWordlists > lenRequesters:
+            raise Exception("The quantity of wordlists is greater than the requesters")
+        elif lenWordlists != lenRequesters:
+            wordlist = parser.wordlists[0]
+            self.globalDictionary = buildDictionary(wordlist, None)
             self.dictionary = self.globalDictionary
             self.totalRequests = len(self.dictionary)
         else:
             self.dictionaries = Queue()
-            for i, dictionary in enumerate(parser.wordlists):
-                name, params = dictionary
-                self.dictionaries.put(buildDictionary(name, params, self.requesters[i]))
+            for i, wordlist in enumerate(parser.wordlists):
+                self.dictionaries.put(buildDictionary(wordlist, self.requesters[i]))

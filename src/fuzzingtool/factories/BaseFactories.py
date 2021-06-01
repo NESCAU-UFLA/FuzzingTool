@@ -55,11 +55,11 @@ class BasePluginFactory(ABC):
         """
         pass
 
-class BaseDictFactory(ABC):
+class BaseWordlistFactory(ABC):
     @staticmethod
     @abstractmethod
     def creator(name: str, params: str, requester):
-        """Build the dictionaries
+        """Build the wordlists
 
         @type name: str
         @param name: The dictionary name

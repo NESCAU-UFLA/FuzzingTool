@@ -145,7 +145,7 @@ class CliArgumentParser:
 
     def setDictionaryArguments(self):
         """Set the dictionary arguments"""
-        self.wordlists = [parseOptionWithArgs(wordlist) for wordlist in self.options.wordlist]
+        self.wordlists = [[parseOptionWithArgs(w) for w in splitStrToList(wordlist)] for wordlist in self.options.wordlist]
         self.prefix = splitStrToList(self.options.prefix)
         self.suffix = splitStrToList(self.options.suffix)
         self.uppercase = self.options.upper
