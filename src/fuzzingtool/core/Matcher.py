@@ -149,7 +149,7 @@ class Matcher:
         
         @type result: Result
         @param result: The actual result object
-        @returns bool: A vulnerability flag
+        @returns bool: A match flag
         """
         if self._matchStatus(result.status):
             if self._comparator['Length']:
