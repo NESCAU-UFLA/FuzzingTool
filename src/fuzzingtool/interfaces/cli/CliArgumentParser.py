@@ -87,9 +87,12 @@ def showScannersHelp():
 class CliArgumentParser:
     """Class that handle with the sys argument parsing"""
     def __init__(self):
+        usage = "Usage: FuzzingTool [-u|-r TARGET]+ [-w WORDLIST]+ [options]*"
+        examples = "For usage examples, see: https://github.com/NESCAU-UFLA/FuzzingTool/wiki/Usage-Examples"
         if len(argv) < 2:
-            raise Exception("Invalid format! Use -h on 2nd parameter to show the help menu.")
-        if '-h=' in argv[1] or '--help=' in argv[1]:
+            CO.print(f"Invalid format! Use -h on 2nd parameter to show the help menu.\n\n{usage}\n\n{examples}")
+            exit(0)
+        if len(argv) == 2 and ('-h=' in argv[1] or '--help=' in argv[1]):
             askedHelp = argv[1].split('=')[1]
             if 'wordlists' == askedHelp:
                 showWordlistsHelp()
@@ -102,8 +105,8 @@ class CliArgumentParser:
             exit(0)
         parser = argparse.ArgumentParser(
             usage=argparse.SUPPRESS,
-            description="Usage: FuzzingTool [-u|-r TARGET]+ [-w WORDLIST]+ [options]*",
-            epilog="For usage examples, see: https://github.com/NESCAU-UFLA/FuzzingTool/wiki/Usage-Examples",
+            description=usage,
+            epilog=examples,
             formatter_class=lambda prog: argparse.HelpFormatter(
                 prog, indent_increment=4, max_help_position=30, width=100
             )
