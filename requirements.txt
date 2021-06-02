@@ -4,19 +4,19 @@
 #
 #    pip-compile --output-file=requirements.txt setup.py
 #
-beautifulsoup4==4.9.3
+beautifulsoup4>=4.9.3
     # via FuzzingTool (setup.py)
-certifi==2020.12.5
+certifi>=2020.12.5
     # via requests
-chardet==4.0.0
+chardet>=4.0.0
     # via requests
-dnspython==2.1.0
+dnspython>=2.1.0
     # via FuzzingTool (setup.py)
-idna==2.10
+idna>=2.10
     # via requests
-requests==2.25.1
+requests>=2.25.1
     # via FuzzingTool (setup.py)
-soupsieve==2.2.1
+soupsieve>=2.2.1
     # via beautifulsoup4
-urllib3==1.26.4
+urllib3>=1.26.5
     # via requests
