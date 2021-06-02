@@ -148,7 +148,7 @@ class CliArgumentParser:
 
     def setDictionaryArguments(self):
         """Set the dictionary arguments"""
-        self.wordlists = [[parseOptionWithArgs(w) for w in splitStrToList(wordlist)] for wordlist in self.options.wordlist]
+        self.wordlists = [[parseOptionWithArgs(w) for w in splitStrToList(wordlist, separator=';')] for wordlist in self.options.wordlist]
         self.prefix = splitStrToList(self.options.prefix)
         self.suffix = splitStrToList(self.options.suffix)
         self.uppercase = self.options.upper
@@ -312,7 +312,7 @@ class CliArgumentParser:
         dictionaryOpts.add_argument('-w',
             action='append',
             dest='wordlist',
-            help="Define the wordlist with the payloads (--help=wordlists for more info)",
+            help="Define the wordlists with the payloads, separating with ';' (--help=wordlists for more info)",
             metavar='WORDLIST',
             required=True,
         )

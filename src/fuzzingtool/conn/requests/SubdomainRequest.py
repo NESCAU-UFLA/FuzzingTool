@@ -26,6 +26,9 @@ class SubdomainRequest(Request):
         """
         super().__init__(url, **kwargs)
 
+    def isPathFuzzing(self):
+        return False
+
     def resolveHostname(self, hostname: str):
         """Resolve the ip for the given hostname
 

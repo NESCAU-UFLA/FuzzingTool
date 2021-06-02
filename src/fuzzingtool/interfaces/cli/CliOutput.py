@@ -10,6 +10,9 @@
 #
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
+from ...utils.utils import stringfyList
+from ...conn.RequestParser import getHost
+
 from datetime import datetime
 import platform
 import threading
@@ -252,6 +255,27 @@ class CliOutput:
         """
         print(self.__getTime()+self.__getInfo(msg)+': ', end='')
         return input()
+
+    def printConfig(self, key, value = '', spaces = 0):
+        print(f"{' '*(spaces+3)}{Colors.BLUE}{key}: {Colors.LIGHT_YELLOW}{value}{Colors.RESET}")
+
+    def printConfigs(self, targets, dictionaries, match, scanner, output, blacklistStatus, delay, threads):
+        globalDict = False
+        if len(dictionaries) == 1:
+            globalDict = True
+            thisDict = dictionaries[0]
+        for i, target in enumerate(targets):
+            if not globalDict:
+                thisDict = dictionaries[i]
+            self.printConfig("Target", getHost(target['url']))
+            spaces = 3
+            self.printConfig("Methods", stringfyList(target['methods']), spaces)
+            self.printConfig("HTTP headers", 'Custom' if target['header'] else 'Default', spaces)
+            if target['data']:
+                self.printConfig("Body data", target['data'], spaces)
+            self.printConfig("Fuzzing type", target['typeFuzzing'], spaces)
+            self.printConfig("Dictionary size", thisDict['sizeof'], spaces)
+            self.printConfig("Wordlists", stringfyList(thisDict['wordlists']), spaces)
 
     def progressStatus(self,
         requestIndex: int,

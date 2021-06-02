@@ -20,7 +20,9 @@ def getHost(url: str):
     @returns str: The payloaded target
     """
     url = getUrlWithoutScheme(url)
-    return url[:url.index('/')]
+    if '/' in url:
+        return url[:url.index('/')]
+    return url
 
 def getPath(url: str):
     """Get the target path from url
@@ -52,7 +54,9 @@ def getUrlWithoutScheme(url: str):
     @param url: The target URL
     @returns str: The url without scheme
     """
-    return url[(url.index('://')+3):]
+    if '://' in url:
+        return url[(url.index('://')+3):]
+    return url
 
 def checkForSubdomainFuzz(url: str):
     """Checks if the fuzzing tests will occur on subdomain

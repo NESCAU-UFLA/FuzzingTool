@@ -21,17 +21,30 @@ def getIndexesToParse(content: str, searchFor: str = '$'):
     """
     return [i for i, char in enumerate(content) if char == searchFor]
 
-def splitStrToList(string: str, separator: str = ','):
+def splitStrToList(string: str, separator: str = ',', ignores: str = '\\'):
     """Split the given string into a list, using a separator
 
     @type string: str
     @param string: The string to be splited
     @type separator: str
     @param separator: A separator to split the string
+    @type ignores: str
+    @param ignores: A string to ignores the separator
     @returns list: The splited string
     """
     if string:
         if separator in string:
+            if f'{ignores}{separator}' in string:
+                strings = string.split(separator)
+                final = []
+                buffer = ''
+                for string in strings:
+                    if ignores in string:
+                        buffer += string[:string.index(ignores)]+separator
+                    else:
+                        final.extend([buffer+string])
+                        buffer = ''
+                return final
             return string.split(separator)
         return [string]
     return []
@@ -52,6 +65,13 @@ def getPluginNamesFromCategory(category: str):
     if '__init__.py' in pluginFiles:
         pluginFiles.remove('__init__.py')
     return [pluginFile.split('.')[0] for pluginFile in pluginFiles]
+
+def stringfyList(oneList: list):
+    output = ''
+    for i in range(len(oneList)-1):
+        output += f"{oneList[i]},"
+    output += oneList[len(oneList)-1]
+    return output
 
 def checkRangeList(content: str):
     """Checks if the given content has a range list,

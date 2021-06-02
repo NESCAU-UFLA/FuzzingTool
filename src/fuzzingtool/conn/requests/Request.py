@@ -136,9 +136,16 @@ class Request:
     def isUrlDiscovery(self):
         """Checks if the fuzzing is for url discovery (path or subdomain)
 
-        @returns bool: If is url discovery fuzzing type
+        @returns bool: A flag to say if is url discovery fuzzing type
         """
         return (self.isUrlFuzzing() and not '?' in self._url['content'])
+
+    def isPathFuzzing(self):
+        """Checks if the fuzzing will be path discovery
+
+        @returns bool: A flag to say if is path fuzzing
+        """
+        return self.isUrlDiscovery()
 
     def getRequestIndex(self):
         """The request index getter
@@ -292,7 +299,7 @@ class Request:
         @returns dict: The HTTP header dictionary
         """
         header = {
-            'content': header,
+            'content': {**header},
             'payloadKeys': [],
         }
         for key, value in header['content'].items():

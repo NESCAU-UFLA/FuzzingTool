@@ -72,8 +72,28 @@ class CliController:
         @type parser: CliArgumentParser
         @param parser: The command line interface arguments object
         """
+        self.co = CliOutput() # Abbreviation to cli output
+        CliOutput.print(banner())
         try:
+            self.co.infoBox("Setupping arguments ...")
             self.init(parser)
+            self.co.printConfigs(
+                targets=self.targetsList,
+                dictionaries=self.dictionariesMetadata,
+                match={
+                    'Match status': parser.matchStatus,
+                    'Match length': parser.matchLength,
+                    'Match time': parser.matchTime
+                },
+                scanner=parser.scanner,
+                output=('quiet' if not self.verbose[0] else 'common' if not self.verbose[1] else 'detailed'),
+                blacklistStatus={
+                    'Blacklisted status': parser.blacklistedStatus,
+                    'Blacklist action': parser.blacklistAction,
+                },
+                delay=self.delay,
+                threads=self.numberOfThreads,
+            )
             self.checkConnectionAndRedirections()
         except KeyboardInterrupt:
             self.co.abortBox("Test aborted by the user")
@@ -89,15 +109,13 @@ class CliController:
         @type parser: CliArgumentParser
         @param parser: The command line interface arguments object
         """
-        self.co = CliOutput() # Abbreviation to cli output
-        CliOutput.print(banner())
         self.__initRequesters(parser)
-        self.globalScanner = parser.scanner
         self.globalMatcher = Matcher.fromString(
             parser.matchStatus,
             parser.matchLength,
             parser.matchTime
         )
+        self.globalScanner = parser.scanner
         self.verbose = parser.verbose
         self.co.setVerbosityOutput(self.isVerboseMode())
         if parser.blacklistedStatus:
@@ -228,16 +246,15 @@ class CliController:
                     self.getDataComparator()
                 )
                 self.startedTime += (time.time() - before)
+        if not self.globalDictionary:
+            self.dictionary = self.dictionaries.get()
+            self.totalRequests = len(self.dictionary)
 
     def prepareFuzzer(self):
         """Prepare the fuzzer for the fuzzing tests.
            Refill the dictionary with the wordlist content if a global dictionary was given
         """
-        if not self.globalDictionary:
-            self.dictionary = self.dictionaries.get()
-            self.totalRequests = len(self.dictionary)
-        else:
-            self.dictionary.reload()
+        self.dictionary.reload()
         self.fuzzer = Fuzzer(
             requester=self.requester,
             dictionary=self.dictionary,
@@ -259,12 +276,12 @@ class CliController:
         @returns BaseScanner: The scanner used in the fuzzing tests
         """
         if self.requester.isUrlDiscovery():
-            if isinstance(self.requester, SubdomainRequest):
-                from ...core.scanners.default.SubdomainScanner import SubdomainScanner
-                scanner = SubdomainScanner()
-            else:
+            if self.requester.isPathFuzzing():
                 from ...core.scanners.default.PathScanner import PathScanner
                 scanner = PathScanner()
+            else:
+                from ...core.scanners.default.SubdomainScanner import SubdomainScanner
+                scanner = SubdomainScanner()
             if self.globalMatcher.allowedStatusIsDefault():
                 self.localMatcher.setAllowedStatus(
                     Matcher.buildAllowedStatus("200-399,401,403")
@@ -453,22 +470,18 @@ class CliController:
         @type parser: CliArgumentParser
         @param parser: The command line interface arguments object
         """
-        targets = []
+        self.targetsList = []
         if parser.targetsFromUrl:
-            targets.extend(AB.buildTargetsFromArgs(
+            self.targetsList.extend(AB.buildTargetsFromArgs(
                 parser.targetsFromUrl, parser.method, parser.data
             ))
         if parser.targetsFromRawHttp:
-            targets.extend(AB.buildTargetsFromRawHttp(
+            self.targetsList.extend(AB.buildTargetsFromRawHttp(
                 parser.targetsFromRawHttp, parser.scheme
             ))
-        if not targets:
+        if not self.targetsList:
             raise Exception("A target is needed to make the fuzzing")
-        for target in targets:
-            self.co.infoBox(f"Set target URL: {target['url']}")
-            self.co.infoBox(f"Set request method: {target['methods']}")
-            if target['data']:
-                self.co.infoBox(f"Set request data: {target['data']}")
+        for target in self.targetsList:
             if checkForSubdomainFuzz(target['url']):
                 requestType = 'SubdomainRequest'
             else:
@@ -486,6 +499,17 @@ class CliController:
                 cookie=parser.cookie,
             )
             self.requesters.append(requester)
+            if requester.isMethodFuzzing():
+                target['typeFuzzing'] = "MethodFuzzing"
+            elif requester.isDataFuzzing():
+                target['typeFuzzing'] = "DataFuzzing"
+            elif requester.isUrlDiscovery():
+                if requester.isPathFuzzing():
+                    target['typeFuzzing'] = "PathFuzzing"
+                else:
+                    target['typeFuzzing'] = "SubdomainFuzzing"
+            else:
+                target['typeFuzzing'] = "Couldn't determine the fuzzing type"
 
     def __initDictionary(self, parser: CliArgumentParser):
         """Initialize the dictionary
@@ -502,10 +526,17 @@ class CliController:
             @param requester: The requester for the given dictionary
             @returns Dictionary: The dictionary object
             """
+            lastDictIndex = len(self.dictionariesMetadata)
+            self.dictionariesMetadata.append({
+                'wordlists': [],
+                'sizeof': 0
+            })
             buildedWordlist = []
             for wordlist in wordlists:
                 name, params = wordlist
-                self.co.infoBox(f"Building dictionary from {name} wordlist ...")
+                self.dictionariesMetadata[lastDictIndex]['wordlists'].append(
+                    f"{name}={params}" if params else name
+                )
                 try:
                     buildedWordlist.extend(WordlistFactory.creator(name, params, requester))
                 except Exception as e:
@@ -513,7 +544,7 @@ class CliController:
             if not buildedWordlist:
                 raise Exception("The wordlist is empty")
             dictionary = Dictionary(set(buildedWordlist))
-            self.co.infoBox(f"Dictionary is done, loaded {len(dictionary)} payloads")
+            self.dictionariesMetadata[lastDictIndex]['sizeof'] = len(dictionary)
             dictionary.setPrefix(parser.prefix)
             dictionary.setSuffix(parser.suffix)
             if parser.lowercase:
@@ -528,6 +559,7 @@ class CliController:
         
         self.globalDictionary = None
         self.dictionaries = []
+        self.dictionariesMetadata = []
         lenWordlists = len(parser.wordlists)
         lenRequesters = len(self.requesters)
         if lenWordlists > lenRequesters:
