@@ -14,6 +14,7 @@ from datetime import datetime
 import platform
 import threading
 import sys
+import os
 from typing import Callable
 
 if platform.system() == 'Windows':
@@ -23,23 +24,33 @@ if platform.system() == 'Windows':
         exit("Colorama package not installed. Install all dependencies first.")
     init()
 
-def fixPayloadToOutput(payload):
+def fixPayloadToOutput(
+    payload: str,
+    maxLength: int = 30,
+    isProgressStatus: bool = False,
+):
     """Fix the payload's size
 
     @type payload: str
     @param payload: The payload used in the request
+    @type maxLength: int
+    @param maxLength: The maximum length of the payload on output
+    @type isProgressStatus: bool
+    @param isProgressStatus: A flag to say if the function was called by the progressStatus or not
     @returns str: The fixed payload to output
     """
     if '	' in payload:
         payload = payload.replace('	', ' ')
-    if len(payload) > 30:
+    if len(payload) > maxLength:
         output = ""
         for i in range(27):
             output += payload[i]
         output += '...'
         return output
-    else:
-        return payload
+    if isProgressStatus:
+        while len(payload) < maxLength:
+            payload += ' '
+    return payload
 
 def getFormatedResult(payload: str, RTT: float, length: int):
     """Format the result into a dict of strings
@@ -242,21 +253,31 @@ class CliOutput:
         print(self.__getTime()+self.__getInfo(msg)+': ', end='')
         return input()
 
-    def progressStatus(self, requestIndex: int, totalRequests: int):
+    def progressStatus(self,
+        requestIndex: int,
+        totalRequests: int,
+        payload: str
+    ):
         """Output the progress status of the fuzzing
 
         @type requestIndex: int
         @param requestIndex: The actual request index
         @type totalRequests: int
         @param totalRequests: The total of requests quantity
+        @type payload: str
+        @param payload: The payload used in the request
         """
         with self.__lock:
             if not self.__lastInline:
                 self.__eraseLine()
                 self.__lastInline = True
-            status = f"Status: [{requestIndex}/{totalRequests}] {str(int((int(requestIndex)/totalRequests)*100))}% completed"
+            status = f"{Colors.GRAY}[{Colors.LIGHT_GRAY}{requestIndex}{Colors.GRAY}/{Colors.LIGHT_GRAY}{totalRequests}{Colors.GRAY}]{Colors.RESET} {Colors.LIGHT_YELLOW}{str(int((int(requestIndex)/totalRequests)*100))}%{Colors.RESET}"
+            payload = Colors.LIGHT_GRAY + fixPayloadToOutput(
+                payload=payload,
+                isProgressStatus=True
+            )
             sys.stdout.flush()
-            print('\r'+self.__getTime()+self.__getInfo(status), end='')
+            print('\r'+f"{self.__getTime()}{status} {Colors.GRAY}:: {payload}", end='')
 
     def printResult(self, result: dict, vulnValidator: bool):
         """Custom output print for box mode

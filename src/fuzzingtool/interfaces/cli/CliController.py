@@ -401,7 +401,7 @@ class CliController:
                     self.results.append(result)
                     self.co.printResult(result, validate)
                 self.co.progressStatus(
-                    result.index, self.totalRequests
+                    result.index, self.totalRequests, result.payload
                 )
     
     def _requestExceptionCallback(self,
@@ -418,7 +418,7 @@ class CliController:
         if self.ignoreErrors:
             if not self.verbose[0]:
                 self.co.progressStatus(
-                    self.requester.index, self.totalRequests
+                    self.requester.index, self.totalRequests, payload
                 )
             else:
                 if self.verbose[1]:
@@ -428,18 +428,23 @@ class CliController:
         else:
             self.skipTarget = str(e)
 
-    def _invalidHostnameCallback(self, e: InvalidHostname):
+    def _invalidHostnameCallback(self,
+        e: InvalidHostname,
+        payload: str
+    ):
         """Callback that handle with the subdomain hostname resolver exceptions
         
         @type e: InvalidHostname
         @param e: The invalid hostname exception
+        @type payload: str
+        @param payload: The payload used in the request
         """
         if self.verbose[0]:
             if self.verbose[1]:
                 self.co.notWorkedBox(str(e))
         else:
             self.co.progressStatus(
-                self.requester.index, self.totalRequests
+                self.requester.index, self.totalRequests, payload
             )
 
     def __initRequesters(self, parser: CliArgumentParser):

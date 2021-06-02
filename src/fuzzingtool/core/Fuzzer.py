@@ -118,7 +118,7 @@ class Fuzzer:
                         self.__scanner.scan(result) if self.__matcher.match(result) else False
                     )
                 except InvalidHostname as e:
-                    self.exceptionCallbacks[0](e)
+                    self.exceptionCallbacks[0](e, payload)
                 except RequestException as e:
                     self.exceptionCallbacks[1](e, payload)
                 finally:
