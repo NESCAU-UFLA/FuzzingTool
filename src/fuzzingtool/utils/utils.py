@@ -35,14 +35,13 @@ def splitStrToList(string: str, separator: str = ',', ignores: str = '\\'):
     if string:
         if separator in string:
             if f'{ignores}{separator}' in string:
-                strings = string.split(separator)
                 final = []
                 buffer = ''
-                for string in strings:
-                    if ignores in string:
-                        buffer += string[:string.index(ignores)]+separator
+                for substr in string.split(separator):
+                    if ignores in substr:
+                        buffer += substr[:substr.index(ignores)]+separator
                     else:
-                        final.extend([buffer+string])
+                        final.extend([buffer+substr])
                         buffer = ''
                 return final
             return string.split(separator)
@@ -67,6 +66,12 @@ def getPluginNamesFromCategory(category: str):
     return [pluginFile.split('.')[0] for pluginFile in pluginFiles]
 
 def stringfyList(oneList: list):
+    """Stringfies a list
+
+    @type oneList: list
+    @param oneList: A list to be stringed
+    @returns str: The stringed list
+    """
     output = ''
     for i in range(len(oneList)-1):
         output += f"{oneList[i]},"
