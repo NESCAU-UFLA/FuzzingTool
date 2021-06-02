@@ -277,7 +277,7 @@ class CliOutput:
                 isProgressStatus=True
             )
             sys.stdout.flush()
-            print('\r'+f"{self.__getTime()}{status} {Colors.GRAY}:: {payload}", end='')
+            print('\r'+f"{self.__getTime()}{status}{Colors.GRAY} :: {payload}", end='')
 
     def printResult(self, result: dict, vulnValidator: bool):
         """Custom output print for box mode
