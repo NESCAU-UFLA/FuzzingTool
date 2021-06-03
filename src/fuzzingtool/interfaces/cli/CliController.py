@@ -101,6 +101,7 @@ class CliController:
                 } if parser.blacklistedStatus else {},
                 delay=self.delay,
                 threads=self.numberOfThreads,
+                report=parser.report,
             )
             self.checkConnectionAndRedirections()
         except KeyboardInterrupt:
@@ -150,6 +151,7 @@ class CliController:
         if self.globalScanner:
             self.localScanner = self.globalScanner
             self.co.setMessageCallback(self.localScanner.cliCallback)
+        fh.reporter.setMetadata(parser.report)
         self.__initDictionary(parser)
 
     def checkConnectionAndRedirections(self):

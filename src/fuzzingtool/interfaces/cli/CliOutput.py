@@ -290,8 +290,8 @@ class CliOutput:
         verbose: str,
         targets: list,
         dictionaries: list,
-        prefix: str,
-        suffix: str,
+        prefix: list,
+        suffix: list,
         case: str,
         encoder: tuple,
         match: dict,
@@ -299,6 +299,7 @@ class CliOutput:
         blacklistStatus: dict,
         delay: float,
         threads: int,
+        report: str,
     ):
         """Prints the program configuration
 
@@ -310,6 +311,14 @@ class CliOutput:
         @param tagets: The targets list
         @type dictionaries: list
         @param dictionaries: The dictionaries used in the tests
+        @type prefix: list
+        @param prefix: The prefixes used with the payload
+        @type suffix: list
+        @param suffix: The suffixes used with the payload
+        @type case: str
+        @param case: The payload case
+        @type encoder: tuple
+        @param encoder: The encoder tuple that caontains the encoder name and parameters
         @type match: dict
         @param match: The matcher options on a dictionary
         @type scanner: tuple
@@ -320,6 +329,8 @@ class CliOutput:
         @param delay: The delay between each request
         @type threads: int
         @param threads: The number of threads used in the tests
+        @type report: str
+        @param report: The report name and/or format
         """
         print("")
         globalDict = False
@@ -367,6 +378,8 @@ class CliOutput:
         if delay:
             self.printConfig("Delay", f"{delay} seconds")
         self.printConfig("Threads", threads)
+        if report:
+            self.printConfig("Report", report)
         print("")
 
     def progressStatus(self,

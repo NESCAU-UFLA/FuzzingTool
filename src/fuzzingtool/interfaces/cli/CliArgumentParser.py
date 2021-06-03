@@ -185,7 +185,7 @@ class CliArgumentParser:
         self.delay = self.options.delay
         self.numberOfThreads = self.options.numberOfThreads
         self.setBlacklistedStatus()
-        fh.reporter.setMetadata(self.options.reportName)
+        self.report = self.options.reportName
 
     def setBlacklistedStatus(self):
         """Check if the --blacklist-status argument is present, and set the blacklisted status and action"""
