@@ -25,9 +25,9 @@ class WordlistFactory(BaseWordlistFactory):
             if (not params and
                 Wordlist.__params__ in ["TARGET_HOST", "TARGET_URL"]):
                 if "TARGET_HOST" in Wordlist.__params__:
-                    params = getHost(getPureUrl(requester.getUrlDict()))
+                    params = getHost(getPureUrl(requester.getUrl()))
                 if "TARGET_URL" in Wordlist.__params__:
-                    params = getPureUrl(requester.getUrlDict())
+                    params = getPureUrl(requester.getUrl())
             wordlist = PluginFactory.objectCreator(name, 'wordlists', params)
         except InvalidPluginName:
             try:

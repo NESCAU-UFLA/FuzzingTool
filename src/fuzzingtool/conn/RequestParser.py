@@ -34,18 +34,18 @@ def getPath(url: str):
     url = getUrlWithoutScheme(url)
     return url[url.index('/'):]
 
-def getPureUrl(url: dict):
+def getPureUrl(url: str):
     """Gets the URL without the $ variable
 
-    @type url: dict
-    @param url: The target URL in Request dictionary format
-    @returns str: The target URL
+    @type url: str
+    @param url: The target URL
+    @returns str: The target URL without fuzzing marks
     """
-    if url['fuzzingIndexes']:
-        if '$.' in url['content']:
-            return url['content'].replace('$.', '')
-        return url['content'].replace('$', '')
-    return url['content']
+    if '$' in url:
+        if '$.' in url:
+            return url.replace('$.', '')
+        return url.replace('$', '')
+    return url
 
 def getUrlWithoutScheme(url: str):
     """Get the target url without scheme

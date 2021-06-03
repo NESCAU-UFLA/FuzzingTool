@@ -185,7 +185,7 @@ class Request:
     def testConnection(self):
         """Test the connection with the target, and raise an exception if couldn't connect"""
         try:
-            url = getPureUrl(self._url)
+            url = getPureUrl(self._url['content'])
             response = requests.get(
                 url,
                 proxies=self.__proxy,

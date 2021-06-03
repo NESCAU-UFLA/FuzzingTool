@@ -242,7 +242,7 @@ class CliController:
         @param requester: The requester for the target
         """
         self.requester = requester
-        targetHost = getHost(getPureUrl(requester.getUrlDict()))
+        targetHost = getHost(getPureUrl(requester.getUrl()))
         if self.isVerboseMode():
             self.co.infoBox(f"Preparing target {targetHost} ...")
         before = time.time()
