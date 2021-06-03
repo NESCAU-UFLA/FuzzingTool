@@ -58,8 +58,12 @@ def fixPayloadToOutput(
 def getFormatedResult(payload: str, RTT: float, length: int):
     """Format the result into a dict of strings
 
-    @type result: dict
-    @param result: The result dict
+    @type payload: str
+    @param payload: The payload used in the request
+    @type RTT: float
+    @param RTT: The request and response elapsed time
+    @type length: int
+    @param length: The response body length in bytes
     @returns tuple(str, str, str): The result formated with strings
     """
     return (
