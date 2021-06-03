@@ -11,7 +11,7 @@
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
 from ...utils.utils import stringfyList
-from ...conn.RequestParser import getHost
+from ...conn.RequestParser import getHost, getPureUrl
 
 from datetime import datetime
 import platform
@@ -330,7 +330,7 @@ class CliOutput:
         self.printConfig("Output mode", output)
         self.printConfig("Verbosity mode", verbose)
         for i, target in enumerate(targets):
-            self.printConfig("Target", getHost(target['url']))
+            self.printConfig("Target", getHost(getPureUrl(target['url'])))
             self.printConfig("Methods", stringfyList(target['methods']), spaces)
             self.printConfig("HTTP headers", 'custom' if target['header'] else 'default', spaces)
             if target['data']:
