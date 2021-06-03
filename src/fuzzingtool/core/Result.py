@@ -46,9 +46,9 @@ class Result:
         @param payload: The payload used in the request
         """
         self.index = str(requestIndex)
+        self.payload = payload
         self.url = response.url
         self.method = response.request.method
-        self.payload = payload
         self.RTT = float('%.6f'%(RTT))
         responseTime = response.elapsed.total_seconds()
         self.requestTime = float('%.6f'%(RTT-responseTime))
@@ -65,9 +65,9 @@ class Result:
     
     def __iter__(self):
        yield 'index', self.index
+       yield 'payload', self.payload
        yield 'url', self.url
        yield 'method', self.method
-       yield 'payload', self.payload
        yield 'RTT', self.RTT
        yield 'requestTime', self.requestTime
        yield 'responseTime', self.responseTime
