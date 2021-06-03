@@ -151,8 +151,24 @@ class CliOutput:
         self.__worked = f'{Colors.GRAY}[{Colors.GREEN}+{Colors.GRAY}]{Colors.RESET} '
         self.__notWorked = f'{Colors.GRAY}[{Colors.RED}-{Colors.GRAY}]{Colors.RESET} '
 
-    def setVerbosityOutput(self, verboseMode: bool):
-        """Set the output verbosity mode
+    def setOutputMode(self, simpleOutput: bool):
+        """Set the display output mode, change labels
+           By default, the app will use common output mode
+
+        @type simpleOutput: bool
+        @param simpleOutput: The simple output mode flag
+        """
+        if simpleOutput:
+            self.__getTime = lambda: ''
+            self.__info = f'{Colors.GRAY}[{Colors.BLUE_GRAY}*{Colors.GRAY}]{Colors.RESET} '
+            self.__warning = f'{Colors.GRAY}[{Colors.YELLOW}!{Colors.GRAY}]{Colors.RESET} '
+            self.__error = f'{Colors.GRAY}[{Colors.RED}!!{Colors.GRAY}]{Colors.RESET} '
+            self.__abord = f'{Colors.GRAY}[{Colors.RED}AB{Colors.GRAY}]{Colors.RESET} '
+            self.__worked = f'{Colors.GRAY}[{Colors.GREEN}+{Colors.GRAY}]{Colors.RESET} '
+            self.__notWorked = f'{Colors.GRAY}[{Colors.RED}-{Colors.GRAY}]{Colors.RESET} '
+
+    def setVerbosityMode(self, verboseMode: bool):
+        """Set the verbosity mode
 
         @type verboseMode: bool
         @param verboseMode: The verbose mode flag
@@ -170,10 +186,7 @@ class CliOutput:
         @type getMessageCallback: Callable
         @param getMessageCallback: The get message callback for the results
         """
-        try:
-            self.__getMessage = getMessageCallback
-        except NotImplementedError as e:
-            exit(str(e))
+        self.__getMessage = getMessageCallback
 
     def infoBox(self, msg: str):
         """Print the message with a info label
@@ -260,11 +273,12 @@ class CliOutput:
         print(f"{' '*(spaces+3)}{Colors.BLUE}{key}: {Colors.LIGHT_YELLOW}{value}{Colors.RESET}")
 
     def printConfigs(self,
+        output: str,
+        verbose: str,
         targets: list,
         dictionaries: list,
         match: dict,
         scanner: tuple,
-        output: str,
         blacklistStatus: dict,
         delay: float,
         threads: int,
@@ -276,12 +290,13 @@ class CliOutput:
             thisDict = dictionaries[0]
         spaces = 3
         self.printConfig("Output mode", output)
+        self.printConfig("Verbosity mode", verbose)
         for i, target in enumerate(targets):
             if not globalDict:
                 thisDict = dictionaries[i]
             self.printConfig("Target", getHost(target['url']))
             self.printConfig("Methods", stringfyList(target['methods']), spaces)
-            self.printConfig("HTTP headers", 'Custom' if target['header'] else 'Default', spaces)
+            self.printConfig("HTTP headers", 'custom' if target['header'] else 'default', spaces)
             if target['data']:
                 self.printConfig("Body data", target['data'], spaces)
             self.printConfig("Fuzzing type", target['typeFuzzing'], spaces)

@@ -123,6 +123,7 @@ class CliArgumentParser:
         self.setRequestArguments()
         self.setDictionaryArguments()
         self.setMatchArguments()
+        self.setDisplayArguments()
         self.setGeneralArguments()
 
     def setRequestArguments(self):
@@ -168,8 +169,9 @@ class CliArgumentParser:
         self.matchTime = self.options.matchTime
         self.scanner = None if not self.options.scanner else parseOptionWithArgs(self.options.scanner)
 
-    def setGeneralArguments(self):
-        """Set the general arguments"""
+    def setDisplayArguments(self):
+        """Set the display arguments"""
+        self.simpleOutput = self.options.simpleOutput
         if self.options.commonVerbose:
             self.verbose = [True, False]
         elif self.options.detailedVerbose:
@@ -177,6 +179,9 @@ class CliArgumentParser:
         else:
             self.verbose = [False, False]
         self.disableColors = self.options.disableColors
+
+    def setGeneralArguments(self):
+        """Set the general arguments"""
         self.delay = self.options.delay
         self.numberOfThreads = self.options.numberOfThreads
         self.setBlacklistedStatus()
@@ -210,6 +215,7 @@ class CliArgumentParser:
         self.__buildRequestOpts(parser)
         self.__buildDictionaryOpts(parser)
         self.__buildMatchOpts(parser)
+        self.__buildDisplayOpts(parser)
         self.__buildMoreOpts(parser)
         return parser.parse_args()
     
@@ -369,6 +375,38 @@ class CliArgumentParser:
             metavar='SCANNER',
         )
 
+    def __buildDisplayOpts(self, parser: argparse.ArgumentParser):
+        """Builds the arguments for cli display options
+
+        @type parser: ArgumentParser
+        @param parser: The argument parser object
+        """
+        displayOpts = parser.add_argument_group('Display options')
+        displayOpts.add_argument('-S, --simple-output',
+            action='store_true',
+            dest="simpleOutput",
+            help="Set the simple display output mode (affects labels)",
+            default=False,
+        )
+        displayOpts.add_argument('-V', '-V1',
+            action='store_true',
+            dest='commonVerbose',
+            help="Set the common verbose output mode",
+            default=False,
+        )
+        displayOpts.add_argument('-V2',
+            action='store_true',
+            dest='detailedVerbose',
+            help="Set the detailed verbose output mode",
+            default=False,
+        )
+        displayOpts.add_argument('--no-colors',
+            action='store_true',
+            dest='disableColors',
+            help="Disable the colors of the program",
+            default=False,
+        )
+
     def __buildMoreOpts(self, parser: argparse.ArgumentParser):
         """Builds the arguments for non categorized options
 
@@ -376,24 +414,6 @@ class CliArgumentParser:
         @param parser: The argument parser object
         """
         moreOpts = parser.add_argument_group('More options')
-        moreOpts.add_argument('-V', '-V1',
-            action='store_true',
-            dest='commonVerbose',
-            help="Set the common verbose output mode",
-            default=False,
-        )
-        moreOpts.add_argument('-V2',
-            action='store_true',
-            dest='detailedVerbose',
-            help="Set the detailed verbose output mode",
-            default=False,
-        )
-        moreOpts.add_argument('--no-colors',
-            action='store_true',
-            dest='disableColors',
-            help="Disable the colors of the program",
-            default=False,
-        )
         moreOpts.add_argument('-t',
             action='store',
             dest='numberOfThreads',

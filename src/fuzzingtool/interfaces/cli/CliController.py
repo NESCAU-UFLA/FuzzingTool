@@ -73,11 +73,16 @@ class CliController:
         @param parser: The command line interface arguments object
         """
         self.co = CliOutput() # Abbreviation to cli output
+        self.co.setOutputMode(parser.simpleOutput)
+        self.verbose = parser.verbose
+        self.co.setVerbosityMode(self.isVerboseMode())
         CliOutput.print(banner())
         try:
             self.co.infoBox("Setupping arguments ...")
             self.init(parser)
             self.co.printConfigs(
+                output='normal' if not parser.simpleOutput else 'simple',
+                verbose=('quiet' if not self.verbose[0] else 'common' if not self.verbose[1] else 'detailed'),
                 targets=self.targetsList,
                 dictionaries=self.dictionariesMetadata,
                 match={
@@ -86,7 +91,6 @@ class CliController:
                     'time': parser.matchTime
                 },
                 scanner=parser.scanner,
-                output=('quiet' if not self.verbose[0] else 'common' if not self.verbose[1] else 'detailed'),
                 blacklistStatus={
                     'status': parser.blacklistedStatus,
                     'action': parser.blacklistAction,
@@ -125,8 +129,6 @@ class CliController:
             except Exception as e:
                 raise Exception(str(e))
         self.globalScanner = scanner
-        self.verbose = parser.verbose
-        self.co.setVerbosityOutput(self.isVerboseMode())
         if parser.blacklistedStatus:
             blacklistedStatus = parser.blacklistedStatus
             action = parser.blacklistAction
@@ -152,7 +154,8 @@ class CliController:
         """
         for requester in self.requesters:
             self.co.infoBox(f"Validating {requester.getUrl()} ...")
-            self.co.infoBox("Testing connection ...")
+            if self.isVerboseMode():
+                self.co.infoBox("Testing connection ...")
             try:
                 requester.testConnection()
             except RequestException as e:
@@ -160,7 +163,8 @@ class CliController:
                     self.co.infoBox(f"Target removed from list.")
                     self.requesters.remove(requester)
             else:
-                self.co.infoBox("Connection status: OK")
+                if self.isVerboseMode():
+                    self.co.infoBox("Connection status: OK")
                 if requester.isDataFuzzing():
                     self.checkRedirections(requester)
         if len(self.requesters) == 0:
@@ -173,17 +177,20 @@ class CliController:
         @type requester: Request
         @param requester: The requester for the target
         """
-        self.co.infoBox("Testing redirections ...")
+        if self.isVerboseMode():
+            self.co.infoBox("Testing redirections ...")
         for method in requester.methods:
             requester.setMethod(method)
-            self.co.infoBox(f"Testing with {method} method ...")
+            if self.isVerboseMode():
+                self.co.infoBox(f"Testing with {method} method ...")
             try:
                 if requester.hasRedirection():
                     if self.co.askYesNo('warning', "You was redirected to another page. Remove this method?"):
                         requester.methods.remove(method)
                         self.co.infoBox(f"Method {method} removed from list")
                 else:
-                    self.co.infoBox("No redirections")
+                    if self.isVerboseMode():
+                        self.co.infoBox("No redirections")
             except RequestException as e:
                 self.co.warningBox(f"{str(e)}. Removing method {method}")
         if len(requester.methods) == 0:
@@ -200,11 +207,10 @@ class CliController:
             for requester in self.requesters:
                 try:
                     self.prepareTarget(requester)
-                    self.co.infoBox(f"Starting test on '{self.requester.getUrl()}' ...")
                     for method in self.requester.methods:
                         self.requester.resetRequestIndex()
                         self.requester.setMethod(method)
-                        self.co.infoBox(f"Set method for fuzzing: {method}")
+                        self.co.infoBox(f"Starting test on '{self.requester.getUrl()} with method {method}")
                         self.prepareFuzzer()
                         if not self.isVerboseMode():
                             CliOutput.print("")
@@ -233,7 +239,8 @@ class CliController:
         """
         self.requester = requester
         targetHost = getHost(getPureUrl(requester.getUrlDict()))
-        self.co.infoBox(f"Preparing target {targetHost} ...")
+        if self.isVerboseMode():
+            self.co.infoBox(f"Preparing target {targetHost} ...")
         before = time.time()
         self.checkIgnoreErrors(targetHost)
         self.startedTime += (time.time() - before)
