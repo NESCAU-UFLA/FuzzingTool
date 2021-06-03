@@ -502,8 +502,6 @@ class CliController:
             ))
         if not self.targetsList:
             raise Exception("A target is needed to make the fuzzing")
-        if len(set([getHost(getPureUrl(target['url'])) for target in self.targetsList])) != len(self.targetsList):
-            raise Exception("Duplicated target detected, exiting.")
         for target in self.targetsList:
             if checkForSubdomainFuzz(target['url']):
                 requestType = 'SubdomainRequest'
@@ -533,6 +531,18 @@ class CliController:
                     target['typeFuzzing'] = "SubdomainFuzzing"
             else:
                 target['typeFuzzing'] = "Couldn't determine the fuzzing type"
+        targetsChecker = [{
+            'host': getHost(getPureUrl(target['url'])),
+            'typeFuzzing': target['typeFuzzing'],
+        } for target in self.targetsList]
+        if len(set([target['host'] for target in targetsChecker])) != len(self.targetsList):
+            targetsChecker.sort(key=lambda e: e['host'])
+            for i in range(len(targetsChecker)-1):
+                thisTarget = targetsChecker[i]
+                nextTarget = targetsChecker[i+1]
+                if (thisTarget['host'] == nextTarget['host'] and
+                    thisTarget['typeFuzzing'] != nextTarget['typeFuzzing']):
+                    raise Exception("Duplicated target detected with different type of fuzzing, exiting.")
 
     def __initDictionary(self, parser: CliArgumentParser):
         """Initialize the dictionary
