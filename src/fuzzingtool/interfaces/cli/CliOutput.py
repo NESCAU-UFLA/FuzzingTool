@@ -270,6 +270,15 @@ class CliOutput:
         return input()
 
     def printConfig(self, key: str, value: str = '', spaces: int = 0):
+        """The config's printer function
+
+        @type key: str
+        @param key: The name of the config
+        @type value: str
+        @param value: The value of that config
+        @type spaces: int
+        @param spaces: The number of spaces to indent the config output
+        """
         print(f"{' '*(spaces+3)}{Colors.BLUE}{key}: {Colors.LIGHT_YELLOW}{value}{Colors.RESET}")
 
     def printConfigs(self,
@@ -283,6 +292,27 @@ class CliOutput:
         delay: float,
         threads: int,
     ):
+        """Prints the program configuration
+
+        @type output: str
+        @param output: The display output mode
+        @type verbose: str
+        @param verbose: The verbosity mode
+        @type targets: list
+        @param tagets: The targets list
+        @type dictionaries: list
+        @param dictionaries: The dictionaries used in the tests
+        @type match: dict
+        @param match: The matcher options on a dictionary
+        @type scanner: tuple
+        @param scanner: The scanner tuple that caontains the scanner name and parameters
+        @type blacklistStatus: dict
+        @param blacklistStatus: The blacklist status arguments (codes and action taken)
+        @type delay: float
+        @param delay: The delay between each request
+        @type threads: int
+        @param threads: The number of threads used in the tests
+        """
         print("")
         globalDict = False
         if len(dictionaries) == 1:
