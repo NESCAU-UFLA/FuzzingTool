@@ -562,9 +562,8 @@ class CliController:
                     self.co.warningBox(str(e))
             if not buildedWordlist:
                 raise Exception("The wordlist is empty")
-            wordlist = set(buildedWordlist)
-            dictionary = Dictionary(wordlist)
-            self.dictionariesMetadata[lastDictIndex]['sizeof'] = len(wordlist)
+            dictionary = Dictionary(buildedWordlist)
+            self.dictionariesMetadata[lastDictIndex]['sizeof'] = len(buildedWordlist)
             dictionary.setPrefix(parser.prefix)
             dictionary.setSuffix(parser.suffix)
             if parser.lowercase:
