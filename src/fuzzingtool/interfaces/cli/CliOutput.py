@@ -290,6 +290,10 @@ class CliOutput:
         verbose: str,
         targets: list,
         dictionaries: list,
+        prefix: str,
+        suffix: str,
+        case: str,
+        encoder: tuple,
         match: dict,
         scanner: tuple,
         blacklistStatus: dict,
@@ -326,24 +330,37 @@ class CliOutput:
         self.printConfig("Output mode", output)
         self.printConfig("Verbosity mode", verbose)
         for i, target in enumerate(targets):
-            if not globalDict:
-                thisDict = dictionaries[i]
             self.printConfig("Target", getHost(target['url']))
             self.printConfig("Methods", stringfyList(target['methods']), spaces)
             self.printConfig("HTTP headers", 'custom' if target['header'] else 'default', spaces)
             if target['data']:
                 self.printConfig("Body data", target['data'], spaces)
             self.printConfig("Fuzzing type", target['typeFuzzing'], spaces)
-            self.printConfig("Dictionary size", thisDict['sizeof'], spaces)
-            self.printConfig("Wordlists", stringfyList(thisDict['wordlists']), spaces)
+            if not globalDict:
+                thisDict = dictionaries[i]
+                self.printConfig("Dictionary size", thisDict['sizeof'], spaces)
+                self.printConfig("Wordlists", stringfyList(thisDict['wordlists']), spaces)
+        if globalDict:
+            self.printConfig("Dictionary size", thisDict['sizeof'])
+            self.printConfig("Wordlists", stringfyList(thisDict['wordlists']))
+        if prefix:
+            self.printConfig("Prefix", stringfyList(prefix))
+        if suffix:
+            self.printConfig("Suffix", stringfyList(suffix))
+        if case:
+            self.printConfig("Payload case", case)
+        if encoder:
+            encoder, params = encoder
+            if params:
+                encoder = f"{encoder}={params}"
+            self.printConfig("Encoder", f"{encoder}")
         for key, value in match.items():
             if value:
                 self.printConfig(f"Match {key}", value)
         if scanner:
-            name, params = scanner
-            scanner = name
+            scanner, params = scanner
             if params:
-                scanner = f"{name}={params}"
+                scanner = f"{scanner}={params}"
             self.printConfig("Scanner", f"{scanner}")
         if blacklistStatus:
             self.printConfig("Blacklisted status", f"{blacklistStatus['status']} with action {blacklistStatus['action']}")

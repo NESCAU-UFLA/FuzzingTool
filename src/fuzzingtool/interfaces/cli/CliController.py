@@ -82,13 +82,17 @@ class CliController:
             self.init(parser)
             self.co.printConfigs(
                 output='normal' if not parser.simpleOutput else 'simple',
-                verbose=('quiet' if not self.verbose[0] else 'common' if not self.verbose[1] else 'detailed'),
+                verbose='quiet' if not self.verbose[0] else 'common' if not self.verbose[1] else 'detailed',
                 targets=self.targetsList,
                 dictionaries=self.dictionariesMetadata,
+                prefix=parser.prefix,
+                suffix=parser.suffix,
+                case='lowercase' if parser.lowercase else 'uppercase' if parser.uppercase else 'capitalize' if parser.capitalize else None,
+                encoder=parser.encoder,
                 match={
                     'status': parser.matchStatus,
                     'length': parser.matchLength,
-                    'time': parser.matchTime
+                    'time': parser.matchTime,
                 },
                 scanner=parser.scanner,
                 blacklistStatus={
