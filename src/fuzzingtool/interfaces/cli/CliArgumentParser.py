@@ -154,16 +154,7 @@ class CliArgumentParser:
         self.uppercase = self.options.upper
         self.lowercase = self.options.lower
         self.capitalize = self.options.capitalize
-        encoder = self.options.encoder
-        if encoder:
-            encoder, param = parseOptionWithArgs(encoder)
-            try:
-                encoder = PluginFactory.objectCreator(
-                    encoder, 'encoders', param
-                )
-            except Exception as e:
-                raise Exception(str(e))
-        self.encoder = encoder
+        self.encoder = None if not self.options.encoder else parseOptionWithArgs(self.options.encoder)
 
     def setMatchArguments(self):
         """Set the match arguments"""
@@ -175,16 +166,7 @@ class CliArgumentParser:
         self.matchStatus = matchStatus
         self.matchLength = self.options.matchLength
         self.matchTime = self.options.matchTime
-        scanner = self.options.scanner
-        if scanner:
-            scanner, param = parseOptionWithArgs(scanner)
-            try:
-                scanner = PluginFactory.objectCreator(
-                    scanner, 'scanners', param
-                )
-            except Exception as e:
-                CO.errorBox(str(e))
-        self.scanner = scanner
+        self.scanner = None if not self.options.scanner else parseOptionWithArgs(self.options.scanner)
 
     def setGeneralArguments(self):
         """Set the general arguments"""

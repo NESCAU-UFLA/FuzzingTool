@@ -81,16 +81,16 @@ class CliController:
                 targets=self.targetsList,
                 dictionaries=self.dictionariesMetadata,
                 match={
-                    'Match status': parser.matchStatus,
-                    'Match length': parser.matchLength,
-                    'Match time': parser.matchTime
+                    'status': parser.matchStatus,
+                    'length': parser.matchLength,
+                    'time': parser.matchTime
                 },
                 scanner=parser.scanner,
                 output=('quiet' if not self.verbose[0] else 'common' if not self.verbose[1] else 'detailed'),
                 blacklistStatus={
-                    'Blacklisted status': parser.blacklistedStatus,
-                    'Blacklist action': parser.blacklistAction,
-                },
+                    'status': parser.blacklistedStatus,
+                    'action': parser.blacklistAction,
+                } if parser.blacklistedStatus else {},
                 delay=self.delay,
                 threads=self.numberOfThreads,
             )
@@ -115,7 +115,16 @@ class CliController:
             parser.matchLength,
             parser.matchTime
         )
-        self.globalScanner = parser.scanner
+        scanner = None
+        if parser.scanner:
+            scanner, param = parser.scanner
+            try:
+                scanner = PluginFactory.objectCreator(
+                    scanner, 'scanners', param
+                )
+            except Exception as e:
+                raise Exception(str(e))
+        self.globalScanner = scanner
         self.verbose = parser.verbose
         self.co.setVerbosityOutput(self.isVerboseMode())
         if parser.blacklistedStatus:
@@ -130,7 +139,6 @@ class CliController:
                     'wait': self._waitCallback,
                 },
             )
-            self.co.infoBox(f"Blacklisted status codes: {blacklistedStatus} with action {action}")
         self.delay = parser.delay
         self.numberOfThreads = parser.numberOfThreads
         if self.globalScanner:
@@ -517,7 +525,11 @@ class CliController:
         @type parser: CliArgumentParser
         @param parser: The command line interface arguments object
         """
-        def buildDictionary(wordlists: list, requester: Request):
+        def buildDictionary(
+            wordlists: list,
+            requester: Request = None,
+            encoder: object = None,
+        ):
             """Build the dictionary
 
             @type wordlists: list
@@ -543,8 +555,9 @@ class CliController:
                     self.co.warningBox(str(e))
             if not buildedWordlist:
                 raise Exception("The wordlist is empty")
-            dictionary = Dictionary(set(buildedWordlist))
-            self.dictionariesMetadata[lastDictIndex]['sizeof'] = len(dictionary)
+            wordlist = set(buildedWordlist)
+            dictionary = Dictionary(wordlist)
+            self.dictionariesMetadata[lastDictIndex]['sizeof'] = len(wordlist)
             dictionary.setPrefix(parser.prefix)
             dictionary.setSuffix(parser.suffix)
             if parser.lowercase:
@@ -553,10 +566,19 @@ class CliController:
                 dictionary.setUppercase()
             elif parser.capitalize:
                 dictionary.setCapitalize()
-            if parser.encoder:
-                dictionary.setEncoder(parser.encoder)
+            if encoder:
+                dictionary.setEncoder(encoder)
             return dictionary
         
+        encoder = None
+        if parser.encoder:
+            encoder, param = parser.encoder
+            try:
+                encoder = PluginFactory.objectCreator(
+                    encoder, 'encoders', param
+                )
+            except Exception as e:
+                raise Exception(str(e))
         self.globalDictionary = None
         self.dictionaries = []
         self.dictionariesMetadata = []
@@ -566,10 +588,10 @@ class CliController:
             raise Exception("The quantity of wordlists is greater than the requesters")
         elif lenWordlists != lenRequesters:
             wordlist = parser.wordlists[0]
-            self.globalDictionary = buildDictionary(wordlist, None)
+            self.globalDictionary = buildDictionary(wordlist, encoder=encoder)
             self.dictionary = self.globalDictionary
             self.totalRequests = len(self.dictionary)
         else:
             self.dictionaries = Queue()
             for i, wordlist in enumerate(parser.wordlists):
-                self.dictionaries.put(buildDictionary(wordlist, self.requesters[i]))
+                self.dictionaries.put(buildDictionary(wordlist, self.requesters[i], encoder))

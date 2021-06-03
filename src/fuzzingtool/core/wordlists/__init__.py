@@ -10,5 +10,6 @@
 #
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
+from .BaseWordlist import BaseWordlist
 from .default import *
 from .custom import *

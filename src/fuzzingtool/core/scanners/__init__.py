@@ -10,5 +10,6 @@
 #
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
+from .BaseScanner import BaseScanner
 from .default import *
 from .custom import *
