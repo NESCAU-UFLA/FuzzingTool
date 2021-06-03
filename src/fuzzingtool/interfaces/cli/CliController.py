@@ -500,6 +500,8 @@ class CliController:
             ))
         if not self.targetsList:
             raise Exception("A target is needed to make the fuzzing")
+        if len(set([getHost(getPureUrl(target['url'])) for target in self.targetsList])) != len(self.targetsList):
+            raise Exception("Duplicated target detected, exiting.")
         for target in self.targetsList:
             if checkForSubdomainFuzz(target['url']):
                 requestType = 'SubdomainRequest'
