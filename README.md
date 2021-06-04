@@ -37,16 +37,19 @@ If you want to install it manually, download the last release or clone this repo
  ```
 
 ### User's Manual
-Reach out the user's manual (command list and usage examples) on our <a href="https://github.com/NESCAU-UFLA/FuzzingTool/wiki" target="_blank">wiki page</a>.
+Reach out the user's manual (command list and usage examples) on our [wiki page](https://github.com/NESCAU-UFLA/FuzzingTool/wiki).
 
 ## Versioning
-We use <a target="_blank" href="https://semver.org/">SemVer</a> for versioning. For the versions available, see the <a target="_blank" href="https://github.com/NESCAU-UFLA/FuzzingTool/releases">tags on this repository</a>.
+We use [SemVer](https://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://github.com/NESCAU-UFLA/FuzzingTool/releases).
 
 ## Authors
- * <b>Vitor Oriel</b> (vitorwixmix@gmail.com) - <a target="_blank" href="https://github.com/VitorOriel">Profile</a>
+ * **Vitor Oriel**
+   * [GitHub](https://github.com/VitorOriel)
+   * [Linkedin](https://www.linkedin.com/in/vitor-oriel-borges)
+   * Email: vitorwixmix@gmail.com
 
 ## Contributing
 If you want to contribute to FuzzingTool project, please read [CONTRIBUTING.md](https://github.com/NESCAU-UFLA/FuzzingTool/blob/master/.github/CONTRIBUTING.md).
 
 ## License
-This project is licensed under the MIT License - see the <a target="_blank" href="https://github.com/NESCAU-UFLA/FuzzingTool/blob/master/LICENSE.md">LICENSE.md</a> for details.
+This project is licensed under the MIT License - see the [LICENSE.md](https://github.com/NESCAU-UFLA/FuzzingTool/blob/master/LICENSE.md) for details.
