@@ -10,6 +10,6 @@
 #
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
-from .CliArgumentParser import CliArgumentParser
+from .CliArguments import CliArguments
 from .CliController import CliController
 from .CliOutput import CliOutput, Colors

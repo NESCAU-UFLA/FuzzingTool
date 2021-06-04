@@ -15,7 +15,7 @@
 from .interfaces.cli import *
 
 def main_cli():
-    parser = CliArgumentParser()
-    if parser.disableColors:
+    arguments = CliArguments()
+    if arguments.disableColors:
         Colors.disable()
-    CliController().main(parser)
+    CliController().main(arguments)

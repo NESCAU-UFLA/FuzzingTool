@@ -10,16 +10,9 @@
 #
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
-from .CliOutput import CliOutput as CO
-from ..ArgumentBuilder import ArgumentBuilder as AB
-from ... import version
-from ...utils.utils import getIndexesToParse, getPluginNamesFromCategory, splitStrToList
-from ...utils.FileHandler import fileHandler as fh
-from ...factories.PluginFactory import PluginFactory
-from ...exceptions.MainExceptions import InvalidPluginName
-
-from sys import argv
-import argparse
+from .ArgumentParser import ArgumentParser
+from ...utils.utils import splitStrToList
+from ...exceptions.MainExceptions import BadArgumentFormat
 
 def parseOptionWithArgs(plugin: str):
     """Parse the plugin name into name and parameter
@@ -35,91 +28,17 @@ def parseOptionWithArgs(plugin: str):
         param = ''
     return (plugin, param)
 
-def showCustomPackageHelp(category: str):
-    """Show the custom package help
-
-    @type category: str
-    @param category: The package category to search for his plugins
-    """
-    for pluginName in getPluginNamesFromCategory(category):
-        Plugin = PluginFactory.classCreator(pluginName, category)
-        if not Plugin.__type__:
-            typeFuzzing = ''
-        else:
-            typeFuzzing = f" (Used for {Plugin.__type__})"
-        if not Plugin.__params__:
-            params = ''
-        else:
-            params = f"={Plugin.__params__}"
-        CO.helpContent(5, f"{Plugin.__name__}{params}", f"{Plugin.__desc__}{typeFuzzing}\n")
-
-def showWordlistsHelp():
-    CO.helpTitle(0, "Wordlist options: (-w)")
-    CO.helpTitle(2, "Default: The default dictionaries are selected by default when no custom are choiced\n")
-    CO.helpContent(5, "FILEPATH", "Set the path of the wordlist file")
-    CO.helpContent(5, "[PAYLOAD1,PAYLOAD2,]", "Set the payloads list to be used as wordlist")
-    CO.helpTitle(2, "Custom (Wordlist=PARAM): Set the custom dictionary and his parameter\n")
-    showCustomPackageHelp('wordlists')
-    CO.helpTitle(0, "Examples:\n")
-    CO.print("FuzzingTool -u https://$.domainexample.com/ -w /path/to/wordlist/subdomains.txt -t 30 --timeout 5 -V2\n")
-    CO.print("FuzzingTool -u https://$.domainexample.com/ -w [wp-admin,admin,webmail,www,cpanel] -t 30 --timeout 5 -V2\n")
-    CO.print("FuzzingTool -u https://$.domainexample.com/ -w CrtSh=domainexample.com -t 30 --timeout 5 -V2\n")
-    CO.print("FuzzingTool -u https://domainexample.com/$ -w Overflow=5000,:../:etc/passwd -t 30 --timeout 5 -V2\n")
-
-def showEncodersHelp():
-    CO.helpTitle(0, "Encoder options: (-e)")
-    CO.helpTitle(2, "Set the encoder used on the payloads\n")
-    showCustomPackageHelp('encoders')
-    CO.helpTitle(0, "Examples:\n")
-    CO.print("FuzzingTool -u https://domainexample.com/page.php?id= -w /path/to/wordlist/sqli.txt -e Url=2 -t 30 --scanner Find=SQL\n")
-
-def showScannersHelp():
-    CO.helpTitle(0, "Scanner options:")
-    CO.helpTitle(2, "Default: The default scanners are selected automatically during the tests, if a custom scanner wasn't gived\n")
-    CO.helpContent(5, "DataScanner", "Scanner for the data fuzzing")
-    CO.helpContent(5, "PathScanner", "Scanner for the path URL fuzzing")
-    CO.helpContent(5, "SubdomainScanner", "Scanner for the subdomain URL fuzzing")
-    CO.helpTitle(2, "Custom (--scaner SCANNER): Set the custom scanner\n")
-    showCustomPackageHelp('scanners')
-    CO.helpTitle(0, "Examples:\n")
-    CO.print("FuzzingTool -u https://domainexample.com/search.php?query= -w /path/to/wordlist/xss.txt --scanner Reflected -t 30 -o csv\n")
-
-class CliArgumentParser:
-    """Class that handle with the sys argument parsing"""
+class CliArguments:
+    """Class that handle with the FuzzingTool arguments"""
     def __init__(self):
-        usage = "Usage: FuzzingTool [-u|-r TARGET]+ [-w WORDLIST]+ [options]*"
-        examples = "For usage examples, see: https://github.com/NESCAU-UFLA/FuzzingTool/wiki/Usage-Examples"
-        if len(argv) < 2:
-            CO.print(f"Invalid format! Use -h on 2nd parameter to show the help menu.\n\n{usage}\n\n{examples}")
-            exit(0)
-        if len(argv) == 2 and ('-h=' in argv[1] or '--help=' in argv[1]):
-            askedHelp = argv[1].split('=')[1]
-            if 'wordlists' == askedHelp:
-                showWordlistsHelp()
-            elif 'encoders' == askedHelp:
-                showEncodersHelp()
-            elif 'scanners' == askedHelp:
-                showScannersHelp()
-            else:
-                CO.print(f"Help argument '{askedHelp}' not available")
-            exit(0)
-        parser = argparse.ArgumentParser(
-            usage=argparse.SUPPRESS,
-            description=usage,
-            epilog=examples,
-            formatter_class=lambda prog: argparse.HelpFormatter(
-                prog, indent_increment=4, max_help_position=30, width=100
+        try:
+            parser = ArgumentParser(
+                usage="Usage: FuzzingTool [-u|-r TARGET]+ [-w WORDLIST]+ [options]*",
+                examples="For usage examples, see: https://github.com/NESCAU-UFLA/FuzzingTool/wiki/Usage-Examples",
             )
-        )
-        parser.add_argument('-v', '--version',
-            action='version',
-            version=f"FuzzingTool v{version()}"
-        )
-        self.options = self.__getOptions(parser)
-        self.setArguments()
-
-    def setArguments(self):
-        """Set all the app arguments"""
+            self.options = self.__getOptions(parser)
+        except BadArgumentFormat as e:
+            exit(f"FuzzingTool bad argument format - {str(e)}")
         self.setRequestArguments()
         self.setDictionaryArguments()
         self.setMatchArguments()
@@ -159,12 +78,7 @@ class CliArgumentParser:
 
     def setMatchArguments(self):
         """Set the match arguments"""
-        matchStatus = self.options.matchStatus
-        if matchStatus:
-            if '200' not in matchStatus:
-                if CO.askYesNo('warning', "Status code 200 (OK) wasn't included. Do you want to include it to the allowed status codes?"):
-                    matchStatus += ",200"
-        self.matchStatus = matchStatus
+        self.matchStatus = self.options.matchStatus
         self.matchLength = self.options.matchLength
         self.matchTime = self.options.matchTime
         self.scanner = None if not self.options.scanner else parseOptionWithArgs(self.options.scanner)
@@ -205,7 +119,7 @@ class CliArgumentParser:
                 self.blacklistAction = 'skip'
             self.blacklistedStatus = status
 
-    def __getOptions(self, parser: argparse.ArgumentParser):
+    def __getOptions(self, parser: ArgumentParser):
         """Builds and get the FuzzingTool arguments
 
         @type parser: ArgumentParser
@@ -219,7 +133,7 @@ class CliArgumentParser:
         self.__buildMoreOpts(parser)
         return parser.parse_args()
     
-    def __buildRequestOpts(self, parser: argparse.ArgumentParser):
+    def __buildRequestOpts(self, parser: ArgumentParser):
         """Builds the arguments for request options
 
         @type parser: ArgumentParser
@@ -290,7 +204,7 @@ class CliArgumentParser:
             default=False,
         )
     
-    def __buildDictionaryOpts(self, parser: argparse.ArgumentParser):
+    def __buildDictionaryOpts(self, parser: ArgumentParser):
         """Builds the arguments for dictionary options
 
         @type parser: ArgumentParser
@@ -341,7 +255,7 @@ class CliArgumentParser:
             default=False,
         )
 
-    def __buildMatchOpts(self, parser: argparse.ArgumentParser):
+    def __buildMatchOpts(self, parser: ArgumentParser):
         """Builds the arguments for match options
 
         @type parser: ArgumentParser
@@ -375,7 +289,7 @@ class CliArgumentParser:
             metavar='SCANNER',
         )
 
-    def __buildDisplayOpts(self, parser: argparse.ArgumentParser):
+    def __buildDisplayOpts(self, parser: ArgumentParser):
         """Builds the arguments for cli display options
 
         @type parser: ArgumentParser
@@ -407,7 +321,7 @@ class CliArgumentParser:
             default=False,
         )
 
-    def __buildMoreOpts(self, parser: argparse.ArgumentParser):
+    def __buildMoreOpts(self, parser: ArgumentParser):
         """Builds the arguments for non categorized options
 
         @type parser: ArgumentParser

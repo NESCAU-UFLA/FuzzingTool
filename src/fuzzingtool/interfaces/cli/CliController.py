@@ -10,17 +10,16 @@
 #
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
-from .CliArgumentParser import *
+from .CliArguments import *
 from .CliOutput import CliOutput, Colors
 from ..ArgumentBuilder import ArgumentBuilder as AB
 from ... import version
 from ...utils.FileHandler import fileHandler as fh
 from ...core import *
 from ...conn import *
-from ...factories.HttpFactory import HttpFactory
-from ...factories.WordlistFactory import WordlistFactory
+from ...factories import *
 from ...exceptions.MainExceptions import SkipTargetException
-from ...exceptions.RequestExceptions import InvalidHostname, RequestException
+from ...exceptions.RequestExceptions import *
 
 from queue import Queue
 import time
@@ -67,43 +66,43 @@ class CliController:
         """
         return self.verbose[0]
 
-    def main(self, parser: CliArgumentParser):
+    def main(self, arguments: CliArguments):
         """The main function.
            Prepares the application environment and starts the fuzzing
         
-        @type parser: CliArgumentParser
-        @param parser: The command line interface arguments object
+        @type arguments: CliArguments
+        @param arguments: The command line interface arguments object
         """
         self.co = CliOutput() # Abbreviation to cli output
-        self.co.setOutputMode(parser.simpleOutput)
-        self.verbose = parser.verbose
+        self.co.setOutputMode(arguments.simpleOutput)
+        self.verbose = arguments.verbose
         self.co.setVerbosityMode(self.isVerboseMode())
         CliOutput.print(banner())
         try:
             self.co.infoBox("Setupping arguments ...")
-            self.init(parser)
+            self.init(arguments)
             self.co.printConfigs(
-                output='normal' if not parser.simpleOutput else 'simple',
+                output='normal' if not arguments.simpleOutput else 'simple',
                 verbose='quiet' if not self.verbose[0] else 'common' if not self.verbose[1] else 'detailed',
                 targets=self.targetsList,
                 dictionaries=self.dictionariesMetadata,
-                prefix=parser.prefix,
-                suffix=parser.suffix,
-                case='lowercase' if parser.lowercase else 'uppercase' if parser.uppercase else 'capitalize' if parser.capitalize else None,
-                encoder=parser.encoder,
+                prefix=arguments.prefix,
+                suffix=arguments.suffix,
+                case='lowercase' if arguments.lowercase else 'uppercase' if arguments.uppercase else 'capitalize' if arguments.capitalize else None,
+                encoder=arguments.encoder,
                 match={
-                    'status': parser.matchStatus,
-                    'length': parser.matchLength,
-                    'time': parser.matchTime,
+                    'status': arguments.matchStatus,
+                    'length': arguments.matchLength,
+                    'time': arguments.matchTime,
                 },
-                scanner=parser.scanner,
+                scanner=arguments.scanner,
                 blacklistStatus={
-                    'status': parser.blacklistedStatus,
-                    'action': parser.blacklistAction,
-                } if parser.blacklistedStatus else {},
+                    'status': arguments.blacklistedStatus,
+                    'action': arguments.blacklistAction,
+                } if arguments.blacklistedStatus else {},
                 delay=self.delay,
                 threads=self.numberOfThreads,
-                report=parser.report,
+                report=arguments.report,
             )
             self.checkConnectionAndRedirections()
         except KeyboardInterrupt:
@@ -122,22 +121,17 @@ class CliController:
             self.showFooter()
             self.co.infoBox("Test completed")
 
-    def init(self, parser: CliArgumentParser):
+    def init(self, arguments: CliArguments):
         """The initialization function.
            Set the application variables including plugins requires
         
-        @type parser: CliArgumentParser
-        @param parser: The command line interface arguments object
+        @type arguments: CliArguments
+        @param arguments: The command line interface arguments object
         """
-        self.globalMatcher = Matcher.fromString(
-            parser.matchStatus,
-            parser.matchLength,
-            parser.matchTime
-        )
-        self.__initRequesters(parser)
+        self.__initRequesters(arguments)
         scanner = None
-        if parser.scanner:
-            scanner, param = parser.scanner
+        if arguments.scanner:
+            scanner, param = arguments.scanner
             try:
                 scanner = PluginFactory.objectCreator(
                     scanner, 'scanners', param
@@ -146,26 +140,36 @@ class CliController:
                 raise Exception(str(e))
         self.globalScanner = scanner
         self.__checkForDuplicatedTargets()
-        if parser.blacklistedStatus:
-            blacklistedStatus = parser.blacklistedStatus
-            action = parser.blacklistAction
+        matchStatus = arguments.matchStatus
+        if matchStatus:
+            if '200' not in matchStatus:
+                if self.co.askYesNo('warning', "Status code 200 (OK) wasn't included. Do you want to include it to the allowed status codes?"):
+                    matchStatus += ",200"
+        self.globalMatcher = Matcher.fromString(
+            matchStatus,
+            arguments.matchLength,
+            arguments.matchTime
+        )
+        if arguments.blacklistedStatus:
+            blacklistedStatus = arguments.blacklistedStatus
+            action = arguments.blacklistAction
             self.blacklistStatus = BlacklistStatus(
                 status=blacklistedStatus,
                 action=action,
-                actionParam=parser.blacklistActionParam,
+                actionParam=arguments.blacklistActionParam,
                 actionCallbacks={
                     'skip': self._skipCallback,
                     'wait': self._waitCallback,
                 },
             )
-        self.delay = parser.delay
-        self.numberOfThreads = parser.numberOfThreads
+        self.delay = arguments.delay
+        self.numberOfThreads = arguments.numberOfThreads
         if self.globalScanner:
             self.localScanner = self.globalScanner
             self.co.setMessageCallback(self.localScanner.cliCallback)
-        if parser.report:
-            fh.reporter.setMetadata(parser.report)
-        self.__initDictionary(parser)
+        if arguments.report:
+            fh.reporter.setMetadata(arguments.report)
+        self.__initDictionary(arguments)
 
     def checkConnectionAndRedirections(self):
         """Test the connection to target.
@@ -488,20 +492,20 @@ class CliController:
                 self.requester.index, self.totalRequests, payload
             )
 
-    def __initRequesters(self, parser: CliArgumentParser):
+    def __initRequesters(self, arguments: CliArguments):
         """Initialize the requesters
 
-        @type parser: CliArgumentParser
-        @param parser: The command line interface arguments object
+        @type arguments: CliArguments
+        @param arguments: The command line interface arguments object
         """
         self.targetsList = []
-        if parser.targetsFromUrl:
+        if arguments.targetsFromUrl:
             self.targetsList.extend(AB.buildTargetsFromArgs(
-                parser.targetsFromUrl, parser.method, parser.data
+                arguments.targetsFromUrl, arguments.method, arguments.data
             ))
-        if parser.targetsFromRawHttp:
+        if arguments.targetsFromRawHttp:
             self.targetsList.extend(AB.buildTargetsFromRawHttp(
-                parser.targetsFromRawHttp, parser.scheme
+                arguments.targetsFromRawHttp, arguments.scheme
             ))
         if not self.targetsList:
             raise Exception("A target is needed to make the fuzzing")
@@ -516,11 +520,11 @@ class CliController:
                 methods=target['methods'],
                 data=target['data'],
                 headers=target['header'],
-                followRedirects=parser.followRedirects,
-                proxy=parser.proxy,
-                proxies=fh.read(parser.proxies) if parser.proxies else [],
-                timeout=parser.timeout,
-                cookie=parser.cookie,
+                followRedirects=arguments.followRedirects,
+                proxy=arguments.proxy,
+                proxies=fh.read(arguments.proxies) if arguments.proxies else [],
+                timeout=arguments.timeout,
+                cookie=arguments.cookie,
             )
             self.requesters.append(requester)
             if requester.isMethodFuzzing():
@@ -553,11 +557,11 @@ class CliController:
                         thisTarget['typeFuzzing'] != nextTarget['typeFuzzing']):
                         raise Exception("Duplicated target detected with different type of fuzzing scan, exiting.")
 
-    def __initDictionary(self, parser: CliArgumentParser):
+    def __initDictionary(self, arguments: CliArguments):
         """Initialize the dictionary
 
-        @type parser: CliArgumentParser
-        @param parser: The command line interface arguments object
+        @type arguments: CliArguments
+        @param arguments: The command line interface arguments object
         """
         def buildDictionary(
             wordlists: list,
@@ -591,21 +595,21 @@ class CliController:
                 raise Exception("The wordlist is empty")
             dictionary = Dictionary(buildedWordlist)
             self.dictionariesMetadata[lastDictIndex]['sizeof'] = len(buildedWordlist)
-            dictionary.setPrefix(parser.prefix)
-            dictionary.setSuffix(parser.suffix)
-            if parser.lowercase:
+            dictionary.setPrefix(arguments.prefix)
+            dictionary.setSuffix(arguments.suffix)
+            if arguments.lowercase:
                 dictionary.setLowercase()
-            elif parser.uppercase:
+            elif arguments.uppercase:
                 dictionary.setUppercase()
-            elif parser.capitalize:
+            elif arguments.capitalize:
                 dictionary.setCapitalize()
             if encoder:
                 dictionary.setEncoder(encoder)
             return dictionary
         
         encoder = None
-        if parser.encoder:
-            encoder, param = parser.encoder
+        if arguments.encoder:
+            encoder, param = arguments.encoder
             try:
                 encoder = PluginFactory.objectCreator(
                     encoder, 'encoders', param
@@ -615,16 +619,16 @@ class CliController:
         self.globalDictionary = None
         self.dictionaries = []
         self.dictionariesMetadata = []
-        lenWordlists = len(parser.wordlists)
+        lenWordlists = len(arguments.wordlists)
         lenRequesters = len(self.requesters)
         if lenWordlists > lenRequesters:
             raise Exception("The quantity of wordlists is greater than the requesters")
         elif lenWordlists != lenRequesters:
-            wordlist = parser.wordlists[0]
+            wordlist = arguments.wordlists[0]
             self.globalDictionary = buildDictionary(wordlist, encoder=encoder)
             self.dictionary = self.globalDictionary
             self.totalRequests = len(self.dictionary)
         else:
             self.dictionaries = Queue()
-            for i, wordlist in enumerate(parser.wordlists):
+            for i, wordlist in enumerate(arguments.wordlists):
                 self.dictionaries.put(buildDictionary(wordlist, self.requesters[i], encoder))
