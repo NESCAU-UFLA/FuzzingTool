@@ -1,7 +1,7 @@
 <p align="center">
 <img src="https://user-images.githubusercontent.com/43549176/110254984-525fb200-7f70-11eb-84f0-9afdcab9725a.png" height="200" /><br/>
-<a href="https://github.com/NESCAU-UFLA/FuzzingTool/releases/tag/v3.10.1">
-<img src="https://img.shields.io/static/v1?label=Release&message=v3.10.1&color=darkred" />
+<a href="https://github.com/NESCAU-UFLA/FuzzingTool/releases/tag/v3.11.0">
+<img src="https://img.shields.io/static/v1?label=Release&message=v3.11.0&color=darkred" />
 </a>
 <img src="https://img.shields.io/static/v1?label=python&message=3.6%20|%203.7%20|%203.8%20|%203.9&color=informational&logo=python" />
 <a href="https://github.com/NESCAU-UFLA/FuzzingTool/blob/master/LICENSE.md">
@@ -16,7 +16,7 @@ FuzzingTool is a web penetration testing tool, that handles with fuzzing. After 
 We're not responsible for the misuse of this tool. This project was created for educational purposes and should not be used in environments without legal authorization.
 
 ## Screenshot
-![use-screenshots](https://user-images.githubusercontent.com/43549176/118672563-ba334400-b7ce-11eb-9927-78f6dc73eac8.png)
+![screenshot-v3-11-0](https://user-images.githubusercontent.com/43549176/120865932-5bf3b880-c565-11eb-984d-642fcd61b0b0.png)
 
 ## Getting Started
 Before we start the *penetration testings*, take a look at the **installing** and **prerequisites**.

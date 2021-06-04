@@ -12,8 +12,8 @@
 
 APP_VERSION = {
     'MAJOR_VERSION': 3,
-    "MINOR_VERSION": 10,
-    "PATCH": 1
+    "MINOR_VERSION": 11,
+    "PATCH": 0
 }
 
 def version():
