@@ -534,6 +534,9 @@ class CliController:
                 target['typeFuzzing'] = "Couldn't determine the fuzzing type"
 
     def __checkForDuplicatedTargets(self):
+        """Checks for duplicated targets, if they'll use the same scanner (based on fuzzing type)
+           Also, checks if a global scanner was already specified before make the check
+        """
         if not self.globalScanner:
             targetsChecker = [{
                 'host': getHost(getPureUrl(target['url'])),
