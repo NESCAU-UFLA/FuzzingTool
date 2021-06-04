@@ -20,7 +20,6 @@ class DataScanner(BaseScanner):
 
     def inspectResult(self, result: Result, *args):
         result._custom['Payload Length'] = len(result.payload)
-        result._custom['Body'] = result.getResponse().text
 
     def scan(self, result: Result):
         return True

@@ -10,19 +10,19 @@
 #
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
-from ..default.DataScanner import DataScanner
+from ..BaseScanner import BaseScanner
 from ...Result import Result
 from ....interfaces.cli.CliOutput import Colors, getFormatedResult
 from ....exceptions.MainExceptions import MissingParameter, BadArgumentFormat
 
 import re
 
-class Find(DataScanner):
+class Find(BaseScanner):
     __name__ = "Find"
     __author__ = ("Vitor Oriel C N Borges")
     __params__ = "REGEX"
     __desc__ = "Filter results based on a regex match into the response body"
-    __type__ = "DataFuzzing"
+    __type__ = ""
 
     """
     Attributes:
@@ -33,7 +33,6 @@ class Find(DataScanner):
     def __init__(self, regex: str):
         if not regex:
             raise MissingParameter("regex")
-        super().__init__()
         try:
             self.__regexer = re.compile(regex)
         except re.error:
@@ -41,10 +40,10 @@ class Find(DataScanner):
         self.__found = {}
 
     def inspectResult(self, result: Result, *args):
-        super().inspectResult(result, *args)
+        pass
 
     def scan(self, result: Result):
-        found = True if self.__regexer.search(result._custom['Body']) else False
+        found = True if self.__regexer.search(result.getResponse().text) else False
         self.__found[result.index] = found
         return found
     

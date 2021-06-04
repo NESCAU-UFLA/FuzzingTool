@@ -10,16 +10,16 @@
 #
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
-from ..default.DataScanner import DataScanner
+from ..BaseScanner import BaseScanner
 from ...Result import Result
 from ....interfaces.cli.CliOutput import Colors, getFormatedResult
 
-class Reflected(DataScanner):
+class Reflected(BaseScanner):
     __name__ = "Reflected"
     __author__ = ("Vitor Oriel C N Borges")
     __params__ = ""
     __desc__ = "Lookup if the payload was reflected in the response body"
-    __type__ = "DataFuzzing"
+    __type__ = ""
 
     """
     Attributes:
@@ -27,14 +27,13 @@ class Reflected(DataScanner):
                    saying if the payload was reflected or not
     """
     def __init__(self):
-        super().__init__()
         self.__reflected = {}
 
     def inspectResult(self, result: Result, *args):
-        super().inspectResult(result, *args)
+        pass
 
     def scan(self, result: Result):
-        reflected = result.payload in result._custom['Body']
+        reflected = result.payload in result.getResponse().text
         self.__reflected[result.index] = reflected
         return reflected
     
