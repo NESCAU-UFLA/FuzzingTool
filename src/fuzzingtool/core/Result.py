@@ -15,9 +15,9 @@ class Result:
 
     Attributes:
         index: The index of the result (same as the request index)
+        payload: The payload used in the request
         url: The requested target URL
         method: The method used in the request
-        payload: The payload used in the request
         RTT: The elapsed time on both request and response
         requestTime: The elapsed time only for the request
         responseTime: The elapsed time only for the response
