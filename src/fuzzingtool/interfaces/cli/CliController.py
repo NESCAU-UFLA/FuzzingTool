@@ -47,6 +47,7 @@ class CliController:
     Attributes:
         requesters: The requesters list
         startedTime: The time when start the fuzzing test
+        fuzzer: The fuzzer object to handle with the fuzzing test
         allResults: The results dictionary for each host
         lock: A thread locker to prevent overwrites on logfiles
         blacklistStatus: The blacklist status object
@@ -54,6 +55,7 @@ class CliController:
     def __init__(self):
         self.requesters = []
         self.startedTime = 0
+        self.fuzzer = None
         self.allResults = {}
         self.lock = threading.Lock()
         self.blacklistStatus = None
@@ -109,7 +111,16 @@ class CliController:
             exit(0)
         except Exception as e:
             self.co.errorBox(str(e))
-        self.start()
+        try:
+            self.start()
+        except KeyboardInterrupt:
+            if self.fuzzer and self.fuzzer.isRunning():
+                self.co.abortBox("Test aborted, stopping threads ...")
+                self.fuzzer.stop()
+            self.co.abortBox("Test aborted by the user")
+        finally:
+            self.showFooter()
+            self.co.infoBox("Test completed")
 
     def init(self, parser: CliArgumentParser):
         """The initialization function.
@@ -210,33 +221,23 @@ class CliController:
            Each target is fuzzed based on their own methods list
         """
         self.startedTime = time.time()
-        self.fuzzer = None
-        try:
-            for requester in self.requesters:
-                try:
-                    self.prepareTarget(requester)
-                    for method in self.requester.methods:
-                        self.requester.resetRequestIndex()
-                        self.requester.setMethod(method)
-                        self.co.infoBox(f"Starting test on '{self.requester.getUrl()} with method {method}")
-                        self.prepareFuzzer()
-                        if not self.isVerboseMode():
-                            CliOutput.print("")
-                except SkipTargetException as e:
-                    if self.fuzzer and self.fuzzer.isRunning():
-                        if not self.isVerboseMode():
-                            CliOutput.print("")
-                        self.co.warningBox("Skip target detected, stopping threads ...")
-                        self.fuzzer.stop()
-                    self.co.abortBox(f"{str(e)}. Target skipped")
-        except KeyboardInterrupt:
-            if self.fuzzer and self.fuzzer.isRunning():
-                self.co.abortBox("Test aborted, stopping threads ...")
-                self.fuzzer.stop()
-            self.co.abortBox("Test aborted by the user")
-        finally:
-            self.showFooter()
-            self.co.infoBox("Test completed")
+        for requester in self.requesters:
+            try:
+                self.prepareTarget(requester)
+                for method in self.requester.methods:
+                    self.requester.resetRequestIndex()
+                    self.requester.setMethod(method)
+                    self.co.infoBox(f"Starting test on '{self.requester.getUrl()} with method {method}")
+                    self.prepareFuzzer()
+                    if not self.isVerboseMode():
+                        CliOutput.print("")
+            except SkipTargetException as e:
+                if self.fuzzer and self.fuzzer.isRunning():
+                    if not self.isVerboseMode():
+                        CliOutput.print("")
+                    self.co.warningBox("Skip target detected, stopping threads ...")
+                    self.fuzzer.stop()
+                self.co.abortBox(f"{str(e)}. Target skipped")
 
     def prepareTarget(self, requester: Request):
         """Prepare the target variables for the fuzzing tests.
