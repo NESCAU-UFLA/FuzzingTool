@@ -435,7 +435,6 @@ class CliArgumentParser:
             dest='reportName',
             help="Define the report name and/or format (accept txt, csv and json)",
             metavar='REPORT',
-            default='txt'
         )
         moreOpts.add_argument('--blacklist-status',
             action='store',

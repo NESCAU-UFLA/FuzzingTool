@@ -152,7 +152,8 @@ class CliController:
         if self.globalScanner:
             self.localScanner = self.globalScanner
             self.co.setMessageCallback(self.localScanner.cliCallback)
-        fh.reporter.setMetadata(parser.report)
+        if parser.report:
+            fh.reporter.setMetadata(parser.report)
         self.__initDictionary(parser)
 
     def checkConnectionAndRedirections(self):

@@ -334,7 +334,7 @@ class CliOutput:
         """
         print("")
         globalDict = False
-        if len(dictionaries) == 1:
+        if len(dictionaries) != len(targets):
             globalDict = True
             thisDict = dictionaries[0]
         spaces = 3
