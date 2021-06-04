@@ -225,13 +225,13 @@ class CliController:
            Each target is fuzzed based on their own methods list
         """
         self.startedTime = time.time()
-        for requester in self.requesters:
+        for i, requester in enumerate(self.requesters):
             try:
                 self.prepareTarget(requester)
                 for method in self.requester.methods:
                     self.requester.resetRequestIndex()
                     self.requester.setMethod(method)
-                    self.co.infoBox(f"Starting test on '{self.requester.getUrl()} with method {method}")
+                    self.co.infoBox(f"Starting {self.targetsList[i]['typeFuzzing']} on {self.targetHost} with method {method}")
                     self.prepareFuzzer()
                     if not self.isVerboseMode():
                         CliOutput.print("")
@@ -251,14 +251,14 @@ class CliController:
         @param requester: The requester for the target
         """
         self.requester = requester
-        targetHost = getHost(getPureUrl(requester.getUrl()))
+        self.targetHost = getHost(getPureUrl(requester.getUrl()))
         if self.isVerboseMode():
-            self.co.infoBox(f"Preparing target {targetHost} ...")
+            self.co.infoBox(f"Preparing target {self.targetHost} ...")
         before = time.time()
-        self.checkIgnoreErrors(targetHost)
+        self.checkIgnoreErrors(self.targetHost)
         self.startedTime += (time.time() - before)
         self.results = []
-        self.allResults[targetHost] = self.results
+        self.allResults[self.targetHost] = self.results
         self.skipTarget = None
         self.localMatcher = Matcher(
             allowedStatus=self.globalMatcher.getAllowedStatus(),
