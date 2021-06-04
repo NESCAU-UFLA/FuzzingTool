@@ -68,7 +68,7 @@ class Reporter:
         @param report: The report format and name
         """
         if '.' in report:
-            reportName, reportType = report.split('.')
+            reportName, reportType = report.rsplit('.', 1)
         else:
             reportType = report
             reportName = ''
