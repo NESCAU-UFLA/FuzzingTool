@@ -275,17 +275,17 @@ class CliController:
                 )
                 self.startedTime += (time.time() - before)
         if not self.globalDictionary:
-            self.dictionary = self.dictionaries.get()
-            self.totalRequests = len(self.dictionary)
+            self.localDictionary = self.dictionaries.get()
+            self.totalRequests = len(self.localDictionary)
+        self.localDictionary.reload()
 
     def prepareFuzzer(self):
         """Prepare the fuzzer for the fuzzing tests.
            Refill the dictionary with the wordlist content if a global dictionary was given
         """
-        self.dictionary.reload()
         self.fuzzer = Fuzzer(
             requester=self.requester,
-            dictionary=self.dictionary,
+            dictionary=self.localDictionary,
             matcher=self.localMatcher,
             scanner=self.localScanner,
             delay=self.delay,
@@ -626,8 +626,8 @@ class CliController:
         elif lenWordlists != lenRequesters:
             wordlist = arguments.wordlists[0]
             self.globalDictionary = buildDictionary(wordlist, encoder=encoder)
-            self.dictionary = self.globalDictionary
-            self.totalRequests = len(self.dictionary)
+            self.localDictionary = self.globalDictionary
+            self.totalRequests = len(self.localDictionary)
         else:
             self.dictionaries = Queue()
             for i, wordlist in enumerate(arguments.wordlists):

@@ -123,6 +123,8 @@ class Request:
 
         @returns bool: The data fuzzing flag
         """
+        if self.isUrlDiscovery():
+            return False
         for key, value in self.__data['PARAM'].items():
             if not value:
                 return True
