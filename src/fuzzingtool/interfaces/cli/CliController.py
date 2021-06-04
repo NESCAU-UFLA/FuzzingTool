@@ -385,7 +385,7 @@ class CliController:
             requesterIndex = 0
             for key, value in self.allResults.items():
                 if value:
-                    self.co.infoBox(f"Found {len(value)} matched results on target {key}:")
+                    self.co.infoBox(f"Found {len(value)} matched results on target {key}")
                     if self.isVerboseMode():
                         if not self.globalScanner:
                             self.requester = self.requesters[requesterIndex]
