@@ -118,12 +118,12 @@ class CliController:
         @type parser: CliArgumentParser
         @param parser: The command line interface arguments object
         """
-        self.__initRequesters(parser)
         self.globalMatcher = Matcher.fromString(
             parser.matchStatus,
             parser.matchLength,
             parser.matchTime
         )
+        self.__initRequesters(parser)
         scanner = None
         if parser.scanner:
             scanner, param = parser.scanner
@@ -134,6 +134,7 @@ class CliController:
             except Exception as e:
                 raise Exception(str(e))
         self.globalScanner = scanner
+        self.__checkForDuplicatedTargets()
         if parser.blacklistedStatus:
             blacklistedStatus = parser.blacklistedStatus
             action = parser.blacklistAction
@@ -531,18 +532,21 @@ class CliController:
                     target['typeFuzzing'] = "SubdomainFuzzing"
             else:
                 target['typeFuzzing'] = "Couldn't determine the fuzzing type"
-        targetsChecker = [{
-            'host': getHost(getPureUrl(target['url'])),
-            'typeFuzzing': target['typeFuzzing'],
-        } for target in self.targetsList]
-        if len(set([target['host'] for target in targetsChecker])) != len(self.targetsList):
-            targetsChecker.sort(key=lambda e: e['host'])
-            for i in range(len(targetsChecker)-1):
-                thisTarget = targetsChecker[i]
-                nextTarget = targetsChecker[i+1]
-                if (thisTarget['host'] == nextTarget['host'] and
-                    thisTarget['typeFuzzing'] != nextTarget['typeFuzzing']):
-                    raise Exception("Duplicated target detected with different type of fuzzing, exiting.")
+
+    def __checkForDuplicatedTargets(self):
+        if not self.globalScanner:
+            targetsChecker = [{
+                'host': getHost(getPureUrl(target['url'])),
+                'typeFuzzing': target['typeFuzzing'],
+            } for target in self.targetsList]
+            if len(set([target['host'] for target in targetsChecker])) != len(self.targetsList):
+                targetsChecker.sort(key=lambda e: e['host'])
+                for i in range(len(targetsChecker)-1):
+                    thisTarget = targetsChecker[i]
+                    nextTarget = targetsChecker[i+1]
+                    if (thisTarget['host'] == nextTarget['host'] and
+                        thisTarget['typeFuzzing'] != nextTarget['typeFuzzing']):
+                        raise Exception("Duplicated target detected with different type of fuzzing scan, exiting.")
 
     def __initDictionary(self, parser: CliArgumentParser):
         """Initialize the dictionary
