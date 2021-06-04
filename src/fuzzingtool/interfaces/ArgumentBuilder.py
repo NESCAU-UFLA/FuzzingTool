@@ -93,13 +93,3 @@ class ArgumentBuilder:
                 'header': headers,
             })
         return targets
-
-    @staticmethod
-    def buildPrefixSuffix(string: str):
-        """Build the prefix or suffix arguments
-
-        @type string: str
-        @param string: The prefix or suffix argument
-        @returns list: The string parsed into a list
-        """
-        return splitStrToList(string)
