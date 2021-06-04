@@ -10,6 +10,9 @@
 #
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
+from .encoders import *
+from .scanners import *
+from .wordlists import *
 from .BlacklistStatus import BlacklistStatus
 from .Dictionary import Dictionary
 from .Fuzzer import Fuzzer
