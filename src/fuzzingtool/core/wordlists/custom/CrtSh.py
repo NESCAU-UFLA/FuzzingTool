@@ -53,7 +53,7 @@ class CrtSh(BaseWordlist):
             raise Exception(str(e))
         if 'None found' in response.text:
             raise Exception(f"No certified domains was found for '{self.host}'")
-        contentList = [element.string for element in bs(response.text, "lxml")('td')]
+        contentList = [element.string for element in bs(response.text, "html.parser")('td')]
         regex = r"([a-zA-Z0-9]+\.)*[a-zA-Z0-9]+"
         for splited in self.host.split('.'):
             regex += r"\."+splited
