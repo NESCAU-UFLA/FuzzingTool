@@ -102,7 +102,7 @@ class CliArguments:
         self.report = self.options.reportName
 
     def setBlacklistedStatus(self):
-        """Check if the --blacklist-status argument is present, and set the blacklisted status and action"""
+        """Sets blacklisted status codes, action and action param"""
         self.blacklistedStatus = ''
         self.blacklistAction = ''
         self.blacklistActionParam = ''
