@@ -24,8 +24,8 @@ class ArgumentParser(argparse.ArgumentParser):
        Overrides the error method from argparse.ArgumentParser, raising an exception instead of exiting
     """
     def __init__(self):
-        usage="Usage: FuzzingTool [-u|-r TARGET]+ [-w WORDLIST]+ [options]*"
-        examples="For usage examples, see: https://github.com/NESCAU-UFLA/FuzzingTool/wiki/Usage-Examples"
+        usage = "Usage: FuzzingTool [-u|-r TARGET]+ [-w WORDLIST]+ [options]*"
+        examples = "For usage examples, see: https://github.com/NESCAU-UFLA/FuzzingTool/wiki/Usage-Examples"
         if len(argv) < 2:
             self.error(f"Invalid format! Use -h on 2nd parameter to show the help menu.\n\n{usage}\n\n{examples}")
         if len(argv) == 2 and ('-h=' in argv[1] or '--help=' in argv[1]):
