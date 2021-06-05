@@ -46,24 +46,16 @@ class ArgumentParser(argparse.ArgumentParser):
                 prog, indent_increment=4, max_help_position=30, width=100
             )
         )
-        self.add_argument('-v', '--version',
-            action='version',
-            version=f"FuzzingTool v{version()}"
-        )
+        self.__buildOptions()
 
     def error(self, message: str):
         raise BadArgumentFormat(message)
     
     def getOptions(self):
-        """Builds and get the FuzzingTool arguments
+        """Get the FuzzingTool options
         
         @returns Namespace(...args): The parsed arguments
         """
-        self.__buildRequestOpts()
-        self.__buildDictionaryOpts()
-        self.__buildMatchOpts()
-        self.__buildDisplayOpts()
-        self.__buildMoreOpts()
         return self.parse_args()
     
     def _showWordlistsHelp(self):
@@ -127,6 +119,18 @@ class ArgumentParser(argparse.ArgumentParser):
                 params = f"={Plugin.__params__}"
             CO.helpContent(5, f"{Plugin.__name__}{params}", f"{Plugin.__desc__}{typeFuzzing}\n")
     
+    def __buildOptions(self):
+        """Builds the FuzzingTool options"""
+        self.add_argument('-v', '--version',
+            action='version',
+            version=f"FuzzingTool v{version()}"
+        )
+        self.__buildRequestOpts()
+        self.__buildDictionaryOpts()
+        self.__buildMatchOpts()
+        self.__buildDisplayOpts()
+        self.__buildMoreOpts()
+
     def __buildRequestOpts(self):
         """Builds the arguments for request options"""
         requestOpts = self.add_argument_group('Request options')
