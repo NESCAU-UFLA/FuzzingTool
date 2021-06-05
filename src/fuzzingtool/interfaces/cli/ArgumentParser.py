@@ -23,7 +23,9 @@ class ArgumentParser(argparse.ArgumentParser):
     """Class to handle with the arguments parsing
        Overrides the error method from argparse.ArgumentParser, raising an exception instead of exiting
     """
-    def __init__(self, usage: str = '', examples: str = ''):
+    def __init__(self):
+        usage="Usage: FuzzingTool [-u|-r TARGET]+ [-w WORDLIST]+ [options]*"
+        examples="For usage examples, see: https://github.com/NESCAU-UFLA/FuzzingTool/wiki/Usage-Examples"
         if len(argv) < 2:
             self.error(f"Invalid format! Use -h on 2nd parameter to show the help menu.\n\n{usage}\n\n{examples}")
         if len(argv) == 2 and ('-h=' in argv[1] or '--help=' in argv[1]):
@@ -51,6 +53,18 @@ class ArgumentParser(argparse.ArgumentParser):
 
     def error(self, message: str):
         raise BadArgumentFormat(message)
+    
+    def getOptions(self):
+        """Builds and get the FuzzingTool arguments
+        
+        @returns Namespace(...args): The parsed arguments
+        """
+        self.__buildRequestOpts()
+        self.__buildDictionaryOpts()
+        self.__buildMatchOpts()
+        self.__buildDisplayOpts()
+        self.__buildMoreOpts()
+        return self.parse_args()
     
     def _showWordlistsHelp(self):
         """Show the help menu for wordlists and exit"""
@@ -112,3 +126,207 @@ class ArgumentParser(argparse.ArgumentParser):
             else:
                 params = f"={Plugin.__params__}"
             CO.helpContent(5, f"{Plugin.__name__}{params}", f"{Plugin.__desc__}{typeFuzzing}\n")
+    
+    def __buildRequestOpts(self):
+        """Builds the arguments for request options"""
+        requestOpts = self.add_argument_group('Request options')
+        requestOpts.add_argument('-u',
+            action='append',
+            dest='url',
+            help="Define the target URL",
+            metavar='URL',
+        )
+        requestOpts.add_argument('-r',
+            action='append',
+            dest='rawHttp',
+            help="Define the file with the raw HTTP request (scheme not specified)",
+            metavar='FILE',
+        )
+        requestOpts.add_argument('--scheme',
+            action='store',
+            dest='scheme',
+            help="Define the scheme used in the URL (default http)",
+            metavar='SCHEME',
+            default="http",
+        )
+        requestOpts.add_argument('-X',
+            action='store',
+            dest='method',
+            help="Define the request http verbs (method)",
+            metavar='METHOD',
+        )
+        requestOpts.add_argument('-d',
+            action='store',
+            dest='data',
+            help="Define the request body data",
+            metavar='DATA',
+        )
+        requestOpts.add_argument('--proxy',
+            action='store',
+            dest='proxy',
+            help="Define the proxy",
+            metavar='IP:PORT',
+        )
+        requestOpts.add_argument('--proxies',
+            action='store',
+            dest='proxies',
+            help="Define the file with a list of proxies",
+            metavar='FILE',
+        )
+        requestOpts.add_argument('--cookie',
+            action='store',
+            dest='cookie',
+            help="Define the HTTP Cookie header value",
+            metavar='COOKIE',
+        )
+        requestOpts.add_argument('--timeout',
+            action='store',
+            dest='timeout',
+            help="Define the request timeout (in seconds)",
+            metavar='TIMEOUT',
+            type=int,
+            default=0,
+        )
+        requestOpts.add_argument('--follow-redirects',
+            action='store_true',
+            dest='followRedirects',
+            help="Force to follow redirects",
+            default=False,
+        )
+    
+    def __buildDictionaryOpts(self):
+        """Builds the arguments for dictionary options"""
+        dictionaryOpts = self.add_argument_group('Dictionary options')
+        dictionaryOpts.add_argument('-w',
+            action='append',
+            dest='wordlist',
+            help="Define the wordlists with the payloads, separating with ';' (--help=wordlists for more info)",
+            metavar='WORDLIST',
+            required=True,
+        )
+        dictionaryOpts.add_argument('-e',
+            action='store',
+            dest='encoder',
+            help="Define the encoder used on payloads (--help=encoders for more info)",
+            metavar='ENCODER',
+        )
+        dictionaryOpts.add_argument('--prefix',
+            action='store',
+            dest='prefix',
+            help="Define the prefix(es) used with the payload",
+            metavar='PREFIX',
+        )
+        dictionaryOpts.add_argument('--suffix',
+            action='store',
+            dest='suffix',
+            help="Define the suffix(es) used with the payload",
+            metavar='SUFFIX',
+        )
+        dictionaryOpts.add_argument('--upper',
+            action='store_true',
+            dest='upper',
+            help="Set the uppercase case for the payloads",
+            default=False,
+        )
+        dictionaryOpts.add_argument('--lower',
+            action='store_true',
+            dest='lower',
+            help="Set the lowercase case for the payloads",
+            default=False,
+        )
+        dictionaryOpts.add_argument('--capitalize',
+            action='store_true',
+            dest='capitalize',
+            help="Set the capitalize case for the payloads",
+            default=False,
+        )
+
+    def __buildMatchOpts(self):
+        """Builds the arguments for match options"""
+        matchOpts = self.add_argument_group('Match options')
+        matchOpts.add_argument('-Mc',
+            action='store',
+            dest='matchStatus',
+            help="Match responses based on their status codes",
+            metavar='STATUS',
+        )
+        matchOpts.add_argument('-Ms',
+            action='store',
+            dest='matchLength',
+            help="Match responses based on their length (in bytes)",
+            metavar='SIZE',
+            type=int,
+        )
+        matchOpts.add_argument('-Mt',
+            action='store',
+            dest='matchTime',
+            help="Match responses based on their elapsed time (in seconds)",
+            metavar='TIME',
+            type=float,
+        )
+        matchOpts.add_argument('--scanner',
+            action='store',
+            dest='scanner',
+            help="Define the custom scanner (--help=scanners for more info)",
+            metavar='SCANNER',
+        )
+
+    def __buildDisplayOpts(self):
+        """Builds the arguments for cli display options"""
+        displayOpts = self.add_argument_group('Display options')
+        displayOpts.add_argument('-S, --simple-output',
+            action='store_true',
+            dest="simpleOutput",
+            help="Set the simple display output mode (affects labels)",
+            default=False,
+        )
+        displayOpts.add_argument('-V', '-V1',
+            action='store_true',
+            dest='commonVerbose',
+            help="Set the common verbose output mode",
+            default=False,
+        )
+        displayOpts.add_argument('-V2',
+            action='store_true',
+            dest='detailedVerbose',
+            help="Set the detailed verbose output mode",
+            default=False,
+        )
+        displayOpts.add_argument('--no-colors',
+            action='store_true',
+            dest='disableColors',
+            help="Disable the colors of the program",
+            default=False,
+        )
+
+    def __buildMoreOpts(self):
+        """Builds the arguments for non categorized options"""
+        moreOpts = self.add_argument_group('More options')
+        moreOpts.add_argument('-t',
+            action='store',
+            dest='numberOfThreads',
+            help="Define the number of threads used in the tests",
+            metavar='NUMBEROFTHREADS',
+            type=int,
+            default=1,
+        )
+        moreOpts.add_argument('--delay',
+            action='store',
+            dest='delay',
+            help="Define delay between each request",
+            metavar='DELAY',
+            type=float,
+            default=0,
+        )
+        moreOpts.add_argument('-o',
+            action='store',
+            dest='reportName',
+            help="Define the report name and/or format (accept txt, csv and json)",
+            metavar='REPORT',
+        )
+        moreOpts.add_argument('--blacklist-status',
+            action='store',
+            dest='blacklistStatus',
+            help="Blacklist status codes from response, and take an action when one is detected. Available actions: skip (to skip the current target), wait=SECONDS (to pause the app for some seconds)",
+            metavar='STATUS:ACTION',
+        )
