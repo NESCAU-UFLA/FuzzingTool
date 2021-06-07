@@ -30,7 +30,7 @@ class Logger:
         dateNow = datetime.now()
         logFileName = f"log-{dateNow.strftime('%Y-%m-%d_%H:%M')}.log"
         logDir = f'{OUTPUT_DIRECTORY}/{host}/logs'
-        self.__logFullPath = f'{logDir}/{logFileName}'
+        self.__logFullPath = Path(f'{logDir}/{logFileName}')
         try:
             logFile = open(self.__logFullPath, 'w+')
         except FileNotFoundError:
@@ -93,7 +93,7 @@ class Reporter:
         if not reportName:
             now = datetime.now()
             reportName = now.strftime("%Y-%m-%d_%H:%M")
-        reportFullPath = f'{reportDir}/{reportName}.{reportType}'
+        reportFullPath = Path(f'{reportDir}/{reportName}.{reportType}')
         try:
             self.__file = open(reportFullPath, 'w')
         except FileNotFoundError:
