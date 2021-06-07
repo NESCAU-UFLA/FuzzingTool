@@ -4,6 +4,7 @@
 <img src="https://img.shields.io/static/v1?label=Release&message=v3.11.0&color=darkred" />
 </a>
 <img src="https://img.shields.io/static/v1?label=python&message=3.6%20|%203.7%20|%203.8%20|%203.9&color=informational&logo=python" />
+<img src="https://img.shields.io/static/v1?label=OS&message=GNU/Linux&color=orange&logo=linux" />
 <a href="https://github.com/NESCAU-UFLA/FuzzingTool/blob/master/LICENSE.md">
 <img src="https://img.shields.io/static/v1?label=License&message=MIT&color=brightgreen" />
 </a>
