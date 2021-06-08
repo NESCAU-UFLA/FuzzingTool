@@ -96,7 +96,7 @@ class CliOutput:
     """Class that handle with the outputs
     
     Attributes:
-        lock: The threads locker
+        lock: The threads locker for screen output
         breakLine: A string to break line
         lastInline: A flag to say if the last output was inline or not
         info: The info label
@@ -145,7 +145,7 @@ class CliOutput:
             print(' '*(maxCommandSizeWithSpace)+' '+desc)
 
     def __init__(self):
-        self.__lock = None
+        self.__lock = threading.Lock()
         self.__breakLine = ''
         self.__lastInline = False
         self.__info = f'{Colors.GRAY}[{Colors.BLUE_GRAY}INFO{Colors.GRAY}]{Colors.RESET} '
@@ -178,10 +178,8 @@ class CliOutput:
         @param verboseMode: The verbose mode flag
         """
         if verboseMode:
-            self.__lock = None
             self.__breakLine = ''
         else:
-            self.__lock = threading.Lock()
             self.__breakLine = '\n'
 
     def setMessageCallback(self, getMessageCallback: Callable):
@@ -222,10 +220,9 @@ class CliOutput:
         @type msg: str
         @param msg: The message
         """
-        if self.__lock:
-            with self.__lock:
-                sys.stdout.flush()
-        print(f'{self.__breakLine}{self.__getTime()}{self.__getAbort(msg)}')
+        with self.__lock:
+            sys.stdout.flush()
+            print(f'{self.__breakLine}{self.__getTime()}{self.__getAbort(msg)}')
 
     def workedBox(self, msg: str):
         """Print the message with worked label and a message
@@ -396,16 +393,15 @@ class CliOutput:
         @type payload: str
         @param payload: The payload used in the request
         """
+        status = f"{Colors.GRAY}[{Colors.LIGHT_GRAY}{requestIndex}{Colors.GRAY}/{Colors.LIGHT_GRAY}{totalRequests}{Colors.GRAY}]{Colors.RESET} {Colors.LIGHT_YELLOW}{str(int((int(requestIndex)/totalRequests)*100))}%{Colors.RESET}"
+        payload = Colors.LIGHT_GRAY + fixPayloadToOutput(
+            payload=payload,
+            isProgressStatus=True
+        )
         with self.__lock:
             if not self.__lastInline:
-                self.__eraseLine()
                 self.__lastInline = True
-            status = f"{Colors.GRAY}[{Colors.LIGHT_GRAY}{requestIndex}{Colors.GRAY}/{Colors.LIGHT_GRAY}{totalRequests}{Colors.GRAY}]{Colors.RESET} {Colors.LIGHT_YELLOW}{str(int((int(requestIndex)/totalRequests)*100))}%{Colors.RESET}"
-            payload = Colors.LIGHT_GRAY + fixPayloadToOutput(
-                payload=payload,
-                isProgressStatus=True
-            )
-            sys.stdout.flush()
+                self.__eraseLine()
             print('\r'+f"{self.__getTime()}{status}{Colors.GRAY} :: {payload}", end='')
 
     def printResult(self, result: dict, vulnValidator: bool):
@@ -418,15 +414,14 @@ class CliOutput:
         """
         msg = self.__getMessage(result)
         if not vulnValidator:
-            self.notWorkedBox(msg)
+            with self.__lock:
+                self.notWorkedBox(msg)
         else:
-            if self.__lock:
-                with self.__lock:
-                    if self.__lastInline:
-                        self.__eraseLine()
-                        self.__lastInline = False
-                    sys.stdout.flush()
-            self.workedBox(msg)
+            with self.__lock:
+                if self.__lastInline:
+                    self.__lastInline = False
+                    self.__eraseLine()
+                self.workedBox(msg)
 
     def __getTime(self):
         """Get a time label
