@@ -238,7 +238,8 @@ class CliOutput:
         @type msg: str
         @param msg: The message
         """
-        print(f"{self.__getTime()}{self.__getNotWorked(msg)}")
+        with self.__lock:
+            print(f"{self.__getTime()}{self.__getNotWorked(msg)}")
 
     def askYesNo(self, askType: str, msg: str):
         """Ask a question for the user
@@ -414,8 +415,7 @@ class CliOutput:
         """
         msg = self.__getMessage(result)
         if not vulnValidator:
-            with self.__lock:
-                self.notWorkedBox(msg)
+            self.notWorkedBox(msg)
         else:
             with self.__lock:
                 if self.__lastInline:
