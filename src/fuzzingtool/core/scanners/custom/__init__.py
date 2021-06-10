@@ -12,3 +12,4 @@
 
 from .Reflected import Reflected
 from .Find import Find
+from .Grep import Grep
