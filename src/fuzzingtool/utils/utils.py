@@ -33,19 +33,17 @@ def splitStrToList(string: str, separator: str = ',', ignores: str = '\\'):
     @returns list: The splited string
     """
     if string:
-        if separator in string:
-            if f'{ignores}{separator}' in string:
-                final = []
-                buffer = ''
-                for substr in string.split(separator):
-                    if ignores in substr:
-                        buffer += substr[:substr.index(ignores)]+separator
-                    else:
-                        final.extend([buffer+substr])
-                        buffer = ''
-                return final
-            return string.split(separator)
-        return [string]
+        if f'{ignores}{separator}' in string:
+            final = []
+            buffer = ''
+            for substr in string.split(separator):
+                if ignores in substr:
+                    buffer += substr[:substr.index(ignores)]+separator
+                else:
+                    final.extend([buffer+substr])
+                    buffer = ''
+            return final
+        return string.split(separator)
     return []
 
 def getPluginNamesFromCategory(category: str):

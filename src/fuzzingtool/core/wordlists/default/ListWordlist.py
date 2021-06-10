@@ -11,7 +11,7 @@
 ## https://github.com/NESCAU-UFLA/FuzzingTool
 
 from ..BaseWordlist import BaseWordlist
-from ....utils.utils import checkRangeList
+from ....utils.utils import splitStrToList, checkRangeList
 from ....exceptions.MainExceptions import MissingParameter
 
 class ListWordlist(BaseWordlist):
@@ -26,10 +26,7 @@ class ListWordlist(BaseWordlist):
         super().__init__()
 
     def _build(self):
-        if ',' in self.payloadList:
-            buildedList = []
-            for payload in self.payloadList.split(','):
-                buildedList.extend(checkRangeList(payload))
-        else:
-            buildedList = checkRangeList(self.payloadList)
+        buildedList = []
+        for payload in splitStrToList(self.payloadList):
+            buildedList.extend(checkRangeList(payload))
         return buildedList
