@@ -1,5 +1,3 @@
-#!/usr/bin/python3
-
 # Copyright (c) 2021 Vitor Oriel C N Borges <https://github.com/VitorOriel>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
