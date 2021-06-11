@@ -1,4 +1,4 @@
-# Copyright (c) 2021 Vitor Oriel C N Borges <https://github.com/VitorOriel>
+# Copyright (c) 2021 Vitor Oriel <https://github.com/VitorOriel>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -23,7 +23,7 @@ from ....utils.FileHandler import fileHandler as fh
 
 class FileWordlist(BaseWordlist):
     __name__ = "FileWordlist"
-    __author__ = ("Vitor Oriel C N Borges")
+    __author__ = ("Vitor Oriel")
 
     def __init__(self, filePath: str):
         self.filePath = filePath

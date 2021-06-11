@@ -1,4 +1,4 @@
-# Copyright (c) 2021 Vitor Oriel C N Borges <https://github.com/VitorOriel>
+# Copyright (c) 2021 Vitor Oriel <https://github.com/VitorOriel>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -24,7 +24,7 @@ import html
 
 class Html(BaseEncoder):
     __name__ = "Html"
-    __author__ = ("Vitor Oriel C N Borges")
+    __author__ = ("Vitor Oriel")
     __params__ = ""
     __desc__ = "Encode payload using HTML entities encoder"
     __type__ = "DataFuzzing"

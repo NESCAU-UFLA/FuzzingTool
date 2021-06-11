@@ -1,7 +1,7 @@
 #! SQLi wordlist
 #! v0.1
 #! Contributors:
-#!  Vitor Oriel C N Borges
+#!  Vitor Oriel
 #!
 function(){ return this.userid}
 ' function(){ return this.username} or '1'='1

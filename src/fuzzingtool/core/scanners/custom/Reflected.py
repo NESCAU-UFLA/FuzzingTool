@@ -1,4 +1,4 @@
-# Copyright (c) 2021 Vitor Oriel C N Borges <https://github.com/VitorOriel>
+# Copyright (c) 2021 Vitor Oriel <https://github.com/VitorOriel>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -24,7 +24,7 @@ from ....interfaces.cli.CliOutput import Colors, getFormatedResult
 
 class Reflected(BaseScanner):
     __name__ = "Reflected"
-    __author__ = ("Vitor Oriel C N Borges")
+    __author__ = ("Vitor Oriel")
     __params__ = ""
     __desc__ = "Lookup if the payload was reflected in the response body"
     __type__ = ""

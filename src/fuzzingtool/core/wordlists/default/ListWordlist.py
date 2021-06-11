@@ -1,4 +1,4 @@
-# Copyright (c) 2021 Vitor Oriel C N Borges <https://github.com/VitorOriel>
+# Copyright (c) 2021 Vitor Oriel <https://github.com/VitorOriel>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -24,7 +24,7 @@ from ....exceptions.MainExceptions import MissingParameter
 
 class ListWordlist(BaseWordlist):
     __name__ = "ListWordlist"
-    __author__ = ("Vitor Oriel C N Borges")
+    __author__ = ("Vitor Oriel")
 
     def __init__(self, payloadList: str):
         payloadList = payloadList[1:len(payloadList)-1]

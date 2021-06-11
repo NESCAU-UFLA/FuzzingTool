@@ -1,7 +1,7 @@
 #! Paths wordlist
 #! v0.1
 #! Contributors:
-#!  Vitor Oriel C N Borges
+#!  Vitor Oriel
 #!
 !.gitignore
 !.htaccess

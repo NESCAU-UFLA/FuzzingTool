@@ -1,4 +1,4 @@
-# Copyright (c) 2021 Vitor Oriel C N Borges <https://github.com/VitorOriel>
+# Copyright (c) 2021 Vitor Oriel <https://github.com/VitorOriel>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -26,7 +26,7 @@ from ....exceptions.MainExceptions import MissingParameter
 
 class Robots(BaseWordlist):
     __name__ = "Robots"
-    __author__ = ("Vitor Oriel C N Borges")
+    __author__ = ("Vitor Oriel")
     __params__ = "TARGET_URL"
     __desc__ = "Build the wordlist using the target robots.txt"
     __type__ = "PathFuzzing"
