@@ -55,7 +55,7 @@ def splitStrToList(string: str, separator: str = ',', ignores: str = '\\'):
     return []
 
 def getPluginNamesFromCategory(category: str):
-    """Gets the custom package names (inside /core/category/custom/)
+    """Gets the custom package names (inside /core/category/plugins/)
 
     @type category: str
     @param category: The category to search for the custom plugins
@@ -63,10 +63,10 @@ def getPluginNamesFromCategory(category: str):
     """
     from os import walk
     try:
-        _, _, pluginFiles = next(walk(f"./fuzzingtool/core/{category}/custom/"))
+        _, _, pluginFiles = next(walk(f"./fuzzingtool/core/{category}/plugins/"))
     except:
         from os.path import dirname, abspath
-        _, _, pluginFiles = next(walk(f"{dirname(dirname(abspath(__file__)))}/core/{category}/custom/"))
+        _, _, pluginFiles = next(walk(f"{dirname(dirname(abspath(__file__)))}/core/{category}/plugins/"))
     if '__init__.py' in pluginFiles:
         pluginFiles.remove('__init__.py')
     return [pluginFile.split('.')[0] for pluginFile in pluginFiles]

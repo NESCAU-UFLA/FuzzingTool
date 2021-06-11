@@ -20,4 +20,4 @@
 
 from .BaseScanner import BaseScanner
 from .default import *
-from .custom import *
+from .plugins import *

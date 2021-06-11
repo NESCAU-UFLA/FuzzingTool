@@ -19,4 +19,4 @@
 # SOFTWARE.
 
 from .BaseEncoder import BaseEncoder
-from .custom import *
+from .plugins import *

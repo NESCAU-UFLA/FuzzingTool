@@ -32,7 +32,7 @@ class PluginFactory(BasePluginFactory):
         if not name in getPluginNamesFromCategory(category):
             raise InvalidPluginName(f"Plugin {name} does not exists")
         Plugin = import_module(
-            f"fuzzingtool.core.{category}.custom.{name}",
+            f"fuzzingtool.core.{category}.plugins.{name}",
             package=name
         )
         return getattr(Plugin, name)

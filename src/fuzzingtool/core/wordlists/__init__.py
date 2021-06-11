@@ -20,4 +20,4 @@
 
 from .BaseWordlist import BaseWordlist
 from .default import *
-from .custom import *
+from .plugins import *
