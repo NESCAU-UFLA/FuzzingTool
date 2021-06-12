@@ -63,6 +63,19 @@ def fixPayloadToOutput(
             payload += ' '
     return payload
 
+def getHumanLength(length: int):
+    """Get the human readable length from the result
+
+    @type length: int
+    @param length: The length of the response body
+    @returns tuple(int|float, str): The tuple with new length and the readable order
+    """
+    for order in ["B ", "KB", "MB", "GB"]:
+        if length < 1024:
+            return (length, order)
+        length /= 1024
+    return (length, "TB")
+
 def getFormatedResult(payload: str, RTT: float, length: int):
     """Format the result into a dict of strings
 
@@ -74,10 +87,14 @@ def getFormatedResult(payload: str, RTT: float, length: int):
     @param length: The response body length in bytes
     @returns tuple(str, str, str): The result formated with strings
     """
+    length, order = getHumanLength(int(length))
+    if type(length) is float:
+        length = "%.2f"%length
+    length = '{:>7}'.format(length)
     return (
         '{:<30}'.format(fixPayloadToOutput(payload)),
         '{:>10}'.format(RTT),
-        '{:>8}'.format(length),
+        f"{length} {order}",
     )
 
 class Colors:
