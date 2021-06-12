@@ -63,9 +63,7 @@ class Result:
         self.responseTime = responseTime
         self.status = response.status_code
         content = response.content
-        self.length = response.headers.get('Content-Length')
-        if self.length == None:
-            self.length = len(content)
+        self.length = len(content)
         self.words = len(content.split())
         self.lines = content.count(b'\n')
         self._custom = {}
