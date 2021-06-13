@@ -27,7 +27,7 @@ class SubdomainScanner(BaseScanner):
     __author__ = ("Vitor Oriel")
 
     def inspectResult(self, result: Result, *args):
-        result._custom['ip'] = args[0]
+        result.custom['ip'] = args[0]
 
     def scan(self, result: Result):
         return True
@@ -36,7 +36,7 @@ class SubdomainScanner(BaseScanner):
         url, RTT, length = getFormatedResult(
             result.url, result.RTT, result.length
         )
-        ip = '{:>15}'.format(result._custom['ip'])
+        ip = '{:>15}'.format(result.custom['ip'])
         return (
             f"{url} {Colors.GRAY}["+
             f'{Colors.LIGHT_GRAY}IP{Colors.RESET} {ip}'" | "+

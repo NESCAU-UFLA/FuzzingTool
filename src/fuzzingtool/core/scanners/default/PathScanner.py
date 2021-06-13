@@ -28,9 +28,9 @@ class PathScanner(BaseScanner):
     __author__ = ("Vitor Oriel")
 
     def inspectResult(self, result: Result, *args):
-        result._custom['redirected'] = ''
+        result.custom['redirected'] = ''
         if result.status > 300 and result.status < 400:
-            result._custom['redirected'] = result.getResponse().headers['Location']
+            result.custom['redirected'] = result.getResponse().headers['Location']
 
     def scan(self, result: Result):
         return True
@@ -53,7 +53,7 @@ class PathScanner(BaseScanner):
             statusColor += Colors.RED
         else:
             statusColor = ''
-        redirected = result._custom['redirected']
+        redirected = result.custom['redirected']
         if redirected:
             redirected = f" {Colors.LIGHT_YELLOW}Redirected to {redirected}{Colors.RESET}"
         path, RTT, length = getFormatedResult(

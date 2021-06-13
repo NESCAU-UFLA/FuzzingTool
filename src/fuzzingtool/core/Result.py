@@ -33,7 +33,7 @@ class Result:
         length: The length of the response body content
         words: The quantitty of words in the response body
         lines: The quantity of lines in the response body
-        custom: A dictionary to store custom data from the plugins
+        custom: A dictionary to store custom data from the scanners
         response: The raw response object
     """
     def __init__(self,
@@ -66,7 +66,7 @@ class Result:
         self.length = len(content)
         self.words = len(content.split())
         self.lines = content.count(b'\n')
-        self._custom = {}
+        self.custom = {}
         self.__response = response
     
     def __iter__(self):
@@ -81,7 +81,7 @@ class Result:
        yield 'length', self.length
        yield 'words', self.words
        yield 'lines', self.lines
-       for key, value in self._custom.items():
+       for key, value in self.custom.items():
            yield key, value
 
     def getResponse(self):

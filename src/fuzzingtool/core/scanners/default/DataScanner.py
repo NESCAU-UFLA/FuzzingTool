@@ -27,7 +27,7 @@ class DataScanner(BaseScanner):
     __author__ = ("Vitor Oriel")
 
     def inspectResult(self, result: Result, *args):
-        result._custom['PayloadLength'] = len(result.payload)
+        result.custom['PayloadLength'] = len(result.payload)
 
     def scan(self, result: Result):
         return True

@@ -47,12 +47,12 @@ class Grep(BaseScanner):
         self.__found = {}
 
     def inspectResult(self, result: Result, *args):
-        result._custom['greped'] = []
+        result.custom['greped'] = []
 
     def scan(self, result: Result):
         greped = set(self.__regexer.findall(result.getResponse().text))
         self.__found[result.index] = len(greped)
-        result._custom['greped'] = greped
+        result.custom['greped'] = greped
         return True if greped else False
     
     def cliCallback(self, result: Result):
