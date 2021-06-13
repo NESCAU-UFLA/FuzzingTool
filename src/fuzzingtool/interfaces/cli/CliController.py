@@ -592,6 +592,8 @@ class CliController:
             buildedWordlist = []
             for wordlist in wordlists:
                 name, params = wordlist
+                if self.verbose[1]:
+                    self.co.infoBox(f"Building wordlist from {name} ...")
                 self.dictionariesMetadata[lastDictIndex]['wordlists'].append(
                     f"{name}={params}" if params else name
                 )
@@ -599,6 +601,9 @@ class CliController:
                     buildedWordlist.extend(WordlistFactory.creator(name, params, requester))
                 except Exception as e:
                     self.co.warningBox(str(e))
+                else:
+                    if self.verbose[1]:
+                        self.co.infoBox(f"Wordlist {name} builded")
             if not buildedWordlist:
                 raise Exception("The wordlist is empty")
             dictionary = Dictionary(buildedWordlist)
