@@ -221,6 +221,7 @@ class ArgumentParser(argparse.ArgumentParser):
             dest='encoder',
             help="Define the encoder used on payloads (--help=encoders for more info)",
             metavar='ENCODER',
+            default='',
         )
         dictionaryOpts.add_argument('--prefix',
             action='store',

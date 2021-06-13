@@ -58,7 +58,10 @@ class Dictionary(Payloader):
         lengthSuffix = len(self._suffix)
         if lengthSuffix == 0:
             lengthSuffix = 1
-        return (len(self.__wordlist)*lengthSuffix*lengthPrefix)
+        lengthEncoders = len(self.encoders['default']) + len(self.encoders['chain'])
+        if lengthEncoders == 0:
+            lengthEncoders = 1
+        return (len(self.__wordlist)*lengthSuffix*lengthPrefix*lengthEncoders)
 
     def isEmpty(self):
         """The payloads empty queue flag getter

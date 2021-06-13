@@ -316,9 +316,9 @@ class CliOutput:
         prefix: list,
         suffix: list,
         case: str,
-        encoder: tuple,
+        encoder: str,
         match: dict,
-        scanner: tuple,
+        scanner: str,
         blacklistStatus: dict,
         delay: float,
         threads: int,
@@ -340,12 +340,12 @@ class CliOutput:
         @param suffix: The suffixes used with the payload
         @type case: str
         @param case: The payload case
-        @type encoder: tuple
-        @param encoder: The encoder tuple that caontains the encoder name and parameters
+        @type encoder: str
+        @param encoder: The encoders string that caontains the encoder name and parameters
         @type match: dict
         @param match: The matcher options on a dictionary
-        @type scanner: tuple
-        @param scanner: The scanner tuple that caontains the scanner name and parameters
+        @type scanner: str
+        @param scanner: The scanner string that caontains the scanner name and parameters
         @type blacklistStatus: dict
         @param blacklistStatus: The blacklist status arguments (codes and action taken)
         @type delay: float
@@ -384,18 +384,12 @@ class CliOutput:
         if case:
             self.printConfig("Payload case", case)
         if encoder:
-            encoder, params = encoder
-            if params:
-                encoder = f"{encoder}={params}"
-            self.printConfig("Encoder", f"{encoder}")
+            self.printConfig("Encoder", encoder)
         for key, value in match.items():
             if value:
                 self.printConfig(f"Match {key}", value)
         if scanner:
-            scanner, params = scanner
-            if params:
-                scanner = f"{scanner}={params}"
-            self.printConfig("Scanner", f"{scanner}")
+            self.printConfig("Scanner", scanner)
         if blacklistStatus:
             self.printConfig("Blacklisted status", f"{blacklistStatus['status']} with action {blacklistStatus['action']}")
         if delay:

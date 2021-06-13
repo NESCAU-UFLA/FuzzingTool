@@ -29,7 +29,10 @@ class Payloader:
         suffix: The suffix used in the payload
     """
     def __init__(self):
-        self.encoder = None
+        self.encoders = {
+            'default': [],
+            'chain': [],
+        }
         self._prefix = []
         self._suffix = []
         self.__case = lambda ajustedPayload : ajustedPayload
@@ -63,14 +66,36 @@ class Payloader:
         """The capitalize setter"""
         self.__case = lambda ajustedPayload : [payload.capitalize() for payload in ajustedPayload]
 
-    def setEncoder(self, encoder: BaseEncoder):
-        """The encoder setter
+    def setEncoders(self, encoders: tuple):
+        """The encoders setter
 
-        @type encoder: BaseEncoder
-        @param encoder: The encoder used in the payloads
+        @type encoders: tuple(list, list)
+        @param encoders: The encoders used in the payloads
         """
-        self.encoder = encoder
-        self.__encode = lambda ajustedPayload : [self.encoder.encode(payload) for payload in ajustedPayload]
+        def encode(ajustedPayload: list):
+            """The encode callback for the payloads
+
+            @type ajustedPayload: list
+            @param ajustedPayload: The payload list ajusted previously
+            @returns list: The encoded payloads list
+            """
+            encodedList = []
+            for payload in ajustedPayload:
+                for encoder in self.encoders['default']:
+                    encodedList.append(encoder.encode(payload))
+                for encoder in self.encoders['chain']:
+                    encodedPayloadWithChain = payload
+                    for e in encoder:
+                        encodedPayloadWithChain = e.encode(encodedPayloadWithChain)
+                    encodedList.append(encodedPayloadWithChain)
+            return encodedList
+        
+        encodersDefault, encodersChain = encoders
+        self.encoders = {
+            'default': encodersDefault,
+            'chain': encodersChain,
+        }
+        self.__encode = encode
 
     def _getCustomizedPayload(self, payload: str):
         """Gets the payload list ajusted with the console options

@@ -97,13 +97,13 @@ class CliController:
                 prefix=arguments.prefix,
                 suffix=arguments.suffix,
                 case='lowercase' if arguments.lowercase else 'uppercase' if arguments.uppercase else 'capitalize' if arguments.capitalize else None,
-                encoder=arguments.encoder,
+                encoder=arguments.strEncoder,
                 match={
                     'status': arguments.matchStatus,
                     'length': arguments.matchLength,
                     'time': arguments.matchTime,
                 },
-                scanner=arguments.scanner,
+                scanner=arguments.strScanner,
                 blacklistStatus={
                     'status': arguments.blacklistedStatus,
                     'action': arguments.blacklistAction,
@@ -571,10 +571,35 @@ class CliController:
         @type arguments: CliArguments
         @param arguments: The command line interface arguments object
         """
+        def buildEncoders():
+            if not arguments.encoder:
+                return None
+            encodersDefault = []
+            encodersChain = []
+            for encoders in arguments.encoder:
+                if len(encoders) > 1:
+                    appendTo = []
+                    isChain = True
+                else:
+                    appendTo = encodersDefault
+                    isChain = False
+                for encoder in encoders:
+                    name, param = encoder
+                    try:
+                        encoder = PluginFactory.objectCreator(
+                            name, 'encoders', param
+                        )
+                    except Exception as e:
+                        raise Exception(str(e))
+                    appendTo.append(encoder)
+                if isChain:
+                    encodersChain.append(appendTo)
+            return (encodersDefault, encodersChain)
+
         def buildDictionary(
             wordlists: list,
             requester: Request = None,
-            encoder: object = None,
+            encoders: dict = {},
         ):
             """Build the dictionary
 
@@ -616,19 +641,11 @@ class CliController:
                 dictionary.setUppercase()
             elif arguments.capitalize:
                 dictionary.setCapitalize()
-            if encoder:
-                dictionary.setEncoder(encoder)
+            if encoders:
+                dictionary.setEncoders(encoders)
             return dictionary
         
-        encoder = None
-        if arguments.encoder:
-            encoder, param = arguments.encoder
-            try:
-                encoder = PluginFactory.objectCreator(
-                    encoder, 'encoders', param
-                )
-            except Exception as e:
-                raise Exception(str(e))
+        encoders = buildEncoders()
         self.globalDictionary = None
         self.dictionaries = []
         self.dictionariesMetadata = []
@@ -638,10 +655,10 @@ class CliController:
             raise Exception("The quantity of wordlists is greater than the requesters")
         elif lenWordlists != lenRequesters:
             wordlist = arguments.wordlists[0]
-            self.globalDictionary = buildDictionary(wordlist, encoder=encoder)
+            self.globalDictionary = buildDictionary(wordlist, encoder=encoders)
             self.localDictionary = self.globalDictionary
             self.totalRequests = len(self.localDictionary)
         else:
             self.dictionaries = Queue()
             for i, wordlist in enumerate(arguments.wordlists):
-                self.dictionaries.put(buildDictionary(wordlist, self.requesters[i], encoder))
+                self.dictionaries.put(buildDictionary(wordlist, self.requesters[i], encoders))

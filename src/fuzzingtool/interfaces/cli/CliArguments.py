@@ -79,13 +79,15 @@ class CliArguments:
         self.uppercase = self.options.upper
         self.lowercase = self.options.lower
         self.capitalize = self.options.capitalize
-        self.encoder = None if not self.options.encoder else parseOptionWithArgs(self.options.encoder)
+        self.strEncoder = self.options.encoder
+        self.encoder = [[parseOptionWithArgs(e) for e in splitStrToList(encoder, separator='@')] for encoder in splitStrToList(self.options.encoder)]
 
     def setMatchArguments(self):
         """Set the match arguments"""
         self.matchStatus = self.options.matchStatus
         self.matchLength = self.options.matchLength
         self.matchTime = self.options.matchTime
+        self.strScanner = self.options.scanner
         self.scanner = None if not self.options.scanner else parseOptionWithArgs(self.options.scanner)
 
     def setDisplayArguments(self):
