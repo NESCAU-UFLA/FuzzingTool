@@ -37,10 +37,10 @@ class DnsZone(BaseWordlist):
         super().__init__()
 
     def _build(self):
-        nameServers = resolver.query(self.host, 'NS')
+        nameServers = resolver.resolve(self.host, 'NS')
         nameServersIps = []
         for ns in nameServers:
-            records = resolver.query(str(ns), 'A')
+            records = resolver.resolve(str(ns), 'A')
             for record in records:
                 nameServersIps.append(str(record))
         if not nameServersIps:
