@@ -25,6 +25,11 @@ from ....exceptions.MainExceptions import MissingParameter, BadArgumentFormat
 
 import re
 
+PREPARED_REGEXES = {
+    'email': r"([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+)",
+    'links': r"(http|https)://([\w-]+(\.[\w-]+))([\w.,@?^=%&:/~+#-]*[\w@?^=%&/~+#-])?",
+}
+
 class Grep(BaseScanner):
     __name__ = "Grep"
     __author__ = ("Vitor Oriel")
@@ -33,19 +38,24 @@ class Grep(BaseScanner):
         'type': list,
         'cli_list_separator': ';',
     }
-    __desc__ = "Grep content based on a regex match into the response body"
+    __desc__ = ("Grep content based on a regex match into the response body. "
+                f"You can use prepared regexes from this list: {list(PREPARED_REGEXES.keys())}")
     __type__ = ""
 
     """
     Attributes:
-        regexer: The regex object to find the content into the response body
+        regexers: The regexes objects to grep the content into the response body
         found: The dictionary to save the number of matched regexes in result
     """
     def __init__(self, regexes: list):
         if not regexes:
             raise MissingParameter("regex")
+        self.__regexers = []
         try:
-            self.__regexers = [re.compile(regex) for regex in regexes]
+            for regex in regexes:
+                if regex.lower() in PREPARED_REGEXES.keys():
+                    regex = PREPARED_REGEXES[regex.lower()]
+                self.__regexers.append(re.compile(regex))
         except re.error:
             raise BadArgumentFormat("invalid regex")
         self.__found = {}
