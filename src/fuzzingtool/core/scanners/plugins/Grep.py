@@ -51,13 +51,13 @@ class Grep(BaseScanner):
         if not regexes:
             raise MissingParameter("regex")
         self.__regexers = []
-        try:
-            for regex in regexes:
-                if regex.lower() in PREPARED_REGEXES.keys():
-                    regex = PREPARED_REGEXES[regex.lower()]
+        for regex in regexes:
+            if regex.lower() in PREPARED_REGEXES.keys():
+                regex = PREPARED_REGEXES[regex.lower()]
+            try:
                 self.__regexers.append(re.compile(regex))
-        except re.error:
-            raise BadArgumentFormat("invalid regex")
+            except re.error:
+                raise BadArgumentFormat(f"invalid regex: {regex}")
         self.__found = {}
 
     def inspectResult(self, result: Result, *args):
