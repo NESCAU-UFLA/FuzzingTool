@@ -56,7 +56,7 @@ class Grep(BaseScanner):
     def scan(self, result: Result):
         totalGreped = 0
         for i, regexer in enumerate(self.__regexers):
-            thisGreped = set(regexer.findall(result.getResponse().text))
+            thisGreped = set([r.group() for r in regexer.finditer(result.getResponse().text)])
             totalGreped += len(thisGreped)
             result.custom['greped'][i] = thisGreped
         self.__found[result.index] = totalGreped
