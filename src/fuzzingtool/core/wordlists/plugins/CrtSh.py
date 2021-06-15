@@ -21,11 +21,13 @@
 from ..BaseWordlist import BaseWordlist
 from ....conn.requests.Request import Request
 from ....exceptions.RequestExceptions import RequestException
+from ....decorators.plugin_meta import plugin_meta
 from ....exceptions.MainExceptions import MissingParameter
 
 from bs4 import BeautifulSoup as bs
 import re
 
+@plugin_meta
 class CrtSh(BaseWordlist):
     __name__ = "CrtSh"
     __author__ = ("Vitor Oriel",)

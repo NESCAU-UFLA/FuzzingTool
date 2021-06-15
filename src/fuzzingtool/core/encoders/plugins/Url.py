@@ -19,10 +19,12 @@
 # SOFTWARE.
 
 from ..BaseEncoder import BaseEncoder
+from ....decorators.plugin_meta import plugin_meta
 from ....exceptions.MainExceptions import BadArgumentFormat
 
 from urllib.parse import quote, unquote
 
+@plugin_meta
 class Url(BaseEncoder):
     __name__ = "Url"
     __author__ = ("Vitor Oriel",)

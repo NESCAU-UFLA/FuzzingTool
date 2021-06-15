@@ -21,9 +21,11 @@
 from ..BaseWordlist import BaseWordlist
 from ....conn.RequestParser import getPath
 from ....conn.requests.Request import Request
+from ....decorators.plugin_meta import plugin_meta
 from ....exceptions.RequestExceptions import RequestException
 from ....exceptions.MainExceptions import MissingParameter
 
+@plugin_meta
 class Robots(BaseWordlist):
     __name__ = "Robots"
     __author__ = ("Vitor Oriel",)

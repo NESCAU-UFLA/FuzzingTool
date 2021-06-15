@@ -21,6 +21,7 @@
 from ..BaseScanner import BaseScanner
 from ...Result import Result
 from ....interfaces.cli.CliOutput import Colors, getFormatedResult
+from ....decorators.plugin_meta import plugin_meta
 from ....exceptions.MainExceptions import MissingParameter, BadArgumentFormat
 
 import re
@@ -30,6 +31,7 @@ PREPARED_REGEXES = {
     'links': r"(http|https)://([\w-]+(\.[\w-]+))([\w.,@?^=%&:/~+#-]*[\w@?^=%&/~+#-])?",
 }
 
+@plugin_meta
 class Grep(BaseScanner):
     __name__ = "Grep"
     __author__ = ("Vitor Oriel",)

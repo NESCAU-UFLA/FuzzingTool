@@ -17,26 +17,3 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-
-from ..BaseEncoder import BaseEncoder
-from ....decorators.plugin_meta import plugin_meta
-
-import html
-
-@plugin_meta
-class Html(BaseEncoder):
-    __name__ = "Html"
-    __author__ = ("Vitor Oriel",)
-    __params__ = {}
-    __desc__ = "Encode payload using HTML entities encoder"
-    __type__ = "DataFuzzing"
-    __version__ = "0.1"
-
-    def __init__(self):
-        super().__init__()
-
-    def encode(self, payload: str):
-        return html.escape(payload)
-    
-    def decode(self, payload: str):
-        return html.unescape(payload)

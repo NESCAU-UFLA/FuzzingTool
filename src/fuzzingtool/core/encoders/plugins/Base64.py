@@ -19,9 +19,11 @@
 # SOFTWARE.
 
 from ..BaseEncoder import BaseEncoder
+from ....decorators.plugin_meta import plugin_meta
 
 import base64
 
+@plugin_meta
 class Base64(BaseEncoder):
     __name__ = "Base64"
     __author__ = ("Vitor Oriel",)

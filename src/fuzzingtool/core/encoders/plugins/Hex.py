@@ -19,9 +19,11 @@
 # SOFTWARE.
 
 from ..BaseEncoder import BaseEncoder
+from ....decorators.plugin_meta import plugin_meta
 
 import binascii
 
+@plugin_meta
 class Hex(BaseEncoder):
     __name__ = "Hex"
     __author__ = ("Vitor Oriel",)

@@ -21,10 +21,12 @@
 from ..BaseScanner import BaseScanner
 from ...Result import Result
 from ....interfaces.cli.CliOutput import Colors, getFormatedResult
+from ....decorators.plugin_meta import plugin_meta
 from ....exceptions.MainExceptions import MissingParameter, BadArgumentFormat
 
 import re
 
+@plugin_meta
 class Find(BaseScanner):
     __name__ = "Find"
     __author__ = ("Vitor Oriel",)

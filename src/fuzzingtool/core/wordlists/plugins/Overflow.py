@@ -19,8 +19,10 @@
 # SOFTWARE.
 
 from ..BaseWordlist import BaseWordlist
+from ....decorators.plugin_meta import plugin_meta
 from ....exceptions.MainExceptions import MissingParameter, BadArgumentFormat
 
+@plugin_meta
 class Overflow(BaseWordlist):
     __name__ = "Overflow"
     __author__ = ("Vitor Oriel",)
