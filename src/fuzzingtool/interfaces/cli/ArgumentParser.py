@@ -124,7 +124,7 @@ class ArgumentParser(argparse.ArgumentParser):
             if not Plugin.__params__:
                 params = ''
             else:
-                params = f"={Plugin.__params__}"
+                params = f"={Plugin.__params__['metavar']}"
             CO.helpContent(5, f"{Plugin.__name__}{params}", f"{Plugin.__desc__}{typeFuzzing}\n")
     
     def __buildOptions(self):

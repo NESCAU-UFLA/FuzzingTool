@@ -27,7 +27,10 @@ from ....exceptions.MainExceptions import MissingParameter
 class Robots(BaseWordlist):
     __name__ = "Robots"
     __author__ = ("Vitor Oriel")
-    __params__ = "TARGET_URL"
+    __params__ = {
+        'metavar': "TARGET_URL",
+        'type': str,
+    }
     __desc__ = "Build the wordlist using the target robots.txt"
     __type__ = "PathFuzzing"
 

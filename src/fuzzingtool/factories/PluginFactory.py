@@ -19,7 +19,7 @@
 # SOFTWARE.
 
 from .BaseFactories import BasePluginFactory
-from ..utils.utils import getPluginNamesFromCategory
+from ..utils.utils import getPluginNamesFromCategory, splitStrToList
 from ..core.encoders import *
 from ..core.scanners import *
 from ..core.wordlists import *
@@ -28,6 +28,11 @@ from ..exceptions.MainExceptions import InvalidPluginName, MissingParameter, Bad
 from importlib import import_module
 
 class PluginFactory(BasePluginFactory):
+    convertCliPluginParameter = {
+        str: lambda string, _: string,
+        list: lambda string, Plugin: splitStrToList(string, separator=Plugin.__params__['cli_list_separator']),
+    }
+
     def classCreator(name: str, category: str):
         if not name in getPluginNamesFromCategory(category):
             raise InvalidPluginName(f"Plugin {name} does not exists")
@@ -37,7 +42,7 @@ class PluginFactory(BasePluginFactory):
         )
         return getattr(Plugin, name)
 
-    def objectCreator(name: str, category: str, params: str = ''):
+    def objectCreator(name: str, category: str, params):
         try:
             Plugin = PluginFactory.classCreator(name, category)
         except InvalidPluginName as e:
@@ -45,6 +50,8 @@ class PluginFactory(BasePluginFactory):
         if not Plugin.__params__:
             return Plugin()
         try:
+            if type(params) is str:
+                params = PluginFactory.convertCliPluginParameter[Plugin.__params__['type']](params, Plugin)
             return Plugin(params)
         except MissingParameter as e:
             raise Exception(f"Plugin {name} missing parameter: {str(e)}")

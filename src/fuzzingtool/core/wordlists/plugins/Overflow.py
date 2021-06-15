@@ -24,7 +24,10 @@ from ....exceptions.MainExceptions import MissingParameter, BadArgumentFormat
 class Overflow(BaseWordlist):
     __name__ = "Overflow"
     __author__ = ("Vitor Oriel")
-    __params__ = "QUANTITY_OF_PAYLOADS,INIT_PAYLOAD:PAYLOAD:END_PAYLOAD"
+    __params__ = {
+        'metavar': "QUANTITY_OF_PAYLOADS,INIT_PAYLOAD:PAYLOAD:END_PAYLOAD",
+        'type': str,
+    }
     __desc__ = "Build the wordlist for stress and buffer overflow purposes"
     __type__ = ""
 

@@ -28,7 +28,10 @@ import re
 class Find(BaseScanner):
     __name__ = "Find"
     __author__ = ("Vitor Oriel")
-    __params__ = "REGEX"
+    __params__ = {
+        'metavar': "REGEX",
+        'type': str,
+    }
     __desc__ = "Filter results based on a regex match into the response body"
     __type__ = ""
 

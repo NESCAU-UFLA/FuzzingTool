@@ -31,10 +31,10 @@ class WordlistFactory(BaseWordlistFactory):
         try:
             Wordlist = PluginFactory.classCreator(name, 'wordlists')
             if (not params and
-                Wordlist.__params__ in ["TARGET_HOST", "TARGET_URL"]):
-                if "TARGET_HOST" in Wordlist.__params__:
+                Wordlist.__params__['metavar'] in ["TARGET_HOST", "TARGET_URL"]):
+                if "TARGET_HOST" in Wordlist.__params__['metavar']:
                     params = getHost(getPureUrl(requester.getUrl()))
-                if "TARGET_URL" in Wordlist.__params__:
+                if "TARGET_URL" in Wordlist.__params__['metavar']:
                     params = getPureUrl(requester.getUrl())
             wordlist = PluginFactory.objectCreator(name, 'wordlists', params)
         except InvalidPluginName:

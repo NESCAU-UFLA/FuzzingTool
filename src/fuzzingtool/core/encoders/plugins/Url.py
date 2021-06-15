@@ -26,7 +26,10 @@ from urllib.parse import quote, unquote
 class Url(BaseEncoder):
     __name__ = "Url"
     __author__ = ("Vitor Oriel")
-    __params__ = "ENCODE_LEVEL"
+    __params__ = {
+        'metavar': "ENCODE_LEVEL",
+        'type': str,
+    }
     __desc__ = "Replace special characters in string using the %xx escape. Letters, digits, and the characters '_.-~' are never quoted."
     __type__ = "DataFuzzing"
 

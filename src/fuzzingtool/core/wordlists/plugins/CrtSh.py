@@ -29,7 +29,10 @@ import re
 class CrtSh(BaseWordlist):
     __name__ = "CrtSh"
     __author__ = ("Vitor Oriel")
-    __params__ = "TARGET_HOST"
+    __params__ = {
+        'metavar': "TARGET_HOST",
+        'type': str,
+    }
     __desc__ = "Build the wordlist based on the content of the site crt.sh"
     __type__ = "SubdomainFuzzing"
 

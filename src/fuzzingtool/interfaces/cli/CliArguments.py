@@ -30,7 +30,7 @@ def parseOptionWithArgs(plugin: str):
     @returns tuple(str, str): The plugin name and parameter
     """
     if '=' in plugin:
-        plugin, param = plugin.split('=')
+        plugin, param = plugin.split('=', 1)
     else:
         plugin = plugin
         param = ''

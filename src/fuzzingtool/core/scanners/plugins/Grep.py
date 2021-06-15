@@ -28,7 +28,11 @@ import re
 class Grep(BaseScanner):
     __name__ = "Grep"
     __author__ = ("Vitor Oriel")
-    __params__ = "REGEX"
+    __params__ = {
+        'metavar': "REGEX",
+        'type': list,
+        'cli_list_separator': ';',
+    }
     __desc__ = "Grep content based on a regex match into the response body"
     __type__ = ""
 
@@ -37,23 +41,26 @@ class Grep(BaseScanner):
         regexer: The regex object to find the content into the response body
         found: The dictionary to save the number of matched regexes in result
     """
-    def __init__(self, regex: str):
-        if not regex:
+    def __init__(self, regexes: list):
+        if not regexes:
             raise MissingParameter("regex")
         try:
-            self.__regexer = re.compile(regex)
+            self.__regexers = [re.compile(regex) for regex in regexes]
         except re.error:
             raise BadArgumentFormat("invalid regex")
         self.__found = {}
 
     def inspectResult(self, result: Result, *args):
-        result.custom['greped'] = []
+        result.custom['greped'] = {i: [] for i in range(len(self.__regexers))}
 
     def scan(self, result: Result):
-        greped = set(self.__regexer.findall(result.getResponse().text))
-        self.__found[result.index] = len(greped)
-        result.custom['greped'] = greped
-        return True if greped else False
+        totalGreped = 0
+        for i, regexer in enumerate(self.__regexers):
+            thisGreped = set(regexer.findall(result.getResponse().text))
+            totalGreped += len(thisGreped)
+            result.custom['greped'][i] = thisGreped
+        self.__found[result.index] = totalGreped
+        return True if totalGreped else False
     
     def cliCallback(self, result: Result):
         found = f"{Colors.LIGHT_YELLOW}{Colors.BOLD} IDK"

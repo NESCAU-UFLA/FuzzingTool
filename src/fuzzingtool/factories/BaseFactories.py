@@ -50,14 +50,14 @@ class BasePluginFactory(ABC):
 
     @staticmethod
     @abstractmethod
-    def objectCreator(name: str, category: str, params: str = ''):
+    def objectCreator(name: str, category: str, params):
         """Build the plugins based on their categories
 
         @type name: str
         @param name: The plugin name
         @type category: str
         @param category: The plugin category
-        @type params: str
+        @type params: mixed
         @param params: The plugin parameters (if it has)
         @returns Plugin: The selected plugin object
         """

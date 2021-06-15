@@ -26,7 +26,10 @@ from dns import resolver, query, zone
 class DnsZone(BaseWordlist):
     __name__ = "DnsZone"
     __author__ = ("Vitor Oriel")
-    __params__ = "TARGET_HOST"
+    __params__ = {
+        'metavar': "TARGET_HOST",
+        'type': str,
+    }
     __desc__ = "Build the wordlist based on a DNS zone transfer request"
     __type__ = "SubdomainFuzzing"
 
