@@ -25,7 +25,7 @@ from dns import resolver, query, zone
 
 class DnsZone(BaseWordlist):
     __name__ = "DnsZone"
-    __author__ = ("Vitor Oriel")
+    __author__ = ("Vitor Oriel",)
     __params__ = {
         'metavar': "TARGET_HOST",
         'type': str,

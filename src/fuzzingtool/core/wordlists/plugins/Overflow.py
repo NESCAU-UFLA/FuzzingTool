@@ -23,7 +23,7 @@ from ....exceptions.MainExceptions import MissingParameter, BadArgumentFormat
 
 class Overflow(BaseWordlist):
     __name__ = "Overflow"
-    __author__ = ("Vitor Oriel")
+    __author__ = ("Vitor Oriel",)
     __params__ = {
         'metavar': "QUANTITY_OF_PAYLOADS,INIT_PAYLOAD:PAYLOAD:END_PAYLOAD",
         'type': str,

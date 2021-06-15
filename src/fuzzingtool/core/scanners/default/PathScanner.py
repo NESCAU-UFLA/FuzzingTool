@@ -25,7 +25,7 @@ from ....interfaces.cli.CliOutput import Colors, getFormatedResult
 
 class PathScanner(BaseScanner):
     __name__ = "PathScanner"
-    __author__ = ("Vitor Oriel")
+    __author__ = ("Vitor Oriel",)
 
     def inspectResult(self, result: Result, *args):
         result.custom['redirected'] = ''

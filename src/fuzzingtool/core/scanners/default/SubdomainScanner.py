@@ -24,7 +24,7 @@ from ....interfaces.cli.CliOutput import Colors, getFormatedResult
 
 class SubdomainScanner(BaseScanner):
     __name__ = "SubdomainScanner"
-    __author__ = ("Vitor Oriel")
+    __author__ = ("Vitor Oriel",)
 
     def inspectResult(self, result: Result, *args):
         result.custom['ip'] = args[0]

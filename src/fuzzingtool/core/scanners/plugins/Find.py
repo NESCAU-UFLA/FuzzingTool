@@ -27,7 +27,7 @@ import re
 
 class Find(BaseScanner):
     __name__ = "Find"
-    __author__ = ("Vitor Oriel")
+    __author__ = ("Vitor Oriel",)
     __params__ = {
         'metavar': "REGEX",
         'type': str,

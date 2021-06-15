@@ -32,7 +32,7 @@ PREPARED_REGEXES = {
 
 class Grep(BaseScanner):
     __name__ = "Grep"
-    __author__ = ("Vitor Oriel")
+    __author__ = ("Vitor Oriel",)
     __params__ = {
         'metavar': "REGEX",
         'type': list,

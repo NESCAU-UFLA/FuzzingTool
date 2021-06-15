@@ -24,7 +24,7 @@ from ....interfaces.cli.CliOutput import Colors, getFormatedResult
 
 class Reflected(BaseScanner):
     __name__ = "Reflected"
-    __author__ = ("Vitor Oriel")
+    __author__ = ("Vitor Oriel",)
     __params__ = {}
     __desc__ = "Lookup if the payload was reflected in the response body"
     __type__ = ""

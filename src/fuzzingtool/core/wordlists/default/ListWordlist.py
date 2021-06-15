@@ -24,7 +24,7 @@ from ....exceptions.MainExceptions import MissingParameter
 
 class ListWordlist(BaseWordlist):
     __name__ = "ListWordlist"
-    __author__ = ("Vitor Oriel")
+    __author__ = ("Vitor Oriel",)
 
     def __init__(self, payloadList: str):
         payloadList = payloadList[1:len(payloadList)-1]

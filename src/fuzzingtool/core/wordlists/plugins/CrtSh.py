@@ -28,7 +28,7 @@ import re
 
 class CrtSh(BaseWordlist):
     __name__ = "CrtSh"
-    __author__ = ("Vitor Oriel")
+    __author__ = ("Vitor Oriel",)
     __params__ = {
         'metavar': "TARGET_HOST",
         'type': str,

@@ -24,7 +24,7 @@ import binascii
 
 class Hex(BaseEncoder):
     __name__ = "Hex"
-    __author__ = ("Vitor Oriel")
+    __author__ = ("Vitor Oriel",)
     __params__ = {}
     __desc__ = "Encode payload to hexadecimal"
     __type__ = "DataFuzzing"

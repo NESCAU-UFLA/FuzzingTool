@@ -26,7 +26,7 @@ from ....exceptions.MainExceptions import MissingParameter
 
 class Robots(BaseWordlist):
     __name__ = "Robots"
-    __author__ = ("Vitor Oriel")
+    __author__ = ("Vitor Oriel",)
     __params__ = {
         'metavar': "TARGET_URL",
         'type': str,
