@@ -32,6 +32,7 @@ class DnsZone(BaseWordlist):
     }
     __desc__ = "Build the wordlist based on a DNS zone transfer request"
     __type__ = "SubdomainFuzzing"
+    __version__ = "0.2"
 
     def __init__(self, host: str):
         if not host:

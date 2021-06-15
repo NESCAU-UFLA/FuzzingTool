@@ -41,6 +41,7 @@ class Grep(BaseScanner):
     __desc__ = ("Grep content based on a regex match into the response body. "
                 f"You can use prepared regexes from this list: {list(PREPARED_REGEXES.keys())}")
     __type__ = ""
+    __version__ = "0.2"
 
     """
     Attributes:

@@ -28,6 +28,7 @@ class Reflected(BaseScanner):
     __params__ = {}
     __desc__ = "Lookup if the payload was reflected in the response body"
     __type__ = ""
+    __version__ = "0.1"
 
     """
     Attributes:

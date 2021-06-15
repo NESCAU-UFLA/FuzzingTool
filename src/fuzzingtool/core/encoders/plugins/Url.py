@@ -32,6 +32,7 @@ class Url(BaseEncoder):
     }
     __desc__ = "Replace special characters in string using the %xx escape. Letters, digits, and the characters '_.-~' are never quoted."
     __type__ = "DataFuzzing"
+    __version__ = "0.1"
 
     def __init__(self, encodeLevel: int):
         super().__init__()

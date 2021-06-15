@@ -28,6 +28,7 @@ class Html(BaseEncoder):
     __params__ = {}
     __desc__ = "Encode payload using HTML entities encoder"
     __type__ = "DataFuzzing"
+    __version__ = "0.1"
 
     def __init__(self):
         super().__init__()

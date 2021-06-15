@@ -35,6 +35,7 @@ class CrtSh(BaseWordlist):
     }
     __desc__ = "Build the wordlist based on the content of the site crt.sh"
     __type__ = "SubdomainFuzzing"
+    __version__ = "0.1"
 
     def __init__(self, host: str):
         if not host:

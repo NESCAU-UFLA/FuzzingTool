@@ -30,6 +30,7 @@ class Overflow(BaseWordlist):
     }
     __desc__ = "Build the wordlist for stress and buffer overflow purposes"
     __type__ = ""
+    __version__ = "0.1"
 
     def __init__(self, sourceParam: str):
         if not sourceParam:

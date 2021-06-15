@@ -33,6 +33,7 @@ class Robots(BaseWordlist):
     }
     __desc__ = "Build the wordlist using the target robots.txt"
     __type__ = "PathFuzzing"
+    __version__ = "0.1"
 
     def __init__(self, url: str):
         if not url:

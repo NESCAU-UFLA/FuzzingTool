@@ -34,6 +34,7 @@ class Find(BaseScanner):
     }
     __desc__ = "Filter results based on a regex match into the response body"
     __type__ = ""
+    __version__ = "0.1"
 
     """
     Attributes:
