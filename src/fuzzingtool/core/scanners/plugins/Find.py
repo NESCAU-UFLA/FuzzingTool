@@ -28,7 +28,6 @@ import re
 
 @plugin_meta
 class Find(BaseScanner):
-    __name__ = "Find"
     __author__ = ("Vitor Oriel",)
     __params__ = {
         'metavar': "REGEX",

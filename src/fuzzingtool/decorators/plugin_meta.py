@@ -19,9 +19,13 @@
 # SOFTWARE.
 
 def plugin_meta(cls):
-    metadata = ['__name__', '__author__', '__params__', '__desc__', '__type__', '__version__']
+    metadata = ['__author__', '__params__', '__desc__', '__type__', '__version__']
     classAttr = vars(cls)
     for meta in metadata:
         if meta not in classAttr:
             raise Exception(f"Metadata {meta} not specified in plugin {cls.__name__}")
+    if not cls.__author__:
+        raise Exception(f"Author cannot be empty on plugin {cls.__name__}")
+    if not cls.__desc__:
+        raise Exception(f"Description cannot be blank on plugin {cls.__name__}")
     return cls

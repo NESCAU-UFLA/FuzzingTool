@@ -25,7 +25,6 @@ import base64
 
 @plugin_meta
 class Base64(BaseEncoder):
-    __name__ = "Base64"
     __author__ = ("Vitor Oriel",)
     __params__ = {}
     __desc__ = "Encode payload using Base64 encoder"

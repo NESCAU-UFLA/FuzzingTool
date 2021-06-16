@@ -29,7 +29,6 @@ import re
 
 @plugin_meta
 class CrtSh(BaseWordlist):
-    __name__ = "CrtSh"
     __author__ = ("Vitor Oriel",)
     __params__ = {
         'metavar': "TARGET_HOST",

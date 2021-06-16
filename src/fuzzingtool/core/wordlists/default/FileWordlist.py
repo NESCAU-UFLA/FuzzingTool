@@ -22,7 +22,6 @@ from ..BaseWordlist import BaseWordlist
 from ....utils.FileHandler import fileHandler as fh
 
 class FileWordlist(BaseWordlist):
-    __name__ = "FileWordlist"
     __author__ = ("Vitor Oriel",)
 
     def __init__(self, filePath: str):

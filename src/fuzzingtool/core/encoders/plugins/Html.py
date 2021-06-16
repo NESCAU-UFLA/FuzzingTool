@@ -25,7 +25,6 @@ import html
 
 @plugin_meta
 class Html(BaseEncoder):
-    __name__ = "Html"
     __author__ = ("Vitor Oriel",)
     __params__ = {}
     __desc__ = "Encode payload using HTML entities encoder"

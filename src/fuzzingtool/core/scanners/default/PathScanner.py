@@ -24,7 +24,6 @@ from ....conn.RequestParser import getPath
 from ....interfaces.cli.CliOutput import Colors, getFormatedResult
 
 class PathScanner(BaseScanner):
-    __name__ = "PathScanner"
     __author__ = ("Vitor Oriel",)
 
     def inspectResult(self, result: Result, *args):

@@ -27,7 +27,6 @@ from ....exceptions.MainExceptions import MissingParameter
 
 @plugin_meta
 class Robots(BaseWordlist):
-    __name__ = "Robots"
     __author__ = ("Vitor Oriel",)
     __params__ = {
         'metavar': "TARGET_URL",

@@ -25,7 +25,6 @@ from ....decorators.plugin_meta import plugin_meta
 
 @plugin_meta
 class Reflected(BaseScanner):
-    __name__ = "Reflected"
     __author__ = ("Vitor Oriel",)
     __params__ = {}
     __desc__ = "Lookup if the payload was reflected in the response body"

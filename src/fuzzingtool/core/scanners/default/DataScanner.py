@@ -23,7 +23,6 @@ from ...Result import Result
 from ....interfaces.cli.CliOutput import Colors, getFormatedResult
 
 class DataScanner(BaseScanner):
-    __name__ = "DataScanner"
     __author__ = ("Vitor Oriel",)
 
     def inspectResult(self, result: Result, *args):

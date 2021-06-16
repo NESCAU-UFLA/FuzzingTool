@@ -23,7 +23,6 @@ from ....utils.utils import splitStrToList, checkRangeList
 from ....exceptions.MainExceptions import MissingParameter
 
 class ListWordlist(BaseWordlist):
-    __name__ = "ListWordlist"
     __author__ = ("Vitor Oriel",)
 
     def __init__(self, payloadList: str):

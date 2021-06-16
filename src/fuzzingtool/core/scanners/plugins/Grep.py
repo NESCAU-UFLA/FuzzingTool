@@ -33,7 +33,6 @@ PREPARED_REGEXES = {
 
 @plugin_meta
 class Grep(BaseScanner):
-    __name__ = "Grep"
     __author__ = ("Vitor Oriel",)
     __params__ = {
         'metavar': "REGEX",

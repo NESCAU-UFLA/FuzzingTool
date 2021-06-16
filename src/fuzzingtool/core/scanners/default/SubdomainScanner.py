@@ -23,7 +23,6 @@ from ...Result import Result
 from ....interfaces.cli.CliOutput import Colors, getFormatedResult
 
 class SubdomainScanner(BaseScanner):
-    __name__ = "SubdomainScanner"
     __author__ = ("Vitor Oriel",)
 
     def inspectResult(self, result: Result, *args):

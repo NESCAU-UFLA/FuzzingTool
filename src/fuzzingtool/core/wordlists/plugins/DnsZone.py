@@ -26,7 +26,6 @@ from dns import resolver, query, zone
 
 @plugin_meta
 class DnsZone(BaseWordlist):
-    __name__ = "DnsZone"
     __author__ = ("Vitor Oriel",)
     __params__ = {
         'metavar': "TARGET_HOST",
