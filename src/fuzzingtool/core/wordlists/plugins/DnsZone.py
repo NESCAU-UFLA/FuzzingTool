@@ -61,4 +61,4 @@ class DnsZone(BaseWordlist):
             raise Exception(f"Couldn't make the zone transfer for any of the {len(nameServersIps)} name servers")
         if '@' in transferedSubdomains:
             transferedSubdomains.remove('@')
-        return transferedSubdomains
+        return set(transferedSubdomains)
