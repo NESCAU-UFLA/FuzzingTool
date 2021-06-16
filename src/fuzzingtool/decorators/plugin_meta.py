@@ -26,6 +26,22 @@ def plugin_meta(cls):
             raise Exception(f"Metadata {meta} not specified in plugin {cls.__name__}")
     if not cls.__author__:
         raise Exception(f"Author cannot be empty on plugin {cls.__name__}")
+    if cls.__params__:
+        if not (type(cls.__params__) is dict):
+            raise Exception(f"The parameters must be a dictionary on plugin {cls.__name__}")
+        paramDictKeys = cls.__params__.keys()
+        for key in ['metavar', 'type']:
+            if key not in paramDictKeys:
+                raise Exception(f"Key {key} must be in parameters dict on plugin {cls.__name__}")
+            if not cls.__params__[key]:
+                raise Exception(f"Value of {key} cannot be empty in parameters dict on plugin {cls.__name__}")
+        if cls.__params__['type'] is list:
+            if 'cli_list_separator' not in paramDictKeys:
+                raise Exception(f"The key 'cli_list_separator' must be present when parameter type is list on plugin {cls.__name__}")
+            if not cls.__params__['cli_list_separator']:
+                raise Exception(f"Value of 'cli_list_separator' cannot be blank on {cls.__name__}")
     if not cls.__desc__:
         raise Exception(f"Description cannot be blank on plugin {cls.__name__}")
+    if not cls.__version__:
+        raise Exception(f"Version cannot be blank on plugin {cls.__name__}")
     return cls
