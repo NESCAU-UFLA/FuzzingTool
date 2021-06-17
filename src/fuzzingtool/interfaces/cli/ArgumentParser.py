@@ -101,8 +101,8 @@ class ArgumentParser(argparse.ArgumentParser):
         CO.helpTitle(0, "Scanner options:")
         CO.helpTitle(2, "Default: The default scanners are selected automatically if no one from plugins was choiced\n")
         CO.helpContent(5, "DataScanner", "Scanner for the data fuzzing")
-        CO.helpContent(5, "PathScanner", "Scanner for the path URL fuzzing")
-        CO.helpContent(5, "SubdomainScanner", "Scanner for the subdomain URL fuzzing")
+        CO.helpContent(5, "PathScanner", "Scanner for the path fuzzing")
+        CO.helpContent(5, "SubdomainScanner", "Scanner for the subdomain fuzzing")
         CO.helpTitle(2, "Plugins (--scaner SCANNER):\n")
         self.__showPluginsHelpFromCategory('scanners')
         CO.helpTitle(0, "Examples:\n")
@@ -124,7 +124,12 @@ class ArgumentParser(argparse.ArgumentParser):
             if not Plugin.__params__:
                 params = ''
             else:
-                params = f"={Plugin.__params__['metavar']}"
+                if Plugin.__params__['type'] is list:
+                    metavar = Plugin.__params__['metavar']
+                    separator = Plugin.__params__['cli_list_separator']
+                    params = f"={metavar}[{separator}{metavar}]*"
+                else:
+                    params = f"={Plugin.__params__['metavar']}"
             CO.helpContent(5, f"{Plugin.__name__}{params}", f"{Plugin.__desc__}{typeFuzzing}\n")
     
     def __buildOptions(self):
