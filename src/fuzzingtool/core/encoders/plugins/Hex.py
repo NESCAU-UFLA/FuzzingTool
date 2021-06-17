@@ -21,21 +21,19 @@
 from ..BaseEncoder import BaseEncoder
 from ....decorators.plugin_meta import plugin_meta
 
-import binascii
-
 @plugin_meta
 class Hex(BaseEncoder):
     __author__ = ("Vitor Oriel",)
     __params__ = {}
     __desc__ = "Encode payload to hexadecimal"
     __type__ = "DataFuzzing"
-    __version__ = "0.1"
+    __version__ = "0.2"
 
     def __init__(self):
         super().__init__()
 
     def encode(self, payload: str):
-        return binascii.hexlify(payload.encode(self.charset)).decode(self.charset)
+        return payload.encode(self.charset).hex()
     
     def decode(self, payload: str):
-        return binascii.unhexlify(payload.encode(self.charset)).decode(self.charset)
+        return bytes.fromhex(payload).decode(self.charset)
