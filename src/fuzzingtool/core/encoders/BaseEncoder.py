@@ -37,12 +37,3 @@ class BaseEncoder(ABC):
         @param payload: The payload used in the request
         """
         pass
-    
-    @abstractmethod
-    def decode(self, payload: str):
-        """Decode a payload for the original version
-
-        @type payload: str
-        @param payload: The payload used in the request
-        """
-        pass
