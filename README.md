@@ -5,7 +5,7 @@
 </a>
 <img src="https://img.shields.io/static/v1?label=python&message=3.6%20|%203.7%20|%203.8%20|%203.9&color=informational&logo=python" />
 <img src="https://img.shields.io/static/v1?label=OS&message=GNU/Linux&color=orange&logo=linux" />
-<a href="https://github.com/NESCAU-UFLA/FuzzingTool/blob/master/LICENSE.md">
+<a href="https://github.com/NESCAU-UFLA/FuzzingTool/blob/master/LICENSE">
 <img src="https://img.shields.io/static/v1?label=License&message=MIT&color=brightgreen" />
 </a>
 </p>
@@ -53,4 +53,4 @@ We use [SemVer](https://semver.org/) for versioning. For the versions available,
 If you want to contribute to FuzzingTool project, please read [CONTRIBUTING.md](https://github.com/NESCAU-UFLA/FuzzingTool/blob/master/.github/CONTRIBUTING.md).
 
 ## License
-This project is licensed under the MIT License - see the [LICENSE.md](https://github.com/NESCAU-UFLA/FuzzingTool/blob/master/LICENSE.md) for details.
+This project is licensed under the MIT License - see the [LICENSE](https://github.com/NESCAU-UFLA/FuzzingTool/blob/master/LICENSE) for details.
