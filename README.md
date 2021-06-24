@@ -6,7 +6,7 @@
 <img src="https://img.shields.io/static/v1?label=python&message=3.6%20|%203.7%20|%203.8%20|%203.9&color=informational&logo=python" />
 <img src="https://img.shields.io/static/v1?label=OS&message=GNU/Linux&color=orange&logo=linux" />
 <a href="https://pypi.org/project/FuzzingTool/">
-<img src="https://img.shields.io/static/v1?label=downloads&message=300&#43;/month&color=brown" />
+<img src="https://img.shields.io/pypi/dm/fuzzingtool.svg" />
 </a>
 <a href="https://github.com/NESCAU-UFLA/FuzzingTool/blob/master/LICENSE">
 <img src="https://img.shields.io/static/v1?label=license&message=MIT&color=brightgreen" />
