@@ -87,7 +87,7 @@ class CliController:
         self.co.setVerbosityMode(self.isVerboseMode())
         CliOutput.print(banner())
         try:
-            self.co.infoBox("Setupping arguments ...")
+            self.co.infoBox("Setting up arguments ...")
             self.init(arguments)
             self.co.printConfigs(
                 output='normal' if not arguments.simpleOutput else 'simple',
