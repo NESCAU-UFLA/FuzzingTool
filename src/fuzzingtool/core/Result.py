@@ -45,7 +45,7 @@ class Result:
         """Class constructor
 
         @type response: Response
-        @param response: The response given in the reuest
+        @param response: The response given in the request
         @type RTT: float
         @param RTT: The elapsed time on both request and response
         @type requestIndex: int
