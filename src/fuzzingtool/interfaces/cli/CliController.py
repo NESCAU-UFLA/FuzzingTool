@@ -85,33 +85,35 @@ class CliController:
         self.co.setOutputMode(arguments.simpleOutput)
         self.verbose = arguments.verbose
         self.co.setVerbosityMode(self.isVerboseMode())
-        CliOutput.print(banner())
+        if not arguments.simpleOutput:
+            CliOutput.print(banner())
         try:
             self.co.infoBox("Setting up arguments ...")
             self.init(arguments)
-            self.co.printConfigs(
-                output='normal' if not arguments.simpleOutput else 'simple',
-                verbose='quiet' if not self.verbose[0] else 'common' if not self.verbose[1] else 'detailed',
-                targets=self.targetsList,
-                dictionaries=self.dictionariesMetadata,
-                prefix=arguments.prefix,
-                suffix=arguments.suffix,
-                case='lowercase' if arguments.lowercase else 'uppercase' if arguments.uppercase else 'capitalize' if arguments.capitalize else None,
-                encoder=arguments.strEncoder,
-                match={
-                    'status': arguments.matchStatus,
-                    'length': arguments.matchLength,
-                    'time': arguments.matchTime,
-                },
-                scanner=arguments.strScanner,
-                blacklistStatus={
-                    'status': arguments.blacklistedStatus,
-                    'action': arguments.blacklistAction,
-                } if arguments.blacklistedStatus else {},
-                delay=self.delay,
-                threads=self.numberOfThreads,
-                report=arguments.report,
-            )
+            if not arguments.simpleOutput:
+                self.co.printConfigs(
+                    output='normal' if not arguments.simpleOutput else 'simple',
+                    verbose='quiet' if not self.verbose[0] else 'common' if not self.verbose[1] else 'detailed',
+                    targets=self.targetsList,
+                    dictionaries=self.dictionariesMetadata,
+                    prefix=arguments.prefix,
+                    suffix=arguments.suffix,
+                    case='lowercase' if arguments.lowercase else 'uppercase' if arguments.uppercase else 'capitalize' if arguments.capitalize else None,
+                    encoder=arguments.strEncoder,
+                    match={
+                        'status': arguments.matchStatus,
+                        'length': arguments.matchLength,
+                        'time': arguments.matchTime,
+                    },
+                    scanner=arguments.strScanner,
+                    blacklistStatus={
+                        'status': arguments.blacklistedStatus,
+                        'action': arguments.blacklistAction,
+                    } if arguments.blacklistedStatus else {},
+                    delay=self.delay,
+                    threads=self.numberOfThreads,
+                    report=arguments.report,
+                )
             self.checkConnectionAndRedirections()
         except KeyboardInterrupt:
             self.co.abortBox("Test aborted by the user")
