@@ -18,8 +18,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from ..utils.utils import getIndexesToParse
-
 def getHost(url: str):
     """Get the target host from url
 

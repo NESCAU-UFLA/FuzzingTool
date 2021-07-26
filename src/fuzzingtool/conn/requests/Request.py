@@ -19,8 +19,8 @@
 # SOFTWARE.
 
 from ..RequestParser import *
-
-from ...exceptions.RequestExceptions import RequestException, InvalidHostname
+from ...utils.utils import getIndexesToParse
+from ...exceptions.RequestExceptions import RequestException
 
 import random
 import time
@@ -211,7 +211,7 @@ class Request:
         except requests.exceptions.InvalidHeader as e:
             e = str(e)
             invalidHeader = e[e.rindex(': ')+2:]
-            raise RequestException(f"Invalid header {invalidHeader}: {headers[invalidHeader].decode('utf-8')}")
+            raise RequestException(f"Invalid header {invalidHeader}")
         except (
             requests.exceptions.ConnectionError,
             requests.exceptions.RequestException
