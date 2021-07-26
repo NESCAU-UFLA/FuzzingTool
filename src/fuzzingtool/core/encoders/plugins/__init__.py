@@ -21,5 +21,7 @@
 from .Hex import Hex
 from .Base64 import Base64
 from .Html import Html
+from .HtmlDec import HtmlDec
+from .HtmlHex import HtmlHex
 from .Plain import Plain
 from .Url import Url

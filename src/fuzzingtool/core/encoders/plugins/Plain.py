@@ -27,13 +27,10 @@ class Plain(BaseEncoder):
     __params__ = {}
     __desc__ = "Do not encode the payload"
     __type__ = ""
-    __version__ = "0.1"
+    __version__ = "0.2"
 
     def __init__(self):
         super().__init__()
 
     def encode(self, payload: str):
-        return payload
-    
-    def decode(self, payload: str):
         return payload

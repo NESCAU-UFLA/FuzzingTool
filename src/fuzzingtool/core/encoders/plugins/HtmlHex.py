@@ -20,40 +20,20 @@
 
 from ..BaseEncoder import BaseEncoder
 from ....decorators.plugin_meta import plugin_meta
-from ....exceptions.MainExceptions import BadArgumentFormat
-
-from urllib.parse import quote, unquote
 
 @plugin_meta
-class Url(BaseEncoder):
+class HtmlHex(BaseEncoder):
     __author__ = ("Vitor Oriel",)
-    __params__ = {
-        'metavar': "ENCODE_LEVEL",
-        'type': str,
-    }
-    __desc__ = "Replace special characters in string using the %xx escape. Letters, digits, and the characters '_.-~' are never quoted."
+    __params__ = {}
+    __desc__ = "Encode payload to html hexadecimal format"
     __type__ = "Encoder"
-    __version__ = "0.2"
+    __version__ = "0.1"
 
-    def __init__(self, encodeLevel: int):
+    def __init__(self):
         super().__init__()
-        if not encodeLevel:
-            encodeLevel = 1
-        else:
-            try:
-                encodeLevel = int(encodeLevel)
-            except:
-                raise BadArgumentFormat("the encoding level must be an integer")
-        self.encodeLevel = encodeLevel
 
     def encode(self, payload: str):
-        encoded = payload
-        for _ in range(self.encodeLevel):
-            encoded = quote(encoded)
+        encoded = ''
+        for c in payload:
+            encoded += f"&#x{ord(c):02x};"
         return encoded
-
-    def decode(self, payload: str):
-        decoded = payload
-        for _ in range(self.encodeLevel):
-            decoded = unquote(decoded)
-        return decoded
