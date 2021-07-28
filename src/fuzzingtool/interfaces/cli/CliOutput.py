@@ -19,13 +19,12 @@
 # SOFTWARE.
 
 from ...utils.utils import stringfyList
-from ...conn.RequestParser import getHost, getPureUrl
+from ...utils.http_utils import getHost, getPureUrl
 
 from datetime import datetime
 import platform
 import threading
 import sys
-import os
 from typing import Callable
 
 if platform.system() == 'Windows':

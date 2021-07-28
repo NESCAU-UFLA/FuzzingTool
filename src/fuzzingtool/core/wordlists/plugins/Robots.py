@@ -19,7 +19,7 @@
 # SOFTWARE.
 
 from ..BaseWordlist import BaseWordlist
-from ....conn.RequestParser import getPath
+from ....utils.http_utils import getPath
 from ....conn.requests.Request import Request
 from ....decorators.plugin_meta import plugin_meta
 from ....exceptions.RequestExceptions import RequestException

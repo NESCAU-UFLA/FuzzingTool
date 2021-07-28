@@ -18,7 +18,9 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-def getIndexesToParse(content: str, searchFor: str = '$'):
+from .consts import FUZZING_MARK
+
+def getIndexesToParse(content: str, searchFor: str = FUZZING_MARK):
     """Gets the indexes of the searched substring into a string content
     
     @type content: str

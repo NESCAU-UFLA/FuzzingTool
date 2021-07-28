@@ -19,7 +19,9 @@
 # SOFTWARE.
 
 from .Request import Request
-from ..RequestParser import getHost, requestParser as parser
+from ..RequestParser import requestParser as parser
+from ...utils.http_utils import getHost
+from ...utils.consts import SUBDOMAIN_FUZZING
 from ...exceptions.RequestExceptions import InvalidHostname
 
 import socket
@@ -33,9 +35,6 @@ class SubdomainRequest(Request):
         @param url: The target URL
         """
         super().__init__(url, **kwargs)
-
-    def isPathFuzzing(self):
-        return False
 
     def resolveHostname(self, hostname: str):
         """Resolve the ip for the given hostname
@@ -54,3 +53,6 @@ class SubdomainRequest(Request):
         parser.setPayload(payload)
         ip = self.resolveHostname(getHost(parser.getUrl(self._url)))
         return (*(super().request(payload)), ip)
+    
+    def _setFuzzingType(self):
+        return SUBDOMAIN_FUZZING

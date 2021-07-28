@@ -20,7 +20,7 @@
 
 from ..BaseScanner import BaseScanner
 from ...Result import Result
-from ....conn.RequestParser import getPath
+from ....utils.http_utils import getPath
 from ....interfaces.cli.CliOutput import Colors, getFormatedResult
 
 class PathScanner(BaseScanner):

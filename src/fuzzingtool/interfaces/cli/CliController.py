@@ -22,6 +22,7 @@ from .CliArguments import *
 from .CliOutput import CliOutput, Colors
 from ..ArgumentBuilder import ArgumentBuilder as AB
 from ... import version
+from ...utils.http_utils import *
 from ...utils.FileHandler import fileHandler as fh
 from ...core import *
 from ...conn import *
@@ -337,7 +338,7 @@ class CliController:
         @type host: str
         @param host: The target hostname
         """
-        if self.requester.isUrlFuzzing():
+        if self.requester.isUrlDiscovery():
             self.ignoreErrors = True
             logPath = fh.logger.setup(host)
             self.co.infoBox(f'The logs will be saved on \'{logPath}\'')

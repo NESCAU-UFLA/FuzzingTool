@@ -20,6 +20,7 @@
 
 from .CliOutput import CliOutput as CO
 from ... import version
+from ...utils.consts import FUZZING_MARK
 from ...utils.utils import getPluginNamesFromCategory
 from ...factories.PluginFactory import PluginFactory
 from ...exceptions.MainExceptions import BadArgumentFormat
@@ -76,15 +77,15 @@ class ArgumentParser(argparse.ArgumentParser):
         CO.helpTitle(2, "Plugins:\n")
         self.__showPluginsHelpFromCategory('wordlists')
         CO.helpTitle(0, "Examples:\n")
-        CO.print("FuzzingTool -u https://$.domainexample.com/ -w /path/to/wordlist/subdomains.txt -t 30 --timeout 5 -V2\n")
-        CO.print("FuzzingTool -u https://$.domainexample1.com/ -u https://$.domainexample2.com/ -w [wp-admin,admin,webmail,www,cpanel] -t 30 --timeout 5 -V2\n")
-        CO.print("FuzzingTool -u https://$.domainexample.com/ -w CrtSh -t 30 --timeout 5 -V2\n")
-        CO.print("FuzzingTool -u https://domainexample.com/$ -w Overflow=5000,:../:etc/passwd -t 30 --timeout 5 -V2\n")
+        CO.print(f"FuzzingTool -u https://{FUZZING_MARK}.domainexample.com/ -w /path/to/wordlist/subdomains.txt -t 30 --timeout 5 -V2\n")
+        CO.print(f"FuzzingTool -u https://{FUZZING_MARK}.domainexample1.com/ -u https://{FUZZING_MARK}.domainexample2.com/ -w [wp-admin,admin,webmail,www,cpanel] -t 30 --timeout 5 -V2\n")
+        CO.print(f"FuzzingTool -u https://{FUZZING_MARK}.domainexample.com/ -w CrtSh -t 30 --timeout 5 -V2\n")
+        CO.print(f"FuzzingTool -u https://domainexample.com/{FUZZING_MARK} -w Overflow=5000,:../:etc/passwd -t 30 --timeout 5 -V2\n")
         CO.helpTitle(0, "Examples with multiple wordlists:\n")
-        CO.print("FuzzingTool -u https://$.domainexample.com/ -w 'DnsZone;CrtSh' -t 30 --timeout 5 -V2\n")
-        CO.print("FuzzingTool -u https://domainexample.com/$ -w 'Robots;/path/to/wordlist/paths.txt' -t 30 --timeout 5 -V2\n")
+        CO.print(f"FuzzingTool -u https://{FUZZING_MARK}.domainexample.com/ -w 'DnsZone;CrtSh' -t 30 --timeout 5 -V2\n")
+        CO.print(f"FuzzingTool -u https://domainexample.com/{FUZZING_MARK} -w 'Robots;/path/to/wordlist/paths.txt' -t 30 --timeout 5 -V2\n")
         CO.helpTitle(0, "Example with wordlists per target:\n")
-        CO.print("FuzzingTool -u domainexample.com/$ -u $.domainexample2.com -w 'Robots;/path/to/wordlist/paths.txt' -w CrtSh -t 30 --timeout 5 -V2\n")
+        CO.print(f"FuzzingTool -u domainexample.com/{FUZZING_MARK} -u {FUZZING_MARK}.domainexample2.com -w 'Robots;/path/to/wordlist/paths.txt' -w CrtSh -t 30 --timeout 5 -V2\n")
         exit(0)
 
     def _showEncodersHelp(self):
@@ -93,7 +94,7 @@ class ArgumentParser(argparse.ArgumentParser):
         CO.helpTitle(2, "Set the encoder used on the payloads\n")
         self.__showPluginsHelpFromCategory('encoders')
         CO.helpTitle(0, "Examples:\n")
-        CO.print("FuzzingTool -u https://domainexample.com/page.php?id= -w /path/to/wordlist/sqli.txt -e Url=2 -t 30 --scanner Find=SQL\n")
+        CO.print(f"FuzzingTool -u https://domainexample.com/page.php?id= -w /path/to/wordlist/sqli.txt -e Url=2 -t 30 --scanner Find=SQL\n")
         exit(0)
 
     def _showScannersHelp(self):
@@ -106,7 +107,7 @@ class ArgumentParser(argparse.ArgumentParser):
         CO.helpTitle(2, "Plugins (--scaner SCANNER):\n")
         self.__showPluginsHelpFromCategory('scanners')
         CO.helpTitle(0, "Examples:\n")
-        CO.print("FuzzingTool -u https://domainexample.com/search.php?query= -w /path/to/wordlist/xss.txt --scanner Reflected -t 30 -o csv\n")
+        CO.print(f"FuzzingTool -u https://domainexample.com/search.php?query= -w /path/to/wordlist/xss.txt --scanner Reflected -t 30 -o csv\n")
         exit(0)
     
     def __showPluginsHelpFromCategory(self, category: str):

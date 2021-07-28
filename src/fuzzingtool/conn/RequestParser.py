@@ -18,51 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-def getHost(url: str):
-    """Get the target host from url
-
-    @type url: str
-    @param url: The target URL
-    @returns str: The payloaded target
-    """
-    url = getUrlWithoutScheme(url)
-    if '/' in url:
-        return url[:url.index('/')]
-    return url
-
-def getPath(url: str):
-    """Get the target path from url
-
-    @type url: str
-    @param url: The target URL
-    @returns str: The payloaded path
-    """
-    url = getUrlWithoutScheme(url)
-    return url[url.index('/'):]
-
-def getPureUrl(url: str):
-    """Gets the URL without the $ variable
-
-    @type url: str
-    @param url: The target URL
-    @returns str: The target URL without fuzzing marks
-    """
-    if '$' in url:
-        if '$.' in url:
-            return url.replace('$.', '')
-        return url.replace('$', '')
-    return url
-
-def getUrlWithoutScheme(url: str):
-    """Get the target url without scheme
-
-    @type url: str
-    @param url: The target URL
-    @returns str: The url without scheme
-    """
-    if '://' in url:
-        return url[(url.index('://')+3):]
-    return url
+from ..utils.consts import *
 
 def checkForSubdomainFuzz(url: str):
     """Checks if the fuzzing tests will occur on subdomain
@@ -71,7 +27,7 @@ def checkForSubdomainFuzz(url: str):
     @param url: The target URL
     @returns bool: The subdomain fuzzing flag
     """
-    if ('.' in url and '$' in url) and url.index('$') < url.index('.'):
+    if ('.' in url and FUZZING_MARK in url) and url.index(FUZZING_MARK) < url.index('.'):
         return True
     return False
 
@@ -146,7 +102,7 @@ class RequestParser:
         return ajustedContent
 
     def __getAjustedHeader(self, header: dict):
-        """Put the payload in the header value that contains $
+        """Put the payload in the header value that contains the fuzzing mark
 
         @type header: dict
         @param header: The HTTP Header dictionary

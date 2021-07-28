@@ -19,6 +19,8 @@
 # SOFTWARE.
 
 from ..RequestParser import *
+from ...utils.consts import *
+from ...utils.http_utils import *
 from ...utils.utils import getIndexesToParse
 from ...exceptions.RequestExceptions import RequestException
 
@@ -86,9 +88,10 @@ class Request:
         self.__header = self.__setupHeader(headers)
         self.__proxy = self.__setupProxy(proxy) if proxy else {}
         self.__proxies = [self.__setupProxy(proxy) for proxy in proxies]
-        self.__timeout = None if not self.isUrlFuzzing() else 10 if not timeout else timeout
         self.__followRedirects = followRedirects
-        if self.isUrlFuzzing():
+        self.__fuzzingType = self._setFuzzingType()
+        self.__timeout = None if not self.isUrlDiscovery() else 10 if not timeout else timeout
+        if self.isUrlDiscovery():
             self.__session = requests.Session()
             self.__request = self.__sessionRequest
         else:
@@ -112,50 +115,33 @@ class Request:
         """
         return self._url
 
-    def isUrlFuzzing(self):
-        """The URL fuzzing flag getter
-        
-        @returns bool: The URL Fuzzing flag
-        """
-        return False if not self._url['fuzzingIndexes'] else True
-
     def isMethodFuzzing(self):
         """The method fuzzing flag getter
 
         @returns bool: The method fuzzing flag
         """
-        return False if not self.__method['fuzzingIndexes'] else True
+        return self.__fuzzingType == HTTP_METHOD_FUZZING
 
     def isDataFuzzing(self):
         """The data fuzzing flag getter
 
         @returns bool: The data fuzzing flag
         """
-        if self.isUrlDiscovery():
-            return False
-        for key, value in self.__data['PARAM'].items():
-            if not value:
-                return True
-        for key, value in self.__data['BODY'].items():
-            if not value:
-                return True
-        if self.__header['payloadKeys']:
-            return True
-        return False
+        return self.__fuzzingType == DATA_FUZZING
 
     def isUrlDiscovery(self):
         """Checks if the fuzzing is for url discovery (path or subdomain)
 
         @returns bool: A flag to say if is url discovery fuzzing type
         """
-        return (self.isUrlFuzzing() and not '?' in self._url['content'])
+        return self.__fuzzingType == PATH_FUZZING or self.__fuzzingType == SUBDOMAIN_FUZZING
 
     def isPathFuzzing(self):
         """Checks if the fuzzing will be path discovery
 
         @returns bool: A flag to say if is path fuzzing
         """
-        return self.isUrlDiscovery()
+        return self.__fuzzingType == PATH_FUZZING
 
     def getRequestIndex(self):
         """The request index getter
@@ -163,6 +149,13 @@ class Request:
         @returns int: The request index
         """
         return self.index
+
+    def getFuzzingType(self):
+        """The fuzzing type getter
+
+        @returns int: The fuzzing type
+        """
+        return self.__fuzzingType
 
     def setMethod(self, method: str):
         """The request method setter
@@ -182,7 +175,7 @@ class Request:
         """
         if not header:
             header = self.__header
-        if '$' in value:
+        if FUZZING_MARK in value:
             header['payloadKeys'].append(key)
             header['content'][key] = self.__parseHeaderValue(value)
         else:
@@ -270,6 +263,35 @@ class Request:
             return (response, RTT)
         finally:
             self.index += 1
+
+    def _setFuzzingType(self):
+        def _isMethodFuzzing():
+            return False if not self.__method['fuzzingIndexes'] else True
+
+        def _isUrlFuzzing():
+            return False if not self._url['fuzzingIndexes'] else True
+
+        def _isUrlDiscovery():
+            return (_isUrlFuzzing() and not '?' in self._url['content'])
+
+        def _isDataFuzzing():
+            for _, value in self.__data['PARAM'].items():
+                if not value:
+                    return True
+            for _, value in self.__data['BODY'].items():
+                if not value:
+                    return True
+            if self.__header['payloadKeys']:
+                return True
+            return False
+        
+        if _isMethodFuzzing():
+            return HTTP_METHOD_FUZZING
+        if _isUrlDiscovery():
+            return PATH_FUZZING
+        if _isDataFuzzing():
+            return DATA_FUZZING
+        return UNKNOWN_FUZZING
 
     def __setupUrl(self, url: str):
         """The URL setup
@@ -382,7 +404,7 @@ class Request:
         """
         if '=' in key:
             key, value = key.split('=')
-            if not '$' in value:
+            if not FUZZING_MARK in value:
                 dataDict[key] = value
             else:
                 dataDict[key] = ''

@@ -20,9 +20,8 @@
 
 from .BaseFactories import BaseWordlistFactory
 from .PluginFactory import PluginFactory
-from ..conn.RequestParser import getHost, getPureUrl
+from ..utils.http_utils import getHost, getPureUrl
 from ..conn.requests.Request import Request
-from ..core.Dictionary import Dictionary
 from ..core.wordlists import *
 from ..exceptions.MainExceptions import InvalidPluginName, MissingParameter
 

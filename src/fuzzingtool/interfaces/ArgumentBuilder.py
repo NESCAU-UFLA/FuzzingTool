@@ -18,6 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+from ..utils.consts import FUZZING_MARK
 from ..utils.utils import splitStrToList
 from ..utils.FileHandler import fileHandler as fh
 
@@ -40,7 +41,7 @@ class ArgumentBuilder:
         targets = []
         for url in urls:
             if not methods:
-                if data and not ('?' in url or '$' in url):
+                if data and not ('?' in url or FUZZING_MARK in url):
                     methods = ['POST']
                 else:
                     methods = ['GET']
