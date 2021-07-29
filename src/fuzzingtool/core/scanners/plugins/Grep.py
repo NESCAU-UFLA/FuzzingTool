@@ -47,7 +47,6 @@ class Grep(BaseScanner):
     """
     Attributes:
         regexers: The regexes objects to grep the content into the response body
-        found: The dictionary to save the number of matched regexes in result
     """
     def __init__(self, regexes: list):
         if not regexes:
@@ -60,9 +59,9 @@ class Grep(BaseScanner):
                 self.__regexers.append(re.compile(regex))
             except re.error:
                 raise BadArgumentFormat(f"invalid regex: {regex}")
-        self.__found = {}
 
     def inspectResult(self, result: Result, *args):
+        result.custom['found'] = None
         result.custom['greped'] = {i: [] for i in range(len(self.__regexers))}
 
     def scan(self, result: Result):
@@ -71,18 +70,17 @@ class Grep(BaseScanner):
             thisGreped = set([r.group() for r in regexer.finditer(result.getResponse().text)])
             totalGreped += len(thisGreped)
             result.custom['greped'][i] = thisGreped
-        self.__found[result.index] = totalGreped
+        result.custom['found'] = totalGreped
         return True if totalGreped else False
     
     def cliCallback(self, result: Result):
         found = f"{Colors.LIGHT_YELLOW}{Colors.BOLD} IDK"
-        if result.index in self.__found:
-            quantityFound = self.__found[result.index]
+        quantityFound = result.custom['found']
+        if quantityFound != None:
             if quantityFound > 0:
                 foundColor = f"{Colors.GREEN}{Colors.BOLD}"
             else:
                 foundColor = f"{Colors.LIGHT_RED}{Colors.BOLD}"
-                del self.__found[result.index]
             quantityFound = '{:>4}'.format(str(quantityFound))
             found = f"{foundColor}{quantityFound}"
         payload, RTT, length = getFormatedResult(

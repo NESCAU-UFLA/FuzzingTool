@@ -40,8 +40,6 @@ class Find(BaseScanner):
     """
     Attributes:
         regexer: The regex object to find the content into the response body
-        found: The dictionary to save a flag for each matched result,
-               saying if the response body match with the regex or not
     """
     def __init__(self, regex: str):
         if not regex:
@@ -50,24 +48,23 @@ class Find(BaseScanner):
             self.__regexer = re.compile(regex)
         except re.error:
             raise BadArgumentFormat("invalid regex")
-        self.__found = {}
 
     def inspectResult(self, result: Result, *args):
-        pass
+        result.custom['found'] = None
 
     def scan(self, result: Result):
         found = True if self.__regexer.search(result.getResponse().text) else False
-        self.__found[result.index] = found
+        result.custom['found'] = found
         return found
     
     def cliCallback(self, result: Result):
         found = f"{Colors.LIGHT_YELLOW}{Colors.BOLD}IDK"
-        if result.index in self.__found:
-            if self.__found[result.index]:
+        wasFound = result.custom['found']
+        if wasFound != None:
+            if wasFound:
                 found = f"{Colors.GREEN}{Colors.BOLD}YES"
             else:
                 found = f"{Colors.LIGHT_RED}{Colors.BOLD}NO "
-                del self.__found[result.index]
         payload, RTT, length = getFormatedResult(
             result.payload, result.RTT, result.length
         )

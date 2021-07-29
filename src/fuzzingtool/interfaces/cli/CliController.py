@@ -275,6 +275,11 @@ class CliController:
             allowedStatus=self.globalMatcher.getAllowedStatus(),
             comparator=self.globalMatcher.getComparator()
         )
+        if (self.requester.isUrlDiscovery() and
+            self.globalMatcher.allowedStatusIsDefault()):
+            self.localMatcher.setAllowedStatus(
+                Matcher.buildAllowedStatus("200-399,401,403")
+            )
         if not self.globalScanner:
             self.localScanner = self.getDefaultScanner()
             if (self.requester.isDataFuzzing() and
@@ -321,10 +326,6 @@ class CliController:
             else:
                 from ...core.scanners.default.SubdomainScanner import SubdomainScanner
                 scanner = SubdomainScanner()
-            if self.globalMatcher.allowedStatusIsDefault():
-                self.localMatcher.setAllowedStatus(
-                    Matcher.buildAllowedStatus("200-399,401,403")
-                )
         else:
             from ...core.scanners.default.DataScanner import DataScanner
             scanner = DataScanner()

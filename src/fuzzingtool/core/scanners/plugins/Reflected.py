@@ -31,30 +31,22 @@ class Reflected(BaseScanner):
     __type__ = ""
     __version__ = "0.1"
 
-    """
-    Attributes:
-        reflected: The dictionary to save a flag for each matched result,
-                   saying if the payload was reflected or not
-    """
-    def __init__(self):
-        self.__reflected = {}
-
     def inspectResult(self, result: Result, *args):
-        pass
+        result.custom['reflected'] = None
 
     def scan(self, result: Result):
         reflected = result.payload in result.getResponse().text
-        self.__reflected[result.index] = reflected
+        result.custom['reflected'] = reflected
         return reflected
     
     def cliCallback(self, result: Result):
         reflected = f"{Colors.LIGHT_YELLOW}{Colors.BOLD}IDK"
-        if result.index in self.__reflected:
-            if self.__reflected[result.index]:
+        wasReflected = result.custom['reflected']
+        if wasReflected != None:
+            if wasReflected:
                 reflected = f"{Colors.GREEN}{Colors.BOLD}YES"
             else:
                 reflected = f"{Colors.LIGHT_RED}{Colors.BOLD}NO "
-                del self.__reflected[result.index]
         payload, RTT, length = getFormatedResult(
             result.payload, result.RTT, result.length
         )
