@@ -237,15 +237,14 @@ class CliController:
         """
         self.startedTime = time.time()
         for i, requester in enumerate(self.requesters):
+            self.co.infoBox(f"Starting {self.targetsList[i]['typeFuzzing']} on {getHost(getPureUrl(requester.getUrl()))}")
             try:
                 self.prepareTarget(requester)
                 for method in self.requester.methods:
-                    self.requester.resetRequestIndex()
                     self.requester.setMethod(method)
-                    self.co.infoBox(f"Starting {self.targetsList[i]['typeFuzzing']} on {self.targetHost} with method {method}")
                     self.prepareFuzzer()
-                    if not self.isVerboseMode():
-                        CliOutput.print("")
+                if not self.isVerboseMode():
+                    CliOutput.print("")
             except SkipTargetException as e:
                 if self.fuzzer and self.fuzzer.isRunning():
                     if not self.isVerboseMode():
@@ -292,13 +291,13 @@ class CliController:
                 self.startedTime += (time.time() - before)
         if not self.globalDictionary:
             self.localDictionary = self.dictionaries.get()
-            self.totalRequests = len(self.localDictionary)
-        self.localDictionary.reload()
+            self.totalRequests = len(self.localDictionary)*len(self.requester.methods)
 
     def prepareFuzzer(self):
         """Prepare the fuzzer for the fuzzing tests.
            Refill the dictionary with the wordlist content if a global dictionary was given
         """
+        self.localDictionary.reload()
         self.fuzzer = Fuzzer(
             requester=self.requester,
             dictionary=self.localDictionary,

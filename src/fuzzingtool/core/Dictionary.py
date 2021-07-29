@@ -38,7 +38,6 @@ class Dictionary(Payloader):
         super().__init__()
         self.__wordlist = wordlist
         self.__payloads = Queue()
-        self.reload()
 
     def __next__(self):
         """Gets the next payload to be processed
