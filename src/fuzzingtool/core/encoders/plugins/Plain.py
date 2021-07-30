@@ -29,8 +29,5 @@ class Plain(BaseEncoder):
     __type__ = ""
     __version__ = "0.2"
 
-    def __init__(self):
-        super().__init__()
-
-    def encode(self, payload: str):
+    def _encode(self, payload: str):
         return payload

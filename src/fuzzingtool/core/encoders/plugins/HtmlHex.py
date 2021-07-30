@@ -29,10 +29,7 @@ class HtmlHex(BaseEncoder):
     __type__ = "Encoder"
     __version__ = "0.1"
 
-    def __init__(self):
-        super().__init__()
-
-    def encode(self, payload: str):
+    def _encode(self, payload: str):
         encoded = ''
         for c in payload:
             encoded += f"&#x{ord(c):02x};"

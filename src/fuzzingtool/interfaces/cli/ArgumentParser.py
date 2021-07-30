@@ -229,6 +229,13 @@ class ArgumentParser(argparse.ArgumentParser):
             metavar='ENCODER',
             default='',
         )
+        dictionaryOpts.add_argument('--encode-only',
+            action='store',
+            dest='encodeOnly',
+            help="Define the regex pattern to use in the encoder",
+            metavar='REGEX',
+            default='',
+        )
         dictionaryOpts.add_argument('--prefix',
             action='store',
             dest='prefix',

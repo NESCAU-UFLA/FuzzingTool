@@ -31,11 +31,8 @@ class Base64(BaseEncoder):
     __type__ = "Encoder"
     __version__ = "0.1"
 
-    def __init__(self):
-        super().__init__()
-
-    def encode(self, payload: str):
-        return base64.b64encode(payload.encode(self.charset)).decode(self.charset)
+    def _encode(self, payload: str):
+        return base64.b64encode(payload.encode(BaseEncoder.charset)).decode(BaseEncoder.charset)
     
-    def decode(self, payload: str):
-        return base64.b64decode(payload).decode(self.charset)
+    def _decode(self, payload: str):
+        return base64.b64decode(payload).decode(BaseEncoder.charset)

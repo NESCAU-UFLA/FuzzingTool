@@ -29,11 +29,8 @@ class Hex(BaseEncoder):
     __type__ = "Encoder"
     __version__ = "0.2"
 
-    def __init__(self):
-        super().__init__()
-
-    def encode(self, payload: str):
-        return payload.encode(self.charset).hex()
+    def _encode(self, payload: str):
+        return payload.encode(BaseEncoder.charset).hex()
     
-    def decode(self, payload: str):
-        return bytes.fromhex(payload).decode(self.charset)
+    def _decode(self, payload: str):
+        return bytes.fromhex(payload).decode(BaseEncoder.charset)

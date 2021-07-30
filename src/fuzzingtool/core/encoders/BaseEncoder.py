@@ -19,21 +19,39 @@
 # SOFTWARE.
 
 from abc import ABC, abstractmethod
+import re
 
 class BaseEncoder(ABC):
-    """Base encoder
-    
-    Attributes:
-        charset: The character encoding format
-    """
-    def __init__(self):
-        self.charset = 'utf-8'
+    charset = 'utf-8'
+    regexer = None
 
-    @abstractmethod
+    @staticmethod
+    def setRegex(regex: str = ''):
+        try:
+            BaseEncoder.regexer = re.compile(regex, re.IGNORECASE)
+        except re.error:
+            raise Exception(f"Invalid regex format {regex}")
+
     def encode(self, payload: str):
         """Encode a payload into an specific encoding type
 
         @type payload: str
         @param payload: The payload used in the request
+        @returns str: The encoded payload
+        """
+        if not BaseEncoder.regexer:
+            return self._encode(payload)
+        strings = set([match.group() for match in BaseEncoder.regexer.finditer(payload)])
+        for string in strings:
+            payload = payload.replace(string, self._encode(string))
+        return payload
+
+    @abstractmethod
+    def _encode(self, payload: str):
+        """Encode a payload into an specific encoding type
+
+        @type payload: str
+        @param payload: The payload used in the request
+        @returns str: The encoded payload
         """
         pass

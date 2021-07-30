@@ -81,6 +81,7 @@ class CliArguments:
         self.capitalize = self.options.capitalize
         self.strEncoder = self.options.encoder
         self.encoder = [[parseOptionWithArgs(e) for e in splitStrToList(encoder, separator='@')] for encoder in splitStrToList(self.options.encoder)]
+        self.encodeOnly = self.options.encodeOnly
 
     def setMatchArguments(self):
         """Set the match arguments"""

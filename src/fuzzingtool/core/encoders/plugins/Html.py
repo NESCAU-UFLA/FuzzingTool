@@ -31,11 +31,8 @@ class Html(BaseEncoder):
     __type__ = "Encoder"
     __version__ = "0.1"
 
-    def __init__(self):
-        super().__init__()
-
-    def encode(self, payload: str):
+    def _encode(self, payload: str):
         return html.escape(payload)
     
-    def decode(self, payload: str):
+    def _decode(self, payload: str):
         return html.unescape(payload)

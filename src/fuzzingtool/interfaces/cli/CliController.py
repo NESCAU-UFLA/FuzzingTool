@@ -577,6 +577,11 @@ class CliController:
         def buildEncoders():
             if not arguments.encoder:
                 return None
+            if arguments.encodeOnly:
+                try:
+                    BaseEncoder.setRegex(arguments.encodeOnly)
+                except Exception as e:
+                    raise e
             encodersDefault = []
             encodersChain = []
             for encoders in arguments.encoder:
@@ -593,7 +598,7 @@ class CliController:
                             name, 'encoders', param
                         )
                     except Exception as e:
-                        raise Exception(str(e))
+                        raise e
                     appendTo.append(encoder)
                 if isChain:
                     encodersChain.append(appendTo)
