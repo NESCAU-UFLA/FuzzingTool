@@ -291,7 +291,7 @@ class CliController:
                 self.startedTime += (time.time() - before)
         if not self.globalDictionary:
             self.localDictionary = self.dictionaries.get()
-            self.totalRequests = len(self.localDictionary)*len(self.requester.methods)
+        self.totalRequests = len(self.localDictionary)*len(self.requester.methods)
 
     def prepareFuzzer(self):
         """Prepare the fuzzer for the fuzzing tests.
@@ -660,7 +660,6 @@ class CliController:
             wordlist = arguments.wordlists[0]
             self.globalDictionary = buildDictionary(wordlist, encoder=encoders)
             self.localDictionary = self.globalDictionary
-            self.totalRequests = len(self.localDictionary)
         else:
             self.dictionaries = Queue()
             for i, wordlist in enumerate(arguments.wordlists):

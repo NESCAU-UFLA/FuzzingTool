@@ -23,21 +23,25 @@ from ..utils.utils import splitStrToList
 from ..utils.FileHandler import fileHandler as fh
 
 from collections import deque
+from typing import Union
 
 class ArgumentBuilder:
     @staticmethod
-    def buildTargetsFromArgs(urls: list, method: str, data: str):
+    def buildTargetsFromArgs(urls: list, method: Union[str, list], data: str):
         """Build the targets from arguments
 
         @type urls: list
         @param urls: The target URLs
-        @type method: str
+        @type method: str | list
         @param method: The request methods
         @type data: str
         @param data: The raw request body data
         @returns dict: The targets data builded into a dictionary
         """
-        methods = splitStrToList(method)
+        if not type(method) is list:
+            methods = splitStrToList(method)
+        else:
+            methods = method
         targets = []
         for url in urls:
             if not methods:
