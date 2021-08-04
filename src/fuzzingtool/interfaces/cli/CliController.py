@@ -291,6 +291,7 @@ class CliController:
                 self.startedTime += (time.time() - before)
         if not self.globalDictionary:
             self.localDictionary = self.dictionaries.get()
+        self.requester.resetRequestIndex()
         self.totalRequests = len(self.localDictionary)*len(self.requester.methods)
 
     def prepareFuzzer(self):
