@@ -39,12 +39,25 @@ class BaseEncoder(ABC):
         @param payload: The payload used in the request
         @returns str: The encoded payload
         """
+        def encodeSubstring(payload: str, i: int, strings: list):
+            for string in strings:
+                lastIndex = i+len(string)
+                toCheck = payload[i:lastIndex]
+                if toCheck == string:
+                    return (lastIndex, self._encode(toCheck))
+            return ((i+1), payload[i])
+
         if not BaseEncoder.regexer:
             return self._encode(payload)
         strings = set([match.group() for match in BaseEncoder.regexer.finditer(payload)])
-        for string in strings:
-            payload = payload.replace(string, self._encode(string))
-        return payload
+        if not strings:
+            return payload
+        encoded = ''
+        i = 0
+        while i < len(payload):
+            i, char = encodeSubstring(payload, i, strings)
+            encoded += char
+        return encoded
 
     @abstractmethod
     def _encode(self, payload: str):
