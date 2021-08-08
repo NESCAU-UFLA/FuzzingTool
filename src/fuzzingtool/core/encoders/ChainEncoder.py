@@ -19,5 +19,17 @@
 # SOFTWARE.
 
 from .BaseEncoder import BaseEncoder
-from .ChainEncoder import ChainEncoder
 from .plugins import *
+
+class ChainEncoder(BaseEncoder):
+    def __init__(self, encoders: list):
+        self.__encoders = encoders
+
+    def getEncoders(self):
+        return self.__encoders
+
+    def _encode(self, payload: str):
+        encoded = payload
+        for encoder in self.__encoders:
+            encoded = encoder._encode(encoded)
+        return encoded

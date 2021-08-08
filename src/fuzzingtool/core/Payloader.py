@@ -84,16 +84,13 @@ class Payloader:
                 for encoder in self.encoders['default']:
                     encodedList.append(encoder.encode(payload))
                 for encoder in self.encoders['chain']:
-                    encodedPayloadWithChain = payload
-                    for e in encoder:
-                        encodedPayloadWithChain = e.encode(encodedPayloadWithChain)
-                    encodedList.append(encodedPayloadWithChain)
+                    encodedList.append(encoder.encode(payload))
             return encodedList
         
         encodersDefault, encodersChain = encoders
         self.encoders = {
             'default': encodersDefault,
-            'chain': encodersChain,
+            'chain': [ChainEncoder(encoders) for encoders in encodersChain],
         }
         self.__encode = encode
 
