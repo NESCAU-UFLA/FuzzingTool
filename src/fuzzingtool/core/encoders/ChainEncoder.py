@@ -22,10 +22,24 @@ from .BaseEncoder import BaseEncoder
 from .plugins import *
 
 class ChainEncoder(BaseEncoder):
+    """Class that handle with the chain encoders
+    
+    Attributes:
+        encoders: The encoders list to be chained
+    """
     def __init__(self, encoders: list):
+        """Class constructor
+
+        @type encoders: list
+        @param encoders: The encoders list to be chained
+        """
         self.__encoders = encoders
 
     def getEncoders(self):
+        """The encoders list getter
+
+        @return list: The encoders list
+        """
         return self.__encoders
 
     def encode(self, payload: str):

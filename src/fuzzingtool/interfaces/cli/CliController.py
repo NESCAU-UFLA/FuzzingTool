@@ -608,7 +608,6 @@ class CliController:
         def buildDictionary(
             wordlists: list,
             requester: Request = None,
-            encoders: tuple = (),
         ):
             """Build the dictionary
 

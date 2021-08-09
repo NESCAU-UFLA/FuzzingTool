@@ -23,6 +23,11 @@ from .encoders import *
 import re
 
 class EncodeManager:
+    """Class that handle with the encoder management
+
+    Attributes:
+        encoders: The encoders used in the program
+    """
     def __init__(self):
         self.encoders = []
         self.encode = lambda ajustedPayload : ajustedPayload
@@ -32,6 +37,11 @@ class EncodeManager:
         return len(self.encoders)
 
     def setRegex(self, regex: str = ''):
+        """The regex setter
+
+        @type regex: str
+        @param regex: The regular expression to set
+        """
         try:
             self.regexer = re.compile(regex, re.IGNORECASE)
         except re.error:
@@ -63,6 +73,8 @@ class EncodeManager:
     def _encode(self, encoder: BaseEncoder, payload: str):
         """Encode a payload into an specific encoding type
 
+        @type encoder: BaseEncoder
+        @param encoder: The encoder used to encode the payload
         @type payload: str
         @param payload: The payload used in the request
         @returns str: The encoded payload
@@ -73,6 +85,18 @@ class EncodeManager:
             i: int,
             strings: list
         ):
+            """Encode a substring using the actual encoder
+
+            @type encoder: BaseEncoder
+            @param encoder: The encoder used to encode the payload
+            @type payload: str
+            @param payload: The payload used in the request
+            @type i: int
+            @param i: The index of the actual char of the payload
+            @type strings: list
+            @param strings: The matched strings list from the regexer
+            @returns tuple(int, str): The encoded substring if match the regex, else return the actual char
+            """
             for string in strings:
                 lastIndex = i+len(string)
                 toCheck = payload[i:lastIndex]
@@ -96,9 +120,9 @@ class Payloader:
     """Class that handle with the payload options
 
     Attributes:
-        encoder: The encoder used in the payload
         prefix: The prefix used in the payload
         suffix: The suffix used in the payload
+        encoder: The encoder used in the payload
     """
     prefix = []
     suffix = []
