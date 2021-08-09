@@ -22,7 +22,7 @@ from .Payloader import Payloader
 
 from queue import Queue
 
-class Dictionary(Payloader):
+class Dictionary:
     """Dictionary object handler
 
     Attributes:
@@ -35,7 +35,6 @@ class Dictionary(Payloader):
         @type wordlist: list
         @param wordlist: The wordlist with the payloads
         """
-        super().__init__()
         self.__wordlist = wordlist
         self.__payloads = Queue()
 
@@ -44,20 +43,20 @@ class Dictionary(Payloader):
 
         @returns list: The payloads used in the request
         """
-        return self._getCustomizedPayload(self.__payloads.get())
+        return Payloader.getCustomizedPayload(self.__payloads.get())
     
     def __len__(self):
         """Gets the wordlist length
 
         @returns int: The wordlist length
         """
-        lengthPrefix = len(self._prefix)
+        lengthPrefix = len(Payloader.prefix)
         if lengthPrefix == 0:
             lengthPrefix = 1
-        lengthSuffix = len(self._suffix)
+        lengthSuffix = len(Payloader.suffix)
         if lengthSuffix == 0:
             lengthSuffix = 1
-        lengthEncoders = len(self.encoders['default']) + len(self.encoders['chain'])
+        lengthEncoders = len(Payloader.encoder)
         if lengthEncoders == 0:
             lengthEncoders = 1
         return (len(self.__wordlist)*lengthSuffix*lengthPrefix*lengthEncoders)

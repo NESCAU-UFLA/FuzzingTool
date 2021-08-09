@@ -29,7 +29,7 @@ class Hex(BaseEncoder):
     __type__ = "Encoder"
     __version__ = "0.2"
 
-    def _encode(self, payload: str):
+    def encode(self, payload: str):
         return payload.encode(BaseEncoder.charset).hex()
     
     def _decode(self, payload: str):

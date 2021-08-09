@@ -31,7 +31,7 @@ class Html(BaseEncoder):
     __type__ = "Encoder"
     __version__ = "0.1"
 
-    def _encode(self, payload: str):
+    def encode(self, payload: str):
         return html.escape(payload)
     
     def _decode(self, payload: str):

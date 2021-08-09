@@ -28,8 +28,8 @@ class ChainEncoder(BaseEncoder):
     def getEncoders(self):
         return self.__encoders
 
-    def _encode(self, payload: str):
+    def encode(self, payload: str):
         encoded = payload
         for encoder in self.__encoders:
-            encoded = encoder._encode(encoded)
+            encoded = encoder.encode(encoded)
         return encoded

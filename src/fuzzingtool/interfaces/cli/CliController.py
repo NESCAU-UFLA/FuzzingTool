@@ -580,7 +580,7 @@ class CliController:
                 return None
             if arguments.encodeOnly:
                 try:
-                    BaseEncoder.setRegex(arguments.encodeOnly)
+                    Payloader.encoder.setRegex(arguments.encodeOnly)
                 except Exception as e:
                     raise e
             encodersDefault = []
@@ -608,7 +608,7 @@ class CliController:
         def buildDictionary(
             wordlists: list,
             requester: Request = None,
-            encoders: dict = {},
+            encoders: tuple = (),
         ):
             """Build the dictionary
 
@@ -642,19 +642,19 @@ class CliController:
                 raise Exception("The wordlist is empty")
             dictionary = Dictionary(buildedWordlist)
             self.dictionariesMetadata[lastDictIndex]['sizeof'] = len(buildedWordlist)
-            dictionary.setPrefix(arguments.prefix)
-            dictionary.setSuffix(arguments.suffix)
-            if arguments.lowercase:
-                dictionary.setLowercase()
-            elif arguments.uppercase:
-                dictionary.setUppercase()
-            elif arguments.capitalize:
-                dictionary.setCapitalize()
-            if encoders:
-                dictionary.setEncoders(encoders)
             return dictionary
         
+        Payloader.setPrefix(arguments.prefix)
+        Payloader.setSuffix(arguments.suffix)
+        if arguments.lowercase:
+            Payloader.setLowercase()
+        elif arguments.uppercase:
+            Payloader.setUppercase()
+        elif arguments.capitalize:
+            Payloader.setCapitalize()
         encoders = buildEncoders()
+        if encoders:
+            Payloader.encoder.setEncoders(encoders)
         self.globalDictionary = None
         self.dictionaries = []
         self.dictionariesMetadata = []

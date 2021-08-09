@@ -29,7 +29,7 @@ class HtmlDec(BaseEncoder):
     __type__ = "Encoder"
     __version__ = "0.1"
 
-    def _encode(self, payload: str):
+    def encode(self, payload: str):
         encoded = ''
         for c in payload:
             encoded += f"&#{ord(c)};"

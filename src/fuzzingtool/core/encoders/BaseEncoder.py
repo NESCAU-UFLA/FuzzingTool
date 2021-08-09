@@ -19,48 +19,12 @@
 # SOFTWARE.
 
 from abc import ABC, abstractmethod
-import re
 
 class BaseEncoder(ABC):
     charset = 'utf-8'
-    regexer = None
-
-    @staticmethod
-    def setRegex(regex: str = ''):
-        try:
-            BaseEncoder.regexer = re.compile(regex, re.IGNORECASE)
-        except re.error:
-            raise Exception(f"Invalid regex format {regex}")
-
-    def encode(self, payload: str):
-        """Encode a payload into an specific encoding type
-
-        @type payload: str
-        @param payload: The payload used in the request
-        @returns str: The encoded payload
-        """
-        def encodeSubstring(payload: str, i: int, strings: list):
-            for string in strings:
-                lastIndex = i+len(string)
-                toCheck = payload[i:lastIndex]
-                if toCheck == string:
-                    return (lastIndex, self._encode(toCheck))
-            return ((i+1), payload[i])
-
-        if not BaseEncoder.regexer:
-            return self._encode(payload)
-        strings = set([match.group() for match in BaseEncoder.regexer.finditer(payload)])
-        if not strings:
-            return payload
-        encoded = ''
-        i = 0
-        while i < len(payload):
-            i, char = encodeSubstring(payload, i, strings)
-            encoded += char
-        return encoded
 
     @abstractmethod
-    def _encode(self, payload: str):
+    def encode(self, payload: str):
         """Encode a payload into an specific encoding type
 
         @type payload: str
