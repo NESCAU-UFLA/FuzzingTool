@@ -24,15 +24,12 @@ import re
 
 class EncodeManager:
     def __init__(self):
-        self.encoders = {
-            'default': [],
-            'chain': [],
-        }
+        self.encoders = []
         self.encode = lambda ajustedPayload : ajustedPayload
         self.regexer = None
     
     def __len__(self):
-        return (len(self.encoders['default']) + len(self.encoders['chain']))
+        return len(self.encoders)
 
     def setRegex(self, regex: str = ''):
         try:
@@ -55,17 +52,12 @@ class EncodeManager:
             """
             encodedList = []
             for payload in ajustedPayload:
-                for encoder in self.encoders['default']:
-                    encodedList.append(self._encode(encoder, payload))
-                for encoder in self.encoders['chain']:
+                for encoder in self.encoders:
                     encodedList.append(self._encode(encoder, payload))
             return encodedList
 
         encodersDefault, encodersChain = encoders
-        self.encoders = {
-            'default': encodersDefault,
-            'chain': [ChainEncoder(encoders) for encoders in encodersChain],
-        }
+        self.encoders = encodersDefault+[ChainEncoder(encoders) for encoders in encodersChain]
         self.encode = encode
 
     def _encode(self, encoder: BaseEncoder, payload: str):
