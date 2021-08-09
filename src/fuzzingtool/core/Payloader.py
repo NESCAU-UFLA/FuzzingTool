@@ -27,6 +27,7 @@ class EncodeManager:
 
     Attributes:
         encoders: The encoders used in the program
+        regexer: The object to handle with the encoding based on a regex
     """
     def __init__(self):
         self.encoders = []
@@ -37,7 +38,7 @@ class EncodeManager:
         return len(self.encoders)
 
     def setRegex(self, regex: str = ''):
-        """The regex setter
+        """The regexer setter
 
         @type regex: str
         @param regex: The regular expression to set
