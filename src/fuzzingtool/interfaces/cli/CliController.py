@@ -292,7 +292,6 @@ class CliController:
                 self.startedTime += (time.time() - before)
         if not self.globalDictionary:
             self.localDictionary = self.dictionaries.get()
-        self.requester.resetRequestIndex()
         self.totalRequests = len(self.localDictionary)*len(self.requester.methods)
 
     def prepareFuzzer(self):
@@ -473,7 +472,7 @@ class CliController:
         if self.ignoreErrors:
             if not self.verbose[0]:
                 self.co.progressStatus(
-                    self.requester.index, self.totalRequests, payload
+                    self.fuzzer.index, self.totalRequests, payload
                 )
             else:
                 if self.verbose[1]:
@@ -499,7 +498,7 @@ class CliController:
                 self.co.notWorkedBox(str(e))
         else:
             self.co.progressStatus(
-                self.requester.index, self.totalRequests, payload
+                self.fuzzer.index, self.totalRequests, payload
             )
 
     def __initRequesters(self, arguments: CliArguments):

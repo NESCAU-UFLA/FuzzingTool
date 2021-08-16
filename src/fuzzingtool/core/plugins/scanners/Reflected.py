@@ -23,6 +23,7 @@ from ...bases.BaseScanner import BaseScanner
 from ...Result import Result
 from ....interfaces.cli.CliOutput import Colors, getFormatedResult
 from ....decorators.plugin_meta import plugin_meta
+from ....decorators.append_args import append_args
 
 @plugin_meta
 class Reflected(BaseScanner, Plugin):
@@ -32,6 +33,7 @@ class Reflected(BaseScanner, Plugin):
     __type__ = ""
     __version__ = "0.1"
 
+    @append_args
     def inspectResult(self, result: Result, *args):
         result.custom['reflected'] = None
 

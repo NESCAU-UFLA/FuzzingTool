@@ -24,6 +24,7 @@ from ...utils.http_utils import *
 from ...utils.utils import getIndexesToParse
 from ...exceptions.RequestExceptions import RequestException
 
+from threading import Lock
 import random
 import time
 import urllib3.exceptions
@@ -44,7 +45,6 @@ class Request:
         proxies: The list with valid proxies gived by a file
         timeout: The request timeout before raise a TimeoutException
         followRedirects: The follow redirections flag
-        requestIndex: The request index
         methods: The methods list to be used on fuzzing
     """
     def __init__(self,
@@ -96,10 +96,10 @@ class Request:
             self.__request = self.__sessionRequest
         else:
             self.__request = self.__commonRequest
-        self.index = 0
         self.methods = methods
         if cookie:
             self.setHeaderContent('Cookie', cookie)
+        self._lock = Lock()
     
     def getUrl(self):
         """The url content getter
@@ -143,13 +143,6 @@ class Request:
         """
         return self.__fuzzingType == PATH_FUZZING
 
-    def getRequestIndex(self):
-        """The request index getter
-
-        @returns int: The request index
-        """
-        return self.index
-
     def getFuzzingType(self):
         """The fuzzing type getter
 
@@ -180,10 +173,6 @@ class Request:
             header['content'][key] = self.__parseHeaderValue(value)
         else:
             header['content'][key] = value
-
-    def resetRequestIndex(self):
-        """Resets the request index"""
-        self.index = 0
 
     def testConnection(self):
         """Test the connection with the target, and raise an exception if couldn't connect"""
@@ -261,8 +250,6 @@ class Request:
             raise RequestException(str(e))
         else:
             return (response, RTT)
-        finally:
-            self.index += 1
 
     def _setFuzzingType(self):
         def _isMethodFuzzing():
@@ -429,13 +416,14 @@ class Request:
         @param payload: The payload used in the request
         @returns tuple(str, str, dict, dict): The parameters of the request
         """
-        requestParser.setPayload(payload)
-        return (
-            requestParser.getMethod(self.__method),
-            requestParser.getUrl(self._url),
-            requestParser.getHeader(self.__header),
-            requestParser.getData(self.__data),
-        )
+        with self._lock:
+            requestParser.setPayload(payload)
+            return (
+                requestParser.getMethod(self.__method),
+                requestParser.getUrl(self._url),
+                requestParser.getHeader(self.__header),
+                requestParser.getData(self.__data),
+            )
     
     def __sessionRequest(self,
         method: str,

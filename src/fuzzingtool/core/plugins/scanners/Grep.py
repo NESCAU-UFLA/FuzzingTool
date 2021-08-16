@@ -23,6 +23,7 @@ from ...bases.BaseScanner import BaseScanner
 from ...Result import Result
 from ....interfaces.cli.CliOutput import Colors, getFormatedResult
 from ....decorators.plugin_meta import plugin_meta
+from ....decorators.append_args import append_args
 from ....exceptions.MainExceptions import MissingParameter, BadArgumentFormat
 
 import re
@@ -61,6 +62,7 @@ class Grep(BaseScanner, Plugin):
             except re.error:
                 raise BadArgumentFormat(f"invalid regex: {regex}")
 
+    @append_args
     def inspectResult(self, result: Result, *args):
         result.custom['found'] = None
         result.custom['greped'] = {i: [] for i in range(len(self.__regexers))}

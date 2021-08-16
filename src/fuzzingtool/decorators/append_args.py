@@ -18,30 +18,12 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from ...bases.BaseScanner import BaseScanner
-from ...Result import Result
-from ....decorators.append_args import append_args
-from ....interfaces.cli.CliOutput import Colors, getFormatedResult
+from ..core.Result import Result
 
-class SubdomainScanner(BaseScanner):
-    __author__ = ("Vitor Oriel",)
+def append_args(function):
+    def wrapper(cls, result, *args):
+        if args:
+            result.custom.update(args[0])
+        return function(cls, result)
 
-    @append_args
-    def inspectResult(self, result: Result, *args):
-        pass
-
-    def scan(self, result: Result):
-        return True
-
-    def cliCallback(self, result: Result):
-        url, RTT, length = getFormatedResult(
-            result.url, result.RTT, result.length
-        )
-        ip = '{:>15}'.format(result.custom['ip'])
-        return (
-            f"{url} {Colors.GRAY}["+
-            f'{Colors.LIGHT_GRAY}IP{Colors.RESET} {ip}'" | "+
-            f"{Colors.LIGHT_GRAY}Code{Colors.RESET} {result.status} | "+
-            f"{Colors.LIGHT_GRAY}RTT{Colors.RESET} {RTT} | "+
-            f"{Colors.LIGHT_GRAY}Size{Colors.RESET} {length}{Colors.GRAY}]{Colors.RESET}"
-        )
+    return wrapper

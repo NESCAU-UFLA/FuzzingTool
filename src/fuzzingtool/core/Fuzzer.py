@@ -40,6 +40,7 @@ class Fuzzer:
         delay: The delay between each test
         numberOfThreads: The number of threads used in the application
         running: A flag to say if the application is running or not
+        index: The actual request index
     """
     def __init__(self,
         requester: Request,
@@ -77,6 +78,7 @@ class Fuzzer:
         self.__delay = delay
         self.__numberOfThreads = numberOfThreads
         self.__running = True
+        self.index = 1
         self.resultsCallback = resultCallback
         self.exceptionCallbacks = exceptionCallbacks
         self.setup()
@@ -91,7 +93,7 @@ class Fuzzer:
             player: The player event object handler - an internal flag manager for the threads
         """
         self.__threads = []
-        for i in range(self.__numberOfThreads):
+        for _ in range(self.__numberOfThreads):
             self.__threads.append(Thread(target=self.run, daemon=True))
         self.__runningThreads = self.__numberOfThreads
         self.__joinTimeout = 0.001*float(self.__numberOfThreads)
@@ -119,21 +121,24 @@ class Fuzzer:
             for payload in payloads:
                 try:
                     response, RTT, *args = self.__requester.request(payload)
-                    result = Result(response, RTT, self.__requester.index, payload)
+                except InvalidHostname as e:
+                    self.exceptionCallbacks[0](e, payload)
+                except RequestException as e:
+                    self.exceptionCallbacks[1](e, payload)
+                else:
+                    result = Result(response, RTT, self.index, payload)
                     self.__scanner.inspectResult(result, *args)
                     self.resultsCallback(
                         result,
                         self.__scanner.scan(result) if self.__matcher.match(result) else False
                     )
-                except InvalidHostname as e:
-                    self.exceptionCallbacks[0](e, payload)
-                except RequestException as e:
-                    self.exceptionCallbacks[1](e, payload)
                 finally:
+                    self.index += 1
                     time.sleep(self.__delay)
             if self.isPaused():
                 self.__runningThreads -= 1
                 self.__player.wait()
+        self.__runningThreads -= 1
 
     def join(self):
         """Join the threads

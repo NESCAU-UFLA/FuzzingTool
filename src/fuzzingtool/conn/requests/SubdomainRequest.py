@@ -26,6 +26,8 @@ from ...exceptions.RequestExceptions import InvalidHostname
 
 import socket
 
+socket._GLOBAL_DEFAULT_TIMEOUT = 0.1
+
 class SubdomainRequest(Request):
     """Class that handle with the requests for subdomain fuzzing"""
     def __init__(self, url: str, **kwargs):
@@ -46,13 +48,14 @@ class SubdomainRequest(Request):
         try:
             return socket.gethostbyname(hostname)
         except:
-            self.index += 1
             raise InvalidHostname(f"Can't resolve hostname {hostname}")
 
     def request(self, payload: str):
-        parser.setPayload(payload)
-        ip = self.resolveHostname(getHost(parser.getUrl(self._url)))
-        return (*(super().request(payload)), ip)
+        with self._lock:
+            parser.setPayload(payload)
+            host = getHost(parser.getUrl(self._url))
+        ip = self.resolveHostname(host)
+        return (*(super().request(payload)), {'ip': ip})
     
     def _setFuzzingType(self):
         return SUBDOMAIN_FUZZING
