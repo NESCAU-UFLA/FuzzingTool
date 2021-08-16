@@ -18,12 +18,28 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from .bases import *
-from .defaults import *
-from .plugins import *
-from .BlacklistStatus import BlacklistStatus
-from .Dictionary import Dictionary
-from .Fuzzer import Fuzzer
-from .Matcher import Matcher
-from .Payloader import Payloader
-from .Result import Result
+from ...bases.BaseScanner import BaseScanner
+from ...Result import Result
+from ....interfaces.cli.CliOutput import Colors, getFormatedResult
+
+class SubdomainScanner(BaseScanner):
+    __author__ = ("Vitor Oriel",)
+
+    def inspectResult(self, result: Result, *args):
+        result.custom['ip'] = args[0]
+
+    def scan(self, result: Result):
+        return True
+
+    def cliCallback(self, result: Result):
+        url, RTT, length = getFormatedResult(
+            result.url, result.RTT, result.length
+        )
+        ip = '{:>15}'.format(result.custom['ip'])
+        return (
+            f"{url} {Colors.GRAY}["+
+            f'{Colors.LIGHT_GRAY}IP{Colors.RESET} {ip}'" | "+
+            f"{Colors.LIGHT_GRAY}Code{Colors.RESET} {result.status} | "+
+            f"{Colors.LIGHT_GRAY}RTT{Colors.RESET} {RTT} | "+
+            f"{Colors.LIGHT_GRAY}Size{Colors.RESET} {length}{Colors.GRAY}]{Colors.RESET}"
+        )

@@ -18,12 +18,30 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from .bases import *
-from .defaults import *
-from .plugins import *
-from .BlacklistStatus import BlacklistStatus
-from .Dictionary import Dictionary
-from .Fuzzer import Fuzzer
-from .Matcher import Matcher
-from .Payloader import Payloader
-from .Result import Result
+from ...bases.BaseScanner import BaseScanner
+from ...Result import Result
+from ....interfaces.cli.CliOutput import Colors, getFormatedResult
+
+class DataScanner(BaseScanner):
+    __author__ = ("Vitor Oriel",)
+
+    def inspectResult(self, result: Result, *args):
+        result.custom['PayloadLength'] = len(result.payload)
+
+    def scan(self, result: Result):
+        return True
+    
+    def cliCallback(self, result: Result):
+        payload, RTT, length = getFormatedResult(
+            result.payload, result.RTT, result.length
+        )
+        words = '{:>6}'.format(result.words)
+        lines = '{:>5}'.format(result.lines)
+        return (
+            f"{payload} {Colors.GRAY}["+
+            f"{Colors.LIGHT_GRAY}Code{Colors.RESET} {result.status} | "+
+            f"{Colors.LIGHT_GRAY}RTT{Colors.RESET} {RTT} | "+
+            f"{Colors.LIGHT_GRAY}Size{Colors.RESET} {length} | "+
+            f"{Colors.LIGHT_GRAY}Words{Colors.RESET} {words} | "+
+            f"{Colors.LIGHT_GRAY}Lines{Colors.RESET} {lines}{Colors.GRAY}]{Colors.RESET}"
+        )

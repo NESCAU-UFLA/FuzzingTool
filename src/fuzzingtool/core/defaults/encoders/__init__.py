@@ -18,12 +18,4 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from .bases import *
-from .defaults import *
-from .plugins import *
-from .BlacklistStatus import BlacklistStatus
-from .Dictionary import Dictionary
-from .Fuzzer import Fuzzer
-from .Matcher import Matcher
-from .Payloader import Payloader
-from .Result import Result
+from .ChainEncoder import ChainEncoder

@@ -20,9 +20,7 @@
 
 from .BaseFactories import BasePluginFactory
 from ..utils.utils import getPluginNamesFromCategory, splitStrToList
-from ..core.encoders import *
-from ..core.scanners import *
-from ..core.wordlists import *
+from ..core.plugins import *
 from ..exceptions.MainExceptions import InvalidPluginName, MissingParameter, BadArgumentFormat
 
 from importlib import import_module
@@ -37,7 +35,7 @@ class PluginFactory(BasePluginFactory):
         if not name in getPluginNamesFromCategory(category):
             raise InvalidPluginName(f"Plugin {name} does not exists")
         Plugin = import_module(
-            f"fuzzingtool.core.{category}.plugins.{name}",
+            f"fuzzingtool.core.plugins.{category}.{name}",
             package=name
         )
         return getattr(Plugin, name)

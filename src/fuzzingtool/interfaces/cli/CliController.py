@@ -322,13 +322,10 @@ class CliController:
         """
         if self.requester.isUrlDiscovery():
             if self.requester.isPathFuzzing():
-                from ...core.scanners.default.PathScanner import PathScanner
                 scanner = PathScanner()
             else:
-                from ...core.scanners.default.SubdomainScanner import SubdomainScanner
                 scanner = SubdomainScanner()
         else:
-            from ...core.scanners.default.DataScanner import DataScanner
             scanner = DataScanner()
         self.co.setMessageCallback(scanner.cliCallback)
         return scanner

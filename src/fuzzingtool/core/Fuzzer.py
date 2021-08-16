@@ -21,7 +21,7 @@
 from .Dictionary import Dictionary
 from .Matcher import Matcher
 from .Result import Result
-from .scanners import *
+from .bases.BaseScanner import BaseScanner
 from ..conn.requests import *
 from ..exceptions.RequestExceptions import RequestException, InvalidHostname
 

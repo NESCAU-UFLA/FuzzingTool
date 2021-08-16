@@ -65,10 +65,10 @@ def getPluginNamesFromCategory(category: str):
     """
     from os import walk
     try:
-        _, _, pluginFiles = next(walk(f"./fuzzingtool/core/{category}/plugins/"))
+        _, _, pluginFiles = next(walk(f"./fuzzingtool/core/plugins/{category}/"))
     except:
         from os.path import dirname, abspath
-        _, _, pluginFiles = next(walk(f"{dirname(dirname(abspath(__file__)))}/core/{category}/plugins/"))
+        _, _, pluginFiles = next(walk(f"{dirname(dirname(abspath(__file__)))}/core/plugins/{category}/"))
     if '__init__.py' in pluginFiles:
         pluginFiles.remove('__init__.py')
     return [pluginFile.split('.')[0] for pluginFile in pluginFiles]

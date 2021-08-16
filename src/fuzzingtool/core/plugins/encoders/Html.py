@@ -18,12 +18,22 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from .bases import *
-from .defaults import *
-from .plugins import *
-from .BlacklistStatus import BlacklistStatus
-from .Dictionary import Dictionary
-from .Fuzzer import Fuzzer
-from .Matcher import Matcher
-from .Payloader import Payloader
-from .Result import Result
+from ..Plugin import Plugin
+from ...bases.BaseEncoder import BaseEncoder
+from ....decorators.plugin_meta import plugin_meta
+
+import html
+
+@plugin_meta
+class Html(BaseEncoder, Plugin):
+    __author__ = ("Vitor Oriel",)
+    __params__ = {}
+    __desc__ = "Encode payload using HTML entities encoder"
+    __type__ = "Encoder"
+    __version__ = "0.1"
+
+    def encode(self, payload: str):
+        return html.escape(payload)
+    
+    def decode(self, payload: str):
+        return html.unescape(payload)

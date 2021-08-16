@@ -18,7 +18,9 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from .encoders import *
+from .bases.BaseEncoder import BaseEncoder
+from .defaults.encoders import *
+from .plugins.encoders import *
 
 import re
 

@@ -18,12 +18,22 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from .bases import *
-from .defaults import *
-from .plugins import *
-from .BlacklistStatus import BlacklistStatus
-from .Dictionary import Dictionary
-from .Fuzzer import Fuzzer
-from .Matcher import Matcher
-from .Payloader import Payloader
-from .Result import Result
+from ...bases.BaseWordlist import BaseWordlist
+from ....utils.utils import splitStrToList, checkRangeList
+from ....exceptions.MainExceptions import MissingParameter
+
+class ListWordlist(BaseWordlist):
+    __author__ = ("Vitor Oriel",)
+
+    def __init__(self, payloadList: str):
+        payloadList = payloadList[1:len(payloadList)-1]
+        if not payloadList:
+            raise MissingParameter("list of payloads")
+        self.payloadList = payloadList
+        super().__init__()
+
+    def _build(self):
+        buildedList = []
+        for payload in splitStrToList(self.payloadList):
+            buildedList.extend(checkRangeList(payload))
+        return buildedList

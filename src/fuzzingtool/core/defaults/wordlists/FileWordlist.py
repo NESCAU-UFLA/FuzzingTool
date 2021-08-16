@@ -18,12 +18,18 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from .bases import *
-from .defaults import *
-from .plugins import *
-from .BlacklistStatus import BlacklistStatus
-from .Dictionary import Dictionary
-from .Fuzzer import Fuzzer
-from .Matcher import Matcher
-from .Payloader import Payloader
-from .Result import Result
+from ...bases.BaseWordlist import BaseWordlist
+from ....utils.FileHandler import fileHandler as fh
+
+class FileWordlist(BaseWordlist):
+    __author__ = ("Vitor Oriel",)
+
+    def __init__(self, filePath: str):
+        self.filePath = filePath
+        super().__init__()
+
+    def _build(self):
+        try:
+            return set(fh.read(self.filePath))
+        except Exception as e:
+            raise e

@@ -22,7 +22,7 @@ from .BaseFactories import BaseWordlistFactory
 from .PluginFactory import PluginFactory
 from ..utils.http_utils import getHost, getPureUrl
 from ..conn.requests.Request import Request
-from ..core.wordlists import *
+from ..core.defaults.wordlists import *
 from ..exceptions.MainExceptions import InvalidPluginName, MissingParameter
 
 class WordlistFactory(BaseWordlistFactory):

@@ -18,12 +18,32 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from .bases import *
-from .defaults import *
-from .plugins import *
-from .BlacklistStatus import BlacklistStatus
-from .Dictionary import Dictionary
-from .Fuzzer import Fuzzer
-from .Matcher import Matcher
-from .Payloader import Payloader
-from .Result import Result
+from ...bases.BaseEncoder import BaseEncoder
+from ...plugins import *
+
+class ChainEncoder(BaseEncoder):
+    """Class that handle with the chain encoders
+    
+    Attributes:
+        encoders: The encoders list to be chained
+    """
+    def __init__(self, encoders: list):
+        """Class constructor
+
+        @type encoders: list
+        @param encoders: The encoders list to be chained
+        """
+        self.__encoders = encoders
+
+    def getEncoders(self):
+        """The encoders list getter
+
+        @return list: The encoders list
+        """
+        return self.__encoders
+
+    def encode(self, payload: str):
+        encoded = payload
+        for encoder in self.__encoders:
+            encoded = encoder.encode(encoded)
+        return encoded
