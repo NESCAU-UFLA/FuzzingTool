@@ -46,6 +46,7 @@ class Request:
         timeout: The request timeout before raise a TimeoutException
         followRedirects: The follow redirections flag
         methods: The methods list to be used on fuzzing
+        lock: The threads locker to set up the payload on the fuzzing entries
     """
     def __init__(self,
         url: str,
@@ -252,16 +253,36 @@ class Request:
             return (response, RTT)
 
     def _setFuzzingType(self):
+        """Sets the fuzzing type
+        
+        @returns int: The fuzzing type int value
+        """
         def _isMethodFuzzing():
+            """Checks if the fuzzing type is MethodFuzzing
+            
+            @returns bool: The fuzzing flag
+            """
             return False if not self.__method['fuzzingIndexes'] else True
 
         def _isUrlFuzzing():
+            """Checks if the fuzzing type is UrlFuzzing
+            
+            @returns bool: The fuzzing flag
+            """
             return False if not self._url['fuzzingIndexes'] else True
 
         def _isUrlDiscovery():
+            """Checks if the fuzzing type is UrlFuzzing for discovery
+            
+            @returns bool: The fuzzing flag
+            """
             return (_isUrlFuzzing() and not '?' in self._url['content'])
 
         def _isDataFuzzing():
+            """Checks if the fuzzing type is DataFuzzing
+            
+            @returns bool: The fuzzing flag
+            """
             for _, value in self.__data['PARAM'].items():
                 if not value:
                     return True

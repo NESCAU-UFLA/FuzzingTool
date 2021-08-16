@@ -19,9 +19,24 @@
 # SOFTWARE.
 
 from ..core.Result import Result
+from ..core.bases.BaseScanner import BaseScanner
 
-def append_args(function):
-    def wrapper(cls, result, *args):
+from typing import Callable
+
+def append_args(function: Callable):
+    """Decorator to append extra data from arguments to the result
+
+    @type function: Callable
+    @param function: The function to inspect the result
+    """
+    def wrapper(cls: BaseScanner, result: Result, *args):
+        """Wrapper function to the decorator
+        
+        @type cls: BaseScanner
+        @param cls: The scanner that are using this decorator function
+        @type result: Result
+        @param result: The result object
+        """
         if args:
             result.custom.update(args[0])
         return function(cls, result)

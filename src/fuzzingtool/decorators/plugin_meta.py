@@ -18,7 +18,14 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-def plugin_meta(cls):
+from ..core.plugins.Plugin import Plugin
+
+def plugin_meta(cls: Plugin):
+    """Decorator to check for plugin metadata on a plugin class
+    
+    @type cls: Plugin
+    @param cls: The class that call this decorator
+    """
     metadata = ['__author__', '__params__', '__desc__', '__type__', '__version__']
     classAttr = vars(cls)
     for meta in metadata:
