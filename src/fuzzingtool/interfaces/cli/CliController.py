@@ -83,10 +83,11 @@ class CliController:
         @param arguments: The command line interface arguments object
         """
         self.co = CliOutput() # Abbreviation to cli output
-        self.co.setOutputMode(arguments.simpleOutput)
         self.verbose = arguments.verbose
         self.co.setVerbosityMode(self.isVerboseMode())
-        if not arguments.simpleOutput:
+        if arguments.simpleOutput:
+            self.co.setSimpleOutputMode()
+        else:
             CliOutput.print(banner())
         try:
             self.co.infoBox("Setting up arguments ...")
@@ -607,7 +608,7 @@ class CliController:
 
         def buildDictionary(
             wordlists: list,
-            requester: Request = None,
+            requester: Request = None
         ):
             """Build the dictionary
 
@@ -663,9 +664,9 @@ class CliController:
             raise Exception("The quantity of wordlists is greater than the requesters")
         elif lenWordlists != lenRequesters:
             wordlist = arguments.wordlists[0]
-            self.globalDictionary = buildDictionary(wordlist, encoder=encoders)
+            self.globalDictionary = buildDictionary(wordlist)
             self.localDictionary = self.globalDictionary
         else:
             self.dictionaries = Queue()
             for i, wordlist in enumerate(arguments.wordlists):
-                self.dictionaries.put(buildDictionary(wordlist, self.requesters[i], encoders))
+                self.dictionaries.put(buildDictionary(wordlist, self.requesters[i]))

@@ -18,7 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from ...utils.utils import stringfyList
+from ...utils.utils import stringfyList, getHumanLength
 from ...utils.http_utils import getHost, getPureUrl
 
 from datetime import datetime
@@ -61,19 +61,6 @@ def fixPayloadToOutput(
         while len(payload) < maxLength:
             payload += ' '
     return payload
-
-def getHumanLength(length: int):
-    """Get the human readable length from the result
-
-    @type length: int
-    @param length: The length of the response body
-    @returns tuple(int|float, str): The tuple with new length and the readable order
-    """
-    for order in ["B ", "KB", "MB", "GB"]:
-        if length < 1024:
-            return (length, order)
-        length /= 1024
-    return (length, "TB")
 
 def getFormatedResult(payload: str, RTT: float, length: int):
     """Format the result into a dict of strings
@@ -179,21 +166,15 @@ class CliOutput:
         self.__worked = f'{Colors.GRAY}[{Colors.GREEN}+{Colors.GRAY}]{Colors.RESET} '
         self.__notWorked = f'{Colors.GRAY}[{Colors.RED}-{Colors.GRAY}]{Colors.RESET} '
 
-    def setOutputMode(self, simpleOutput: bool):
-        """Set the display output mode, change labels
-           By default, the app will use common output mode
-
-        @type simpleOutput: bool
-        @param simpleOutput: The simple output mode flag
-        """
-        if simpleOutput:
-            self.__getTime = lambda: ''
-            self.__info = f'{Colors.GRAY}[{Colors.BLUE_GRAY}*{Colors.GRAY}]{Colors.RESET} '
-            self.__warning = f'{Colors.GRAY}[{Colors.YELLOW}!{Colors.GRAY}]{Colors.RESET} '
-            self.__error = f'{Colors.GRAY}[{Colors.RED}!!{Colors.GRAY}]{Colors.RESET} '
-            self.__abord = f'{Colors.GRAY}[{Colors.RED}AB{Colors.GRAY}]{Colors.RESET} '
-            self.__worked = f'{Colors.GRAY}[{Colors.GREEN}+{Colors.GRAY}]{Colors.RESET} '
-            self.__notWorked = f'{Colors.GRAY}[{Colors.RED}-{Colors.GRAY}]{Colors.RESET} '
+    def setSimpleOutputMode(self):
+        """Set the display to simple output mode, change labels"""
+        self.__getTime = lambda: ''
+        self.__info = f'{Colors.GRAY}[{Colors.BLUE_GRAY}*{Colors.GRAY}]{Colors.RESET} '
+        self.__warning = f'{Colors.GRAY}[{Colors.YELLOW}!{Colors.GRAY}]{Colors.RESET} '
+        self.__error = f'{Colors.GRAY}[{Colors.RED}!!{Colors.GRAY}]{Colors.RESET} '
+        self.__abord = f'{Colors.GRAY}[{Colors.RED}AB{Colors.GRAY}]{Colors.RESET} '
+        self.__worked = f'{Colors.GRAY}[{Colors.GREEN}+{Colors.GRAY}]{Colors.RESET} '
+        self.__notWorked = f'{Colors.GRAY}[{Colors.RED}-{Colors.GRAY}]{Colors.RESET} '
 
     def setVerbosityMode(self, verboseMode: bool):
         """Set the verbosity mode

@@ -86,6 +86,19 @@ def stringfyList(oneList: list):
     output += oneList[len(oneList)-1]
     return output
 
+def getHumanLength(length: int):
+    """Get the human readable length from the result
+
+    @type length: int
+    @param length: The length of the response body
+    @returns tuple(int|float, str): The tuple with new length and the readable order
+    """
+    for order in ["B ", "KB", "MB", "GB"]:
+        if length < 1024:
+            return (length, order)
+        length /= 1024
+    return (length, "TB")
+
 def checkRangeList(content: str):
     """Checks if the given content has a range list,
        and make a list of the range specified
