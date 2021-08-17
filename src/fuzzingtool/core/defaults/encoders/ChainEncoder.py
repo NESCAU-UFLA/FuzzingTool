@@ -19,7 +19,7 @@
 # SOFTWARE.
 
 from ...bases.BaseEncoder import BaseEncoder
-from ...plugins import *
+from ...plugins.encoders import *
 
 class ChainEncoder(BaseEncoder):
     """Class that handle with the chain encoders
