@@ -19,7 +19,8 @@
 # SOFTWARE.
 
 from .BaseFactories import BasePluginFactory
-from ..utils.utils import getPluginNamesFromCategory, splitStrToList
+from ..utils.file_utils import getPluginNamesFromCategory
+from ..utils.utils import splitStrToList
 from ..core.plugins import *
 from ..exceptions.MainExceptions import InvalidPluginName, MissingParameter, BadArgumentFormat
 

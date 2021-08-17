@@ -18,14 +18,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from pathlib import Path
-
-UNKNOWN_FUZZING = -1
-HTTP_METHOD_FUZZING = 0
-PATH_FUZZING = 1
-SUBDOMAIN_FUZZING = 2
-DATA_FUZZING = 3
-
-FUZZING_MARK = '$'
-
-OUTPUT_DIRECTORY = f'{Path.home()}/.FuzzingTool'
+from .CsvReport import CsvReport
+from .JsonReport import JsonReport
+from .TxtReport import TxtReport

@@ -18,14 +18,35 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from pathlib import Path
+from .BaseFactories import BaseReportFactory
+from ..reports.reports import *
+from ..utils.utils import stringfyList
+from ..utils.file_utils import getReports
 
-UNKNOWN_FUZZING = -1
-HTTP_METHOD_FUZZING = 0
-PATH_FUZZING = 1
-SUBDOMAIN_FUZZING = 2
-DATA_FUZZING = 3
+from importlib import import_module
 
-FUZZING_MARK = '$'
-
-OUTPUT_DIRECTORY = f'{Path.home()}/.FuzzingTool'
+class ReportFactory(BaseReportFactory):
+    def creator(name: str):
+        def classCreator(name: str):
+            Report = import_module(
+                f"fuzzingtool.reports.reports.{name}",
+                package=name
+            )
+            return getattr(Report, name)
+        
+        if '.' in name:
+            reportName, reportType = name.rsplit('.', 1)
+        else:
+            reportType = name
+            reportName = ''
+        reportType = reportType.lower()
+        availableReports = {}
+        for report in getReports():
+            Report = classCreator(report)
+            availableReports[Report.__alias__] = Report
+        try:
+            return availableReports[reportType](reportName)
+        except:
+            raise Exception(f"Unsupported report format for {reportType}! Accepts: "+
+                stringfyList(list(availableReports.keys())))
+        

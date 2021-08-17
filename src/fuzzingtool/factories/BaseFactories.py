@@ -70,11 +70,23 @@ class BaseWordlistFactory(ABC):
         """Build the wordlists
 
         @type name: str
-        @param name: The dictionary name
+        @param name: The wordlist name
         @type params: str
-        @param params: The dicttionary parameters
+        @param params: The wordlist parameters
         @type requester: Request
         @param requester: The requester for the given wordlist
-        @returns Dictionary: The dictionary object
+        @returns BaseWordlist: The wordlist object
+        """
+        pass
+
+class BaseReportFactory(ABC):
+    @staticmethod
+    @abstractmethod
+    def creator(name: str):
+        """Build the reports
+
+        @type name: str
+        @param name: The name of the report file
+        @returns BaseReport: The report object
         """
         pass

@@ -23,7 +23,8 @@ from .CliOutput import CliOutput, Colors
 from ..ArgumentBuilder import ArgumentBuilder as AB
 from ... import version
 from ...utils.http_utils import *
-from ...utils.FileHandler import fileHandler as fh
+from ...utils.file_utils import readFile
+from ...utils.Logger import Logger
 from ...core import *
 from ...conn import *
 from ...factories import *
@@ -67,6 +68,7 @@ class CliController:
         self.allResults = {}
         self.lock = threading.Lock()
         self.blacklistStatus = None
+        self.logger = Logger()
 
     def isVerboseMode(self):
         """The verboseMode getter
@@ -179,8 +181,7 @@ class CliController:
         if self.globalScanner:
             self.localScanner = self.globalScanner
             self.co.setMessageCallback(self.localScanner.cliCallback)
-        if arguments.report:
-            fh.reporter.setMetadata(arguments.report)
+        self.report = ReportFactory.creator(arguments.report)
         self.__initDictionary(arguments)
 
     def checkConnectionAndRedirections(self):
@@ -338,12 +339,12 @@ class CliController:
         """
         if self.requester.isUrlDiscovery():
             self.ignoreErrors = True
-            logPath = fh.logger.setup(host)
+            logPath = self.logger.setup(host)
             self.co.infoBox(f'The logs will be saved on \'{logPath}\'')
         else:
             if self.co.askYesNo('info', "Do you want to ignore errors on this target, and save them into a log file?"):
                 self.ignoreErrors = True
-                logPath = fh.logger.setup(host)
+                logPath = self.logger.setup(host)
                 self.co.infoBox(f'The logs will be saved on \'{logPath}\'')
             else:
                 self.ignoreErrors = False
@@ -401,9 +402,9 @@ class CliController:
                             self.getDefaultScanner()
                         for result in value:
                             self.co.printResult(result, True)
-                    reportPath = fh.reporter.open(key)
+                    reportPath = self.report.open(key)
                     self.co.infoBox(f'Saving results for {key} on \'{reportPath}\' ...')
-                    fh.reporter.write(value)
+                    self.report.write(value)
                     self.co.infoBox('Results saved')
                 else:
                     self.co.infoBox(f"No matched results was found on target {key}")
@@ -478,7 +479,7 @@ class CliController:
                 if self.verbose[1]:
                     self.co.notWorkedBox(str(e))
             with self.lock:
-                fh.logger.write(str(e), payload)
+                self.logger.write(str(e), payload)
         else:
             self.skipTarget = str(e)
 
@@ -531,7 +532,7 @@ class CliController:
                 headers=target['header'],
                 followRedirects=arguments.followRedirects,
                 proxy=arguments.proxy,
-                proxies=fh.read(arguments.proxies) if arguments.proxies else [],
+                proxies=readFile(arguments.proxies) if arguments.proxies else [],
                 timeout=arguments.timeout,
                 cookie=arguments.cookie,
             )

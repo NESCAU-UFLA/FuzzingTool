@@ -20,7 +20,7 @@
 
 from ..utils.consts import FUZZING_MARK
 from ..utils.utils import splitStrToList
-from ..utils.FileHandler import fileHandler as fh
+from ..utils.file_utils import readFile
 
 from collections import deque
 from typing import Union
@@ -88,7 +88,7 @@ class ArgumentBuilder:
         targets = []
         for rawHttpFilename in rawHttpFilenames:
             try:
-                headerList = deque(fh.read(rawHttpFilename))
+                headerList = deque(readFile(rawHttpFilename))
             except Exception as e:
                 raise Exception(str(e))
             method, path, httpVer = headerList.popleft().split(' ')

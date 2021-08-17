@@ -21,7 +21,7 @@
 from .CliOutput import CliOutput as CO
 from ... import version
 from ...utils.consts import FUZZING_MARK
-from ...utils.utils import getPluginNamesFromCategory
+from ...utils.file_utils import getPluginNamesFromCategory
 from ...factories.PluginFactory import PluginFactory
 from ...exceptions.MainExceptions import BadArgumentFormat
 
@@ -349,6 +349,7 @@ class ArgumentParser(argparse.ArgumentParser):
             dest='reportName',
             help="Define the report name and/or format (accept txt, csv and json)",
             metavar='REPORT',
+            default='txt'
         )
         moreOpts.add_argument('--blacklist-status',
             action='store',

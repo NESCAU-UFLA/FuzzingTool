@@ -18,14 +18,23 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from pathlib import Path
+from ..reports.BaseReport import BaseReport
 
-UNKNOWN_FUZZING = -1
-HTTP_METHOD_FUZZING = 0
-PATH_FUZZING = 1
-SUBDOMAIN_FUZZING = 2
-DATA_FUZZING = 3
-
-FUZZING_MARK = '$'
-
-OUTPUT_DIRECTORY = f'{Path.home()}/.FuzzingTool'
+def report_meta(cls: BaseReport):
+    """Decorator to check for BaseReport metadata
+    
+    @type cls: BaseReport
+    @param cls: The class that call this decorator
+    """
+    metadata = ['__author__', '__version__', '__alias__']
+    classAttr = vars(cls)
+    for meta in metadata:
+        if meta not in classAttr:
+            raise Exception(f"Metadata {meta} not specified on report {cls.__name__}")
+    if not cls.__author__:
+        raise Exception(f"Author cannot be empty on report {cls.__name__}")
+    if not cls.__version__:
+        raise Exception(f"Version cannot be blank on report {cls.__name__}")
+    if not cls.__alias__:
+        raise Exception(f"Alias cannot be blank on report {cls.__name__}")
+    return cls

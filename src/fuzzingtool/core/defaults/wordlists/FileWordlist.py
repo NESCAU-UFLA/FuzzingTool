@@ -19,7 +19,7 @@
 # SOFTWARE.
 
 from ...bases.BaseWordlist import BaseWordlist
-from ....utils.FileHandler import fileHandler as fh
+from ....utils.file_utils import readFile
 
 class FileWordlist(BaseWordlist):
     __author__ = ("Vitor Oriel",)
@@ -30,6 +30,6 @@ class FileWordlist(BaseWordlist):
 
     def _build(self):
         try:
-            return set(fh.read(self.filePath))
+            return set(readFile(self.filePath))
         except Exception as e:
             raise e

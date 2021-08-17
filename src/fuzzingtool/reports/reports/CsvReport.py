@@ -18,14 +18,33 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from pathlib import Path
+from ..BaseReport import BaseReport
+from ...core.Result import Result
+from ...decorators.report_meta import report_meta
 
-UNKNOWN_FUZZING = -1
-HTTP_METHOD_FUZZING = 0
-PATH_FUZZING = 1
-SUBDOMAIN_FUZZING = 2
-DATA_FUZZING = 3
+import csv
+from typing import List
 
-FUZZING_MARK = '$'
+@report_meta
+class CsvReport(BaseReport):
+    __author__ = ("Vitor Oriel",)
+    __version__ = "0.1"
+    __alias__ = 'csv'
 
-OUTPUT_DIRECTORY = f'{Path.home()}/.FuzzingTool'
+    def _getType(self):
+        return CsvReport.__alias__
+
+    def _header(self):
+        pass
+
+    def _results(self, results: List[Result]):
+        writer = csv.DictWriter(
+            self._file,
+            fieldnames=[key for key in dict(results[0]).keys()]
+        )
+        writer.writeheader()
+        for content in results:
+            writer.writerow(dict(content))
+
+    def _footer(self):
+        pass
