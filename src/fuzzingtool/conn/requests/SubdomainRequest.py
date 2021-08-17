@@ -26,8 +26,6 @@ from ...exceptions.RequestExceptions import InvalidHostname
 
 import socket
 
-socket._GLOBAL_DEFAULT_TIMEOUT = 0.1
-
 class SubdomainRequest(Request):
     """Class that handle with the requests for subdomain fuzzing"""
     def __init__(self, url: str, **kwargs):
