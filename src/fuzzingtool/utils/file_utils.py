@@ -19,6 +19,7 @@
 # SOFTWARE.
 
 from os import walk
+from os.path import dirname, abspath
 
 def readFile(fileName: str):
     """Reads content of a file.
@@ -54,7 +55,6 @@ def getPluginNamesFromCategory(category: str):
     try:
         _, _, pluginFiles = next(walk(f"./fuzzingtool/core/plugins/{category}/"))
     except:
-        from os.path import dirname, abspath
         _, _, pluginFiles = next(walk(f"{dirname(dirname(abspath(__file__)))}/core/plugins/{category}/"))
     return splitFilenames(pluginFiles)
 
@@ -66,6 +66,5 @@ def getReports():
     try:
         _, _, reportFiles = next(walk(f"./fuzzingtool/reports/reports/"))
     except:
-        from os.path import dirname, abspath
         _, _, reportFiles = next(walk(f"{dirname(dirname(abspath(__file__)))}/reports/"))
     return splitFilenames(reportFiles)

@@ -78,15 +78,3 @@ class BaseWordlistFactory(ABC):
         @returns BaseWordlist: The wordlist object
         """
         pass
-
-class BaseReportFactory(ABC):
-    @staticmethod
-    @abstractmethod
-    def creator(name: str):
-        """Build the reports
-
-        @type name: str
-        @param name: The name of the report file
-        @returns BaseReport: The report object
-        """
-        pass

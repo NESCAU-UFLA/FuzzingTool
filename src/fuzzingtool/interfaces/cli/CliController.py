@@ -28,6 +28,7 @@ from ...utils.Logger import Logger
 from ...core import *
 from ...conn import *
 from ...factories import *
+from ...reports.Report import Report
 from ...exceptions.MainExceptions import SkipTargetException
 from ...exceptions.RequestExceptions import *
 
@@ -181,7 +182,7 @@ class CliController:
         if self.globalScanner:
             self.localScanner = self.globalScanner
             self.co.setMessageCallback(self.localScanner.cliCallback)
-        self.report = ReportFactory.creator(arguments.report)
+        self.report = Report.build(arguments.report)
         self.__initDictionary(arguments)
 
     def checkConnectionAndRedirections(self):

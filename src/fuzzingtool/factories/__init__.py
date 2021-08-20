@@ -20,5 +20,4 @@
 
 from .HttpFactory import HttpFactory
 from .PluginFactory import PluginFactory
-from .ReportFactory import ReportFactory
 from .WordlistFactory import WordlistFactory
