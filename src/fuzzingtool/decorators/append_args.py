@@ -23,13 +23,13 @@ from ..core.bases.BaseScanner import BaseScanner
 
 from typing import Callable
 
-def append_args(function: Callable):
+def append_args(function: Callable) -> Callable:
     """Decorator to append extra data from arguments to the result
 
     @type function: Callable
     @param function: The function to inspect the result
     """
-    def wrapper(cls: BaseScanner, result: Result, *args):
+    def wrapper(cls: BaseScanner, result: Result, *args) -> Callable[[BaseScanner, Result], None]:
         """Wrapper function to the decorator
         
         @type cls: BaseScanner

@@ -35,8 +35,9 @@ from ...exceptions.RequestExceptions import *
 from queue import Queue
 import time
 import threading
+from typing import Tuple, List
 
-def banner():
+def banner() -> str:
     """Gets the program banner
 
     @returns str: The program banner
@@ -71,14 +72,14 @@ class CliController:
         self.blacklistStatus = None
         self.logger = Logger()
 
-    def isVerboseMode(self):
+    def isVerboseMode(self) -> bool:
         """The verboseMode getter
 
         @returns bool: The verbose mode flag
         """
         return self.verbose[0]
 
-    def main(self, arguments: CliArguments):
+    def main(self, arguments: CliArguments) -> None:
         """The main function.
            Prepares the application environment and starts the fuzzing
         
@@ -136,7 +137,7 @@ class CliController:
             self.showFooter()
             self.co.infoBox("Test completed")
 
-    def init(self, arguments: CliArguments):
+    def init(self, arguments: CliArguments) -> None:
         """The initialization function.
            Set the application variables including plugins requires
         
@@ -185,7 +186,7 @@ class CliController:
         self.report = Report.build(arguments.report)
         self.__initDictionary(arguments)
 
-    def checkConnectionAndRedirections(self):
+    def checkConnectionAndRedirections(self) -> None:
         """Test the connection to target.
            If data fuzzing is detected, check for redirections
         """
@@ -207,7 +208,7 @@ class CliController:
         if len(self.requesters) == 0:
             raise Exception("No targets left for fuzzing")
 
-    def checkRedirections(self, requester: Request):
+    def checkRedirections(self, requester: Request) -> None:
         """Check the redirections for a target.
            Perform a redirection check for each method in requester methods list
         
@@ -234,7 +235,7 @@ class CliController:
             self.requesters.remove(requester)
             self.co.warningBox("No methods left on this target, removed from targets list")
 
-    def start(self):
+    def start(self) -> None:
         """Starts the fuzzing application.
            Each target is fuzzed based on their own methods list
         """
@@ -256,7 +257,7 @@ class CliController:
                     self.fuzzer.stop()
                 self.co.abortBox(f"{str(e)}. Target skipped")
 
-    def prepareTarget(self, requester: Request):
+    def prepareTarget(self, requester: Request) -> None:
         """Prepare the target variables for the fuzzing tests.
            Both error logger and default scanners are setted
         
@@ -296,7 +297,7 @@ class CliController:
             self.localDictionary = self.dictionaries.get()
         self.totalRequests = len(self.localDictionary)*len(self.requester.methods)
 
-    def prepareFuzzer(self):
+    def prepareFuzzer(self) -> None:
         """Prepare the fuzzer for the fuzzing tests.
            Refill the dictionary with the wordlist content if a global dictionary was given
         """
@@ -316,7 +317,7 @@ class CliController:
             if self.skipTarget:
                 raise SkipTargetException(self.skipTarget)
 
-    def getDefaultScanner(self):
+    def getDefaultScanner(self) -> BaseScanner:
         """Check what's the scanners that will be used
         
         @returns BaseScanner: The scanner used in the fuzzing tests
@@ -331,7 +332,7 @@ class CliController:
         self.co.setMessageCallback(scanner.cliCallback)
         return scanner
 
-    def checkIgnoreErrors(self, host: str):
+    def checkIgnoreErrors(self, host: str) -> None:
         """Check if the user wants to ignore the errors during the tests.
            By default, URL fuzzing (path and subdomain) ignore errors
         
@@ -350,7 +351,7 @@ class CliController:
             else:
                 self.ignoreErrors = False
 
-    def getDataComparator(self):
+    def getDataComparator(self) -> dict:
         """Check if the user wants to insert custom data comparator to validate the responses
         
         @returns dict: The data comparator dictionary for the Matcher object
@@ -386,7 +387,7 @@ class CliController:
                 self.co.errorBox(f"The time ({time}) must be a number")
         return Matcher.buildComparator(length, time)
 
-    def showFooter(self):
+    def showFooter(self) -> None:
         """Show the footer content of the software, after maked the fuzzing.
            The results are shown for each target
         """
@@ -411,7 +412,7 @@ class CliController:
                     self.co.infoBox(f"No matched results was found on target {key}")
                 requesterIndex += 1
 
-    def _skipCallback(self, status: int):
+    def _skipCallback(self, status: int) -> None:
         """The skip target callback for the blacklistAction
 
         @type status: int
@@ -419,7 +420,7 @@ class CliController:
         """
         self.skipTarget = f"Status code {str(status)} detected"
     
-    def _waitCallback(self, status: int):
+    def _waitCallback(self, status: int) -> None:
         """The wait (pause) callback for the blacklistAction
 
         @type status: int
@@ -437,7 +438,7 @@ class CliController:
             self.co.infoBox("Resuming target ...")
             self.fuzzer.resume()
 
-    def _resultCallback(self, result: dict, validate: bool):
+    def _resultCallback(self, result: dict, validate: bool) -> None:
         """Callback function for the results output
 
         @type result: dict
@@ -463,7 +464,7 @@ class CliController:
     def _requestExceptionCallback(self,
         e: RequestException,
         payload: str
-    ):
+    ) -> None:
         """Callback that handle with the request exceptions
         
         @type e: RequestException
@@ -487,7 +488,7 @@ class CliController:
     def _invalidHostnameCallback(self,
         e: InvalidHostname,
         payload: str
-    ):
+    ) -> None:
         """Callback that handle with the subdomain hostname resolver exceptions
         
         @type e: InvalidHostname
@@ -503,7 +504,7 @@ class CliController:
                 self.fuzzer.index, self.totalRequests, payload
             )
 
-    def __initRequesters(self, arguments: CliArguments):
+    def __initRequesters(self, arguments: CliArguments) -> None:
         """Initialize the requesters
 
         @type arguments: CliArguments
@@ -550,7 +551,7 @@ class CliController:
             else:
                 target['typeFuzzing'] = "Couldn't determine the fuzzing type"
 
-    def __checkForDuplicatedTargets(self):
+    def __checkForDuplicatedTargets(self) -> None:
         """Checks for duplicated targets, if they'll use the same scanner (based on fuzzing type)
            Also, checks if a global scanner was already specified before make the check
         """
@@ -568,13 +569,19 @@ class CliController:
                         thisTarget['typeFuzzing'] != nextTarget['typeFuzzing']):
                         raise Exception("Duplicated target detected with different type of fuzzing scan, exiting.")
 
-    def __initDictionary(self, arguments: CliArguments):
+    def __initDictionary(self, arguments: CliArguments) -> None:
         """Initialize the dictionary
 
         @type arguments: CliArguments
         @param arguments: The command line interface arguments object
         """
-        def buildEncoders():
+        def buildEncoders() -> Tuple[
+            List[BaseEncoder], List[List[BaseEncoder]]
+        ]:
+            """Build the encoders
+
+            @returns Tuple[List[BaseEncoder], List[List[BaseEncoder]]]: The encoders used in the program
+            """
             if not arguments.encoder:
                 return None
             if arguments.encodeOnly:
@@ -605,12 +612,12 @@ class CliController:
             return (encodersDefault, encodersChain)
 
         def buildDictionary(
-            wordlists: list,
+            wordlists: List[Tuple[str, str]],
             requester: Request = None
-        ):
+        ) -> None:
             """Build the dictionary
 
-            @type wordlists: list
+            @type wordlists: List[Tuple[str, str]]
             @param wordlists: The wordlists used in the dictionary
             @type requester: Request
             @param requester: The requester for the given dictionary

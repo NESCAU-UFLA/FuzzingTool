@@ -23,6 +23,7 @@ from .defaults.encoders import *
 from .plugins.encoders import *
 
 import re
+from typing import List, Tuple
 
 class EncodeManager:
     """Class that handle with the encoder management
@@ -36,10 +37,10 @@ class EncodeManager:
         self.encode = lambda ajustedPayload : ajustedPayload
         self.regexer = None
     
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.encoders)
 
-    def setRegex(self, regex: str = ''):
+    def setRegex(self, regex: str = '') -> None:
         """The regexer setter
 
         @type regex: str
@@ -50,18 +51,20 @@ class EncodeManager:
         except re.error:
             raise Exception(f"Invalid regex format {regex}")
 
-    def setEncoders(self, encoders: tuple):
+    def setEncoders(self,
+        encoders: Tuple[List[BaseEncoder], List[List[BaseEncoder]]]
+    ) -> None:
         """The encoders setter
 
-        @type encoders: tuple(list, list)
+        @type encoders: Tuple[list, list]
         @param encoders: The encoders used in the payloads
         """
-        def encode(ajustedPayload: list):
+        def encode(ajustedPayload: List[str]) -> List[str]:
             """The encode callback for the payloads
 
-            @type ajustedPayload: list
+            @type ajustedPayload: List[str]
             @param ajustedPayload: The payload list ajusted previously
-            @returns list: The encoded payloads list
+            @returns List[str]: The encoded payloads list
             """
             encodedList = []
             for payload in ajustedPayload:
@@ -73,7 +76,7 @@ class EncodeManager:
         self.encoders = encodersDefault+[ChainEncoder(encoders) for encoders in encodersChain]
         self.encode = encode
 
-    def _encode(self, encoder: BaseEncoder, payload: str):
+    def _encode(self, encoder: BaseEncoder, payload: str) -> str:
         """Encode a payload into an specific encoding type
 
         @type encoder: BaseEncoder
@@ -87,7 +90,7 @@ class EncodeManager:
             payload: str,
             i: int,
             strings: list
-        ):
+        ) -> Tuple[int, str]:
             """Encode a substring using the actual encoder
 
             @type encoder: BaseEncoder
@@ -98,7 +101,7 @@ class EncodeManager:
             @param i: The index of the actual char of the payload
             @type strings: list
             @param strings: The matched strings list from the regexer
-            @returns tuple(int, str): The encoded substring if match the regex, else return the actual char
+            @returns Tuple[int, str]: The encoded substring if match the regex, else return the actual char
             """
             for string in strings:
                 lastIndex = i+len(string)
@@ -133,45 +136,45 @@ class Payloader:
     _case = lambda ajustedPayload : ajustedPayload
 
     @staticmethod
-    def setPrefix(prefix: list):
+    def setPrefix(prefix: List[str]) -> None:
         """The prefix setter
 
-        @type prefix: list
+        @type prefix: List[str]
         @param prefix: The prefix used in the payload
         """
         Payloader.prefix = prefix
     
     @staticmethod
-    def setSuffix(suffix: list):
+    def setSuffix(suffix: List[str]) -> None:
         """The suffix setter
 
-        @type suffix: list
+        @type suffix: List[str]
         @param suffix: The suffix used in the payload
         """
         Payloader.suffix = suffix
 
     @staticmethod
-    def setUppercase():
+    def setUppercase() -> None:
         """The uppercase setter"""
         Payloader._case = lambda ajustedPayload : [payload.upper() for payload in ajustedPayload]
     
     @staticmethod
-    def setLowercase():
+    def setLowercase() -> None:
         """The lowercase setter"""
         Payloader._case = lambda ajustedPayload : [payload.lower() for payload in ajustedPayload]
 
     @staticmethod
-    def setCapitalize():
+    def setCapitalize() -> None:
         """The capitalize setter"""
         Payloader._case = lambda ajustedPayload : [payload.capitalize() for payload in ajustedPayload]
 
     @staticmethod
-    def getCustomizedPayload(payload: str):
+    def getCustomizedPayload(payload: str) -> List[str]:
         """Gets the payload list ajusted with the console options
 
         @type payload: str
         @param payload: The string payload gived by the payloads queue
-        @returns list: The payloads used in the request
+        @returns List[str]: The payloads used in the request
         """
         ajustedPayload = [payload]
         if Payloader.prefix:

@@ -32,8 +32,8 @@ class Html(BaseEncoder, Plugin):
     __type__ = "Encoder"
     __version__ = "0.1"
 
-    def encode(self, payload: str):
+    def encode(self, payload: str) -> str:
         return html.escape(payload)
     
-    def decode(self, payload: str):
+    def decode(self, payload: str) -> str:
         return html.unescape(payload)

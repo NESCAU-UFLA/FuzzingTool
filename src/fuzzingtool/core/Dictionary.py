@@ -21,6 +21,7 @@
 from .Payloader import Payloader
 
 from queue import Queue
+from typing import List
 
 class Dictionary:
     """Dictionary object handler
@@ -38,14 +39,14 @@ class Dictionary:
         self.__wordlist = wordlist
         self.__payloads = Queue()
 
-    def __next__(self):
+    def __next__(self) -> List[str]:
         """Gets the next payload to be processed
 
         @returns list: The payloads used in the request
         """
         return Payloader.getCustomizedPayload(self.__payloads.get())
     
-    def __len__(self):
+    def __len__(self) -> int:
         """Gets the wordlist length
 
         @returns int: The wordlist length
@@ -61,14 +62,14 @@ class Dictionary:
             lengthEncoders = 1
         return (len(self.__wordlist)*lengthSuffix*lengthPrefix*lengthEncoders)
 
-    def isEmpty(self):
+    def isEmpty(self) -> bool:
         """The payloads empty queue flag getter
 
         @returns bool: The payloads empty queue flag
         """
         return self.__payloads.empty()
 
-    def reload(self):
+    def reload(self) -> None:
         """Reloads the payloads queue with the wordlist content"""
         self.__payloads = Queue()
         for payload in self.__wordlist:

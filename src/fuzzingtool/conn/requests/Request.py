@@ -28,6 +28,7 @@ from threading import Lock
 import random
 import time
 import urllib3.exceptions
+from typing import List, Dict, Tuple
 try:
     import requests
 except:
@@ -51,12 +52,12 @@ class Request:
     def __init__(self,
         url: str,
         method: str = 'GET',
-        methods: list = [],
-        data: str = "",
-        headers: dict = {},
+        methods: List[str] = [],
+        data: str = '',
+        headers: Dict[str, str] = {},
         followRedirects: bool = True,
-        proxy: dict = {},
-        proxies: list = [],
+        proxy: str = '',
+        proxies: List[str] = [],
         timeout: int = 0,
         cookie: str = '',
     ):
@@ -74,7 +75,7 @@ class Request:
         @param headers: The HTTP header of the request
         @type followRedirects: bool
         @param followRedirects: The follow redirects flag
-        @type proxy: dict
+        @type proxy: str
         @param proxy: The proxy used in the request
         @type proxies: list
         @param proxies: The list with the proxies used in the requests
@@ -102,56 +103,56 @@ class Request:
             self.setHeaderContent('Cookie', cookie)
         self._lock = Lock()
     
-    def getUrl(self):
+    def getUrl(self) -> str:
         """The url content getter
 
         @returns str: The target URL
         """
         return self._url['content']
 
-    def getUrlDict(self):
+    def getUrlDict(self) -> dict:
         """The url getter
 
         @returns dict: The target URL dictionary
         """
         return self._url
 
-    def isMethodFuzzing(self):
+    def isMethodFuzzing(self) -> bool:
         """The method fuzzing flag getter
 
         @returns bool: The method fuzzing flag
         """
         return self.__fuzzingType == HTTP_METHOD_FUZZING
 
-    def isDataFuzzing(self):
+    def isDataFuzzing(self) -> bool:
         """The data fuzzing flag getter
 
         @returns bool: The data fuzzing flag
         """
         return self.__fuzzingType == DATA_FUZZING
 
-    def isUrlDiscovery(self):
+    def isUrlDiscovery(self) -> bool:
         """Checks if the fuzzing is for url discovery (path or subdomain)
 
         @returns bool: A flag to say if is url discovery fuzzing type
         """
         return self.__fuzzingType == PATH_FUZZING or self.__fuzzingType == SUBDOMAIN_FUZZING
 
-    def isPathFuzzing(self):
+    def isPathFuzzing(self) -> bool:
         """Checks if the fuzzing will be path discovery
 
         @returns bool: A flag to say if is path fuzzing
         """
         return self.__fuzzingType == PATH_FUZZING
 
-    def getFuzzingType(self):
+    def getFuzzingType(self) -> int:
         """The fuzzing type getter
 
         @returns int: The fuzzing type
         """
         return self.__fuzzingType
 
-    def setMethod(self, method: str):
+    def setMethod(self, method: str) -> None:
         """The request method setter
 
         @type method: str
@@ -159,7 +160,11 @@ class Request:
         """
         self.__method = self.__setupMethod(method)
 
-    def setHeaderContent(self, key: str, value: str, header: dict = {}):
+    def setHeaderContent(self,
+        key: str,
+        value: str,
+        header: Dict[str, str] = {}
+    ) -> None:
         """The header content setter
 
         @type key: str
@@ -175,7 +180,7 @@ class Request:
         else:
             header['content'][key] = value
 
-    def testConnection(self):
+    def testConnection(self) -> None:
         """Test the connection with the target, and raise an exception if couldn't connect"""
         try:
             url = getPureUrl(self._url['content'])
@@ -201,7 +206,7 @@ class Request:
         ):
             raise RequestException(f"Failed to establish a connection to {url}")
 
-    def hasRedirection(self):
+    def hasRedirection(self) -> bool:
         """Test if the connection will have a redirection
         
         @returns bool: The flag to say if occur a redirection or not
@@ -211,7 +216,7 @@ class Request:
             return True
         return False
 
-    def request(self, payload: str):
+    def request(self, payload: str) -> Tuple[requests.Response, float]:
         """Make a request and get the response
 
         @type payload: str
@@ -252,33 +257,33 @@ class Request:
         else:
             return (response, RTT)
 
-    def _setFuzzingType(self):
+    def _setFuzzingType(self) -> int:
         """Sets the fuzzing type
         
         @returns int: The fuzzing type int value
         """
-        def _isMethodFuzzing():
+        def _isMethodFuzzing() -> bool:
             """Checks if the fuzzing type is MethodFuzzing
             
             @returns bool: The fuzzing flag
             """
             return False if not self.__method['fuzzingIndexes'] else True
 
-        def _isUrlFuzzing():
+        def _isUrlFuzzing() -> bool:
             """Checks if the fuzzing type is UrlFuzzing
             
             @returns bool: The fuzzing flag
             """
             return False if not self._url['fuzzingIndexes'] else True
 
-        def _isUrlDiscovery():
+        def _isUrlDiscovery() -> bool:
             """Checks if the fuzzing type is UrlFuzzing for discovery
             
             @returns bool: The fuzzing flag
             """
             return (_isUrlFuzzing() and not '?' in self._url['content'])
 
-        def _isDataFuzzing():
+        def _isDataFuzzing() -> bool:
             """Checks if the fuzzing type is DataFuzzing
             
             @returns bool: The fuzzing flag
@@ -301,7 +306,7 @@ class Request:
             return DATA_FUZZING
         return UNKNOWN_FUZZING
 
-    def __setupUrl(self, url: str):
+    def __setupUrl(self, url: str) -> dict:
         """The URL setup
 
         @returns dict: The target URL dictionary
@@ -321,7 +326,7 @@ class Request:
             'fuzzingIndexes': getIndexesToParse(url)
         }
 
-    def __setupMethod(self, method: str):
+    def __setupMethod(self, method: str) -> dict:
         """The method setup
 
         @returns dict: The target method dictionary
@@ -331,7 +336,7 @@ class Request:
             'fuzzingIndexes': getIndexesToParse(method)
         }
 
-    def __setupHeader(self, header: dict):
+    def __setupHeader(self, header: dict) -> dict:
         """Setup the HTTP Header
         
         @type header: dict
@@ -352,12 +357,12 @@ class Request:
         header['content']['Accept-Encoding'] = 'gzip, deflate'
         return header
 
-    def __parseHeaderValue(self, value: str):
+    def __parseHeaderValue(self, value: str) -> List[str]:
         """Parse the header value into a list
 
         @type value: str
         @param value: The HTTP Header value
-        @returns list: The list with the HTTP Header value content
+        @returns List[str]: The list with the HTTP Header value content
         """
         headerValue = []
         lastIndex = 0
@@ -370,7 +375,7 @@ class Request:
             headerValue.append(value[lastIndex:len(value)])
         return headerValue
 
-    def __setupData(self, data: str):
+    def __setupData(self, data: str) -> dict:
         """Split all the request parameters into a list of arguments used in the request
 
         @type data: str
@@ -402,7 +407,7 @@ class Request:
                 self.__buildDataDict(dataDict[key], rawData[key])
         return dataDict
 
-    def __buildDataDict(self, dataDict: dict, key: str):
+    def __buildDataDict(self, dataDict: dict, key: str) -> None:
         """Set the default parameter values if are given
 
         @type data: dict
@@ -419,18 +424,21 @@ class Request:
         else:
             dataDict[key] = ''
 
-    def __setupProxy(self, proxy: str):
+    def __setupProxy(self, proxy: str) -> Dict[str, str]:
         """Setup the proxy
 
         @type proxy: str
         @param proxy: The proxy used in the request
+        @returns Dict[str, str]: The proxy dictionary
         """
         return {
             'http': f"http://{proxy}",
             'https': f"https://{proxy}",
         }
 
-    def __getRequestParameters(self, payload: str):
+    def __getRequestParameters(self, payload: str) -> Tuple[
+        str, str, dict, dict
+    ]:
         """Get the request parameters using in the request fields
 
         @type payload: str
@@ -451,7 +459,7 @@ class Request:
         url: str,
         headers: dict,
         data: dict
-    ):
+    ) -> requests.Response:
         """Performs a request to the target using Session object
 
         @type method: str
@@ -482,7 +490,7 @@ class Request:
         url: str,
         headers: dict,
         data: dict
-    ):
+    ) -> requests.Response:
         """Performs a request to the target
 
         @type method: str

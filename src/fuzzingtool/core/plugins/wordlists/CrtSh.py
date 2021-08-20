@@ -27,6 +27,7 @@ from ....exceptions.MainExceptions import MissingParameter
 
 from bs4 import BeautifulSoup as bs
 import re
+from typing import List
 
 @plugin_meta
 class CrtSh(BaseWordlist, Plugin):
@@ -45,7 +46,7 @@ class CrtSh(BaseWordlist, Plugin):
         self.host = host
         BaseWordlist.__init__(self)
 
-    def _build(self):
+    def _build(self) -> List[str]:
         requester = Request(
             url=f"https://crt.sh/?q={self.host}",
             method='GET',

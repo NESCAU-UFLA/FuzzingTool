@@ -25,13 +25,13 @@ from ....interfaces.cli.CliOutput import Colors, getFormatedResult
 class DataScanner(BaseScanner):
     __author__ = ("Vitor Oriel",)
 
-    def inspectResult(self, result: Result, *args):
+    def inspectResult(self, result: Result, *args) -> None:
         result.custom['PayloadLength'] = len(result.payload)
 
-    def scan(self, result: Result):
+    def scan(self, result: Result) -> bool:
         return True
     
-    def cliCallback(self, result: Result):
+    def cliCallback(self, result: Result) -> str:
         payload, RTT, length = getFormatedResult(
             result.payload, result.RTT, result.length
         )

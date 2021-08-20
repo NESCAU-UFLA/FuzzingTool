@@ -44,7 +44,7 @@ class BasePluginFactory(ABC):
         @param name: The plugin to be searched for
         @type category: str
         @param category: The category of the searched plugin
-        @returns import: The import of the searched plugin
+        @returns Type[Plugin]: The import of the searched plugin
         """
         pass
 
@@ -75,6 +75,6 @@ class BaseWordlistFactory(ABC):
         @param params: The wordlist parameters
         @type requester: Request
         @param requester: The requester for the given wordlist
-        @returns BaseWordlist: The wordlist object
+        @returns List[str]: The wordlist list
         """
         pass

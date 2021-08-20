@@ -20,7 +20,7 @@
 
 from ..utils.consts import *
 
-def checkForSubdomainFuzz(url: str):
+def checkForSubdomainFuzz(url: str) -> bool:
     """Checks if the fuzzing tests will occur on subdomain
 
     @type url: str
@@ -40,7 +40,7 @@ class RequestParser:
     def __init__(self):
         self.__payload = ''
 
-    def getMethod(self, method: dict):
+    def getMethod(self, method: dict) -> str:
         """The new method getter
         
         @type method: dict
@@ -49,7 +49,7 @@ class RequestParser:
         """
         return method['content'] if not method['fuzzingIndexes'] else self.__getAjustedContentByIndexes(method)
 
-    def getUrl(self, url: dict):
+    def getUrl(self, url: dict) -> str:
         """The new url getter
         
         @type url: dict
@@ -58,7 +58,7 @@ class RequestParser:
         """
         return url['content'] if not url['fuzzingIndexes'] else self.__getAjustedContentByIndexes(url)
 
-    def getHeader(self, headers: dict):
+    def getHeader(self, headers: dict) -> dict:
         """The new HTTP Header getter
         
         @type httpHeder: dict
@@ -67,7 +67,7 @@ class RequestParser:
         """
         return headers['content'] if not headers['payloadKeys'] else self.__getAjustedHeader(headers)
 
-    def getData(self, data: dict):
+    def getData(self, data: dict) -> dict:
         """The new data getter
 
         @type data: dict
@@ -79,7 +79,7 @@ class RequestParser:
             'BODY': {} if not data['BODY'] else self.__getAjustedData(data['BODY'])
         }
 
-    def setPayload(self, payload: str):
+    def setPayload(self, payload: str) -> None:
         """The payload setter
 
         @type payload: str
@@ -87,7 +87,7 @@ class RequestParser:
         """
         self.__payload = payload
 
-    def __getAjustedContentByIndexes(self, content: dict):
+    def __getAjustedContentByIndexes(self, content: dict) -> str:
         """Put the payload into the given content
 
         @type content: dict
@@ -101,7 +101,7 @@ class RequestParser:
             ajustedContent = head + self.__payload + tail
         return ajustedContent
 
-    def __getAjustedHeader(self, header: dict):
+    def __getAjustedHeader(self, header: dict) -> dict:
         """Put the payload in the header value that contains the fuzzing mark
 
         @type header: dict
@@ -120,7 +120,7 @@ class RequestParser:
             ajustedHeader[key] = result.encode('utf-8')
         return ajustedHeader
 
-    def __getAjustedData(self, data: dict):
+    def __getAjustedData(self, data: dict) -> dict:
         """Put the payload into the Data requestParameters dictionary
 
         @type data: dict

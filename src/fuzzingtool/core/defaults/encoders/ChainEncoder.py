@@ -42,7 +42,7 @@ class ChainEncoder(BaseEncoder):
         """
         return self.__encoders
 
-    def encode(self, payload: str):
+    def encode(self, payload: str) -> str:
         encoded = payload
         for encoder in self.__encoders:
             encoded = encoder.encode(encoded)

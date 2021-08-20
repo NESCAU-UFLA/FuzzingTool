@@ -20,7 +20,7 @@
 
 from ..core.plugins.Plugin import Plugin
 
-def plugin_meta(cls: Plugin):
+def plugin_meta(cls: Plugin) -> Plugin:
     """Decorator to check for plugin metadata on a plugin class
     
     @type cls: Plugin

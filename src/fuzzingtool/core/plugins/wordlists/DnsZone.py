@@ -24,6 +24,7 @@ from ....decorators.plugin_meta import plugin_meta
 from ....exceptions.MainExceptions import MissingParameter
 
 from dns import resolver, query, zone
+from typing import List
 
 @plugin_meta
 class DnsZone(BaseWordlist, Plugin):
@@ -42,7 +43,7 @@ class DnsZone(BaseWordlist, Plugin):
         self.host = host
         BaseWordlist.__init__(self)
 
-    def _build(self):
+    def _build(self) -> List[str]:
         nameServers = resolver.resolve(self.host, 'NS')
         nameServersIps = []
         for ns in nameServers:
@@ -62,4 +63,4 @@ class DnsZone(BaseWordlist, Plugin):
             raise Exception(f"Couldn't make the zone transfer for any of the {len(nameServersIps)} name servers")
         if '@' in transferedSubdomains:
             transferedSubdomains.remove('@')
-        return set(transferedSubdomains)
+        return list(set(transferedSubdomains))

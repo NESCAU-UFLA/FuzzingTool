@@ -23,16 +23,20 @@ from ..utils.utils import splitStrToList
 from ..utils.file_utils import readFile
 
 from collections import deque
-from typing import Union
+from typing import List, Union, Dict
 
 class ArgumentBuilder:
     @staticmethod
-    def buildTargetsFromArgs(urls: list, method: Union[str, list], data: str):
+    def buildTargetsFromArgs(
+        urls: List[str],
+        method: Union[str, List[str]],
+        data: str
+    ) -> List[dict]:
         """Build the targets from arguments
 
-        @type urls: list
+        @type urls: List[str]
         @param urls: The target URLs
-        @type method: str | list
+        @type method: str | List[str]
         @param method: The request methods
         @type data: str
         @param data: The raw request body data
@@ -58,21 +62,24 @@ class ArgumentBuilder:
         return targets
 
     @staticmethod
-    def buildTargetsFromRawHttp(rawHttpFilenames: list, scheme: str):
+    def buildTargetsFromRawHttp(
+        rawHttpFilenames: List[str],
+        scheme: str
+    ) -> List[dict]:
         """Build the targets from raw http files
 
         @type rawHttpFilenames: list
         @param rawHttpFilenames: The list with the raw http filenames
         @type scheme: str
         @param scheme: The scheme used in the URL
-        @returns dict: The targets data builded into a dictionary
+        @returns List[dict]: The targets data builded into a list of dictionary
         """
-        def buildHeaderFromRawHttp(headerList: list):
+        def buildHeaderFromRawHttp(headerList: List[deque]) -> Dict[str, str]:
             """Get the HTTP header
 
-            @tyoe headerList: list
+            @tyoe headerList: List[deque]
             @param headerList: The list with HTTP header
-            @returns dict: The HTTP header parsed into a dict
+            @returns Dict[str, str]: The HTTP header parsed into a dict
             """
             headers = {}
             i = 0

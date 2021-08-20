@@ -46,13 +46,13 @@ class Url(BaseEncoder, Plugin):
                 raise BadArgumentFormat("the encoding level must be an integer")
         self.encodeLevel = encodeLevel
 
-    def encode(self, payload: str):
+    def encode(self, payload: str) -> str:
         encoded = payload
         for _ in range(self.encodeLevel):
             encoded = quote(encoded)
         return encoded
 
-    def decode(self, payload: str):
+    def decode(self, payload: str) -> str:
         decoded = payload
         for _ in range(self.encodeLevel):
             decoded = unquote(decoded)

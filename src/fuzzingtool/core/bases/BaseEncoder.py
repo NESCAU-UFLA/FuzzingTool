@@ -24,7 +24,7 @@ class BaseEncoder(ABC):
     charset = 'utf-8'
 
     @abstractmethod
-    def encode(self, payload: str):
+    def encode(self, payload: str) -> str:
         """Encode a payload into an specific encoding type
 
         @type payload: str

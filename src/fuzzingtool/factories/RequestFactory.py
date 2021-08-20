@@ -24,7 +24,7 @@ from ..conn.requests import *
 from importlib import import_module
 
 class RequestFactory(BaseRequestFactory):
-    def creator(requestType, url, **kwargs):
+    def creator(requestType, url, **kwargs) -> Request:
         Request = import_module(
             f"fuzzingtool.conn.requests.{requestType}",
             package=requestType

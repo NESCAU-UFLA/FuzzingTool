@@ -18,21 +18,29 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from .reports import *
+from .BaseReport import BaseReport
+from . import reports
 from ..utils.utils import stringfyList
 from ..utils.file_utils import getReports
 
 from importlib import import_module
+from typing import Dict, Type
 
 class Report:
     """Class that handles with the report operations"""
     @staticmethod
-    def getAvailableReports():
+    def getAvailableReports() -> Dict[str, Type[BaseReport]]:
         """Gets the available report formats
 
-        @returns BaseReport: The base report class
+        @returns Dict[str, Type[BaseReport]]: The base report class
         """
-        def classCreator(name: str):
+        def classCreator(name: str) -> Type[BaseReport]:
+            """Creates the class type
+
+            @type name: str
+            @param name: The class name
+            @returns Type[BaseReport]: The base report type
+            """
             Report = import_module(
                 f"fuzzingtool.reports.reports.{name}",
                 package=name
@@ -46,7 +54,7 @@ class Report:
         return availableReports
 
     @staticmethod
-    def build(name: str):
+    def build(name: str) -> BaseReport:
         """Build the report
 
         @type name: str

@@ -23,6 +23,8 @@ from ...bases.BaseWordlist import BaseWordlist
 from ....decorators.plugin_meta import plugin_meta
 from ....exceptions.MainExceptions import MissingParameter, BadArgumentFormat
 
+from typing import List
+
 @plugin_meta
 class Overflow(BaseWordlist, Plugin):
     __author__ = ("Vitor Oriel",)
@@ -60,7 +62,7 @@ class Overflow(BaseWordlist, Plugin):
         self.endPayload = endPayload
         BaseWordlist.__init__(self)
 
-    def _build(self):
+    def _build(self) -> List[str]:
         return [
             f"{self.initPayload}{self.payload*i}{self.endPayload}" for i in range(self.quantityOfPayloads)
         ]

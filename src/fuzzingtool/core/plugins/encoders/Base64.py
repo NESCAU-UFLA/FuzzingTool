@@ -32,8 +32,8 @@ class Base64(BaseEncoder, Plugin):
     __type__ = "Encoder"
     __version__ = "0.1"
 
-    def encode(self, payload: str):
+    def encode(self, payload: str) -> str:
         return base64.b64encode(payload.encode(BaseEncoder.charset)).decode(BaseEncoder.charset)
     
-    def decode(self, payload: str):
+    def decode(self, payload: str) -> str:
         return base64.b64decode(payload).decode(BaseEncoder.charset)

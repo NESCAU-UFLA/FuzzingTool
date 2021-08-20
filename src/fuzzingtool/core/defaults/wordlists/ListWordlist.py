@@ -22,6 +22,8 @@ from ...bases.BaseWordlist import BaseWordlist
 from ....utils.utils import splitStrToList, checkRangeList
 from ....exceptions.MainExceptions import MissingParameter
 
+from typing import List
+
 class ListWordlist(BaseWordlist):
     __author__ = ("Vitor Oriel",)
 
@@ -32,7 +34,7 @@ class ListWordlist(BaseWordlist):
         self.payloadList = payloadList
         super().__init__()
 
-    def _build(self):
+    def _build(self) -> List[str]:
         buildedList = []
         for payload in splitStrToList(self.payloadList):
             buildedList.extend(checkRangeList(payload))

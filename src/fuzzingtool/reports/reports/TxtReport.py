@@ -22,7 +22,7 @@ from ..BaseReport import BaseReport
 from ...core.Result import Result
 from ...decorators.report_meta import report_meta
 
-from typing import List
+from typing import List, NoReturn
 
 @report_meta
 class TxtReport(BaseReport):
@@ -30,17 +30,17 @@ class TxtReport(BaseReport):
     __version__ = "0.1"
     __alias__ = 'txt'
 
-    def _getType(self):
+    def _getType(self) -> str:
         return TxtReport.__alias__
 
-    def _header(self):
+    def _header(self) -> None:
         pass
 
-    def _results(self, results: List[Result]):
+    def _results(self, results: List[Result]) -> None:
         for result in results:
             for key, value in result:
                 self._file.write(f'{key}: {str(value)}\n')
             self._file.write('\n')
 
-    def _footer(self):
+    def _footer(self) -> None:
         pass

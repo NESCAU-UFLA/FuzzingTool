@@ -20,6 +20,8 @@
 
 from ..utils.utils import splitStrToList
 
+from typing import List, Dict, Callable
+
 class BlacklistStatus:
     """Blacklist status handler object
 
@@ -31,7 +33,7 @@ class BlacklistStatus:
         status: str,
         action: str,
         actionParam: str,
-        actionCallbacks: dict
+        actionCallbacks: Dict[str, Callable[[int], None]]
     ):
         """Class constructor
         
@@ -41,18 +43,18 @@ class BlacklistStatus:
         @param action: The action taken when detects a status in blacklist
         @type actionParam: str
         @param actionParam: The parameter for the action, if it requires
-        @type actionCallbacks: dict
+        @type actionCallbacks: Dict[str, Callable[[int], None]]
         @param actionCallbacks: The action callbacks
         """
         self.codes = self.buildStatusList(status)
         self.actionCallback = self.setActionCallback(action, actionParam, actionCallbacks)
     
-    def buildStatusList(self, status: str):
+    def buildStatusList(self, status: str) -> List[int]:
         """Build the blacklisted status codes
 
         @type status: str
         @param status: The blacklisted status codes
-        @returns list: The parsed blacklisted status codes
+        @returns List[int]: The parsed blacklisted status codes
         """
         try:
             return [int(status) for status in splitStrToList(status)]
@@ -63,7 +65,7 @@ class BlacklistStatus:
         action: str,
         actionParam: str,
         actionCallbacks: str
-    ):
+    ) -> Callable[[int], None]:
         """Get the action callback if a blacklisted status code is set
 
         @type action: str
@@ -72,7 +74,7 @@ class BlacklistStatus:
         @param actionParam: The parameter for the action, if it requires
         @type actionCallbacks: dict
         @param actionCallbacks: The action callbacks
-        @returns Callable: A callback function for the blacklisted status code
+        @returns Callable[[int], None]: A callback function for the blacklisted status code
         """
         if not action:
             return lambda status : None

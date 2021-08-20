@@ -27,13 +27,13 @@ class SubdomainScanner(BaseScanner):
     __author__ = ("Vitor Oriel",)
 
     @append_args
-    def inspectResult(self, result: Result, *args):
+    def inspectResult(self, result: Result, *args) -> None:
         pass
 
-    def scan(self, result: Result):
+    def scan(self, result: Result) -> bool:
         return True
 
-    def cliCallback(self, result: Result):
+    def cliCallback(self, result: Result) -> str:
         url, RTT, length = getFormatedResult(
             result.url, result.RTT, result.length
         )

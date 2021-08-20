@@ -63,11 +63,11 @@ class Grep(BaseScanner, Plugin):
                 raise BadArgumentFormat(f"invalid regex: {regex}")
 
     @append_args
-    def inspectResult(self, result: Result, *args):
+    def inspectResult(self, result: Result, *args) -> None:
         result.custom['found'] = None
         result.custom['greped'] = {i: [] for i in range(len(self.__regexers))}
 
-    def scan(self, result: Result):
+    def scan(self, result: Result) -> bool:
         totalGreped = 0
         for i, regexer in enumerate(self.__regexers):
             thisGreped = set([r.group() for r in regexer.finditer(result.getResponse().text)])
@@ -76,7 +76,7 @@ class Grep(BaseScanner, Plugin):
         result.custom['found'] = totalGreped
         return True if totalGreped else False
     
-    def cliCallback(self, result: Result):
+    def cliCallback(self, result: Result) -> str:
         found = f"{Colors.LIGHT_YELLOW}{Colors.BOLD} IDK"
         quantityFound = result.custom['found']
         if quantityFound != None:

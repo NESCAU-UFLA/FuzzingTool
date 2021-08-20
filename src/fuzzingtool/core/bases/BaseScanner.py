@@ -25,7 +25,7 @@ from abc import ABC, abstractmethod
 class BaseScanner(ABC):
     """Base scanner"""
     @abstractmethod
-    def inspectResult(self, result: Result, *args):
+    def inspectResult(self, result: Result, *args) -> None:
         """Inspects the FuzingTool result to add new information if needed
         
         @type result: Result
@@ -34,7 +34,7 @@ class BaseScanner(ABC):
         pass
 
     @abstractmethod
-    def scan(self, result: Result):
+    def scan(self, result: Result) -> bool:
         """Scan the FuzzingTool result
 
         @type result: Result
@@ -44,7 +44,7 @@ class BaseScanner(ABC):
         pass
 
     @abstractmethod
-    def cliCallback(self, result: Result):
+    def cliCallback(self, result: Result) -> str:
         """Get the formated message to be used on output
 
         @type result: Result

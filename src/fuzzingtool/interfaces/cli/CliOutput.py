@@ -25,7 +25,7 @@ from datetime import datetime
 import platform
 import threading
 import sys
-from typing import Callable
+from typing import Callable, Tuple
 
 if platform.system() == 'Windows':
     try:
@@ -38,7 +38,7 @@ def fixPayloadToOutput(
     payload: str,
     maxLength: int = 30,
     isProgressStatus: bool = False,
-):
+) -> str:
     """Fix the payload's size
 
     @type payload: str
@@ -62,7 +62,11 @@ def fixPayloadToOutput(
             payload += ' '
     return payload
 
-def getFormatedResult(payload: str, RTT: float, length: int):
+def getFormatedResult(
+    payload: str,
+    RTT: float,
+    length: int
+) -> Tuple[str, str, str]:
     """Format the result into a dict of strings
 
     @type payload: str
@@ -71,7 +75,7 @@ def getFormatedResult(payload: str, RTT: float, length: int):
     @param RTT: The request and response elapsed time
     @type length: int
     @param length: The response body length in bytes
-    @returns tuple(str, str, str): The result formated with strings
+    @returns tuple[str, str, str]: The result formated with strings
     """
     length, order = getHumanLength(int(length))
     if type(length) is float:
@@ -118,7 +122,7 @@ class CliOutput:
         notWorked: The not worked label
     """
     @staticmethod
-    def print(msg: str):
+    def print(msg: str) -> None:
         """Print the message
 
         @type msg: str
@@ -127,7 +131,7 @@ class CliOutput:
         print(msg)
 
     @staticmethod
-    def helpTitle(numSpaces: int, title: str):
+    def helpTitle(numSpaces: int, title: str) -> None:
         """Output the help title
 
         @type numSpaces: int
@@ -138,7 +142,7 @@ class CliOutput:
         print("\n"+' '*numSpaces+title)
 
     @staticmethod
-    def helpContent(numSpaces: int, command: str, desc: str):
+    def helpContent(numSpaces: int, command: str, desc: str) -> None:
         """Output the help content
 
         @type numSpaces: int
@@ -166,7 +170,7 @@ class CliOutput:
         self.__worked = f'{Colors.GRAY}[{Colors.GREEN}+{Colors.GRAY}]{Colors.RESET} '
         self.__notWorked = f'{Colors.GRAY}[{Colors.RED}-{Colors.GRAY}]{Colors.RESET} '
 
-    def setSimpleOutputMode(self):
+    def setSimpleOutputMode(self) -> None:
         """Set the display to simple output mode, change labels"""
         self.__getTime = lambda: ''
         self.__info = f'{Colors.GRAY}[{Colors.BLUE_GRAY}*{Colors.GRAY}]{Colors.RESET} '
@@ -176,7 +180,7 @@ class CliOutput:
         self.__worked = f'{Colors.GRAY}[{Colors.GREEN}+{Colors.GRAY}]{Colors.RESET} '
         self.__notWorked = f'{Colors.GRAY}[{Colors.RED}-{Colors.GRAY}]{Colors.RESET} '
 
-    def setVerbosityMode(self, verboseMode: bool):
+    def setVerbosityMode(self, verboseMode: bool) -> None:
         """Set the verbosity mode
 
         @type verboseMode: bool
@@ -187,7 +191,7 @@ class CliOutput:
         else:
             self.__breakLine = '\n'
 
-    def setMessageCallback(self, getMessageCallback: Callable):
+    def setMessageCallback(self, getMessageCallback: Callable) -> None:
         """Set the print content mode for the results
 
         @type getMessageCallback: Callable
@@ -195,7 +199,7 @@ class CliOutput:
         """
         self.__getMessage = getMessageCallback
 
-    def infoBox(self, msg: str):
+    def infoBox(self, msg: str) -> None:
         """Print the message with a info label
 
         @type msg: str
@@ -203,7 +207,7 @@ class CliOutput:
         """
         print(f'{self.__getTime()}{self.__getInfo(msg)}')
 
-    def errorBox(self, msg: str):
+    def errorBox(self, msg: str) -> None:
         """End the application with error label and a message
 
         @type msg: str
@@ -211,7 +215,7 @@ class CliOutput:
         """
         exit(f'{self.__getTime()}{self.__getError(msg)}')
  
-    def warningBox(self, msg: str):
+    def warningBox(self, msg: str) -> None:
         """Print the message with a warning label
 
         @type msg: str
@@ -219,7 +223,7 @@ class CliOutput:
         """
         print(f'{self.__getTime()}{self.__getWarning(msg)}')
 
-    def abortBox(self, msg: str):
+    def abortBox(self, msg: str) -> None:
         """Print the message with abort label and a message
 
         @type msg: str
@@ -229,7 +233,7 @@ class CliOutput:
             sys.stdout.flush()
             print(f'{self.__breakLine}{self.__getTime()}{self.__getAbort(msg)}')
 
-    def workedBox(self, msg: str):
+    def workedBox(self, msg: str) -> None:
         """Print the message with worked label and a message
 
         @type msg: str
@@ -237,7 +241,7 @@ class CliOutput:
         """
         print(f'{self.__getTime()}{self.__getWorked(msg)}')
 
-    def notWorkedBox(self, msg: str):
+    def notWorkedBox(self, msg: str) -> None:
         """Print the message with not worked label and a message
 
         @type msg: str
@@ -246,7 +250,7 @@ class CliOutput:
         with self.__lock:
             print(f"{self.__getTime()}{self.__getNotWorked(msg)}")
 
-    def askYesNo(self, askType: str, msg: str):
+    def askYesNo(self, askType: str, msg: str) -> bool:
         """Ask a question for the user
 
         @type askType: str
@@ -266,7 +270,7 @@ class CliOutput:
         else:
             return False
 
-    def askData(self, msg: str):
+    def askData(self, msg: str) -> str:
         """Ask data for the user
 
         @type msg: str
@@ -276,7 +280,7 @@ class CliOutput:
         print(self.__getTime()+self.__getInfo(msg)+': ', end='')
         return input()
 
-    def printConfig(self, key: str, value: str = '', spaces: int = 0):
+    def printConfig(self, key: str, value: str = '', spaces: int = 0) -> None:
         """The config's printer function
 
         @type key: str
@@ -303,7 +307,7 @@ class CliOutput:
         delay: float,
         threads: int,
         report: str,
-    ):
+    ) -> None:
         """Prints the program configuration
 
         @type output: str
@@ -383,7 +387,7 @@ class CliOutput:
         requestIndex: int,
         totalRequests: int,
         payload: str
-    ):
+    ) -> None:
         """Output the progress status of the fuzzing
 
         @type requestIndex: int
@@ -404,7 +408,7 @@ class CliOutput:
                 self.__eraseLine()
             print('\r'+f"{self.__getTime()}{status}{Colors.GRAY} :: {payload}", end='')
 
-    def printResult(self, result: dict, vulnValidator: bool):
+    def printResult(self, result: dict, vulnValidator: bool) -> None:
         """Custom output print for box mode
 
         @type result: dict
@@ -422,7 +426,7 @@ class CliOutput:
                     self.__eraseLine()
                 self.workedBox(msg)
 
-    def __getTime(self):
+    def __getTime(self) -> str:
         """Get a time label
 
         @returns str: The time label with format HH:MM:SS
@@ -430,7 +434,7 @@ class CliOutput:
         time = datetime.now().strftime("%H:%M:%S")
         return f'{Colors.GRAY}[{Colors.LIGHT_GREEN}{time}{Colors.GRAY}]{Colors.RESET} '
 
-    def __getInfo(self, msg: str):
+    def __getInfo(self, msg: str) -> str:
         """The info getter, with a custom message
 
         @type msg: str
@@ -439,7 +443,7 @@ class CliOutput:
         """
         return f'{self.__info}{msg}'
 
-    def __getWarning(self, msg: str):
+    def __getWarning(self, msg: str) -> str:
         """The warning getter, with a custom message
 
         @type msg: str
@@ -448,7 +452,7 @@ class CliOutput:
         """
         return f'{self.__warning}{msg}'
     
-    def __getError(self, msg: str):
+    def __getError(self, msg: str) -> str:
         """The error getter, with a custom message
 
         @type msg: str
@@ -457,7 +461,7 @@ class CliOutput:
         """
         return f'{self.__error}{msg}'
 
-    def __getAbort(self, msg: str):
+    def __getAbort(self, msg: str) -> str:
         """The abort getter, with a custom message
 
         @type msg: str
@@ -466,7 +470,7 @@ class CliOutput:
         """
         return f'{self.__abord}{msg}'
 
-    def __getWorked(self, msg: str):
+    def __getWorked(self, msg: str) -> str:
         """The worked getter, with a custom message
 
         @type msg: str
@@ -475,7 +479,7 @@ class CliOutput:
         """
         return f'{self.__worked}{msg}'
     
-    def __getNotWorked(self, msg: str):
+    def __getNotWorked(self, msg: str) -> str:
         """The not worked getter, with a custom message
 
         @type msg: str
@@ -484,7 +488,7 @@ class CliOutput:
         """
         return f'{self.__notWorked}{Colors.LIGHT_GRAY}{msg}{Colors.RESET}'
 
-    def __eraseLine(self):
+    def __eraseLine(self) -> None:
         """Erases the current line"""
         sys.stdout.flush()
         sys.stdout.write("\033[1K")

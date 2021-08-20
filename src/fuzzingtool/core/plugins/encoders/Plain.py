@@ -30,5 +30,5 @@ class Plain(BaseEncoder, Plugin):
     __type__ = ""
     __version__ = "0.2"
 
-    def encode(self, payload: str):
+    def encode(self, payload: str) -> str:
         return payload

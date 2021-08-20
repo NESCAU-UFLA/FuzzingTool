@@ -22,12 +22,14 @@ from .ArgumentParser import ArgumentParser
 from ...utils.utils import splitStrToList
 from ...exceptions.MainExceptions import BadArgumentFormat
 
-def parseOptionWithArgs(plugin: str):
+from typing import Tuple
+
+def parseOptionWithArgs(plugin: str) -> Tuple[str, str]:
     """Parse the plugin name into name and parameter
 
     @type plugin: str
     @param plugin: The plugin argument
-    @returns tuple(str, str): The plugin name and parameter
+    @returns tuple[str, str]: The plugin name and parameter
     """
     if '=' in plugin:
         plugin, param = plugin.split('=', 1)
@@ -50,7 +52,7 @@ class CliArguments:
         self.setDisplayArguments()
         self.setGeneralArguments()
 
-    def setRequestArguments(self):
+    def setRequestArguments(self) -> None:
         """Set the request arguments"""
         self.setTargetsFromArgs()
         self.setTargetsFromRawHttp()
@@ -60,18 +62,18 @@ class CliArguments:
         self.timeout = self.options.timeout
         self.followRedirects = self.options.followRedirects
 
-    def setTargetsFromArgs(self):
+    def setTargetsFromArgs(self) -> None:
         """Set the targets from url"""
         self.targetsFromUrl = self.options.url
         self.method = self.options.method
         self.data = self.options.data
 
-    def setTargetsFromRawHttp(self):
+    def setTargetsFromRawHttp(self) -> None:
         """Set the targets from raw http"""
         self.targetsFromRawHttp = self.options.rawHttp
         self.scheme = self.options.scheme
 
-    def setDictionaryArguments(self):
+    def setDictionaryArguments(self) -> None:
         """Set the dictionary arguments"""
         self.wordlists = [[parseOptionWithArgs(w) for w in splitStrToList(wordlist, separator=';')] for wordlist in self.options.wordlist]
         self.prefix = splitStrToList(self.options.prefix)
@@ -83,7 +85,7 @@ class CliArguments:
         self.encoder = [[parseOptionWithArgs(e) for e in splitStrToList(encoder, separator='@')] for encoder in splitStrToList(self.options.encoder)]
         self.encodeOnly = self.options.encodeOnly
 
-    def setMatchArguments(self):
+    def setMatchArguments(self) -> None:
         """Set the match arguments"""
         self.matchStatus = self.options.matchStatus
         self.matchLength = self.options.matchLength
@@ -91,7 +93,7 @@ class CliArguments:
         self.strScanner = self.options.scanner
         self.scanner = None if not self.options.scanner else parseOptionWithArgs(self.options.scanner)
 
-    def setDisplayArguments(self):
+    def setDisplayArguments(self) -> None:
         """Set the display arguments"""
         self.simpleOutput = self.options.simpleOutput
         if self.options.commonVerbose:
@@ -102,14 +104,14 @@ class CliArguments:
             self.verbose = [False, False]
         self.disableColors = self.options.disableColors
 
-    def setGeneralArguments(self):
+    def setGeneralArguments(self) -> None:
         """Set the general arguments"""
         self.delay = self.options.delay
         self.numberOfThreads = self.options.numberOfThreads
         self.setBlacklistedStatus()
         self.report = self.options.reportName
 
-    def setBlacklistedStatus(self):
+    def setBlacklistedStatus(self) -> None:
         """Sets blacklisted status codes, action and action param"""
         self.blacklistedStatus = ''
         self.blacklistAction = ''

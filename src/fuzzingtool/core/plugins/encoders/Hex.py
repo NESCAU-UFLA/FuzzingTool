@@ -30,8 +30,8 @@ class Hex(BaseEncoder, Plugin):
     __type__ = "Encoder"
     __version__ = "0.2"
 
-    def encode(self, payload: str):
+    def encode(self, payload: str) -> str:
         return payload.encode(BaseEncoder.charset).hex()
     
-    def decode(self, payload: str):
+    def decode(self, payload: str) -> str:
         return bytes.fromhex(payload).decode(BaseEncoder.charset)

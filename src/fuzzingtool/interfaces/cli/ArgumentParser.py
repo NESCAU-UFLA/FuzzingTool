@@ -57,7 +57,7 @@ class ArgumentParser(argparse.ArgumentParser):
         )
         self.__buildOptions()
 
-    def error(self, message: str):
+    def error(self, message: str) -> None:
         raise BadArgumentFormat(message)
     
     def getOptions(self):
@@ -67,7 +67,7 @@ class ArgumentParser(argparse.ArgumentParser):
         """
         return self.parse_args()
     
-    def _showWordlistsHelp(self):
+    def _showWordlistsHelp(self) -> None:
         """Show the help menu for wordlists and exit"""
         CO.helpTitle(0, "Wordlist options: (-w)")
         CO.print("     You can set just one global wordlist, multiple wordlists and wordlists per target!")
@@ -88,7 +88,7 @@ class ArgumentParser(argparse.ArgumentParser):
         CO.print(f"FuzzingTool -u domainexample.com/{FUZZING_MARK} -u {FUZZING_MARK}.domainexample2.com -w 'Robots;/path/to/wordlist/paths.txt' -w CrtSh -t 30 --timeout 5 -V2\n")
         exit(0)
 
-    def _showEncodersHelp(self):
+    def _showEncodersHelp(self) -> None:
         """Show the help menu for encoders and exit"""
         CO.helpTitle(0, "Encoder options: (-e)")
         CO.helpTitle(2, "Set the encoder used on the payloads\n")
@@ -97,7 +97,7 @@ class ArgumentParser(argparse.ArgumentParser):
         CO.print(f"FuzzingTool -u https://domainexample.com/page.php?id= -w /path/to/wordlist/sqli.txt -e Url=2 -t 30 --scanner Find=SQL\n")
         exit(0)
 
-    def _showScannersHelp(self):
+    def _showScannersHelp(self) -> None:
         """Show the help menu for scanners and exit"""
         CO.helpTitle(0, "Scanner options:")
         CO.helpTitle(2, "Default: The default scanners are selected automatically if no one from plugins was choiced\n")
@@ -110,7 +110,7 @@ class ArgumentParser(argparse.ArgumentParser):
         CO.print(f"FuzzingTool -u https://domainexample.com/search.php?query= -w /path/to/wordlist/xss.txt --scanner Reflected -t 30 -o csv\n")
         exit(0)
     
-    def __showPluginsHelpFromCategory(self, category: str):
+    def __showPluginsHelpFromCategory(self, category: str) -> None:
         """Show the help menu for the plugins
 
         @type category: str
@@ -133,7 +133,7 @@ class ArgumentParser(argparse.ArgumentParser):
                     params = f"={Plugin.__params__['metavar']}"
             CO.helpContent(5, f"{Plugin.__name__}{params}", f"{Plugin.__desc__}{typeFuzzing}\n")
     
-    def __buildOptions(self):
+    def __buildOptions(self) -> None:
         """Builds the FuzzingTool options"""
         self.add_argument('-v', '--version',
             action='version',
@@ -145,7 +145,7 @@ class ArgumentParser(argparse.ArgumentParser):
         self.__buildDisplayOpts()
         self.__buildMoreOpts()
 
-    def __buildRequestOpts(self):
+    def __buildRequestOpts(self) -> None:
         """Builds the arguments for request options"""
         requestOpts = self.add_argument_group('Request options')
         requestOpts.add_argument('-u',
@@ -212,7 +212,7 @@ class ArgumentParser(argparse.ArgumentParser):
             default=False,
         )
     
-    def __buildDictionaryOpts(self):
+    def __buildDictionaryOpts(self) -> None:
         """Builds the arguments for dictionary options"""
         dictionaryOpts = self.add_argument_group('Dictionary options')
         dictionaryOpts.add_argument('-w',
@@ -267,7 +267,7 @@ class ArgumentParser(argparse.ArgumentParser):
             default=False,
         )
 
-    def __buildMatchOpts(self):
+    def __buildMatchOpts(self) -> None:
         """Builds the arguments for match options"""
         matchOpts = self.add_argument_group('Match options')
         matchOpts.add_argument('-Mc',
@@ -297,7 +297,7 @@ class ArgumentParser(argparse.ArgumentParser):
             metavar='SCANNER',
         )
 
-    def __buildDisplayOpts(self):
+    def __buildDisplayOpts(self) -> None:
         """Builds the arguments for cli display options"""
         displayOpts = self.add_argument_group('Display options')
         displayOpts.add_argument('-S, --simple-output',
@@ -325,7 +325,7 @@ class ArgumentParser(argparse.ArgumentParser):
             default=False,
         )
 
-    def __buildMoreOpts(self):
+    def __buildMoreOpts(self) -> None:
         """Builds the arguments for non categorized options"""
         moreOpts = self.add_argument_group('More options')
         moreOpts.add_argument('-t',

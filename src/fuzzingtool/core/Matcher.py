@@ -21,6 +21,8 @@
 from .Result import Result
 from ..utils.utils import splitStrToList
 
+from typing import List
+
 class Matcher:
     """A matcher validator
 
@@ -29,21 +31,25 @@ class Matcher:
         allowedStatus: The dictionary with the allowed status codes (and range)
     """
     @staticmethod
-    def buildAllowedStatus(allowedStatus: str):
+    def buildAllowedStatus(allowedStatus: str) -> dict:
         """Build the matcher attribute for allowed status
 
         @type allowedStatus: str
         @param allowedStatus: The allowed status codes to match results
         @returns dict: The allowed status code, list and range, parsed into a dict
         """
-        def getAllowedStatus(status: str, allowedList: list, allowedRange: list):
+        def getAllowedStatus(
+            status: str,
+            allowedList: List[int],
+            allowedRange: List[int]
+        ) -> None:
             """Get the allowed status code list and range
 
             @type status: str
             @param status: The status cod given in the terminal
-            @type allowedList: list
+            @type allowedList: List[int]
             @param allowedList: The allowed status codes list
-            @type allowedRange: list
+            @type allowedRange: List[int]
             @param allowedRange: The range of allowed status codes
             """
             try:
@@ -73,7 +79,7 @@ class Matcher:
         }
 
     @staticmethod
-    def buildComparator(length: int, time: float):
+    def buildComparator(length: int, time: float) -> dict:
         """Build the matcher attribute for data comparator
 
         @type length: int
@@ -102,41 +108,41 @@ class Matcher:
         self._comparator = comparator
 
     @classmethod
-    def fromString(cls, allowedStatus: str, length: int, time: float):
+    def fromString(cls, allowedStatus: str, length: int, time: float) -> object:
         return cls(
             Matcher.buildAllowedStatus(allowedStatus),
             Matcher.buildComparator(length, time)
         )
 
-    def getAllowedStatus(self):
+    def getAllowedStatus(self) -> dict:
         """The allowed status getter
 
         @returns dict: The allowed status dict
         """
         return self._allowedStatus
     
-    def getComparator(self):
+    def getComparator(self) -> dict:
         """The data comparator getter
 
         @returns dict: The data comparator dict
         """
         return self._comparator
 
-    def allowedStatusIsDefault(self):
+    def allowedStatusIsDefault(self) -> bool:
         """Check if the allowed status is set as default config
 
         @returns bool: If the allowed status is the default or not
         """
         return self._allowedStatus['IsDefault']
 
-    def comparatorIsSet(self):
+    def comparatorIsSet(self) -> bool:
         """Check if any of the comparators are seted
 
         @returns bool: if any of the comparators are seted returns True, else False
         """
         return self._comparator['Length'] or self._comparator['Time']
 
-    def setAllowedStatus(self, allowedStatus: dict):
+    def setAllowedStatus(self, allowedStatus: dict) -> None:
         """The allowed status setter
 
         @type allowedStatus: dict
@@ -144,7 +150,7 @@ class Matcher:
         """
         self._allowedStatus = allowedStatus
 
-    def setComparator(self, comparator: dict):
+    def setComparator(self, comparator: dict) -> None:
         """The comparator setter
 
         @type comparator: dict
@@ -152,7 +158,7 @@ class Matcher:
         """
         self._comparator = comparator
 
-    def match(self, result: Result):
+    def match(self, result: Result) -> bool:
         """Check if the request content has some predefined characteristics based on a payload, it'll be considered as vulnerable
         
         @type result: Result
@@ -167,7 +173,7 @@ class Matcher:
             return True
         return False
     
-    def _matchStatus(self, status: int):
+    def _matchStatus(self, status: int) -> bool:
         """Check if the result status match with the allowed status dict
 
         @type status: int
@@ -179,7 +185,7 @@ class Matcher:
                 and (self._allowedStatus['Range'][0] <= status
                 and status <= self._allowedStatus['Range'][1])))
     
-    def _matchLength(self, length: int):
+    def _matchLength(self, length: int) -> bool:
         """Check if the result length match with the comparator dict
 
         @type length: int
@@ -188,7 +194,7 @@ class Matcher:
         """
         return self._comparator['Length'] < length
     
-    def _matchTime(self, time: float):
+    def _matchTime(self, time: float) -> bool:
         """Check if the result time match with the comparator dict
 
         @type time: int

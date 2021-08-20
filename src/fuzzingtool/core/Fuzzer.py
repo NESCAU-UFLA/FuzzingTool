@@ -27,7 +27,7 @@ from ..exceptions.RequestExceptions import RequestException, InvalidHostname
 
 from threading import Thread, Event
 import time
-from typing import Callable
+from typing import Callable, List
 
 class Fuzzer:
     """Fuzzer class, the core of the software
@@ -50,7 +50,7 @@ class Fuzzer:
         delay: float,
         numberOfThreads: int,
         resultCallback: Callable[[dict, bool], None],
-        exceptionCallbacks: list, # Callback list
+        exceptionCallbacks: List[Callable[[str, str], None]],
     ):
         """Class constructor
 
@@ -68,7 +68,7 @@ class Fuzzer:
         @param numberOfThreads: The number of threads used in the fuzzing tests
         @type resultCallback: Callable
         @param resultCallback: The callback function for the results
-        @type exceptionCallbacks: list
+        @type exceptionCallbacks: List[Callable]
         @param exceptionCallbacks: The list that handles with exception callbacks
         """
         self.__requester = requester
@@ -83,7 +83,7 @@ class Fuzzer:
         self.exceptionCallbacks = exceptionCallbacks
         self.setup()
 
-    def setup(self):
+    def setup(self) -> None:
         """Handle with threads setup
         
         Attributes:
@@ -100,21 +100,21 @@ class Fuzzer:
         self.__player = Event()
         self.__player.clear() # Not necessary, but force the blocking of the threads
 
-    def isRunning(self):
+    def isRunning(self) -> bool:
         """The running flag getter
 
         @returns bool: The running flag
         """
         return self.__running
 
-    def isPaused(self):
+    def isPaused(self) -> bool:
         """The paused flag getter
 
         @returns bool: The paused flag
         """
         return not self.__player.isSet()
 
-    def run(self):
+    def run(self) -> None:
         """Run the threads"""
         while not self.__dict.isEmpty():
             payloads = next(self.__dict)
@@ -140,7 +140,7 @@ class Fuzzer:
                 self.__player.wait()
         self.__runningThreads -= 1
 
-    def join(self):
+    def join(self) -> bool:
         """Join the threads
 
         @returns bool: A flag to say if the threads are running or not
@@ -151,25 +151,25 @@ class Fuzzer:
                 return True
         return False
 
-    def start(self):
+    def start(self) -> None:
         """Starts the fuzzer application"""
         self.__player.set() # Awake threads
         for thread in self.__threads:
             thread.start()
 
-    def pause(self):
+    def pause(self) -> None:
         """Pause the fuzzer application"""
         self.__player.clear()
         while self.__runningThreads > 1:
             pass
         time.sleep(0.1)
 
-    def stop(self):
+    def stop(self) -> None:
         """Stop the fuzzer application"""
         self.__running = False
         self.pause()
     
-    def resume(self):
+    def resume(self) -> None:
         """Resume the fuzzer application"""
         self.__runningThreads = self.__numberOfThreads
         self.__player.set()

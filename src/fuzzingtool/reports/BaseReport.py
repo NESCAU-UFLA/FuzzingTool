@@ -32,8 +32,8 @@ class BaseReport(ABC):
         self.__filename = filename
         self._file = None
 
-    def open(self, host: str):
-        """Opens the report file to store the FuzzingTool matcher results
+    def open(self, host: str) -> str:
+        """Opens the report file to store the results
         
         @type host: str
         @param host: The target hostname
@@ -53,24 +53,24 @@ class BaseReport(ABC):
             self._file = open(reportFullPath, 'w')
         return reportFullPath
 
-    def write(self, results: List[Result]):
+    def write(self, results: List[Result]) -> None:
         self._header()
         self._results(results)
         self._footer()
         self._file.close()
 
     @abstractmethod
-    def _getType(self):
+    def _getType(self) -> str:
         """Gets the file type"""
         pass
 
     @abstractmethod
-    def _header(self):
+    def _header(self) -> None:
         """Writes the header information on the report"""
         pass
 
     @abstractmethod
-    def _results(self, results: List[Result]):
+    def _results(self, results: List[Result]) -> None:
         """Writes the results on the report
 
         @type results: List[Result]
@@ -79,6 +79,6 @@ class BaseReport(ABC):
         pass
 
     @abstractmethod
-    def _footer(self):
+    def _footer(self) -> None:
         """Writes the footer information on the report"""
         pass

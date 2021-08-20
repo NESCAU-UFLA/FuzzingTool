@@ -21,12 +21,14 @@
 from os import walk
 from os.path import dirname, abspath
 
-def readFile(fileName: str):
+from typing import List
+
+def readFile(fileName: str) -> List[str]:
     """Reads content of a file.
 
     @type fileName: str
     @param fileName: The file path and name
-    @returns list: The content into the file
+    @returns List[str]: The content into the file
     """
     try:
         with open(f'{fileName}', 'r') as thisFile:
@@ -34,23 +36,23 @@ def readFile(fileName: str):
     except FileNotFoundError:
         raise Exception(f"File '{fileName}' not found")
 
-def splitFilenames(files: list):
+def splitFilenames(files: list) -> List[str]:
     """Splits the files, removing the extension and __init__.py
 
     @type files: list
     @param files: The filenames to split
-    @returns list: The splited content, without extension
+    @returns List[str]: The splited content, without extension
     """
     if '__init__.py' in files:
         files.remove('__init__.py')
     return [file.split('.')[0] for file in files]
 
-def getPluginNamesFromCategory(category: str):
+def getPluginNamesFromCategory(category: str) -> List[str]:
     """Gets the plugin filenames
 
     @type category: str
     @param category: The category of the plugins
-    @returns list: The list with the plugin filenames
+    @returns List[str]: The list with the plugin filenames
     """
     try:
         _, _, pluginFiles = next(walk(f"./fuzzingtool/core/plugins/{category}/"))
@@ -58,10 +60,10 @@ def getPluginNamesFromCategory(category: str):
         _, _, pluginFiles = next(walk(f"{dirname(dirname(abspath(__file__)))}/core/plugins/{category}/"))
     return splitFilenames(pluginFiles)
 
-def getReports():
+def getReports() -> List[str]:
     """Gets the report filenames
     
-    @returns list: The list with the report filenames
+    @returns List[str]: The list with the report filenames
     """
     try:
         _, _, reportFiles = next(walk(f"./fuzzingtool/reports/reports/"))

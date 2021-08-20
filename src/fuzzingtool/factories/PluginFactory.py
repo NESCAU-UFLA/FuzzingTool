@@ -25,6 +25,7 @@ from ..core.plugins import *
 from ..exceptions.MainExceptions import InvalidPluginName, MissingParameter, BadArgumentFormat
 
 from importlib import import_module
+from typing import Type
 
 class PluginFactory(BasePluginFactory):
     convertCliPluginParameter = {
@@ -32,7 +33,7 @@ class PluginFactory(BasePluginFactory):
         list: lambda string, Plugin: splitStrToList(string, separator=Plugin.__params__['cli_list_separator']),
     }
 
-    def classCreator(name: str, category: str):
+    def classCreator(name: str, category: str) -> Type[Plugin]:
         if not name in getPluginNamesFromCategory(category):
             raise InvalidPluginName(f"Plugin {name} does not exists")
         Plugin = import_module(
@@ -41,7 +42,7 @@ class PluginFactory(BasePluginFactory):
         )
         return getattr(Plugin, name)
 
-    def objectCreator(name: str, category: str, params):
+    def objectCreator(name: str, category: str, params) -> Plugin:
         try:
             Plugin = PluginFactory.classCreator(name, category)
         except InvalidPluginName as e:

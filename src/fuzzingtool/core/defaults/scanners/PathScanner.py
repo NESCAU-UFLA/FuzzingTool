@@ -26,15 +26,15 @@ from ....interfaces.cli.CliOutput import Colors, getFormatedResult
 class PathScanner(BaseScanner):
     __author__ = ("Vitor Oriel",)
 
-    def inspectResult(self, result: Result, *args):
+    def inspectResult(self, result: Result, *args) -> None:
         result.custom['redirected'] = ''
         if result.status > 300 and result.status < 400:
             result.custom['redirected'] = result.getResponse().headers['Location']
 
-    def scan(self, result: Result):
+    def scan(self, result: Result) -> bool:
         return True
     
-    def cliCallback(self, result: Result):
+    def cliCallback(self, result: Result) -> str:
         status = result.status
         statusColor = Colors.BOLD
         if status == 404:

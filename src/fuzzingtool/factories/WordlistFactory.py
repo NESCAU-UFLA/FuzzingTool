@@ -25,8 +25,10 @@ from ..conn.requests.Request import Request
 from ..core.defaults.wordlists import *
 from ..exceptions.MainExceptions import InvalidPluginName, MissingParameter
 
+from typing import List
+
 class WordlistFactory(BaseWordlistFactory):
-    def creator(name: str, params: str, requester: Request):
+    def creator(name: str, params: str, requester: Request) -> List[str]:
         try:
             Wordlist = PluginFactory.classCreator(name, 'wordlists')
             if (not params and

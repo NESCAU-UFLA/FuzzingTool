@@ -34,15 +34,15 @@ class Reflected(BaseScanner, Plugin):
     __version__ = "0.1"
 
     @append_args
-    def inspectResult(self, result: Result, *args):
+    def inspectResult(self, result: Result, *args) -> None:
         result.custom['reflected'] = None
 
-    def scan(self, result: Result):
+    def scan(self, result: Result) -> bool:
         reflected = result.payload in result.getResponse().text
         result.custom['reflected'] = reflected
         return reflected
     
-    def cliCallback(self, result: Result):
+    def cliCallback(self, result: Result) -> str:
         reflected = f"{Colors.LIGHT_YELLOW}{Colors.BOLD}IDK"
         wasReflected = result.custom['reflected']
         if wasReflected != None:

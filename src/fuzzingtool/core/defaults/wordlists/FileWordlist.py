@@ -21,6 +21,8 @@
 from ...bases.BaseWordlist import BaseWordlist
 from ....utils.file_utils import readFile
 
+from typing import List
+
 class FileWordlist(BaseWordlist):
     __author__ = ("Vitor Oriel",)
 
@@ -28,7 +30,7 @@ class FileWordlist(BaseWordlist):
         self.filePath = filePath
         super().__init__()
 
-    def _build(self):
+    def _build(self) -> List[str]:
         try:
             return set(readFile(self.filePath))
         except Exception as e:

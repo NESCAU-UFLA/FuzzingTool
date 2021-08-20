@@ -32,7 +32,7 @@ class Logger:
     def __init__(self):
         self.__logFullPath = ''
 
-    def setup(self, host: str):
+    def setup(self, host: str) -> str:
         """Setup the log path to save the current logs
         
         @type host: str
@@ -52,7 +52,7 @@ class Logger:
         logFile.close()
         return self.__logFullPath
 
-    def write(self, exception: str, payload: str):
+    def write(self, exception: str, payload: str) -> None:
         """Write the exception on the log file
 
         @type exception: str

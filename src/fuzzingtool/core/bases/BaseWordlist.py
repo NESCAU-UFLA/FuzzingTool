@@ -20,6 +20,8 @@
 
 from abc import ABC, abstractmethod
 
+from typing import List
+
 class BaseWordlist(ABC):
     """Base wordlist
 
@@ -29,20 +31,20 @@ class BaseWordlist(ABC):
     def __init__(self):
         self.__wordlist = self._build()
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.__wordlist)
 
-    def get(self):
+    def get(self) -> List[str]:
         """The wordlist getter
 
-        @returns list: The list with the payloads
+        @returns List[str]: The list with the payloads
         """
         return self.__wordlist
 
     @abstractmethod
-    def _build(self):
+    def _build(self) -> List[str]:
         """The wordlist builder
         
-        @returns list: The builded wordlist
+        @returns List[str]: The builded wordlist
         """
         pass

@@ -23,7 +23,7 @@ from ...core.Result import Result
 from ...decorators.report_meta import report_meta
 
 import json
-from typing import List
+from typing import List, NoReturn
 
 @report_meta
 class JsonReport(BaseReport):
@@ -31,14 +31,14 @@ class JsonReport(BaseReport):
     __version__ = "0.1"
     __alias__ = 'json'
 
-    def _getType(self):
+    def _getType(self) -> str:
         return JsonReport.__alias__
 
-    def _header(self):
+    def _header(self) -> None:
         pass
 
-    def _results(self, results: List[Result]):
+    def _results(self, results: List[Result]) -> None:
         json.dump([dict(result) for result in results], self._file)
 
-    def _footer(self):
+    def _footer(self) -> None:
         pass

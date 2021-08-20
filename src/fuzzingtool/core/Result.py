@@ -18,6 +18,9 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+from typing import Iterator, Tuple
+from requests import Response
+
 class Result:
     """The FuzzingTool result handler
 
@@ -34,10 +37,10 @@ class Result:
         words: The quantitty of words in the response body
         lines: The quantity of lines in the response body
         custom: A dictionary to store custom data from the scanners
-        response: The raw response object
+        response: The Response object from python requests
     """
     def __init__(self,
-        response: object,
+        response: Response,
         RTT: float,
         requestIndex: int = 0,
         payload: str = '',
@@ -69,7 +72,7 @@ class Result:
         self.custom = {}
         self.__response = response
     
-    def __iter__(self):
+    def __iter__(self) -> Iterator[Tuple]:
        yield 'index', self.index
        yield 'payload', self.payload
        yield 'url', self.url
@@ -84,7 +87,7 @@ class Result:
        for key, value in self.custom.items():
            yield key, value
 
-    def getResponse(self):
+    def getResponse(self) -> Response:
         """The response getter
 
         @returns Response: The response of the request

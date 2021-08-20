@@ -52,15 +52,15 @@ class Find(BaseScanner, Plugin):
             raise BadArgumentFormat("invalid regex")
 
     @append_args
-    def inspectResult(self, result: Result, *args):
+    def inspectResult(self, result: Result, *args) -> None:
         result.custom['found'] = None
 
-    def scan(self, result: Result):
+    def scan(self, result: Result) -> bool:
         found = True if self.__regexer.search(result.getResponse().text) else False
         result.custom['found'] = found
         return found
     
-    def cliCallback(self, result: Result):
+    def cliCallback(self, result: Result) -> str:
         found = f"{Colors.LIGHT_YELLOW}{Colors.BOLD}IDK"
         wasFound = result.custom['found']
         if wasFound != None:

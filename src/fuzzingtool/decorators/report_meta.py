@@ -20,7 +20,7 @@
 
 from ..reports.BaseReport import BaseReport
 
-def report_meta(cls: BaseReport):
+def report_meta(cls: BaseReport) -> BaseReport:
     """Decorator to check for BaseReport metadata
     
     @type cls: BaseReport

@@ -20,18 +20,24 @@
 
 from .consts import FUZZING_MARK
 
-def getIndexesToParse(content: str, searchFor: str = FUZZING_MARK):
+from typing import List, Tuple, Union
+
+def getIndexesToParse(content: str, searchFor: str = FUZZING_MARK) -> List[int]:
     """Gets the indexes of the searched substring into a string content
     
     @type content: str
     @param content: The parameter content
     @type searchFor: str
     @param searchFor: The substring to be searched indexes on the given content
-    @returns list: The positions indexes of the searched substring
+    @returns List[int]: The positions indexes of the searched substring
     """
     return [i for i, char in enumerate(content) if char == searchFor]
 
-def splitStrToList(string: str, separator: str = ',', ignores: str = '\\'):
+def splitStrToList(
+    string: str,
+    separator: str = ',',
+    ignores: str = '\\'
+) -> List[str]:
     """Split the given string into a list, using a separator
 
     @type string: str
@@ -40,7 +46,7 @@ def splitStrToList(string: str, separator: str = ',', ignores: str = '\\'):
     @param separator: A separator to split the string
     @type ignores: str
     @param ignores: A string to ignores the separator
-    @returns list: The splited string
+    @returns List[str]: The splited string
     """
     if string:
         if f'{ignores}{separator}' in string:
@@ -56,7 +62,7 @@ def splitStrToList(string: str, separator: str = ',', ignores: str = '\\'):
         return string.split(separator)
     return []
 
-def stringfyList(oneList: list):
+def stringfyList(oneList: list) -> str:
     """Stringfies a list
 
     @type oneList: list
@@ -69,12 +75,12 @@ def stringfyList(oneList: list):
     output += oneList[len(oneList)-1]
     return output
 
-def getHumanLength(length: int):
+def getHumanLength(length: int) -> Tuple[Union[int, float], str]:
     """Get the human readable length from the result
 
     @type length: int
     @param length: The length of the response body
-    @returns tuple(int|float, str): The tuple with new length and the readable order
+    @returns Tuple[int|float, str]: The tuple with new length and the readable order
     """
     for order in ["B ", "KB", "MB", "GB"]:
         if length < 1024:
@@ -82,22 +88,22 @@ def getHumanLength(length: int):
         length /= 1024
     return (length, "TB")
 
-def checkRangeList(content: str):
+def checkRangeList(content: str) -> List[Union[int, str]]:
     """Checks if the given content has a range list,
        and make a list of the range specified
     
     @type content: str
     @param content: The string content to check for range
-    @returns list: The list with the compiled content
+    @returns List[int|str]: The list with the compiled content
     """
-    def getNumberRange(left: str, right: str):
+    def getNumberRange(left: str, right: str) -> List[int]:
         """Get the number range list
         
         @type left: str
         @param left: The left string of the division mark
         @type right: str
         @param right: The right string of the division mark
-        @returns list: The list with the range
+        @returns List[int]: The list with the range
         """
         isNumber = True
         i = len(left)
@@ -134,14 +140,14 @@ def checkRangeList(content: str):
                 leftDigit -= 1
         return compiledList
 
-    def getLetterRange(left: str, right: str):
+    def getLetterRange(left: str, right: str) -> List[str]:
         """Get the alphabet range list [a-z] [A-Z] [z-a] [Z-A]
         
         @type left: str
         @param left: The left string of the division mark
         @type right: str
         @param right: The right string of the division mark
-        @returns list: The list with the range
+        @returns List[str]: The list with the range
         """
         leftDigit, leftStr = left[len(left)-1], left[:len(left)-1]
         rightDigit, rightStr = right[0], right[1:]

@@ -20,7 +20,7 @@
 
 from .interfaces.cli import *
 
-def main_cli():
+def main_cli() -> None:
     arguments = CliArguments()
     if arguments.disableColors:
         Colors.disable()

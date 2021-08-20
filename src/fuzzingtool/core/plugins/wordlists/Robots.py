@@ -26,6 +26,8 @@ from ....decorators.plugin_meta import plugin_meta
 from ....exceptions.RequestExceptions import RequestException
 from ....exceptions.MainExceptions import MissingParameter
 
+from typing import List
+
 @plugin_meta
 class Robots(BaseWordlist, Plugin):
     __author__ = ("Vitor Oriel",)
@@ -45,7 +47,7 @@ class Robots(BaseWordlist, Plugin):
         self.url = url
         BaseWordlist.__init__(self)
 
-    def _build(self):
+    def _build(self) -> List[str]:
         requester = Request(
             url=f"{self.url}robots.txt",
             method='GET',
