@@ -525,7 +525,7 @@ class CliController:
                 requestType = 'SubdomainRequest'
             else:
                 requestType = 'Request'
-            requester = HttpFactory.requestCreator(
+            requester = RequestFactory.creator(
                 requestType,
                 url=target['url'],
                 methods=target['methods'],

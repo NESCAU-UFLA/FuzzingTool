@@ -18,6 +18,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from .HttpFactory import HttpFactory
+from .RequestFactory import RequestFactory
 from .PluginFactory import PluginFactory
 from .WordlistFactory import WordlistFactory

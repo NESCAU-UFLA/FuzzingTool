@@ -20,10 +20,10 @@
 
 from abc import ABC, abstractmethod
 
-class BaseHttpFactory(ABC):
+class BaseRequestFactory(ABC):
     @staticmethod
     @abstractmethod
-    def requestCreator(requestType: str, url: str, **kwargs):
+    def creator(requestType: str, url: str, **kwargs):
         """Build the requests based on their types
 
         @type requestType: str
