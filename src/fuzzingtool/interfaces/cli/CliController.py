@@ -613,6 +613,7 @@ class CliController:
 
         def buildDictionary(
             wordlists: List[Tuple[str, str]],
+            isUnique: bool,
             requester: Request = None
         ) -> None:
             """Build the dictionary
@@ -645,6 +646,8 @@ class CliController:
                         self.co.infoBox(f"Wordlist {name} builded")
             if not buildedWordlist:
                 raise Exception("The wordlist is empty")
+            if isUnique:
+                buildedWordlist = set(buildedWordlist)
             dictionary = Dictionary(buildedWordlist)
             self.dictionariesMetadata[lastDictIndex]['sizeof'] = len(buildedWordlist)
             return dictionary
@@ -669,9 +672,11 @@ class CliController:
             raise Exception("The quantity of wordlists is greater than the requesters")
         elif lenWordlists != lenRequesters:
             wordlist = arguments.wordlists[0]
-            self.globalDictionary = buildDictionary(wordlist)
+            self.globalDictionary = buildDictionary(wordlist, arguments.unique)
             self.localDictionary = self.globalDictionary
         else:
             self.dictionaries = Queue()
             for i, wordlist in enumerate(arguments.wordlists):
-                self.dictionaries.put(buildDictionary(wordlist, self.requesters[i]))
+                self.dictionaries.put(buildDictionary(
+                    wordlist, arguments.unique, self.requesters[i]
+                ))

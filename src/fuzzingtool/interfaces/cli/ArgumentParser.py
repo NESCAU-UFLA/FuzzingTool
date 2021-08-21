@@ -222,6 +222,12 @@ class ArgumentParser(argparse.ArgumentParser):
             metavar='WORDLIST',
             required=True,
         )
+        dictionaryOpts.add_argument('--unique',
+            action='store_true',
+            dest='unique',
+            help="Removes duplicated payloads from the final wordlist",
+            default=False,
+        )
         dictionaryOpts.add_argument('-e',
             action='store',
             dest='encoder',

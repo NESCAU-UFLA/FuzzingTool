@@ -76,6 +76,7 @@ class CliArguments:
     def setDictionaryArguments(self) -> None:
         """Set the dictionary arguments"""
         self.wordlists = [[parseOptionWithArgs(w) for w in splitStrToList(wordlist, separator=';')] for wordlist in self.options.wordlist]
+        self.unique = self.options.unique
         self.prefix = splitStrToList(self.options.prefix)
         self.suffix = splitStrToList(self.options.suffix)
         self.uppercase = self.options.upper
