@@ -31,7 +31,7 @@ class WordlistFactory(BaseWordlistFactory):
     def creator(name: str, params: str, requester: Request) -> List[str]:
         try:
             Wordlist = PluginFactory.classCreator(name, 'wordlists')
-            if (not params and
+            if (not params and requester and
                 Wordlist.__params__['metavar'] in ["TARGET_HOST", "TARGET_URL"]):
                 if "TARGET_HOST" in Wordlist.__params__['metavar']:
                     params = getHost(getPureUrl(requester.getUrl()))
