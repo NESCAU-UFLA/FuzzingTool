@@ -68,5 +68,5 @@ def getReports() -> List[str]:
     try:
         _, _, reportFiles = next(walk(f"./fuzzingtool/reports/reports/"))
     except:
-        _, _, reportFiles = next(walk(f"{dirname(dirname(abspath(__file__)))}/reports/"))
+        _, _, reportFiles = next(walk(f"{dirname(dirname(abspath(__file__)))}/reports/reports/"))
     return splitFilenames(reportFiles)
