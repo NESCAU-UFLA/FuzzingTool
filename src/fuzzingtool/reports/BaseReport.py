@@ -27,8 +27,18 @@ from datetime import datetime
 from pathlib import Path
 
 class BaseReport(ABC):
-    """Base Report"""
+    """Base Report
+    
+    Attributes:
+        filename: The report filename
+        file: The file object
+    """
     def __init__(self, filename: str = ''):
+        """Class constructor
+
+        @type filename: str
+        @param filename: The report filename
+        """
         self.__filename = filename
         self._file = None
 
@@ -54,6 +64,12 @@ class BaseReport(ABC):
         return reportFullPath
 
     def write(self, results: List[Result]) -> None:
+        """Write the results in the report file,
+           also a header and footer if the report supports it
+
+        @type results: List[Result]
+        @param results: The results objects list
+        """
         self._header()
         self._results(results)
         self._footer()
