@@ -27,7 +27,7 @@ class SubdomainScanner(BaseScanner):
     __author__ = ("Vitor Oriel",)
 
     @append_args
-    def inspectResult(self, result: Result, *args) -> None:
+    def inspectResult(self, result: Result) -> None:
         pass
 
     def scan(self, result: Result) -> bool:

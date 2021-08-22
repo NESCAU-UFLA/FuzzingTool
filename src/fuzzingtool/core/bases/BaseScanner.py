@@ -25,7 +25,7 @@ from abc import ABC, abstractmethod
 class BaseScanner(ABC):
     """Base scanner"""
     @abstractmethod
-    def inspectResult(self, result: Result, *args) -> None:
+    def inspectResult(self, result: Result) -> None:
         """Inspects the FuzingTool result to add new information if needed
         
         @type result: Result

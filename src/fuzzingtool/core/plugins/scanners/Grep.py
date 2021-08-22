@@ -64,7 +64,7 @@ class Grep(BaseScanner, Plugin):
                 raise BadArgumentFormat(f"invalid regex: {regex}")
 
     @append_args
-    def inspectResult(self, result: Result, *args) -> None:
+    def inspectResult(self, result: Result) -> None:
         result.custom['found'] = None
         result.custom['greped'] = {i: [] for i in range(len(self.__regexers))}
 

@@ -25,7 +25,7 @@ from ....interfaces.cli.CliOutput import Colors, getFormatedResult
 class DataScanner(BaseScanner):
     __author__ = ("Vitor Oriel",)
 
-    def inspectResult(self, result: Result, *args) -> None:
+    def inspectResult(self, result: Result) -> None:
         result.custom['PayloadLength'] = len(result.payload)
 
     def scan(self, result: Result) -> bool:

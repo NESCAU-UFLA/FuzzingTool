@@ -26,7 +26,7 @@ from ....interfaces.cli.CliOutput import Colors, getFormatedResult
 class PathScanner(BaseScanner):
     __author__ = ("Vitor Oriel",)
 
-    def inspectResult(self, result: Result, *args) -> None:
+    def inspectResult(self, result: Result) -> None:
         result.custom['redirected'] = ''
         if result.status > 300 and result.status < 400:
             result.custom['redirected'] = result.getResponse().headers['Location']

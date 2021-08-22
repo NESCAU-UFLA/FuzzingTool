@@ -34,7 +34,7 @@ class Reflected(BaseScanner, Plugin):
     __version__ = "0.1"
 
     @append_args
-    def inspectResult(self, result: Result, *args) -> None:
+    def inspectResult(self, result: Result) -> None:
         result.custom['reflected'] = None
 
     def scan(self, result: Result) -> bool:

@@ -52,7 +52,7 @@ class Find(BaseScanner, Plugin):
             raise BadArgumentFormat("invalid regex")
 
     @append_args
-    def inspectResult(self, result: Result, *args) -> None:
+    def inspectResult(self, result: Result) -> None:
         result.custom['found'] = None
 
     def scan(self, result: Result) -> bool:
