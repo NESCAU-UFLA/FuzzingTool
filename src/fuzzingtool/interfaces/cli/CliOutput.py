@@ -351,8 +351,8 @@ class CliOutput:
             self.printConfig("Target", getHost(getPureUrl(target['url'])))
             self.printConfig("Methods", stringfyList(target['methods']), spaces)
             self.printConfig("HTTP headers", 'custom' if target['header'] else 'default', spaces)
-            if target['data']:
-                self.printConfig("Body data", target['data'], spaces)
+            if target['body']:
+                self.printConfig("Body data", target['body'], spaces)
             self.printConfig("Fuzzing type", target['typeFuzzing'], spaces)
             if not globalDict:
                 thisDict = dictionaries[i]

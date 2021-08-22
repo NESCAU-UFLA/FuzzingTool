@@ -30,13 +30,13 @@ import re
 from typing import List
 
 @plugin_meta
-class CrtSh(BaseWordlist, Plugin):
+class DnsDumpster(BaseWordlist, Plugin):
     __author__ = ("Vitor Oriel",)
     __params__ = {
         'metavar': "TARGET_HOST",
         'type': str,
     }
-    __desc__ = "Build the wordlist based on the content of the site crt.sh"
+    __desc__ = "Build the wordlist based on the content of the site dnsdumpster.com"
     __type__ = "SubdomainFuzzing"
     __version__ = "0.1"
 
@@ -48,27 +48,36 @@ class CrtSh(BaseWordlist, Plugin):
 
     def _build(self) -> List[str]:
         requester = Request(
-            url=f"https://crt.sh/?q={self.host}",
+            url=f"https://dnsdumpster.com/",
             method='GET',
             headers={
-                'Host': "crt.sh",
+                'Host': "dnsdumpster.com",
                 'User-Agent': "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:87.0) Gecko/20100101 Firefox/87.0",
                 'Accept': "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
                 'Accept-Language': "en-US,en;q=0.5",
                 'Accept-Encoding': "gzip, deflate",
                 'Connection': "keep-alive",
-                'Referer': "https://crt.sh/",
+                'Referer': "https://dnsdumpster.com/",
                 'Upgrade-Insecure-Requests': "1",
-                'TE': "Trailers",
             },
+            isSession=True,
         )
         try:
             response, *_ = requester.request()
         except RequestException as e:
             raise Exception(str(e))
-        if 'None found' in response.text:
-            raise Exception(f"No certified domains was found for '{self.host}'")
-        contentList = [element.string for element in bs(response.text, "html.parser")('td')]
+        token = response.cookies['csrftoken']
+        requester.setMethod('POST')
+        requester.setBody(
+            f"csrfmiddlewaretoken={token}&targetip={self.host}&user=free"
+        )
+        try:
+            response, *_ = requester.request()
+        except RequestException as e:
+            raise Exception(str(e))
+        if 'There was an error getting results' in response.text:
+            raise Exception(f"No domains was found for '{self.host}'")
+        contentList = [element.text for element in bs(response.text, "html.parser").find_all('td', class_='col-md-4')]
         regex = r"([a-zA-Z0-9]+\.)*[a-zA-Z0-9]+"
         for splited in self.host.split('.'):
             regex += r"\."+splited

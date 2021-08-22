@@ -57,7 +57,7 @@ class Robots(BaseWordlist, Plugin):
             },
         )
         try:
-            response, *_ = requester.request("")
+            response, *_ = requester.request()
         except RequestException as e:
             raise Exception(str(e))
         paths = []

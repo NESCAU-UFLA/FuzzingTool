@@ -530,7 +530,7 @@ class CliController:
                 requestType,
                 url=target['url'],
                 methods=target['methods'],
-                data=target['data'],
+                body=target['body'],
                 headers=target['header'],
                 followRedirects=arguments.followRedirects,
                 proxy=arguments.proxy,

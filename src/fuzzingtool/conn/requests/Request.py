@@ -40,7 +40,7 @@ class Request:
     Attributes:
         url: The target URL
         method: The request method
-        data: The parameter data of the request
+        body: The body data of the request
         headers: The HTTP header
         proxy: The proxy used in the request
         proxies: The list with valid proxies gived by a file
@@ -53,13 +53,14 @@ class Request:
         url: str,
         method: str = 'GET',
         methods: List[str] = [],
-        data: str = '',
+        body: str = '',
         headers: Dict[str, str] = {},
         followRedirects: bool = True,
         proxy: str = '',
         proxies: List[str] = [],
         timeout: int = 0,
         cookie: str = '',
+        isSession: bool = False,
     ):
         """Class constructor
 
@@ -69,8 +70,8 @@ class Request:
         @param method: The request http verb (method)
         @type methods: list
         @param methods: The request methods list
-        @type data: dict
-        @param data: The parameters of the request, with default values if are given
+        @type body: str
+        @param body: The body data of the request
         @type headers: dict
         @param headers: The HTTP header of the request
         @type followRedirects: bool
@@ -83,17 +84,19 @@ class Request:
         @param timeout: The request timeout
         @type cookie: str
         @param cookie: The cookie HTTP header value
+        @type isSession: bool
+        @param isSession: The flag to say if the requests will be made as session request
         """
         self._url = self.__setupUrl(url)
         self.__method = self.__setupMethod(method)
-        self.__data = self.__setupData(data)
+        self.__data = self.__setupData(body)
         self.__header = self.__setupHeader(headers)
         self.__proxy = self.__setupProxy(proxy) if proxy else {}
         self.__proxies = [self.__setupProxy(proxy) for proxy in proxies]
         self.__followRedirects = followRedirects
         self.__fuzzingType = self._setFuzzingType()
         self.__timeout = None if not self.isUrlDiscovery() else 10 if not timeout else timeout
-        if self.isUrlDiscovery():
+        if isSession or self.isPathFuzzing():
             self.__session = requests.Session()
             self.__request = self.__sessionRequest
         else:
@@ -160,10 +163,18 @@ class Request:
         """
         self.__method = self.__setupMethod(method)
 
+    def setBody(self, body: str) -> None:
+        """The body data setter
+
+        @type body: str
+        @param body: The body data of the request
+        """
+        self.__buildDataDict(self.__data, 'BODY', body)
+
     def setHeaderContent(self,
         key: str,
         value: str,
-        header: Dict[str, str] = {}
+        header: dict = {}
     ) -> None:
         """The header content setter
 
@@ -171,6 +182,8 @@ class Request:
         @param key: The HTTP header key
         @type value: str
         @param value: The HTTP header value
+        @type header: dict
+        @param header: The header to set the content
         """
         if not header:
             header = self.__header
@@ -184,7 +197,7 @@ class Request:
         """Test the connection with the target, and raise an exception if couldn't connect"""
         try:
             url = getPureUrl(self._url['content'])
-            response = requests.get(
+            requests.get(
                 url,
                 proxies=self.__proxy,
                 headers=requestParser.getHeader(self.__header),
@@ -216,7 +229,7 @@ class Request:
             return True
         return False
 
-    def request(self, payload: str) -> Tuple[requests.Response, float]:
+    def request(self, payload: str = '') -> Tuple[requests.Response, float]:
         """Make a request and get the response
 
         @type payload: str
@@ -375,54 +388,53 @@ class Request:
             headerValue.append(value[lastIndex:len(value)])
         return headerValue
 
-    def __setupData(self, data: str) -> dict:
+    def __setupData(self, body: str) -> dict:
         """Split all the request parameters into a list of arguments used in the request
 
-        @type data: str
-        @param data: The body data of the request
+        @type body: str
+        @param body: The body data of the request
         @returns dict: The entries data of the request
         """
-        rawData = {
-            'PARAM': '',
-            'BODY': '',
-        }
         dataDict = {
             'PARAM': {},
             'BODY': {},
         }
-        keys = []
         if self.__param:
-            rawData['PARAM'] = self.__param
-            keys.append('PARAM')
+            self.__buildDataDict(dataDict, 'PARAM', self.__param)
         del self.__param
-        if data:
-            rawData['BODY'] = data
-            keys.append('BODY')
-        for key in keys:
-            if '&' in rawData[key]:
-                rawData[key] = rawData[key].split('&')
-                for arg in rawData[key]:
-                    self.__buildDataDict(dataDict[key], arg)
-            else:
-                self.__buildDataDict(dataDict[key], rawData[key])
+        if body:
+            self.__buildDataDict(dataDict, 'BODY', body)
         return dataDict
 
-    def __buildDataDict(self, dataDict: dict, key: str) -> None:
-        """Set the default parameter values if are given
+    def __buildDataDict(self, dataDict: dict, where: str, content: str) -> None:
+        """Build the content into the data dict
 
-        @type data: dict
-        @param data: The entries data of the request
-        @type key: str
-        @param key: The parameter key of the request
+        @type dataDict: dict
+        @param dataDict: The final data dict
+        @type where: str
+        @param where: Is on POST or GET?
+        @type content: str
+        @param content: The content of the data
         """
-        if '=' in key:
-            key, value = key.split('=')
-            if not FUZZING_MARK in value:
-                dataDict[key] = value
+        def buildContent(dataDict: dict, content: str) -> None:
+            """Build the inner content (for each splited &) into the data dict
+
+            @type dataDict: dict
+            @param dataDict: The final data dict
+            @type content: str
+            @param content: The content of the data
+            """
+            if '=' in content:
+                key, value = content.split('=')
+                if not FUZZING_MARK in value:
+                    dataDict[key] = value
+                else:
+                    dataDict[key] = ''
             else:
-                dataDict[key] = ''
-        else:
-            dataDict[key] = ''
+                dataDict[content] = ''
+        
+        for content in content.split('&'):
+            buildContent(dataDict[where], content)
 
     def __setupProxy(self, proxy: str) -> Dict[str, str]:
         """Setup the proxy

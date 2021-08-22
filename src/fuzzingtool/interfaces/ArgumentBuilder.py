@@ -30,7 +30,7 @@ class ArgumentBuilder:
     def buildTargetsFromArgs(
         urls: List[str],
         method: Union[str, List[str]],
-        data: str
+        body: str
     ) -> List[dict]:
         """Build the targets from arguments
 
@@ -38,8 +38,8 @@ class ArgumentBuilder:
         @param urls: The target URLs
         @type method: str | List[str]
         @param method: The request methods
-        @type data: str
-        @param data: The raw request body data
+        @type body: str
+        @param body: The raw request body data
         @returns dict: The targets data builded into a dictionary
         """
         if not type(method) is list:
@@ -49,14 +49,14 @@ class ArgumentBuilder:
         targets = []
         for url in urls:
             if not methods:
-                if data and not ('?' in url or FUZZING_MARK in url):
+                if body and not ('?' in url or FUZZING_MARK in url):
                     methods = ['POST']
                 else:
                     methods = ['GET']
             targets.append({
                 'url': url,
                 'methods': methods,
-                'data': data,
+                'body': body,
                 'header': {},
             })
         return targets
@@ -103,13 +103,13 @@ class ArgumentBuilder:
             headers = buildHeaderFromRawHttp(headerList)
             url = f"{scheme}://{headers['Host']}{path}"
             if len(headerList) > 0:
-                data = headerList.popleft()
+                body = headerList.popleft()
             else:
-                data = ''
+                body = ''
             targets.append({
                 'url': url,
                 'methods': methods,
-                'data': data,
+                'body': body,
                 'header': headers,
             })
         return targets
