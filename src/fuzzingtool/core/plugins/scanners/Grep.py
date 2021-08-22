@@ -21,6 +21,7 @@
 from ..Plugin import Plugin
 from ...bases.BaseScanner import BaseScanner
 from ...Result import Result
+from ....utils.utils import stringfyList
 from ....interfaces.cli.CliOutput import Colors, getFormatedResult
 from ....decorators.plugin_meta import plugin_meta
 from ....decorators.append_args import append_args
@@ -42,7 +43,7 @@ class Grep(BaseScanner, Plugin):
         'cli_list_separator': ';',
     }
     __desc__ = ("Grep content based on a regex match into the response body. "
-                f"You can use prepared regexes from this list: {list(PREPARED_REGEXES.keys())}")
+                f"You can use these prepared regexes: {stringfyList(list(PREPARED_REGEXES.keys()))}")
     __type__ = ""
     __version__ = "0.2"
 
