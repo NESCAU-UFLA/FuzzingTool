@@ -19,7 +19,7 @@
 # SOFTWARE.
 
 from .BaseReport import BaseReport
-from . import reports
+from .reports import *
 from ..utils.utils import stringfyList
 from ..utils.file_utils import getReports
 

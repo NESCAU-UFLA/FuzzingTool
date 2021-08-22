@@ -21,8 +21,10 @@
 from .CliOutput import CliOutput as CO
 from ... import version
 from ...utils.consts import FUZZING_MARK
+from ...utils.utils import stringfyList
 from ...utils.file_utils import getPluginNamesFromCategory
 from ...factories.PluginFactory import PluginFactory
+from ...reports.Report import Report
 from ...exceptions.MainExceptions import BadArgumentFormat
 
 from sys import argv
@@ -353,7 +355,7 @@ class ArgumentParser(argparse.ArgumentParser):
         moreOpts.add_argument('-o',
             action='store',
             dest='reportName',
-            help="Define the report name and/or format (accept txt, csv and json)",
+            help=f"Define the report name and/or format. Available reports: {stringfyList(list(Report.getAvailableReports().keys()))}",
             metavar='REPORT',
             default='txt'
         )
