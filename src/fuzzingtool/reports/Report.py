@@ -32,7 +32,7 @@ class Report:
     def getAvailableReports() -> Dict[str, Type[BaseReport]]:
         """Gets the available report formats
 
-        @returns Dict[str, Type[BaseReport]]: The base report class
+        @returns Dict[str, Type[BaseReport]]: The dict that contains the available reports
         """
         def classCreator(name: str) -> Type[BaseReport]:
             """Creates the class type
