@@ -62,10 +62,10 @@ class ArgumentParser(argparse.ArgumentParser):
     def error(self, message: str) -> None:
         raise BadArgumentFormat(message)
     
-    def getOptions(self):
+    def getOptions(self) -> argparse.Namespace:
         """Get the FuzzingTool options
         
-        @returns Namespace(...args): The parsed arguments
+        @returns argparse.Namespace: The Namespace with the arguments
         """
         return self.parse_args()
     
