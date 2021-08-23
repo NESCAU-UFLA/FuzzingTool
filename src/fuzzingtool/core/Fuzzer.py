@@ -48,6 +48,7 @@ class Fuzzer:
         scanner: BaseScanner,
         delay: float,
         numberOfThreads: int,
+        startIndex: int,
         resultCallback: Callable[[dict, bool], None],
         exceptionCallbacks: List[Callable[[str, str], None]],
     ):
@@ -65,6 +66,8 @@ class Fuzzer:
         @param delay: The delay between each request
         @type numberOfThreads: int
         @param numberOfThreads: The number of threads used in the fuzzing tests
+        @type startIndex: int
+        @param startIndex: The index value to start
         @type resultCallback: Callable
         @param resultCallback: The callback function for the results
         @type exceptionCallbacks: List[Callable]
@@ -76,7 +79,7 @@ class Fuzzer:
         self.__scanner = scanner
         self.__delay = delay
         self.__running = True
-        self.index = 1
+        self.index = startIndex
         self.resultsCallback = resultCallback
         self.exceptionCallbacks = exceptionCallbacks
         self.setupThreads(numberOfThreads)

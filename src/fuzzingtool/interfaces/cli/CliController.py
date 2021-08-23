@@ -242,13 +242,15 @@ class CliController:
         self.startedTime = time.time()
         for i, requester in enumerate(self.requesters):
             self.co.infoBox(f"Starting {self.targetsList[i]['typeFuzzing']} on {getHost(getPureUrl(requester.getUrl()))}")
+            startIndex = 1
             try:
                 self.prepareTarget(requester)
                 for method in self.requester.methods:
                     self.requester.setMethod(method)
-                    self.prepareFuzzer()
-                    if not self.isVerboseMode():
-                        CliOutput.print("")
+                    self.prepareFuzzer(startIndex)
+                    startIndex = self.fuzzer.index
+                if not self.isVerboseMode():
+                    CliOutput.print("")
             except SkipTargetException as e:
                 if self.fuzzer and self.fuzzer.isRunning():
                     self.co.warningBox("Skip target detected, stopping threads ...")
@@ -293,11 +295,14 @@ class CliController:
                 self.startedTime += (time.time() - before)
         if not self.globalDictionary:
             self.localDictionary = self.dictionaries.get()
-        self.totalRequests = len(self.localDictionary)
+        self.totalRequests = len(self.localDictionary)*len(self.requester.methods)
 
-    def prepareFuzzer(self) -> None:
+    def prepareFuzzer(self, startIndex: int = 1) -> None:
         """Prepare the fuzzer for the fuzzing tests.
            Refill the dictionary with the wordlist content if a global dictionary was given
+        
+        @type startIndex: int
+        @param startIndex: The index value to start the Fuzzer index
         """
         self.localDictionary.reload()
         self.fuzzer = Fuzzer(
@@ -307,6 +312,7 @@ class CliController:
             scanner=self.localScanner,
             delay=self.delay,
             numberOfThreads=self.numberOfThreads,
+            startIndex=startIndex,
             resultCallback=self._resultCallback,
             exceptionCallbacks=[self._invalidHostnameCallback, self._requestExceptionCallback],
         )
