@@ -116,7 +116,7 @@ class RequestParser:
             value = ajustedHeader[key]
             for i in range(len(value)-1):
                 result += value[i] + self.__payload
-            result += value[len(value)-1]
+            result += value[-1]
             ajustedHeader[key] = result.encode('utf-8')
         return ajustedHeader
 

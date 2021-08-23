@@ -28,7 +28,7 @@ class ListWordlist(BaseWordlist):
     __author__ = ("Vitor Oriel",)
 
     def __init__(self, payloadList: str):
-        payloadList = payloadList[1:len(payloadList)-1]
+        payloadList = payloadList[1:-1]
         if not payloadList:
             raise MissingParameter("list of payloads")
         self.payloadList = payloadList

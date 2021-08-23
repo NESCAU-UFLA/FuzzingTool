@@ -72,7 +72,7 @@ def stringfyList(oneList: list) -> str:
     output = ''
     for i in range(len(oneList)-1):
         output += f"{oneList[i]},"
-    output += oneList[len(oneList)-1]
+    output += oneList[-1]
     return output
 
 def getHumanLength(length: int) -> Tuple[Union[int, float], str]:
@@ -149,7 +149,7 @@ def checkRangeList(content: str) -> List[Union[int, str]]:
         @param right: The right string of the division mark
         @returns List[str]: The list with the range
         """
-        leftDigit, leftStr = left[len(left)-1], left[:len(left)-1]
+        leftDigit, leftStr = left[-1], left[:-1]
         rightDigit, rightStr = right[0], right[1:]
         compiledList = []
         if ord(leftDigit) <= ord(rightDigit):
@@ -176,7 +176,7 @@ def checkRangeList(content: str) -> List[Union[int, str]]:
         left, right = content.split('-', 1)
         try:
             # Checks if the left and right digits from the mark are integers
-            int(left[len(left)-1])
+            int(left[-1])
             int(right[0])
             return getNumberRange(left, right)
         except:
