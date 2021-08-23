@@ -38,7 +38,6 @@ class Fuzzer:
         matcher: A matcher object, used to match the results
         scanner: A scanner object, used to validate the results
         delay: The delay between each test
-        numberOfThreads: The number of threads used in the application
         running: A flag to say if the application is running or not
         index: The actual request index
     """
@@ -76,27 +75,31 @@ class Fuzzer:
         self.__matcher = matcher
         self.__scanner = scanner
         self.__delay = delay
-        self.__numberOfThreads = numberOfThreads
         self.__running = True
         self.index = 1
         self.resultsCallback = resultCallback
         self.exceptionCallbacks = exceptionCallbacks
-        self.setup()
+        self.setupThreads(numberOfThreads)
 
-    def setup(self) -> None:
+    def setupThreads(self, numberOfThreads: int) -> None:
         """Handle with threads setup
         
+        @type numberOfThreads: int
+        @param numberOfThreads: The number of threads used in the fuzzing tests
+
         Attributes:
             threads: The list with the threads used in the application
             runningThreads: The running threads count
+            pausedThreads: The paused threads count
             joinTimeout: The join timeout for the threads
             player: The player event object handler - an internal flag manager for the threads
         """
         self.__threads = []
-        for _ in range(self.__numberOfThreads):
+        for _ in range(numberOfThreads):
             self.__threads.append(Thread(target=self.run, daemon=True))
-        self.__runningThreads = self.__numberOfThreads
-        self.__joinTimeout = 0.001*float(self.__numberOfThreads)
+        self.__runningThreads = numberOfThreads
+        self.__pausedThreads = 0
+        self.__joinTimeout = 0.001*float(numberOfThreads)
         self.__player = Event()
         self.__player.clear() # Not necessary, but force the blocking of the threads
 
@@ -136,7 +139,7 @@ class Fuzzer:
                     self.index += 1
                     time.sleep(self.__delay)
             if self.isPaused():
-                self.__runningThreads -= 1
+                self.__pausedThreads += 1
                 self.__player.wait()
         self.__runningThreads -= 1
 
@@ -160,16 +163,19 @@ class Fuzzer:
     def pause(self) -> None:
         """Pause the fuzzer application"""
         self.__player.clear()
-        while self.__runningThreads > 1:
-            pass
-        time.sleep(0.1)
 
     def stop(self) -> None:
         """Stop the fuzzer application"""
         self.__running = False
         self.pause()
+        self.waitUntilPause()
     
     def resume(self) -> None:
         """Resume the fuzzer application"""
-        self.__runningThreads = self.__numberOfThreads
+        self.__pausedThreads = 0
         self.__player.set()
+    
+    def waitUntilPause(self) -> None:
+        while self.__pausedThreads < (self.__runningThreads-1):
+            pass
+        time.sleep(0.1)

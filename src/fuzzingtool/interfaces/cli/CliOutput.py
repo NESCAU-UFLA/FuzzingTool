@@ -221,7 +221,9 @@ class CliOutput:
         @type msg: str
         @param msg: The message
         """
-        print(f'{self.__getTime()}{self.__getWarning(msg)}')
+        with self.__lock:
+            sys.stdout.flush()
+            print(f'{self.__breakLine}{self.__getTime()}{self.__getWarning(msg)}')
 
     def abortBox(self, msg: str) -> None:
         """Print the message with abort label and a message

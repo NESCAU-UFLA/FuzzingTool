@@ -88,7 +88,6 @@ class CliController:
         """
         self.co = CliOutput() # Abbreviation to cli output
         self.verbose = arguments.verbose
-        self.co.setVerbosityMode(self.isVerboseMode())
         if arguments.simpleOutput:
             self.co.setSimpleOutputMode()
         else:
@@ -126,6 +125,7 @@ class CliController:
             exit(0)
         except Exception as e:
             self.co.errorBox(str(e))
+        self.co.setVerbosityMode(self.isVerboseMode())
         try:
             self.start()
         except KeyboardInterrupt:
@@ -247,12 +247,10 @@ class CliController:
                 for method in self.requester.methods:
                     self.requester.setMethod(method)
                     self.prepareFuzzer()
-                if not self.isVerboseMode():
-                    CliOutput.print("")
-            except SkipTargetException as e:
-                if self.fuzzer and self.fuzzer.isRunning():
                     if not self.isVerboseMode():
                         CliOutput.print("")
+            except SkipTargetException as e:
+                if self.fuzzer and self.fuzzer.isRunning():
                     self.co.warningBox("Skip target detected, stopping threads ...")
                     self.fuzzer.stop()
                 self.co.abortBox(f"{str(e)}. Target skipped")
@@ -295,7 +293,7 @@ class CliController:
                 self.startedTime += (time.time() - before)
         if not self.globalDictionary:
             self.localDictionary = self.dictionaries.get()
-        self.totalRequests = len(self.localDictionary)*len(self.requester.methods)
+        self.totalRequests = len(self.localDictionary)
 
     def prepareFuzzer(self) -> None:
         """Prepare the fuzzer for the fuzzing tests.
@@ -426,11 +424,11 @@ class CliController:
         @type status: int
         @param status: The identified status code into the blacklist
         """
+        print(self.fuzzer.isPaused())
         if not self.fuzzer.isPaused():
-            if not self.isVerboseMode():
-                CliOutput.print("")
-            self.co.warningBox(f"Status code {str(status)} detected. Pausing threads ...")
             self.fuzzer.pause()
+            self.co.warningBox(f"Status code {str(status)} detected. Pausing threads ...")
+            self.fuzzer.waitUntilPause()
             if not self.isVerboseMode():
                 CliOutput.print("")
             self.co.infoBox(f"Waiting for {self.blacklistStatus.actionParam} seconds ...")
