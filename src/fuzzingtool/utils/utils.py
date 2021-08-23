@@ -53,8 +53,8 @@ def splitStrToList(
             final = []
             buffer = ''
             for substr in string.split(separator):
-                if ignores in substr:
-                    buffer += substr[:substr.index(ignores)]+separator
+                if substr[-1] == ignores:
+                    buffer += substr[:-1]+separator
                 else:
                     final.extend([buffer+substr])
                     buffer = ''
