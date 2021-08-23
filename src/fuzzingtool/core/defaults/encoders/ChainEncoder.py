@@ -21,6 +21,8 @@
 from ...bases.BaseEncoder import BaseEncoder
 from ...plugins.encoders import *
 
+from typing import List
+
 class ChainEncoder(BaseEncoder):
     """Class that handle with the chain encoders
     
@@ -35,10 +37,10 @@ class ChainEncoder(BaseEncoder):
         """
         self.__encoders = encoders
 
-    def getEncoders(self):
+    def getEncoders(self) -> List[BaseEncoder]:
         """The encoders list getter
 
-        @return list: The encoders list
+        @return List[BaseEncoder]: The encoders list
         """
         return self.__encoders
 
