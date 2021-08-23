@@ -29,10 +29,10 @@ class ChainEncoder(BaseEncoder):
     Attributes:
         encoders: The encoders list to be chained
     """
-    def __init__(self, encoders: list):
+    def __init__(self, encoders: List[BaseEncoder]):
         """Class constructor
 
-        @type encoders: list
+        @type encoders: List[BaseEncoder]
         @param encoders: The encoders list to be chained
         """
         self.__encoders = encoders
