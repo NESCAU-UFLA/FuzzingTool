@@ -62,6 +62,7 @@ class CliController:
         allResults: The results dictionary for each host
         lock: A thread locker to prevent overwrites on logfiles
         blacklistStatus: The blacklist status object
+        logger: The object to handle with the program log
     """
     def __init__(self):
         self.requesters = []
@@ -647,10 +648,14 @@ class CliController:
                         self.co.infoBox(f"Wordlist {name} builded")
             if not buildedWordlist:
                 raise Exception("The wordlist is empty")
+            atualLength = len(buildedWordlist)
             if isUnique:
+                previousLength = atualLength
                 buildedWordlist = set(buildedWordlist)
+                atualLength = len(buildedWordlist)
+                self.dictionariesMetadata[lastDictIndex]['removed'] = previousLength-atualLength
             dictionary = Dictionary(buildedWordlist)
-            self.dictionariesMetadata[lastDictIndex]['sizeof'] = len(buildedWordlist)
+            self.dictionariesMetadata[lastDictIndex]['len'] = atualLength
             return dictionary
         
         Payloader.setPrefix(arguments.prefix)

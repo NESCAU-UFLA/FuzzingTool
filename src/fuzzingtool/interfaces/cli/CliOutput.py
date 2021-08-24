@@ -358,10 +358,16 @@ class CliOutput:
             self.printConfig("Fuzzing type", target['typeFuzzing'], spaces)
             if not globalDict:
                 thisDict = dictionaries[i]
-                self.printConfig("Dictionary size", thisDict['sizeof'], spaces)
+                dictSize = thisDict['len']
+                if 'removed' in thisDict.keys() and thisDict['removed']:
+                    dictSize = f"{thisDict['len']} (removed {thisDict['removed']} duplicated payloads)"
+                self.printConfig("Dictionary size", dictSize, spaces)
                 self.printConfig("Wordlists", stringfyList(thisDict['wordlists']), spaces)
         if globalDict:
-            self.printConfig("Dictionary size", thisDict['sizeof'])
+            dictSize = thisDict['len']
+            if 'removed' in thisDict.keys() and thisDict['removed']:
+                dictSize = f"{thisDict['len']} (removed {thisDict['removed']} duplicated payloads)"
+            self.printConfig("Dictionary size", dictSize)
             self.printConfig("Wordlists", stringfyList(thisDict['wordlists']))
         if prefix:
             self.printConfig("Prefix", stringfyList(prefix))
