@@ -106,6 +106,7 @@ class CliController:
                     suffix=arguments.suffix,
                     case='lowercase' if arguments.lowercase else 'uppercase' if arguments.uppercase else 'capitalize' if arguments.capitalize else None,
                     encoder=arguments.strEncoder,
+                    encodeOnly=arguments.encodeOnly,
                     match={
                         'status': arguments.matchStatus,
                         'length': arguments.matchLength,
@@ -241,8 +242,8 @@ class CliController:
            Each target is fuzzed based on their own methods list
         """
         self.startedTime = time.time()
-        for i, requester in enumerate(self.requesters):
-            self.co.infoBox(f"Starting {self.targetsList[i]['typeFuzzing']} on {getHost(getPureUrl(requester.getUrl()))}")
+        for requester in self.requesters:
+            self.co.infoBox(f"Starting fuzzing on {getHost(getPureUrl(requester.getUrl()))}")
             startIndex = 1
             try:
                 self.prepareTarget(requester)

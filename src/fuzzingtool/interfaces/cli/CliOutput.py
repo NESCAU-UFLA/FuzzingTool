@@ -303,6 +303,7 @@ class CliOutput:
         suffix: list,
         case: str,
         encoder: str,
+        encodeOnly: str,
         match: dict,
         scanner: str,
         blacklistStatus: dict,
@@ -328,6 +329,8 @@ class CliOutput:
         @param case: The payload case
         @type encoder: str
         @param encoder: The encoders string that caontains the encoder name and parameters
+        @type encodeOnly: str
+        @param encodeOnly: The encode only regex
         @type match: dict
         @param match: The matcher options on a dictionary
         @type scanner: str
@@ -376,7 +379,10 @@ class CliOutput:
         if case:
             self.printConfig("Payload case", case)
         if encoder:
-            self.printConfig("Encoder", encoder)
+            encodeMsg = encoder
+            if encodeOnly:
+                encodeMsg = f"{encoder} (encode with regex {encodeOnly})"
+            self.printConfig("Encoder", encodeMsg)
         for key, value in match.items():
             if value:
                 self.printConfig(f"Match {key}", value)
