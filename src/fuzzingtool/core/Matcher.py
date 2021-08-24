@@ -250,9 +250,9 @@ class Matcher:
         @returns bool: A match flag
         """
         if self._matchStatus(result.status):
-            if self._comparator['Length']:
+            if not self._comparator['Length'] is None:
                 return self._matchLength(int(result.length))
-            if self._comparator['Time']:
+            if not self._comparator['Time'] is None:
                 return self._matchTime(result.RTT)
             return True
         return False
