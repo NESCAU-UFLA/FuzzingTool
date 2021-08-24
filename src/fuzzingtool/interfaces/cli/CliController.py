@@ -403,17 +403,17 @@ class CliController:
             requesterIndex = 0
             for key, value in self.allResults.items():
                 if value:
-                    self.co.infoBox(f"Found {len(value)} matched results on target {key}")
                     if self.isVerboseMode():
+                        self.co.infoBox(f"Found {len(value)} matched results on target {key}")
                         if not self.globalScanner:
                             self.requester = self.requesters[requesterIndex]
                             self.getDefaultScanner()
                         for result in value:
                             self.co.printResult(result, True)
+                        self.co.infoBox(f'Saving results for {key} ...')
                     reportPath = self.report.open(key)
-                    self.co.infoBox(f'Saving results for {key} on \'{reportPath}\' ...')
                     self.report.write(value)
-                    self.co.infoBox('Results saved')
+                    self.co.infoBox(f"Results saved on {reportPath}")
                 else:
                     self.co.infoBox(f"No matched results was found on target {key}")
                 requesterIndex += 1
@@ -642,7 +642,8 @@ class CliController:
                 try:
                     buildedWordlist.extend(WordlistFactory.creator(name, params, requester))
                 except Exception as e:
-                    self.co.warningBox(str(e))
+                    if self.isVerboseMode():
+                        self.co.warningBox(str(e))
                 else:
                     if self.verbose[1]:
                         self.co.infoBox(f"Wordlist {name} builded")
