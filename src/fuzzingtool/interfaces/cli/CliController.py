@@ -243,7 +243,7 @@ class CliController:
         """
         self.startedTime = time.time()
         for requester in self.requesters:
-            self.co.infoBox(f"Starting fuzzing on {getHost(getPureUrl(requester.getUrl()))}")
+            self.co.infoBox(f"Start fuzzing on {getHost(getPureUrl(requester.getUrl()))}")
             startIndex = 1
             try:
                 self.prepareTarget(requester)
