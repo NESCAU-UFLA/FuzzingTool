@@ -312,6 +312,7 @@ class CliController:
             scanner=self.localScanner,
             delay=self.delay,
             numberOfThreads=self.numberOfThreads,
+            blacklistStatus=self.blacklistStatus,
             startIndex=startIndex,
             resultCallback=self._resultCallback,
             exceptionCallbacks=[self._invalidHostnameCallback, self._requestExceptionCallback],
@@ -364,7 +365,7 @@ class CliController:
         self.co.infoBox(f"Making first request with '{payload}' as payload ...")
         try:
             # Make the first request to get some info about the target
-            response, RTT, *_ = self.requester.request(payload)
+            response, RTT = self.requester.request(payload)
         except RequestException as e:
             raise SkipTargetException(f"{str(e)}")
         firstResult = Result(response, RTT)
@@ -430,7 +431,6 @@ class CliController:
         @type status: int
         @param status: The identified status code into the blacklist
         """
-        print(self.fuzzer.isPaused())
         if not self.fuzzer.isPaused():
             self.fuzzer.pause()
             self.co.warningBox(f"Status code {str(status)} detected. Pausing threads ...")
@@ -450,20 +450,17 @@ class CliController:
         @type validate: bool
         @param validate: A validator flag for the result, gived by the scanner
         """
-        if self.blacklistStatus and result.status in self.blacklistStatus.codes:
-            self.blacklistStatus.actionCallback(result.status)
+        if self.verbose[0]:
+            if validate:
+                self.results.append(result)
+            self.co.printResult(result, validate)
         else:
-            if self.verbose[0]:
-                if validate:
-                    self.results.append(result)
+            if validate:
+                self.results.append(result)
                 self.co.printResult(result, validate)
-            else:
-                if validate:
-                    self.results.append(result)
-                    self.co.printResult(result, validate)
-                self.co.progressStatus(
-                    result.index, self.totalRequests, result.payload
-                )
+            self.co.progressStatus(
+                result.index, self.totalRequests, result.payload
+            )
     
     def _requestExceptionCallback(self,
         e: RequestException,

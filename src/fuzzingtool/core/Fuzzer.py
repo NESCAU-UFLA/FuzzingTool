@@ -18,11 +18,13 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+from .BlacklistStatus import BlacklistStatus
 from .Dictionary import Dictionary
 from .Matcher import Matcher
 from .Result import Result
 from .bases.BaseScanner import BaseScanner
 from ..conn.requests import *
+from ..exceptions.MainExceptions import SkipTargetException
 from ..exceptions.RequestExceptions import RequestException, InvalidHostname
 
 from threading import Thread, Event
@@ -39,7 +41,8 @@ class Fuzzer:
         scanner: A scanner object, used to validate the results
         delay: The delay between each test
         running: A flag to say if the application is running or not
-        index: The actual request index
+        blacklistStatus: The blacklist status object to handle with the blacklisted status
+        startIndex: The actual request index
     """
     def __init__(self,
         requester: Request,
@@ -48,6 +51,7 @@ class Fuzzer:
         scanner: BaseScanner,
         delay: float,
         numberOfThreads: int,
+        blacklistStatus: BlacklistStatus,
         startIndex: int,
         resultCallback: Callable[[dict, bool], None],
         exceptionCallbacks: List[Callable[[str, str], None]],
@@ -66,6 +70,8 @@ class Fuzzer:
         @param delay: The delay between each request
         @type numberOfThreads: int
         @param numberOfThreads: The number of threads used in the fuzzing tests
+        @type blacklistStatus: BlacklistStatus
+        @param blacklistStatus: The blacklist status object to handle with the blacklisted status
         @type startIndex: int
         @param startIndex: The index value to start
         @type resultCallback: Callable
@@ -79,6 +85,7 @@ class Fuzzer:
         self.__scanner = scanner
         self.__delay = delay
         self.__running = True
+        self.__blacklistStatus = blacklistStatus
         self.index = startIndex
         self.resultsCallback = resultCallback
         self.exceptionCallbacks = exceptionCallbacks
@@ -132,6 +139,9 @@ class Fuzzer:
                 except RequestException as e:
                     self.exceptionCallbacks[1](e, payload)
                 else:
+                    if (self.__blacklistStatus and
+                        response.status_code in self.__blacklistStatus.codes):
+                        self.__blacklistStatus.actionCallback(response.status_code)
                     result = Result(response, RTT, self.index, payload)
                     self.__scanner.inspectResult(result, *args)
                     self.resultsCallback(
