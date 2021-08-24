@@ -289,14 +289,12 @@ class ArgumentParser(argparse.ArgumentParser):
             dest='matchLength',
             help="Match responses based on their length (in bytes)",
             metavar='SIZE',
-            type=int,
         )
         matchOpts.add_argument('-Mt',
             action='store',
             dest='matchTime',
             help="Match responses based on their elapsed time (in seconds)",
             metavar='TIME',
-            type=float,
         )
         matchOpts.add_argument('--scanner',
             action='store',

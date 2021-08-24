@@ -277,7 +277,8 @@ class CliController:
         self.skipTarget = None
         self.localMatcher = Matcher(
             allowedStatus=self.globalMatcher.getAllowedStatus(),
-            comparator=self.globalMatcher.getComparator()
+            comparator=self.globalMatcher.getComparator(),
+            matchFunctions=self.globalMatcher.getMatchFunctions()
         )
         if (self.requester.isUrlDiscovery() and
             self.globalMatcher.allowedStatusIsDefault()):
@@ -369,28 +370,20 @@ class CliController:
             response, RTT = self.requester.request(payload)
         except RequestException as e:
             raise SkipTargetException(f"{str(e)}")
-        firstResult = Result(response, RTT)
-        self.co.printResult(firstResult, False)
+        resultToComparator = Result(response, RTT)
+        self.co.printResult(resultToComparator, False)
         length = None
-        defaultLength = int(firstResult.length)+300
+        defaultLength = int(resultToComparator.length)+300
         if self.co.askYesNo('info', "Do you want to exclude responses based on custom length?"):
-            length = self.co.askData(f"Insert the length (default {defaultLength})")
+            length = self.co.askData(f"Insert the length (in bytes, default >{defaultLength})")
             if not length:
                 length = defaultLength
-            try:
-                length = int(length)
-            except ValueError:
-                self.co.errorBox(f"The length ({length}) must be an integer")
         time = None
-        defaultTime = firstResult.RTT+5.0
+        defaultTime = resultToComparator.RTT+5.0
         if self.co.askYesNo('info', "Do you want to exclude responses based on custom time?"):
-            time = self.co.askData(f"Insert the time (in seconds, default {defaultTime} seconds)")
+            time = self.co.askData(f"Insert the time (in seconds, default >{defaultTime} seconds)")
             if not time:
                 time = defaultTime
-            try:
-                time = float(time)
-            except ValueError:
-                self.co.errorBox(f"The time ({time}) must be a number")
         return Matcher.buildComparator(length, time)
 
     def showFooter(self) -> None:
