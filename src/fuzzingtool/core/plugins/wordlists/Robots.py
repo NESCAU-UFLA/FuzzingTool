@@ -20,7 +20,7 @@
 
 from ..Plugin import Plugin
 from ...bases.BaseWordlist import BaseWordlist
-from ....utils.http_utils import getPath
+from ....utils.http_utils import get_path
 from ....conn.requests.Request import Request
 from ....decorators.plugin_meta import plugin_meta
 from ....exceptions.RequestExceptions import RequestException
@@ -69,6 +69,6 @@ class Robots(BaseWordlist, Plugin):
             )):
                 _, path = line.split(': ', 1)
                 if '://' in path:
-                    path = getPath(path)
+                    path = get_path(path)
                 paths.append(path[1:])
         return paths

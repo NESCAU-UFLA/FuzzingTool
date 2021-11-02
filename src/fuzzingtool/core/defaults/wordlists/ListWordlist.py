@@ -18,24 +18,23 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+from typing import List
+
 from ...bases.BaseWordlist import BaseWordlist
-from ....utils.utils import splitStrToList, checkRangeList
+from ....utils.utils import split_str_to_list, check_range_list
 from ....exceptions.MainExceptions import MissingParameter
 
-from typing import List
 
 class ListWordlist(BaseWordlist):
     __author__ = ("Vitor Oriel",)
 
-    def __init__(self, payloadList: str):
-        payloadList = payloadList[1:-1]
-        if not payloadList:
+    def __init__(self, payload_list: str):
+        payload_list = payload_list[1:-1]
+        if not payload_list:
             raise MissingParameter("list of payloads")
-        self.payloadList = payloadList
+        self.payload_list = payload_list
         super().__init__()
 
     def _build(self) -> List[str]:
-        buildedList = []
-        for payload in splitStrToList(self.payloadList):
-            buildedList.extend(checkRangeList(payload))
-        return buildedList
+        return [check_range_list(payload)
+                for payload in split_str_to_list(self.payload_list)]

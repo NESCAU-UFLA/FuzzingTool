@@ -19,8 +19,8 @@
 # SOFTWARE.
 
 from abc import ABC, abstractmethod
-
 from typing import List
+
 
 class BaseWordlist(ABC):
     """Base wordlist

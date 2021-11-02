@@ -20,47 +20,48 @@
 
 from ...bases.BaseScanner import BaseScanner
 from ...Result import Result
-from ....utils.http_utils import getPath
-from ....interfaces.cli.CliOutput import Colors, getFormatedResult
+from ....utils.http_utils import get_path
+from ....interfaces.cli.CliOutput import Colors, get_formated_result
+
 
 class PathScanner(BaseScanner):
     __author__ = ("Vitor Oriel",)
 
-    def inspectResult(self, result: Result) -> None:
+    def inspect_result(self, result: Result) -> None:
         result.custom['redirected'] = ''
         if result.status > 300 and result.status < 400:
-            result.custom['redirected'] = result.getResponse().headers['Location']
+            result.custom['redirected'] = result.get_response().headers['Location']
 
     def scan(self, result: Result) -> bool:
         return True
     
-    def cliCallback(self, result: Result) -> str:
+    def cli_callback(self, result: Result) -> str:
         status = result.status
-        statusColor = Colors.BOLD
+        status_color = Colors.BOLD
         if status == 404:
-            statusColor = ''
+            status_color = ''
         elif status >= 200 and status < 300:
-            statusColor += Colors.GREEN
+            status_color += Colors.GREEN
         elif status >= 300 and status < 400:
-            statusColor += Colors.LIGHT_YELLOW
+            status_color += Colors.LIGHT_YELLOW
         elif status >= 400 and status < 500:
             if status == 401 or status == 403:
-                statusColor += Colors.CYAN
+                status_color += Colors.CYAN
             else:
-                statusColor += Colors.BLUE
+                status_color += Colors.BLUE
         elif status >= 500 and status < 600:
-            statusColor += Colors.RED
+            status_color += Colors.RED
         else:
-            statusColor = ''
+            status_color = ''
         redirected = result.custom['redirected']
         if redirected:
             redirected = f" {Colors.LIGHT_YELLOW}Redirected to {redirected}{Colors.RESET}"
-        path, RTT, length = getFormatedResult(
-            getPath(result.url), result.RTT, result.length
+        path, RTT, length = get_formated_result(
+            get_path(result.url), result.RTT, result.length
         )
         return (
             f"{path} {Colors.GRAY}["+
-            f"{Colors.LIGHT_GRAY}Code{Colors.RESET} {statusColor}{status}{Colors.RESET} | "+
+            f"{Colors.LIGHT_GRAY}Code{Colors.RESET} {status_color}{status}{Colors.RESET} | "+
             f"{Colors.LIGHT_GRAY}RTT{Colors.RESET} {RTT} | "+
             f"{Colors.LIGHT_GRAY}Size{Colors.RESET} {length}{Colors.GRAY}]{Colors.RESET}"+
             f"{redirected}"

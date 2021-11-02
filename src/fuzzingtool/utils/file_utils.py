@@ -20,23 +20,22 @@
 
 from os import walk
 from os.path import dirname, abspath
-
 from typing import List
 
-def readFile(fileName: str) -> List[str]:
+def read_file(file_name: str) -> List[str]:
     """Reads content of a file.
 
-    @type fileName: str
-    @param fileName: The file path and name
+    @type file_name: str
+    @param file_name: The file path and name
     @returns List[str]: The content into the file
     """
     try:
-        with open(f'{fileName}', 'r') as thisFile:
-            return [line.rstrip('\n') for line in thisFile if not line.startswith('#!')]
+        with open(f'{file_name}', 'r') as this_file:
+            return [line.rstrip('\n') for line in this_file if not line.startswith('#!')]
     except FileNotFoundError:
-        raise Exception(f"File '{fileName}' not found")
+        raise Exception(f"File '{file_name}' not found")
 
-def splitFilenames(files: list) -> List[str]:
+def split_filenames(files: list) -> List[str]:
     """Splits the files, removing the extension and __init__.py
 
     @type files: list
@@ -47,7 +46,7 @@ def splitFilenames(files: list) -> List[str]:
         files.remove('__init__.py')
     return [file.split('.')[0] for file in files]
 
-def getPluginNamesFromCategory(category: str) -> List[str]:
+def get_plugin_names_from_category(category: str) -> List[str]:
     """Gets the plugin filenames
 
     @type category: str
@@ -55,18 +54,18 @@ def getPluginNamesFromCategory(category: str) -> List[str]:
     @returns List[str]: The list with the plugin filenames
     """
     try:
-        _, _, pluginFiles = next(walk(f"./fuzzingtool/core/plugins/{category}/"))
+        _, _, plugin_files = next(walk(f"./fuzzingtool/core/plugins/{category}/"))
     except:
-        _, _, pluginFiles = next(walk(f"{dirname(dirname(abspath(__file__)))}/core/plugins/{category}/"))
-    return splitFilenames(pluginFiles)
+        _, _, plugin_files = next(walk(f"{dirname(dirname(abspath(__file__)))}/core/plugins/{category}/"))
+    return split_filenames(plugin_files)
 
-def getReports() -> List[str]:
+def get_reports() -> List[str]:
     """Gets the report filenames
     
     @returns List[str]: The list with the report filenames
     """
     try:
-        _, _, reportFiles = next(walk(f"./fuzzingtool/reports/reports/"))
+        _, _, report_files = next(walk(f"./fuzzingtool/reports/reports/"))
     except:
-        _, _, reportFiles = next(walk(f"{dirname(dirname(abspath(__file__)))}/reports/reports/"))
-    return splitFilenames(reportFiles)
+        _, _, report_files = next(walk(f"{dirname(dirname(abspath(__file__)))}/reports/reports/"))
+    return split_filenames(report_files)

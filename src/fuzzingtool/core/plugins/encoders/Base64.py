@@ -18,11 +18,12 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+import base64
+
 from ..Plugin import Plugin
 from ...bases.BaseEncoder import BaseEncoder
 from ....decorators.plugin_meta import plugin_meta
 
-import base64
 
 @plugin_meta
 class Base64(BaseEncoder, Plugin):

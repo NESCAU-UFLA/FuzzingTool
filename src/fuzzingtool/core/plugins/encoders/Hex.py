@@ -22,6 +22,7 @@ from ..Plugin import Plugin
 from ...bases.BaseEncoder import BaseEncoder
 from ....decorators.plugin_meta import plugin_meta
 
+
 @plugin_meta
 class Hex(BaseEncoder, Plugin):
     __author__ = ("Vitor Oriel",)

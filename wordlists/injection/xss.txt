@@ -693,8 +693,8 @@ s1=<s>evalalerta(1)a</s>,s2=<s></s>+'',s3=s1+s2,e1=/s/!=/s/?s3[0]:
 <script>{onerror=alert}throw 1337</script>
 <script>onerror=alert;throw 1337</script>
 <script>{onerror=eval}throw'=alertx281337x29'</script>
-<script>{onerror=eval}throw{lineNumber:1,columnNumber:1,fileName:1,message:'alertx281x29'}</script>
-<script>{onerror=prompt}throw{lineNumber:1,columnNumber:1,fileName:'second argument',message:'first argument'}</script>
+<script>{onerror=eval}throw{lineNumber:1,columnNumber:1,file_name:1,message:'alertx281x29'}</script>
+<script>{onerror=prompt}throw{lineNumber:1,columnNumber:1,file_name:'second argument',message:'first argument'}</script>
 <script>ReferenceError.prototype.__defineGetter__('name', function(){alert(123)}),x</script>
 &<script&S1&TS&1>alert&A7&(1)&R&UA;&&<&A9&11/script&X&>
 </script><script >alert(document.cookie)</script>

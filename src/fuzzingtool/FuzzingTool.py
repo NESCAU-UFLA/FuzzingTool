@@ -22,6 +22,6 @@ from .interfaces.cli import *
 
 def main_cli() -> None:
     arguments = CliArguments()
-    if arguments.disableColors:
+    if arguments.disable_colors:
         Colors.disable()
     CliController().main(arguments)

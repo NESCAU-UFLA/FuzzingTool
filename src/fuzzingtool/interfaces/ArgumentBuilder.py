@@ -18,16 +18,17 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from ..utils.consts import FUZZING_MARK
-from ..utils.utils import splitStrToList
-from ..utils.file_utils import readFile
-
 from collections import deque
 from typing import List, Union, Dict
 
+from ..utils.consts import FUZZING_MARK
+from ..utils.utils import split_str_to_list
+from ..utils.file_utils import read_file
+
+
 class ArgumentBuilder:
     @staticmethod
-    def buildTargetsFromArgs(
+    def build_targets_from_args(
         urls: List[str],
         method: Union[str, List[str]],
         body: str
@@ -43,7 +44,7 @@ class ArgumentBuilder:
         @returns dict: The targets data builded into a dictionary
         """
         if not type(method) is list:
-            methods = splitStrToList(method)
+            methods = split_str_to_list(method)
         else:
             methods = method
         targets = []
@@ -62,48 +63,48 @@ class ArgumentBuilder:
         return targets
 
     @staticmethod
-    def buildTargetsFromRawHttp(
-        rawHttpFilenames: List[str],
+    def build_targets_from_raw_http(
+        raw_http_filenames: List[str],
         scheme: str
     ) -> List[dict]:
         """Build the targets from raw http files
 
-        @type rawHttpFilenames: list
-        @param rawHttpFilenames: The list with the raw http filenames
+        @type raw_http_filenames: list
+        @param raw_http_filenames: The list with the raw http filenames
         @type scheme: str
         @param scheme: The scheme used in the URL
         @returns List[dict]: The targets data builded into a list of dictionary
         """
-        def buildHeaderFromRawHttp(headerList: List[deque]) -> Dict[str, str]:
+        def build_header_from_raw_http(header_list: List[deque]) -> Dict[str, str]:
             """Get the HTTP header
 
-            @tyoe headerList: List[deque]
-            @param headerList: The list with HTTP header
+            @tyoe header_list: List[deque]
+            @param header_list: The list with HTTP header
             @returns Dict[str, str]: The HTTP header parsed into a dict
             """
             headers = {}
             i = 0
-            thisHeader = headerList.popleft()
-            headerLength = len(headerList)
-            while i < headerLength and thisHeader != '':
-                key, value = thisHeader.split(': ', 1)
+            this_header = header_list.popleft()
+            header_length = len(header_list)
+            while i < header_length and this_header != '':
+                key, value = this_header.split(': ', 1)
                 headers[key] = value
-                thisHeader = headerList.popleft()
+                this_header = header_list.popleft()
                 i += 1
             return headers
         
         targets = []
-        for rawHttpFilename in rawHttpFilenames:
+        for raw_http_filename in raw_http_filenames:
             try:
-                headerList = deque(readFile(rawHttpFilename))
+                header_list = deque(read_file(raw_http_filename))
             except Exception as e:
                 raise Exception(str(e))
-            method, path, httpVer = headerList.popleft().split(' ')
-            methods = splitStrToList(method)
-            headers = buildHeaderFromRawHttp(headerList)
+            method, path, _ = header_list.popleft().split(' ')
+            methods = split_str_to_list(method)
+            headers = build_header_from_raw_http(header_list)
             url = f"{scheme}://{headers['Host']}{path}"
-            if len(headerList) > 0:
-                body = headerList.popleft()
+            if len(header_list) > 0:
+                body = header_list.popleft()
             else:
                 body = ''
             targets.append({

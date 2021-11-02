@@ -21,9 +21,10 @@
 from ..Plugin import Plugin
 from ...bases.BaseScanner import BaseScanner
 from ...Result import Result
-from ....interfaces.cli.CliOutput import Colors, getFormatedResult
+from ....interfaces.cli.CliOutput import Colors, get_formated_result
 from ....decorators.plugin_meta import plugin_meta
 from ....decorators.append_args import append_args
+
 
 @plugin_meta
 class Reflected(BaseScanner, Plugin):
@@ -34,23 +35,23 @@ class Reflected(BaseScanner, Plugin):
     __version__ = "0.1"
 
     @append_args
-    def inspectResult(self, result: Result) -> None:
+    def inspect_result(self, result: Result) -> None:
         result.custom['reflected'] = None
 
     def scan(self, result: Result) -> bool:
-        reflected = result.payload in result.getResponse().text
+        reflected = result.payload in result.get_response().text
         result.custom['reflected'] = reflected
         return reflected
     
-    def cliCallback(self, result: Result) -> str:
+    def cli_callback(self, result: Result) -> str:
         reflected = f"{Colors.LIGHT_YELLOW}{Colors.BOLD}IDK"
-        wasReflected = result.custom['reflected']
-        if wasReflected != None:
-            if wasReflected:
+        was_reflected = result.custom['reflected']
+        if was_reflected != None:
+            if was_reflected:
                 reflected = f"{Colors.GREEN}{Colors.BOLD}YES"
             else:
                 reflected = f"{Colors.LIGHT_RED}{Colors.BOLD}NO "
-        payload, RTT, length = getFormatedResult(
+        payload, RTT, length = get_formated_result(
             result.payload, result.RTT, result.length
         )
         return (

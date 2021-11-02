@@ -18,26 +18,27 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+from typing import List
+
 from .BaseFactories import BaseWordlistFactory
 from .PluginFactory import PluginFactory
-from ..utils.http_utils import getHost, getPureUrl
+from ..utils.http_utils import get_host, get_pure_url
 from ..conn.requests.Request import Request
 from ..core.defaults.wordlists import *
 from ..exceptions.MainExceptions import InvalidPluginName, MissingParameter
 
-from typing import List
 
 class WordlistFactory(BaseWordlistFactory):
     def creator(name: str, params: str, requester: Request) -> List[str]:
         try:
-            Wordlist = PluginFactory.classCreator(name, 'wordlists')
+            Wordlist = PluginFactory.class_creator(name, 'wordlists')
             if (not params and requester and
                 Wordlist.__params__['metavar'] in ["TARGET_HOST", "TARGET_URL"]):
                 if "TARGET_HOST" in Wordlist.__params__['metavar']:
-                    params = getHost(getPureUrl(requester.getUrl()))
+                    params = get_host(get_pure_url(requester.get_url()))
                 if "TARGET_URL" in Wordlist.__params__['metavar']:
-                    params = getPureUrl(requester.getUrl())
-            wordlist = PluginFactory.objectCreator(name, 'wordlists', params)
+                    params = get_pure_url(requester.get_url())
+            wordlist = PluginFactory.object_creator(name, 'wordlists', params)
         except InvalidPluginName:
             try:
                 if name.startswith('[') and name.endswith(']'):
@@ -49,4 +50,4 @@ class WordlistFactory(BaseWordlistFactory):
                 raise Exception(f"Missing parameter: {str(e)}")
         if len(wordlist) == 0:
             raise Exception("The generated wordlist is empty")
-        return wordlist.get()
+        return wordlist

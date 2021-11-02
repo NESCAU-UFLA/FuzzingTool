@@ -18,13 +18,14 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from ..core.Result import Result
-from ..utils.consts import OUTPUT_DIRECTORY
-
 from abc import ABC, abstractmethod
 from typing import List
 from datetime import datetime
 from pathlib import Path
+
+from ..core.Result import Result
+from ..utils.consts import OUTPUT_DIRECTORY
+
 
 class BaseReport(ABC):
     """Base Report
@@ -49,19 +50,19 @@ class BaseReport(ABC):
         @param host: The target hostname
         @returns str: The report path and name
         """
-        reportType = self._getType()
-        reportName = self.__filename
-        reportDir = f"{OUTPUT_DIRECTORY}/{host}/reports"
-        if not reportName:
+        report_type = self.file_extension
+        report_name = self.__filename
+        report_dir = f"{OUTPUT_DIRECTORY}/{host}/reports"
+        if not report_name:
             now = datetime.now()
-            reportName = now.strftime("%Y-%m-%d_%H:%M")
-        reportFullPath = Path(f'{reportDir}/{reportName}.{reportType}')
+            report_name = now.strftime("%Y-%m-%d_%H:%M")
+        report_full_path = Path(f'{report_dir}/{report_name}.{report_type}')
         try:
-            self._file = open(reportFullPath, 'w')
+            self._file = open(report_full_path, 'w')
         except FileNotFoundError:
-            Path(reportDir).mkdir(parents=True, exist_ok=True)
-            self._file = open(reportFullPath, 'w')
-        return reportFullPath
+            Path(report_dir).mkdir(parents=True, exist_ok=True)
+            self._file = open(report_full_path, 'w')
+        return report_full_path
 
     def write(self, results: List[Result]) -> None:
         """Write the results in the report file,
@@ -75,8 +76,9 @@ class BaseReport(ABC):
         self._footer()
         self._file.close()
 
+    @property
     @abstractmethod
-    def _getType(self) -> str:
+    def file_extension(self) -> str:
         """Gets the file type"""
         pass
 

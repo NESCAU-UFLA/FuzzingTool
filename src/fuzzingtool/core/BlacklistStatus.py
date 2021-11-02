@@ -18,22 +18,23 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from ..utils.utils import splitStrToList
-
 from typing import List, Dict, Callable
+
+from ..utils.utils import split_str_to_list
+
 
 class BlacklistStatus:
     """Blacklist status handler object
 
     Attributes:
         codes: The list with the blacklisted status codes
-        actionCallback: The callback function to trigger when detect a blacklisted status
+        action_callback: The callback function to trigger when detect a blacklisted status
     """
     def __init__(self,
         status: str,
         action: str,
-        actionParam: str,
-        actionCallbacks: Dict[str, Callable[[int], None]]
+        action_param: str,
+        action_callbacks: Dict[str, Callable[[int], None]]
     ):
         """Class constructor
         
@@ -41,15 +42,15 @@ class BlacklistStatus:
         @param status: The blacklist status codes in string format
         @type action: str
         @param action: The action taken when detects a status in blacklist
-        @type actionParam: str
-        @param actionParam: The parameter for the action, if it requires
-        @type actionCallbacks: Dict[str, Callable[[int], None]]
-        @param actionCallbacks: The action callbacks
+        @type action_param: str
+        @param action_param: The parameter for the action, if it requires
+        @type action_callbacks: Dict[str, Callable[[int], None]]
+        @param action_callbacks: The action callbacks
         """
-        self.codes = self.buildStatusList(status)
-        self.actionCallback = self.setActionCallback(action, actionParam, actionCallbacks)
+        self.codes = self.build_status_list(status)
+        self.action_callback = self.set_action_callback(action, action_param, action_callbacks)
     
-    def buildStatusList(self, status: str) -> List[int]:
+    def build_status_list(self, status: str) -> List[int]:
         """Build the blacklisted status codes
 
         @type status: str
@@ -57,35 +58,35 @@ class BlacklistStatus:
         @returns List[int]: The parsed blacklisted status codes
         """
         try:
-            return [int(status) for status in splitStrToList(status)]
+            return [int(status) for status in split_str_to_list(status)]
         except:
             raise Exception("Status code must be an integer")
     
-    def setActionCallback(self,
+    def set_action_callback(self,
         action: str,
-        actionParam: str,
-        actionCallbacks: str
+        action_param: str,
+        action_callbacks: str
     ) -> Callable[[int], None]:
         """Get the action callback if a blacklisted status code is set
 
         @type action: str
         @param action: The action taken when detects a status in blacklist
-        @type actionParam: str
-        @param actionParam: The parameter for the action, if it requires
-        @type actionCallbacks: dict
-        @param actionCallbacks: The action callbacks
+        @type action_param: str
+        @param action_param: The parameter for the action, if it requires
+        @type action_callbacks: dict
+        @param action_callbacks: The action callbacks
         @returns Callable[[int], None]: A callback function for the blacklisted status code
         """
         if not action:
             return lambda status : None
         if action == 'skip':
-            return actionCallbacks['skip']
+            return action_callbacks['skip']
         if action == 'wait':
-            if not actionParam:
+            if not action_param:
                 raise Exception("Must set a time to wait")
             try:
-                self.actionParam = float(actionParam)
+                self.action_param = float(action_param)
             except ValueError:
                 raise Exception("Time to wait must be a number")
-            return actionCallbacks['wait']
+            return action_callbacks['wait']
         raise Exception(f"Invalid type of blacklist action: {action}")

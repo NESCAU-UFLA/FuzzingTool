@@ -21,6 +21,7 @@
 from typing import Iterator, Tuple
 from requests import Response
 
+
 class Result:
     """The FuzzingTool result handler
 
@@ -30,8 +31,8 @@ class Result:
         url: The requested target URL
         method: The method used in the request
         RTT: The elapsed time on both request and response
-        requestTime: The elapsed time only for the request
-        responseTime: The elapsed time only for the response
+        request_time: The elapsed time only for the request
+        response_time: The elapsed time only for the response
         status: The response HTTP status code
         length: The length of the response body content
         words: The quantitty of words in the response body
@@ -42,7 +43,7 @@ class Result:
     def __init__(self,
         response: Response,
         RTT: float,
-        requestIndex: int = 0,
+        request_index: int = 0,
         payload: str = '',
     ):
         """Class constructor
@@ -51,19 +52,19 @@ class Result:
         @param response: The response given in the request
         @type RTT: float
         @param RTT: The elapsed time on both request and response
-        @type requestIndex: int
-        @param requestIndex: The index of the request
+        @type request_index: int
+        @param request_index: The index of the request
         @type payload: str
         @param payload: The payload used in the request
         """
-        self.index = str(requestIndex)
+        self.index = str(request_index)
         self.payload = payload
         self.url = response.url
         self.method = response.request.method
         self.RTT = float('%.6f'%(RTT))
-        responseTime = response.elapsed.total_seconds()
-        self.requestTime = float('%.6f'%(RTT-responseTime))
-        self.responseTime = responseTime
+        response_time = response.elapsed.total_seconds()
+        self.request_time = float('%.6f'%(RTT-response_time))
+        self.response_time = response_time
         self.status = response.status_code
         content = response.content
         self.length = len(content)
@@ -78,8 +79,8 @@ class Result:
        yield 'url', self.url
        yield 'method', self.method
        yield 'RTT', self.RTT
-       yield 'requestTime', self.requestTime
-       yield 'responseTime', self.responseTime
+       yield 'request_time', self.request_time
+       yield 'response_time', self.response_time
        yield 'status', self.status
        yield 'length', self.length
        yield 'words', self.words
@@ -87,7 +88,7 @@ class Result:
        for key, value in self.custom.items():
            yield key, value
 
-    def getResponse(self) -> Response:
+    def get_response(self) -> Response:
         """The response getter
 
         @returns Response: The response of the request

@@ -18,10 +18,10 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+from typing import Callable
+
 from ..core.Result import Result
 from ..core.bases.BaseScanner import BaseScanner
-
-from typing import Callable
 
 def append_args(function: Callable) -> Callable:
     """Decorator to append extra data from arguments to the result

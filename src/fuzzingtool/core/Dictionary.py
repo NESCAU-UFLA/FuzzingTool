@@ -18,10 +18,11 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from .Payloader import Payloader
-
 from queue import Queue
 from typing import List
+
+from .Payloader import Payloader
+
 
 class Dictionary:
     """Dictionary object handler
@@ -44,25 +45,25 @@ class Dictionary:
 
         @returns list: The payloads used in the request
         """
-        return Payloader.getCustomizedPayload(self.__payloads.get())
+        return Payloader.get_customized_payload(self.__payloads.get())
     
     def __len__(self) -> int:
         """Gets the wordlist length
 
         @returns int: The wordlist length
         """
-        lengthPrefix = len(Payloader.prefix)
-        if lengthPrefix == 0:
-            lengthPrefix = 1
-        lengthSuffix = len(Payloader.suffix)
-        if lengthSuffix == 0:
-            lengthSuffix = 1
-        lengthEncoders = len(Payloader.encoder)
-        if lengthEncoders == 0:
-            lengthEncoders = 1
-        return (len(self.__wordlist)*lengthSuffix*lengthPrefix*lengthEncoders)
+        length_prefix = len(Payloader.prefix)
+        if length_prefix == 0:
+            length_prefix = 1
+        length_suffix = len(Payloader.suffix)
+        if length_suffix == 0:
+            length_suffix = 1
+        length_encoders = len(Payloader.encoder)
+        if length_encoders == 0:
+            length_encoders = 1
+        return (len(self.__wordlist)*length_suffix*length_prefix*length_encoders)
 
-    def isEmpty(self) -> bool:
+    def is_empty(self) -> bool:
         """The payloads empty queue flag getter
 
         @returns bool: The payloads empty queue flag

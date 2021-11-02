@@ -18,15 +18,17 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+import socket
+from typing import Tuple, Dict
+
+from requests import Response
+
 from .Request import Request
-from ..RequestParser import requestParser as parser
-from ...utils.http_utils import getHost
+from ..RequestParser import request_parser
+from ...utils.http_utils import get_host
 from ...utils.consts import SUBDOMAIN_FUZZING
 from ...exceptions.RequestExceptions import InvalidHostname
 
-import socket
-from requests import Response
-from typing import Tuple, Dict
 
 class SubdomainRequest(Request):
     """Class that handle with the requests for subdomain fuzzing"""
@@ -38,7 +40,7 @@ class SubdomainRequest(Request):
         """
         super().__init__(url, **kwargs)
 
-    def resolveHostname(self, hostname: str) -> str:
+    def resolve_hostname(self, hostname: str) -> str:
         """Resolve the ip for the given hostname
 
         @type hostname: str
@@ -52,10 +54,10 @@ class SubdomainRequest(Request):
 
     def request(self, payload: str) -> Tuple[Response, float, Dict[str, str]]:
         with self._lock:
-            parser.setPayload(payload)
-            host = getHost(parser.getUrl(self._url))
-        ip = self.resolveHostname(host)
+            request_parser.set_payload(payload)
+            host = get_host(request_parser.get_url(self._url))
+        ip = self.resolve_hostname(host)
         return (*(super().request(payload)), {'ip': ip})
     
-    def _setFuzzingType(self) -> int:
+    def _set_fuzzing_type(self) -> int:
         return SUBDOMAIN_FUZZING

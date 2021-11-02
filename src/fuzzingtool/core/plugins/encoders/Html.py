@@ -18,11 +18,12 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+import html
+
 from ..Plugin import Plugin
 from ...bases.BaseEncoder import BaseEncoder
 from ....decorators.plugin_meta import plugin_meta
 
-import html
 
 @plugin_meta
 class Html(BaseEncoder, Plugin):

@@ -18,68 +18,69 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from .Result import Result
-from ..utils.utils import splitStrToList
-
 from typing import List, Dict, Tuple, Callable
+
+from .Result import Result
+from ..utils.utils import split_str_to_list
+
 
 class Matcher:
     """Class to handle with the match validations
 
     Attributes:
         comparator: The dictionary with the default entries to be compared with the current request
-        allowedStatus: The dictionary with the allowed status codes (and range)
+        allowed_status: The dictionary with the allowed status codes (and range)
     """
     @staticmethod
-    def buildAllowedStatus(allowedStatus: str) -> dict:
+    def build_allowed_status(allowed_status: str) -> dict:
         """Build the matcher attribute for allowed status
 
-        @type allowedStatus: str
-        @param allowedStatus: The allowed status codes to match results
+        @type allowed_status: str
+        @param allowed_status: The allowed status codes to match results
         @returns dict: The allowed status code, list and range, parsed into a dict
         """
-        def getAllowedStatus(
+        def get_allowed_status(
             status: str,
-            allowedList: List[int],
-            allowedRange: List[int]
+            allowed_list: List[int],
+            allowed_range: List[int]
         ) -> None:
             """Get the allowed status code list and range
 
             @type status: str
             @param status: The status cod given in the terminal
-            @type allowedList: List[int]
-            @param allowedList: The allowed status codes list
-            @type allowedRange: List[int]
-            @param allowedRange: The range of allowed status codes
+            @type allowed_list: List[int]
+            @param allowed_list: The allowed status codes list
+            @type allowed_range: List[int]
+            @param allowed_range: The range of allowed status codes
             """
             try:
                 if '-' not in status:
-                    allowedList.append(int(status))
+                    allowed_list.append(int(status))
                 else:
-                    codeLeft, codeRight = (int(code) for code in status.split('-', 1))
-                    if codeRight < codeLeft:
-                        codeLeft, codeRight = codeRight, codeLeft
-                    allowedRange[:] = [codeLeft, codeRight]
+                    code_left, code_right = (int(code) for code in status.split('-', 1))
+                    if code_right < code_left:
+                        code_left, code_right = code_right, code_left
+                    allowed_range[:] = [code_left, code_right]
             except:
                 raise Exception(f"The match status argument ({status}) must be integer")
 
-        if not allowedStatus:
-            isDefault = True
-            allowedList = [200]
+        if not allowed_status:
+            is_default = True
+            allowed_list = [200]
         else:
-            isDefault = False
-            allowedList = []
-        allowedRange = []
-        for status in splitStrToList(allowedStatus):
-            getAllowedStatus(status, allowedList, allowedRange)
+            is_default = False
+            allowed_list = []
+        allowed_range = []
+        for status in split_str_to_list(allowed_status):
+            get_allowed_status(status, allowed_list, allowed_range)
         return {
-            'IsDefault': isDefault,
-            'List': allowedList,
-            'Range': allowedRange,
+            'is_default': is_default,
+            'List': allowed_list,
+            'Range': allowed_range,
         }
 
     @staticmethod
-    def buildComparator(length: str, time: str) -> dict:
+    def build_comparator(length: str, time: str) -> dict:
         """Build the matcher attribute for data comparator
 
         @type length: str
@@ -94,8 +95,8 @@ class Matcher:
         }
 
     def __init__(self,
-        allowedStatus: dict = {
-            'IsDefault': True,
+        allowed_status: dict = {
+            'is_default': True,
             'List': [200],
             'Range': [],
         },
@@ -103,30 +104,30 @@ class Matcher:
             'Length': None,
             'Time': None,
         },
-        matchFunctions: Tuple[Callable, Callable] = None
+        match_functions: Tuple[Callable, Callable] = None
     ):
         """Class constructor
 
-        @type allowedStatus: dict
-        @param allowedStatus: The allowed status dictionary
+        @type allowed_status: dict
+        @param allowed_status: The allowed status dictionary
         @type comparator: dict
         @param comparator: The dict with comparator data
-        @type matchFunctions: Tuple[Callable, Callable]
-        @param matchFunctions: The callback functions for the match comparator
+        @type match_functions: Tuple[Callable, Callable]
+        @param match_functions: The callback functions for the match comparator
         """
-        self._allowedStatus = allowedStatus
-        if matchFunctions:
+        self._allowed_status = allowed_status
+        if match_functions:
             self._comparator = comparator
-            self._matchLength, self._matchTime = matchFunctions
+            self._match_length, self._match_time = match_functions
         else:
-            self.setComparator(comparator)
+            self.set_comparator(comparator)
 
     @classmethod
-    def fromString(cls, allowedStatus: str, length: str, time: str) -> object:
+    def from_string(cls, allowed_status: str, length: str, time: str) -> object:
         """Creates a Matcher object com strings
 
-        @type allowedStatus: str
-        @param allowedStatus: The allowed status codes
+        @type allowed_status: str
+        @param allowed_status: The allowed status codes
         @type length: str
         @param length: The length to be compared with the response body
         @type time: str
@@ -134,61 +135,60 @@ class Matcher:
         @returns Matcher: A Matcher object
         """
         return cls(
-            Matcher.buildAllowedStatus(allowedStatus),
-            Matcher.buildComparator(length, time)
+            Matcher.build_allowed_status(allowed_status),
+            Matcher.build_comparator(length, time)
         )
 
-    def getAllowedStatus(self) -> dict:
+    def get_allowed_status(self) -> dict:
         """The allowed status getter
 
         @returns dict: The allowed status dict
         """
-        return self._allowedStatus
+        return self._allowed_status
     
-    def getComparator(self) -> dict:
+    def get_comparator(self) -> dict:
         """The data comparator getter
 
         @returns dict: The data comparator dict
         """
         return self._comparator
     
-    def getMatchFunctions(self) -> Tuple[Callable, Callable]:
+    def get_match_functions(self) -> Tuple[Callable, Callable]:
         """Gets the match functions
 
         @returns Tuple[Callable, Callable]: The match functions
         """
-        return (self._matchLength, self._matchTime)
+        return (self._match_length, self._match_time)
 
-    def allowedStatusIsDefault(self) -> bool:
+    def allowed_status_is_default(self) -> bool:
         """Check if the allowed status is set as default config
 
         @returns bool: If the allowed status is the default or not
         """
-        return self._allowedStatus['IsDefault']
+        return self._allowed_status['is_default']
 
-    def comparatorIsSet(self) -> bool:
+    def comparator_is_set(self) -> bool:
         """Check if any of the comparators are seted
 
         @returns bool: if any of the comparators are seted returns True, else False
         """
         return self._comparator['Length'] or self._comparator['Time']
 
-    def setAllowedStatus(self, allowedStatus: dict) -> None:
+    def set_allowed_status(self, allowed_status: dict) -> None:
         """The allowed status setter
 
-        @type allowedStatus: dict
-        @param allowedStatus: The allowed status dictionary
+        @type allowed_status: dict
+        @param allowed_status: The allowed status dictionary
         """
-        self._allowedStatus = allowedStatus
+        self._allowed_status = allowed_status
 
-    def setComparator(self, comparator: dict) -> None:
+    def set_comparator(self, comparator: dict) -> None:
         """The comparator setter
 
         @type comparator: dict
         @param comparator: The comparator dictionary
         """
-
-        def getComparatorAndCallback(comparator: str, key: str) -> Tuple[str, Callable]:
+        def get_comparator_and_callback(comparator: str, key: str) -> Tuple[str, Callable]:
             """Gets the comparator and callback
 
             @type comparator: str
@@ -197,7 +197,7 @@ class Matcher:
             @param key: Where it'll be compared (Length or Time)
             @returns Tuple[str, Callable]: The comparator and match callback
             """
-            def setMatch(match: Dict[str, Callable], comparator: str) -> Tuple[Callable, str]:
+            def set_match(match: Dict[str, Callable], comparator: str) -> Tuple[Callable, str]:
                 """Set the match function and new comparator value
 
                 @type match: Dict[str, Callable]
@@ -212,34 +212,34 @@ class Matcher:
                         return (value, comparator.split(key, 1)[1])
                 raise IndexError
 
-            matchDict = {
-                '>=': lambda toCompare: toCompare >= self._comparator[key],
-                '<=': lambda toCompare: toCompare <= self._comparator[key],
-                '>': lambda toCompare: toCompare > self._comparator[key],
-                '<': lambda toCompare: toCompare < self._comparator[key],
-                '==': lambda toCompare: toCompare == self._comparator[key],
-                '!=': lambda toCompare: toCompare != self._comparator[key],
+            match_dict = {
+                '>=': lambda to_compare: to_compare >= self._comparator[key],
+                '<=': lambda to_compare: to_compare <= self._comparator[key],
+                '>': lambda to_compare: to_compare > self._comparator[key],
+                '<': lambda to_compare: to_compare < self._comparator[key],
+                '==': lambda to_compare: to_compare == self._comparator[key],
+                '!=': lambda to_compare: to_compare != self._comparator[key],
             }
             try:
-                matchCallback, comparator = setMatch(matchDict, comparator)
+                match_callback, comparator = set_match(match_dict, comparator)
             except IndexError:
-                matchCallback = lambda toCompare: self._comparator[key] < toCompare
-            return (comparator, matchCallback)
+                match_callback = lambda to_compare: self._comparator[key] < to_compare
+            return (comparator, match_callback)
 
         if comparator['Length']:
-            lengthComparator, self._matchLength = getComparatorAndCallback(comparator['Length'], 'Length')
+            length_comparator, self._match_length = get_comparator_and_callback(comparator['Length'], 'Length')
             try:
-                lengthComparator = int(lengthComparator)
+                length_comparator = int(length_comparator)
             except:
-                raise Exception(f"The length comparator must be an integer, not '{lengthComparator}'!")
-            comparator['Length'] = lengthComparator
+                raise Exception(f"The length comparator must be an integer, not '{length_comparator}'!")
+            comparator['Length'] = length_comparator
         if comparator['Time']:
-            timeComparator, self._matchTime = getComparatorAndCallback(comparator['Time'], 'Time')
+            time_comparator, self._match_time = get_comparator_and_callback(comparator['Time'], 'Time')
             try:
-                timeComparator = float(timeComparator)
+                time_comparator = float(time_comparator)
             except:
-                raise Exception(f"The time comparator must be a number, not '{timeComparator}'!")
-            comparator['Time'] = timeComparator
+                raise Exception(f"The time comparator must be a number, not '{time_comparator}'!")
+            comparator['Time'] = time_comparator
         self._comparator = comparator
 
     def match(self, result: Result) -> bool:
@@ -249,27 +249,27 @@ class Matcher:
         @param result: The actual result object
         @returns bool: A match flag
         """
-        if self._matchStatus(result.status):
+        if self._match_status(result.status):
             if not self._comparator['Length'] is None:
-                return self._matchLength(int(result.length))
+                return self._match_length(int(result.length))
             if not self._comparator['Time'] is None:
-                return self._matchTime(result.RTT)
+                return self._match_time(result.RTT)
             return True
         return False
     
-    def _matchStatus(self, status: int) -> bool:
+    def _match_status(self, status: int) -> bool:
         """Check if the result status match with the allowed status dict
 
         @type status: int
         @param status: The result status code
         @returns bool: if match returns True else False
         """
-        return (status in self._allowedStatus['List']
-                or (self._allowedStatus['Range']
-                and (self._allowedStatus['Range'][0] <= status
-                and status <= self._allowedStatus['Range'][1])))
+        return (status in self._allowed_status['List']
+                or (self._allowed_status['Range']
+                and (self._allowed_status['Range'][0] <= status
+                and status <= self._allowed_status['Range'][1])))
     
-    def _matchLength(self, length: int) -> bool:
+    def _match_length(self, length: int) -> bool:
         """Check if the result length match with the comparator dict
 
         @type length: int
@@ -278,7 +278,7 @@ class Matcher:
         """
         pass
     
-    def _matchTime(self, time: float) -> bool:
+    def _match_time(self, time: float) -> bool:
         """Check if the result time match with the comparator dict
 
         @type time: int

@@ -18,19 +18,20 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from .consts import OUTPUT_DIRECTORY
-
 from datetime import datetime
 from pathlib import Path
+
+from .consts import OUTPUT_DIRECTORY
+
 
 class Logger:
     """Class to handle with the program logging
 
     Attributes:
-        logFullPath: The path of the log file
+        log_full_path: The path of the log file
     """
     def __init__(self):
-        self.__logFullPath = ''
+        self.__log_full_path = ''
 
     def setup(self, host: str) -> str:
         """Setup the log path to save the current logs
@@ -39,18 +40,18 @@ class Logger:
         @param host: The target hostname
         @returns str: The log path and name
         """
-        dateNow = datetime.now()
-        logFileName = f"log-{dateNow.strftime('%Y-%m-%d_%H:%M')}.log"
-        logDir = f'{OUTPUT_DIRECTORY}/{host}/logs'
-        self.__logFullPath = Path(f'{logDir}/{logFileName}')
+        date_now = datetime.now()
+        log_file_name = f"log-{date_now.strftime('%Y-%m-%d_%H:%M')}.log"
+        log_dir = f'{OUTPUT_DIRECTORY}/{host}/logs'
+        self.__log_full_path = Path(f'{log_dir}/{log_file_name}')
         try:
-            logFile = open(self.__logFullPath, 'w+')
+            log_file = open(self.__log_full_path, 'w+')
         except FileNotFoundError:
-            Path(logDir).mkdir(parents=True, exist_ok=True)
-            logFile = open(self.__logFullPath, 'w+')
-        logFile.write(f"Log for {host} on {dateNow.strftime('%Y/%m/%d %H:%M')}\n\n")
-        logFile.close()
-        return self.__logFullPath
+            Path(log_dir).mkdir(parents=True, exist_ok=True)
+            log_file = open(self.__log_full_path, 'w+')
+        log_file.write(f"Log for {host} on {date_now.strftime('%Y/%m/%d %H:%M')}\n\n")
+        log_file.close()
+        return self.__log_full_path
 
     def write(self, exception: str, payload: str) -> None:
         """Write the exception on the log file
@@ -61,5 +62,5 @@ class Logger:
         @param payload: The payload used in the request
         """
         time = datetime.now().strftime("%H:%M:%S")
-        with open(self.__logFullPath, 'a') as logFile:
-            logFile.write(f'{time} | {exception} using payload: {payload}\n')
+        with open(self.__log_full_path, 'a') as log_file:
+            log_file.write(f'{time} | {exception} using payload: {payload}\n')

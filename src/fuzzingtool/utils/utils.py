@@ -18,22 +18,22 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from .consts import FUZZING_MARK
-
 from typing import List, Tuple, Union
 
-def getIndexesToParse(content: str, searchFor: str = FUZZING_MARK) -> List[int]:
+from .consts import FUZZING_MARK
+
+def get_indexes_to_parse(content: str, search_for: str = FUZZING_MARK) -> List[int]:
     """Gets the indexes of the searched substring into a string content
     
     @type content: str
     @param content: The parameter content
-    @type searchFor: str
-    @param searchFor: The substring to be searched indexes on the given content
+    @type search_for: str
+    @param search_for: The substring to be searched indexes on the given content
     @returns List[int]: The positions indexes of the searched substring
     """
-    return [i for i, char in enumerate(content) if char == searchFor]
+    return [i for i, char in enumerate(content) if char == search_for]
 
-def splitStrToList(
+def split_str_to_list(
     string: str,
     separator: str = ',',
     ignores: str = '\\'
@@ -62,20 +62,20 @@ def splitStrToList(
         return string.split(separator)
     return []
 
-def stringfyList(oneList: list) -> str:
+def stringfy_list(one_list: list) -> str:
     """Stringfies a list
 
-    @type oneList: list
-    @param oneList: A list to be stringed
+    @type one_list: list
+    @param one_list: A list to be stringed
     @returns str: The stringed list
     """
     output = ''
-    for i in range(len(oneList)-1):
-        output += f"{oneList[i]},"
-    output += oneList[-1]
+    for i in range(len(one_list)-1):
+        output += f"{one_list[i]},"
+    output += one_list[-1]
     return output
 
-def getHumanLength(length: int) -> Tuple[Union[int, float], str]:
+def get_human_length(length: int) -> Tuple[Union[int, float], str]:
     """Get the human readable length from the result
 
     @type length: int
@@ -88,7 +88,7 @@ def getHumanLength(length: int) -> Tuple[Union[int, float], str]:
         length /= 1024
     return (length, "TB")
 
-def checkRangeList(content: str) -> List[Union[int, str]]:
+def check_range_list(content: str) -> List[Union[int, str]]:
     """Checks if the given content has a range list,
        and make a list of the range specified
     
@@ -96,7 +96,7 @@ def checkRangeList(content: str) -> List[Union[int, str]]:
     @param content: The string content to check for range
     @returns List[int|str]: The list with the compiled content
     """
-    def getNumberRange(left: str, right: str) -> List[int]:
+    def get_number_range(left: str, right: str) -> List[int]:
         """Get the number range list
         
         @type left: str
@@ -105,42 +105,42 @@ def checkRangeList(content: str) -> List[Union[int, str]]:
         @param right: The right string of the division mark
         @returns List[int]: The list with the range
         """
-        isNumber = True
+        is_number = True
         i = len(left)
-        while isNumber and i > 0:
+        while is_number and i > 0:
             try:
                 int(left[i-1])
             except:
-                isNumber = False
+                is_number = False
             else:
                 i -= 1
-        leftDigit, leftStr = int(left[i:]), left[:i]
-        isNumber = True
+        left_digit, left_str = int(left[i:]), left[:i]
+        is_number = True
         i = 0
-        while isNumber and i < (len(right)-1):
+        while is_number and i < (len(right)-1):
             try:
                 int(right[i+1])
-            except Exception as e:
-                isNumber = False
+            except:
+                is_number = False
             else:
                 i += 1
-        rightDigit, rightStr = int(right[:(i+1)]), right[(i+1):]
-        compiledList = []
-        if leftDigit < rightDigit:
-            while leftDigit <= rightDigit:
-                compiledList.append(
-                    f"{leftStr}{str(leftDigit)}{rightStr}"
+        right_digit, right_str = int(right[:(i+1)]), right[(i+1):]
+        compiled_list = []
+        if left_digit < right_digit:
+            while left_digit <= right_digit:
+                compiled_list.append(
+                    f"{left_str}{str(left_digit)}{right_str}"
                 )
-                leftDigit += 1
+                left_digit += 1
         else:
-            while rightDigit <= leftDigit:
-                compiledList.append(
-                    f"{leftStr}{str(leftDigit)}{rightStr}"
+            while right_digit <= left_digit:
+                compiled_list.append(
+                    f"{left_str}{str(left_digit)}{right_str}"
                 )
-                leftDigit -= 1
-        return compiledList
+                left_digit -= 1
+        return compiled_list
 
-    def getLetterRange(left: str, right: str) -> List[str]:
+    def get_letter_range(left: str, right: str) -> List[str]:
         """Get the alphabet range list [a-z] [A-Z] [z-a] [Z-A]
         
         @type left: str
@@ -149,26 +149,26 @@ def checkRangeList(content: str) -> List[Union[int, str]]:
         @param right: The right string of the division mark
         @returns List[str]: The list with the range
         """
-        leftDigit, leftStr = left[-1], left[:-1]
-        rightDigit, rightStr = right[0], right[1:]
-        compiledList = []
-        if ord(leftDigit) <= ord(rightDigit):
-            orderLeftDigit = ord(leftDigit)
-            orderRightDigit = ord(rightDigit)
-            while orderLeftDigit <= orderRightDigit:
-                compiledList.append(
-                    f"{leftStr}{chr(orderLeftDigit)}{rightStr}"
+        left_digit, left_str = left[-1], left[:-1]
+        right_digit, right_str = right[0], right[1:]
+        compiled_list = []
+        if ord(left_digit) <= ord(right_digit):
+            order_left_digit = ord(left_digit)
+            order_right_digit = ord(right_digit)
+            while order_left_digit <= order_right_digit:
+                compiled_list.append(
+                    f"{left_str}{chr(order_left_digit)}{right_str}"
                 )
-                orderLeftDigit += 1
+                order_left_digit += 1
         else:
-            orderLeftDigit = ord(leftDigit)
-            orderRightDigit = ord(rightDigit)
-            while orderLeftDigit >= orderRightDigit:
-                compiledList.append(
-                    f"{leftStr}{chr(orderLeftDigit)}{rightStr}"
+            order_left_digit = ord(left_digit)
+            order_right_digit = ord(right_digit)
+            while order_left_digit >= order_right_digit:
+                compiled_list.append(
+                    f"{left_str}{chr(order_left_digit)}{right_str}"
                 )
-                orderLeftDigit -= 1
-        return compiledList
+                order_left_digit -= 1
+        return compiled_list
 
     if '\-' in content:
         content = content.replace('\-', '-')
@@ -178,7 +178,7 @@ def checkRangeList(content: str) -> List[Union[int, str]]:
             # Checks if the left and right digits from the mark are integers
             int(left[-1])
             int(right[0])
-            return getNumberRange(left, right)
+            return get_number_range(left, right)
         except:
-            return getLetterRange(left, right)
+            return get_letter_range(left, right)
     return [content]
