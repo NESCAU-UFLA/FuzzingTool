@@ -58,11 +58,13 @@ class DnsZone(BaseWordlist, Plugin):
         for ip in name_servers_ips:
             try:
                 zones = zone.from_xfr(query.xfr(ip.rstrip('.'), self.host))
-                transfered_subdomains.extend([str(subdomain) for subdomain in zones])
-            except:
+                transfered_subdomains.extend([str(subdomain)
+                                              for subdomain in zones])
+            except Exception:
                 continue
         if not transfered_subdomains:
-            raise Exception(f"Couldn't make the zone transfer for any of the {len(name_servers_ips)} name servers")
+            raise Exception("Couldn't make the zone transfer for any of the "
+                            f"{len(name_servers_ips)} name servers")
         if '@' in transfered_subdomains:
             transfered_subdomains.remove('@')
         return list(set(transfered_subdomains))

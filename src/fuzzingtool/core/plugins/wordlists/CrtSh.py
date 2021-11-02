@@ -70,10 +70,14 @@ class CrtSh(BaseWordlist, Plugin):
             raise Exception(str(e))
         if 'None found' in response.text:
             raise Exception(f"No certified domains was found for '{self.host}'")
-        content_list = [element.string for element in bs(response.text, "html.parser")('td')]
+        content_list = [element.string
+                        for element in bs(response.text, "html.parser")('td')]
         regex = r"([a-zA-Z0-9]+\.)*[a-zA-Z0-9]+"
         for splited in self.host.split('.'):
             regex += r"\."+splited
         regexer = re.compile(regex)
-        domain_list = sorted(set([element for element in content_list if regexer.match(str(element))]))
-        return [domain.split(f'.{self.host}')[0] for domain in domain_list]
+        domain_list = sorted(set([element
+                                  for element in content_list
+                                  if regexer.match(str(element))]))
+        return [domain.split(f'.{self.host}')[0]
+                for domain in domain_list]

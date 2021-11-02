@@ -46,7 +46,7 @@ class Dictionary:
         @returns list: The payloads used in the request
         """
         return Payloader.get_customized_payload(self.__payloads.get())
-    
+
     def __len__(self) -> int:
         """Gets the wordlist length
 
@@ -61,7 +61,10 @@ class Dictionary:
         length_encoders = len(Payloader.encoder)
         if length_encoders == 0:
             length_encoders = 1
-        return (len(self.__wordlist)*length_suffix*length_prefix*length_encoders)
+        return (len(self.__wordlist)
+                * length_suffix
+                * length_prefix
+                * length_encoders)
 
     def is_empty(self) -> bool:
         """The payloads empty queue flag getter

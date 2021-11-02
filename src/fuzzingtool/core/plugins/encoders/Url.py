@@ -43,7 +43,7 @@ class Url(BaseEncoder, Plugin):
         else:
             try:
                 encode_level = int(encode_level)
-            except:
+            except ValueError:
                 raise BadArgumentFormat("the encoding level must be an integer")
         self.encode_level = encode_level
 

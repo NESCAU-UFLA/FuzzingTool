@@ -41,11 +41,10 @@ class Result:
         response: The Response object from python requests
     """
     def __init__(self,
-        response: Response,
-        RTT: float,
-        request_index: int = 0,
-        payload: str = '',
-    ):
+                 response: Response,
+                 RTT: float,
+                 request_index: int = 0,
+                 payload: str = ''):
         """Class constructor
 
         @type response: Response
@@ -61,9 +60,9 @@ class Result:
         self.payload = payload
         self.url = response.url
         self.method = response.request.method
-        self.RTT = float('%.6f'%(RTT))
+        self.RTT = float('%.6f' % (RTT))
         response_time = response.elapsed.total_seconds()
-        self.request_time = float('%.6f'%(RTT-response_time))
+        self.request_time = float('%.6f' % (RTT-response_time))
         self.response_time = response_time
         self.status = response.status_code
         content = response.content
@@ -72,21 +71,21 @@ class Result:
         self.lines = content.count(b'\n')
         self.custom = {}
         self.__response = response
-    
+
     def __iter__(self) -> Iterator[Tuple]:
-       yield 'index', self.index
-       yield 'payload', self.payload
-       yield 'url', self.url
-       yield 'method', self.method
-       yield 'RTT', self.RTT
-       yield 'request_time', self.request_time
-       yield 'response_time', self.response_time
-       yield 'status', self.status
-       yield 'length', self.length
-       yield 'words', self.words
-       yield 'lines', self.lines
-       for key, value in self.custom.items():
-           yield key, value
+        yield 'index', self.index
+        yield 'payload', self.payload
+        yield 'url', self.url
+        yield 'method', self.method
+        yield 'RTT', self.RTT
+        yield 'request_time', self.request_time
+        yield 'response_time', self.response_time
+        yield 'status', self.status
+        yield 'length', self.length
+        yield 'words', self.words
+        yield 'lines', self.lines
+        for key, value in self.custom.items():
+            yield key, value
 
     def get_response(self) -> Response:
         """The response getter

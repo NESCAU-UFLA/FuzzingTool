@@ -27,13 +27,13 @@ from .Dictionary import Dictionary
 from .Matcher import Matcher
 from .Result import Result
 from .bases.BaseScanner import BaseScanner
-from ..conn.requests import *
+from ..conn.requests import Request
 from ..exceptions.RequestExceptions import RequestException, InvalidHostname
 
 
 class Fuzzer:
     """Fuzzer class, the core of the software
-    
+
     Attributes:
         requester: The requester object to deal with the requests
         dict: The dictionary object to handle with the payloads
@@ -41,21 +41,21 @@ class Fuzzer:
         scanner: A scanner object, used to validate the results
         delay: The delay between each test
         running: A flag to say if the application is running or not
-        blacklist_status: The blacklist status object to handle with the blacklisted status
+        blacklist_status: The blacklist status object to handle
+                          with the blacklisted status
         start_index: The actual request index
     """
     def __init__(self,
-        requester: Request,
-        dictionary: Dictionary,
-        matcher: Matcher,
-        scanner: BaseScanner,
-        delay: float,
-        number_of_threads: int,
-        blacklist_status: BlacklistStatus,
-        start_index: int,
-        result_callback: Callable[[dict, bool], None],
-        exception_callbacks: List[Callable[[str, str], None]],
-    ):
+                 requester: Request,
+                 dictionary: Dictionary,
+                 matcher: Matcher,
+                 scanner: BaseScanner,
+                 delay: float,
+                 number_of_threads: int,
+                 blacklist_status: BlacklistStatus,
+                 start_index: int,
+                 result_callback: Callable[[dict, bool], None],
+                 exception_callbacks: List[Callable[[str, str], None]]):
         """Class constructor
 
         @type requester: requester
@@ -69,15 +69,18 @@ class Fuzzer:
         @type delay: float
         @param delay: The delay between each request
         @type number_of_threads: int
-        @param number_of_threads: The number of threads used in the fuzzing tests
+        @param number_of_threads: The number of threads
+                                  used in the fuzzing tests
         @type blacklist_status: blacklist_status
-        @param blacklist_status: The blacklist status object to handle with the blacklisted status
+        @param blacklist_status: The blacklist status object
+                                 to handle with the blacklisted status
         @type start_index: int
         @param start_index: The index value to start
         @type result_callback: Callable
         @param result_callback: The callback function for the results
         @type exception_callbacks: List[Callable]
-        @param exception_callbacks: The list that handles with exception callbacks
+        @param exception_callbacks: The list that handles
+                                    with exception callbacks
         """
         self.__requester = requester
         self.__dict = dictionary
@@ -93,16 +96,17 @@ class Fuzzer:
 
     def setup_threads(self, number_of_threads: int) -> None:
         """Handle with threads setup
-        
+
         @type number_of_threads: int
-        @param number_of_threads: The number of threads used in the fuzzing tests
+        @param number_of_threads: The number of threads
+                                  used in the fuzzing tests
 
         Attributes:
             threads: The list with the threads used in the application
             running_threads: The running threads count
             paused_threads: The paused threads count
             join_timeout: The join timeout for the threads
-            player: The player event object handler - an internal flag manager for the threads
+            player: The player event object handler
         """
         self.__threads = []
         for _ in range(number_of_threads):
@@ -111,7 +115,7 @@ class Fuzzer:
         self.__paused_threads = 0
         self.__join_timeout = 0.001*float(number_of_threads)
         self.__player = Event()
-        self.__player.clear() # Not necessary, but force the blocking of the threads
+        self.__player.clear()  # Not necessary, but force the blocking of the threads
 
     def is_running(self) -> bool:
         """The running flag getter
@@ -140,13 +144,15 @@ class Fuzzer:
                     self.exception_callbacks[1](e, payload)
                 else:
                     if (self.__blacklist_status and
-                        response.status_code in self.__blacklist_status.codes):
+                            response.status_code in self.__blacklist_status.codes):
                         self.__blacklist_status.action_callback(response.status_code)
                     result = Result(response, RTT, self.index, payload)
                     self.__scanner.inspect_result(result, *args)
                     self.result_callback(
                         result,
-                        self.__scanner.scan(result) if self.__matcher.match(result) else False
+                        (self.__scanner.scan(result)
+                         if self.__matcher.match(result)
+                         else False)
                     )
                 finally:
                     self.index += 1
@@ -169,7 +175,7 @@ class Fuzzer:
 
     def start(self) -> None:
         """Starts the fuzzer application"""
-        self.__player.set() # Awake threads
+        self.__player.set()  # Awake threads
         for thread in self.__threads:
             thread.start()
 
@@ -182,12 +188,12 @@ class Fuzzer:
         self.__running = False
         self.pause()
         self.wait_until_pause()
-    
+
     def resume(self) -> None:
         """Resume the fuzzer application"""
         self.__paused_threads = 0
         self.__player.set()
-    
+
     def wait_until_pause(self) -> None:
         while self.__paused_threads < (self.__running_threads-1):
             pass

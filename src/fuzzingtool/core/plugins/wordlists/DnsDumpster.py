@@ -89,4 +89,5 @@ class DnsDumpster(BaseWordlist, Plugin):
         domain_list = sorted(set([element
                                   for element in content_list
                                   if regexer.match(str(element))]))
-        return [domain.split(f'.{self.host}')[0] for domain in domain_list]
+        return [domain.split(f'.{self.host}')[0]
+                for domain in domain_list]

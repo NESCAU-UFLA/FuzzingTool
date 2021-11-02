@@ -30,7 +30,7 @@ from ...decorators.report_meta import report_meta
 class CsvReport(BaseReport):
     __author__ = ("Vitor Oriel",)
     __version__ = "0.1"
-    
+
     file_extension = 'csv'
 
     def _header(self) -> None:

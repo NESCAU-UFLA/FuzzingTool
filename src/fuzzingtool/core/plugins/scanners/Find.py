@@ -57,14 +57,16 @@ class Find(BaseScanner, Plugin):
         result.custom['found'] = None
 
     def scan(self, result: Result) -> bool:
-        found = True if self.__regexer.search(result.get_response().text) else False
+        found = (True
+                 if self.__regexer.search(result.get_response().text)
+                 else False)
         result.custom['found'] = found
         return found
-    
+
     def cli_callback(self, result: Result) -> str:
         found = f"{Colors.LIGHT_YELLOW}{Colors.BOLD}IDK"
         was_found = result.custom['found']
-        if was_found != None:
+        if was_found is not None:
             if was_found:
                 found = f"{Colors.GREEN}{Colors.BOLD}YES"
             else:

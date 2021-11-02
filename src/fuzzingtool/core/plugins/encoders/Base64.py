@@ -35,6 +35,6 @@ class Base64(BaseEncoder, Plugin):
 
     def encode(self, payload: str) -> str:
         return base64.b64encode(payload.encode(BaseEncoder.charset)).decode(BaseEncoder.charset)
-    
+
     def decode(self, payload: str) -> str:
         return base64.b64decode(payload).decode(BaseEncoder.charset)

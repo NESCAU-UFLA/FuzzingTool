@@ -45,8 +45,11 @@ class Overflow(BaseWordlist, Plugin):
             if ':' in payload:
                 try:
                     init_payload, payload, end_payload = payload.split(':', 3)
-                except:
-                    raise BadArgumentFormat("invalid quantity of values to unpack (expected init_payload:payload:end_payload)")
+                except ValueError:
+                    raise BadArgumentFormat(
+                        "invalid quantity of values to unpack "
+                        "(expected init_payload:payload:end_payload)"
+                    )
             else:
                 init_payload, end_payload = '', ''
             quantity_of_payloads = quantity_of_payloads
@@ -55,7 +58,7 @@ class Overflow(BaseWordlist, Plugin):
             init_payload, payload, end_payload = '', '', ''
         try:
             quantity_of_payloads = int(quantity_of_payloads)
-        except:
+        except ValueError:
             raise BadArgumentFormat("the quantity of payloads must be integer")
         self.quantity_of_payloads = quantity_of_payloads
         self.init_payload = init_payload
@@ -65,5 +68,6 @@ class Overflow(BaseWordlist, Plugin):
 
     def _build(self) -> List[str]:
         return [
-            f"{self.init_payload}{self.payload*i}{self.end_payload}" for i in range(self.quantity_of_payloads)
+            f"{self.init_payload}{self.payload*i}{self.end_payload}"
+            for i in range(self.quantity_of_payloads)
         ]

@@ -24,6 +24,7 @@ from .ArgumentParser import ArgumentParser
 from ...utils.utils import split_str_to_list
 from ...exceptions.MainExceptions import BadArgumentFormat
 
+
 def parse_option_with_args(plugin: str) -> Tuple[str, str]:
     """Parse the plugin name into name and parameter
 
@@ -37,6 +38,7 @@ def parse_option_with_args(plugin: str) -> Tuple[str, str]:
         plugin = plugin
         param = ''
     return (plugin, param)
+
 
 class CliArguments:
     """Class that handle with the FuzzingTool arguments"""
@@ -75,7 +77,11 @@ class CliArguments:
 
     def set_dictionary_arguments(self) -> None:
         """Set the dictionary arguments"""
-        self.wordlists = [[parse_option_with_args(w) for w in split_str_to_list(wordlist, separator=';')] for wordlist in self.options.wordlist]
+        self.wordlists = [[
+            parse_option_with_args(w)
+            for w in split_str_to_list(wordlist, separator=';')]
+            for wordlist in self.options.wordlist
+        ]
         self.unique = self.options.unique
         self.prefix = split_str_to_list(self.options.prefix)
         self.suffix = split_str_to_list(self.options.suffix)
@@ -83,7 +89,11 @@ class CliArguments:
         self.lowercase = self.options.lower
         self.capitalize = self.options.capitalize
         self.str_encoder = self.options.encoder
-        self.encoder = [[parse_option_with_args(e) for e in split_str_to_list(encoder, separator='@')] for encoder in split_str_to_list(self.options.encoder)]
+        self.encoder = [[
+            parse_option_with_args(e)
+            for e in split_str_to_list(encoder, separator='@')]
+            for encoder in split_str_to_list(self.options.encoder)
+        ]
         self.encode_only = self.options.encode_only
 
     def set_match_arguments(self) -> None:
@@ -92,7 +102,9 @@ class CliArguments:
         self.match_length = self.options.match_length
         self.match_time = self.options.match_time
         self.str_scanner = self.options.scanner
-        self.scanner = None if not self.options.scanner else parse_option_with_args(self.options.scanner)
+        self.scanner = (None
+                        if not self.options.scanner
+                        else parse_option_with_args(self.options.scanner))
 
     def set_display_arguments(self) -> None:
         """Set the display arguments"""

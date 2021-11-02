@@ -20,6 +20,7 @@
 
 from abc import ABC, abstractmethod
 
+
 class BaseRequestFactory(ABC):
     @staticmethod
     @abstractmethod
@@ -33,6 +34,7 @@ class BaseRequestFactory(ABC):
         @returns Request: A request object
         """
         pass
+
 
 class BasePluginFactory(ABC):
     @staticmethod
@@ -62,6 +64,7 @@ class BasePluginFactory(ABC):
         @returns Plugin: The selected plugin object
         """
         pass
+
 
 class BaseWordlistFactory(ABC):
     @staticmethod

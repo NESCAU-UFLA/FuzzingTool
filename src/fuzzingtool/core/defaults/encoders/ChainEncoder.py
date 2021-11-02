@@ -21,12 +21,11 @@
 from typing import List
 
 from ...bases.BaseEncoder import BaseEncoder
-from ...plugins.encoders import *
 
 
 class ChainEncoder(BaseEncoder):
     """Class that handle with the chain encoders
-    
+
     Attributes:
         encoders: The encoders list to be chained
     """

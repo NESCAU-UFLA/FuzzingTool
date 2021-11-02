@@ -22,8 +22,7 @@ import re
 from typing import List, Tuple
 
 from .bases.BaseEncoder import BaseEncoder
-from .defaults.encoders import *
-from .plugins.encoders import *
+from .defaults.encoders import ChainEncoder
 
 
 class EncodeManager:
@@ -35,9 +34,9 @@ class EncodeManager:
     """
     def __init__(self):
         self.encoders = []
-        self.encode = lambda ajusted_payload : ajusted_payload
+        self.encode = lambda ajusted_payload: ajusted_payload
         self.regexer = None
-    
+
     def __len__(self) -> int:
         return len(self.encoders)
 
@@ -53,8 +52,9 @@ class EncodeManager:
             raise Exception(f"Invalid regex format {regex}")
 
     def set_encoders(self,
-        encoders: Tuple[List[BaseEncoder], List[List[BaseEncoder]]]
-    ) -> None:
+                     encoders: Tuple[
+                         List[BaseEncoder], List[List[BaseEncoder]]
+                     ]) -> None:
         """The encoders setter
 
         @type encoders: Tuple[list, list]
@@ -74,7 +74,8 @@ class EncodeManager:
             return encoded_list
 
         encoders_default, encoders_chain = encoders
-        self.encoders = encoders_default+[ChainEncoder(encoders) for encoders in encoders_chain]
+        self.encoders = encoders_default+[ChainEncoder(encoders)
+                                          for encoders in encoders_chain]
         self.encode = encode
 
     def _encode(self, encoder: BaseEncoder, payload: str) -> str:
@@ -102,7 +103,8 @@ class EncodeManager:
             @param i: The index of the actual char of the payload
             @type strings: list
             @param strings: The matched strings list from the regexer
-            @returns Tuple[int, str]: The encoded substring if match the regex, else return the actual char
+            @returns Tuple[int, str]: The encoded substring if match
+                                      the regex, else return the actual char
             """
             for string in strings:
                 last_index = i+len(string)
@@ -113,7 +115,8 @@ class EncodeManager:
 
         if not self.regexer:
             return encoder.encode(payload)
-        strings = set([match.group() for match in self.regexer.finditer(payload)])
+        strings = set([match.group()
+                       for match in self.regexer.finditer(payload)])
         if not strings:
             return payload
         encoded = ''
@@ -122,6 +125,7 @@ class EncodeManager:
             i, char = encode_substring(encoder, payload, i, strings)
             encoded += char
         return encoded
+
 
 class Payloader:
     """Class that handle with the payload options
@@ -134,7 +138,7 @@ class Payloader:
     prefix = []
     suffix = []
     encoder = EncodeManager()
-    _case = lambda ajusted_payload : ajusted_payload
+    _case = lambda ajusted_payload: ajusted_payload
 
     @staticmethod
     def set_prefix(prefix: List[str]) -> None:
@@ -157,17 +161,23 @@ class Payloader:
     @staticmethod
     def set_uppercase() -> None:
         """The uppercase setter"""
-        Payloader._case = lambda ajusted_payload : [payload.upper() for payload in ajusted_payload]
-    
+        Payloader._case = lambda ajusted_payload: [
+            payload.upper() for payload in ajusted_payload
+        ]
+
     @staticmethod
     def set_lowercase() -> None:
         """The lowercase setter"""
-        Payloader._case = lambda ajusted_payload : [payload.lower() for payload in ajusted_payload]
+        Payloader._case = lambda ajusted_payload: [
+            payload.lower() for payload in ajusted_payload
+        ]
 
     @staticmethod
     def set_capitalize() -> None:
         """The capitalize setter"""
-        Payloader._case = lambda ajusted_payload : [payload.capitalize() for payload in ajusted_payload]
+        Payloader._case = lambda ajusted_payload: [
+            payload.capitalize() for payload in ajusted_payload
+        ]
 
     @staticmethod
     def get_customized_payload(payload: str) -> List[str]:
@@ -179,7 +189,11 @@ class Payloader:
         """
         ajusted_payload = [payload]
         if Payloader.prefix:
-            ajusted_payload = [(prefix+payload) for prefix in Payloader.prefix for payload in ajusted_payload]
+            ajusted_payload = [(prefix+payload)
+                               for prefix in Payloader.prefix
+                               for payload in ajusted_payload]
         if Payloader.suffix:
-            ajusted_payload = [(payload+suffix) for suffix in Payloader.suffix for payload in ajusted_payload]
+            ajusted_payload = [(payload+suffix)
+                               for suffix in Payloader.suffix
+                               for payload in ajusted_payload]
         return Payloader._case(Payloader.encoder.encode(ajusted_payload))

@@ -30,11 +30,12 @@ class PathScanner(BaseScanner):
     def inspect_result(self, result: Result) -> None:
         result.custom['redirected'] = ''
         if result.status > 300 and result.status < 400:
-            result.custom['redirected'] = result.get_response().headers['Location']
+            result.custom['redirected'] = (result.get_response()
+                                                 .headers['Location'])
 
     def scan(self, result: Result) -> bool:
         return True
-    
+
     def cli_callback(self, result: Result) -> str:
         status = result.status
         status_color = Colors.BOLD

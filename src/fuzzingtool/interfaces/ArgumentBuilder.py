@@ -75,7 +75,9 @@ class ArgumentBuilder:
         @param scheme: The scheme used in the URL
         @returns List[dict]: The targets data builded into a list of dictionary
         """
-        def build_header_from_raw_http(header_list: List[deque]) -> Dict[str, str]:
+        def build_header_from_raw_http(
+            header_list: List[deque]
+        ) -> Dict[str, str]:
             """Get the HTTP header
 
             @tyoe header_list: List[deque]
@@ -92,7 +94,7 @@ class ArgumentBuilder:
                 this_header = header_list.popleft()
                 i += 1
             return headers
-        
+
         targets = []
         for raw_http_filename in raw_http_filenames:
             try:

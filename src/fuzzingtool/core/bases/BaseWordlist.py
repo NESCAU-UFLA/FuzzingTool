@@ -44,7 +44,7 @@ class BaseWordlist(ABC):
     @abstractmethod
     def _build(self) -> List[str]:
         """The wordlist builder
-        
+
         @returns List[str]: The builded wordlist
         """
         pass

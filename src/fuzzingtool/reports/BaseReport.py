@@ -29,7 +29,7 @@ from ..utils.consts import OUTPUT_DIRECTORY
 
 class BaseReport(ABC):
     """Base Report
-    
+
     Attributes:
         filename: The report filename
         file: The file object
@@ -45,7 +45,7 @@ class BaseReport(ABC):
 
     def open(self, host: str) -> str:
         """Opens the report file to store the results
-        
+
         @type host: str
         @param host: The target hostname
         @returns str: The report path and name

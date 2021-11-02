@@ -26,11 +26,10 @@ from typing import Callable, Tuple
 from ...utils.utils import stringfy_list, get_human_length
 from ...utils.http_utils import get_host, get_pure_url
 
-def fix_payload_to_output(
-    payload: str,
-    max_length: int = 30,
-    is_progress_status: bool = False,
-) -> str:
+
+def fix_payload_to_output(payload: str,
+                          max_length: int = 30,
+                          is_progress_status: bool = False) -> str:
     """Fix the payload's size
 
     @type payload: str
@@ -38,7 +37,8 @@ def fix_payload_to_output(
     @type max_length: int
     @param max_length: The maximum length of the payload on output
     @type is_progress_status: bool
-    @param is_progress_status: A flag to say if the function was called by the progress_status or not
+    @param is_progress_status: A flag to say if the function
+                               was called by the progress_status or not
     @returns str: The fixed payload to output
     """
     if '	' in payload:
@@ -54,11 +54,10 @@ def fix_payload_to_output(
             payload += ' '
     return payload
 
-def get_formated_result(
-    payload: str,
-    RTT: float,
-    length: int
-) -> Tuple[str, str, str]:
+
+def get_formated_result(payload: str,
+                        RTT: float,
+                        length: int) -> Tuple[str, str, str]:
     """Format the result into a dict of strings
 
     @type payload: str
@@ -71,13 +70,14 @@ def get_formated_result(
     """
     length, order = get_human_length(int(length))
     if type(length) is float:
-        length = "%.2f"%length
+        length = "%.2f" % length
     length = '{:>7}'.format(length)
     return (
         '{:<30}'.format(fix_payload_to_output(payload)),
         '{:>10}'.format(RTT),
         f"{length} {order}",
     )
+
 
 class Colors:
     """Class that handle with the colors"""
@@ -99,9 +99,10 @@ class Colors:
     def disable():
         Colors.RESET = Colors.GRAY = Colors.YELLOW = Colors.RED = Colors.GREEN = Colors.BLUE = Colors.BLUE_GRAY = Colors.CYAN = Colors.LIGHT_GRAY = Colors.LIGHT_YELLOW = Colors.LIGHT_RED = Colors.LIGHT_GREEN = Colors.BOLD = ''
 
+
 class CliOutput:
     """Class that handle with the outputs
-    
+
     Attributes:
         lock: The threads locker for screen output
         break_line: A string to break line
@@ -146,9 +147,16 @@ class CliOutput:
         """
         max_command_size_with_space = 27
         if (len(command)+num_spaces) <= max_command_size_with_space:
-            print(' '*num_spaces+("{:<"+str(max_command_size_with_space-num_spaces)+"}").format(command)+' '+desc)
+            print(' '
+                  * num_spaces
+                  + ("{:<" + str(max_command_size_with_space-num_spaces) + "}")
+                  .format(command)
+                  + ' ' + desc)
         else:
-            print(' '*num_spaces+("{:<"+str(max_command_size_with_space-num_spaces)+"}").format(command))
+            print(' '
+                  * num_spaces
+                  + ("{:<" + str(max_command_size_with_space-num_spaces) + "}")
+                  .format(command))
             print(' '*(max_command_size_with_space)+' '+desc)
 
     def __init__(self):
@@ -206,7 +214,7 @@ class CliOutput:
         @param msg: The message
         """
         exit(f'{self.__get_time()}{self.__get_error(msg)}')
- 
+
     def warning_box(self, msg: str) -> None:
         """Print the message with a warning label
 
@@ -215,7 +223,8 @@ class CliOutput:
         """
         with self.__lock:
             sys.stdout.flush()
-            print(f'{self.__break_line}{self.__get_time()}{self.__get_warning(msg)}')
+            print(f'{self.__break_line}'
+                  f'{self.__get_time()}{self.__get_warning(msg)}')
 
     def abort_box(self, msg: str) -> None:
         """Print the message with abort label and a message
@@ -225,7 +234,8 @@ class CliOutput:
         """
         with self.__lock:
             sys.stdout.flush()
-            print(f'{self.__break_line}{self.__get_time()}{self.__get_abort(msg)}')
+            print(f'{self.__break_line}'
+                  f'{self.__get_time()}{self.__get_abort(msg)}')
 
     def worked_box(self, msg: str) -> None:
         """Print the message with worked label and a message
@@ -284,25 +294,25 @@ class CliOutput:
         @type spaces: int
         @param spaces: The number of spaces to indent the config output
         """
-        print(f"{' '*(spaces+3)}{Colors.BLUE}{key}: {Colors.LIGHT_YELLOW}{value}{Colors.RESET}")
+        print(f"{' '*(spaces+3)}{Colors.BLUE}{key}: "
+              f"{Colors.LIGHT_YELLOW}{value}{Colors.RESET}")
 
     def print_configs(self,
-        output: str,
-        verbose: str,
-        targets: list,
-        dictionaries: list,
-        prefix: list,
-        suffix: list,
-        case: str,
-        encoder: str,
-        encode_only: str,
-        match: dict,
-        scanner: str,
-        blacklist_status: dict,
-        delay: float,
-        threads: int,
-        report: str,
-    ) -> None:
+                      output: str,
+                      verbose: str,
+                      targets: list,
+                      dictionaries: list,
+                      prefix: list,
+                      suffix: list,
+                      case: str,
+                      encoder: str,
+                      encode_only: str,
+                      match: dict,
+                      scanner: str,
+                      blacklist_status: dict,
+                      delay: float,
+                      threads: int,
+                      report: str) -> None:
         """Prints the program configuration
 
         @type output: str
@@ -320,15 +330,18 @@ class CliOutput:
         @type case: str
         @param case: The payload case
         @type encoder: str
-        @param encoder: The encoders string that caontains the encoder name and parameters
+        @param encoder: The encoders string that caontains
+                        the encoder name and parameters
         @type encode_only: str
         @param encode_only: The encode only regex
         @type match: dict
         @param match: The matcher options on a dictionary
         @type scanner: str
-        @param scanner: The scanner string that caontains the scanner name and parameters
+        @param scanner: The scanner string that caontains
+                        the scanner name and parameters
         @type blacklist_status: dict
-        @param blacklist_status: The blacklist status arguments (codes and action taken)
+        @param blacklist_status: The blacklist status arguments
+                                 (codes and action taken)
         @type delay: float
         @param delay: The delay between each request
         @type threads: int
@@ -346,8 +359,12 @@ class CliOutput:
         self.print_config("Verbosity mode", verbose)
         for i, target in enumerate(targets):
             self.print_config("Target", get_host(get_pure_url(target['url'])))
-            self.print_config("Methods", stringfy_list(target['methods']), spaces)
-            self.print_config("HTTP headers", 'custom' if target['header'] else 'default', spaces)
+            self.print_config("Methods",
+                              stringfy_list(target['methods']),
+                              spaces)
+            self.print_config("HTTP headers",
+                              'custom' if target['header'] else 'default',
+                              spaces)
             if target['body']:
                 self.print_config("Body data", target['body'], spaces)
             self.print_config("Fuzzing type", target['type_fuzzing'], spaces)
@@ -355,15 +372,22 @@ class CliOutput:
                 this_dict = dictionaries[i]
                 dict_size = this_dict['len']
                 if 'removed' in this_dict.keys() and this_dict['removed']:
-                    dict_size = f"{this_dict['len']} (removed {this_dict['removed']} duplicated payloads)"
+                    dict_size = (f"{this_dict['len']} "
+                                 f"(removed {this_dict['removed']} "
+                                 f"duplicated payloads)")
                 self.print_config("Dictionary size", dict_size, spaces)
-                self.print_config("Wordlists", stringfy_list(this_dict['wordlists']), spaces)
+                self.print_config("Wordlists",
+                                  stringfy_list(this_dict['wordlists']),
+                                  spaces)
         if global_dict:
             dict_size = this_dict['len']
             if 'removed' in this_dict.keys() and this_dict['removed']:
-                dict_size = f"{this_dict['len']} (removed {this_dict['removed']} duplicated payloads)"
+                dict_size = (f"{this_dict['len']} "
+                             f"(removed {this_dict['removed']} "
+                             f"duplicated payloads)")
             self.print_config("Dictionary size", dict_size)
-            self.print_config("Wordlists", stringfy_list(this_dict['wordlists']))
+            self.print_config("Wordlists",
+                              stringfy_list(this_dict['wordlists']))
         if prefix:
             self.print_config("Prefix", stringfy_list(prefix))
         if suffix:
@@ -381,7 +405,9 @@ class CliOutput:
         if scanner:
             self.print_config("Scanner", scanner)
         if blacklist_status:
-            self.print_config("Blacklisted status", f"{blacklist_status['status']} with action {blacklist_status['action']}")
+            self.print_config("Blacklisted status",
+                              (f"{blacklist_status['status']} "
+                               f"with action {blacklist_status['action']}"))
         if delay:
             self.print_config("Delay", f"{delay} seconds")
         self.print_config("Threads", threads)
@@ -390,10 +416,9 @@ class CliOutput:
         print("")
 
     def progress_status(self,
-        request_index: int,
-        total_requests: int,
-        payload: str
-    ) -> None:
+                        request_index: int,
+                        total_requests: int,
+                        payload: str) -> None:
         """Output the progress status of the fuzzing
 
         @type request_index: int
@@ -403,7 +428,11 @@ class CliOutput:
         @type payload: str
         @param payload: The payload used in the request
         """
-        status = f"{Colors.GRAY}[{Colors.LIGHT_GRAY}{request_index}{Colors.GRAY}/{Colors.LIGHT_GRAY}{total_requests}{Colors.GRAY}]{Colors.RESET} {Colors.LIGHT_YELLOW}{str(int((int(request_index)/total_requests)*100))}%{Colors.RESET}"
+        status = (f"{Colors.GRAY}[{Colors.LIGHT_GRAY}{request_index}"
+                  f"{Colors.GRAY}/{Colors.LIGHT_GRAY}{total_requests}"
+                  f"{Colors.GRAY}]{Colors.RESET} {Colors.LIGHT_YELLOW}"
+                  f"{str(int((int(request_index)/total_requests)*100))}%"
+                  f"{Colors.RESET}")
         payload = Colors.LIGHT_GRAY + fix_payload_to_output(
             payload=payload,
             is_progress_status=True
@@ -412,7 +441,8 @@ class CliOutput:
             if not self.__last_inline:
                 self.__last_inline = True
                 self.__erase_line()
-            print('\r'+f"{self.__get_time()}{status}{Colors.GRAY} :: {payload}", end='')
+            print(f"\r{self.__get_time()}{status}"
+                  f"{Colors.GRAY} :: {payload}", end='')
 
     def print_result(self, result: dict, vuln_validator: bool) -> None:
         """Custom output print for box mode
@@ -438,7 +468,8 @@ class CliOutput:
         @returns str: The time label with format HH:MM:SS
         """
         time = datetime.now().strftime("%H:%M:%S")
-        return f'{Colors.GRAY}[{Colors.LIGHT_GREEN}{time}{Colors.GRAY}]{Colors.RESET} '
+        return (f'{Colors.GRAY}[{Colors.LIGHT_GREEN}{time}'
+                f'{Colors.GRAY}]{Colors.RESET} ')
 
     def __get_info(self, msg: str) -> str:
         """The info getter, with a custom message
@@ -457,7 +488,7 @@ class CliOutput:
         @returns str: The message with warning label
         """
         return f'{self.__warning}{msg}'
-    
+
     def __get_error(self, msg: str) -> str:
         """The error getter, with a custom message
 
@@ -484,7 +515,7 @@ class CliOutput:
         @returns str: The message with worked label
         """
         return f'{self.__worked}{msg}'
-    
+
     def __get_not_worked(self, msg: str) -> str:
         """The not worked getter, with a custom message
 

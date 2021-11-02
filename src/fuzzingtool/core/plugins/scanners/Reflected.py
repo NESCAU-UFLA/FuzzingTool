@@ -42,11 +42,11 @@ class Reflected(BaseScanner, Plugin):
         reflected = result.payload in result.get_response().text
         result.custom['reflected'] = reflected
         return reflected
-    
+
     def cli_callback(self, result: Result) -> str:
         reflected = f"{Colors.LIGHT_YELLOW}{Colors.BOLD}IDK"
         was_reflected = result.custom['reflected']
-        if was_reflected != None:
+        if was_reflected is not None:
             if was_reflected:
                 reflected = f"{Colors.GREEN}{Colors.BOLD}YES"
             else:

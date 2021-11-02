@@ -33,13 +33,16 @@ from ...exceptions.MainExceptions import BadArgumentFormat
 
 class ArgumentParser(argparse.ArgumentParser):
     """Class to handle with the arguments parsing
-       Overrides the error method from argparse.ArgumentParser, raising an exception instead of exiting
+       Overrides the error method from argparse.ArgumentParser,
+       raising an exception instead of exiting
     """
     def __init__(self):
         usage = "Usage: FuzzingTool [-u|-r TARGET]+ [-w WORDLIST]+ [options]*"
-        examples = "For usage examples, see: https://github.com/NESCAU-UFLA/FuzzingTool/wiki/Usage-Examples"
+        examples = ("For usage examples, see: "
+                    "https://github.com/NESCAU-UFLA/FuzzingTool/wiki/Usage-Examples")
         if len(argv) < 2:
-            self.error(f"Invalid format! Use -h on 2nd parameter to show the help menu.\n\n{usage}\n\n{examples}")
+            self.error("Invalid format! Use -h on 2nd parameter "
+                       f"to show the help menu.\n\n{usage}\n\n{examples}")
         if len(argv) == 2 and ('-h=' in argv[1] or '--help=' in argv[1]):
             asked_help = argv[1].split('=')[1]
             if 'wordlists' == asked_help:
@@ -62,14 +65,14 @@ class ArgumentParser(argparse.ArgumentParser):
 
     def error(self, message: str) -> None:
         raise BadArgumentFormat(message)
-    
+
     def get_options(self) -> argparse.Namespace:
         """Get the FuzzingTool options
-        
+
         @returns argparse.Namespace: The Namespace with the arguments
         """
         return self.parse_args()
-    
+
     def _show_wordlists_help(self) -> None:
         """Show the help menu for wordlists and exit"""
         CO.help_title(0, "Wordlist options: (-w)")
@@ -112,7 +115,7 @@ class ArgumentParser(argparse.ArgumentParser):
         CO.help_title(0, "Examples:\n")
         CO.print(f"FuzzingTool -u https://domainexample.com/search.php?query= -w /path/to/wordlist/xss.txt --scanner Reflected -t 30 -o csv\n")
         exit(0)
-    
+
     def __show_plugins_help_from_category(self, category: str) -> None:
         """Show the help menu for the plugins
 
@@ -135,7 +138,7 @@ class ArgumentParser(argparse.ArgumentParser):
                 else:
                     params = f"={Plugin.__params__['metavar']}"
             CO.help_content(5, f"{Plugin.__name__}{params}", f"{Plugin.__desc__}{type_fuzzing}\n")
-    
+
     def __build_options(self) -> None:
         """Builds the FuzzingTool options"""
         self.add_argument('-v', '--version',

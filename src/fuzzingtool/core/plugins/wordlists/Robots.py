@@ -28,6 +28,7 @@ from ....exceptions.MainExceptions import MissingParameter
 
 from typing import List
 
+
 @plugin_meta
 class Robots(BaseWordlist, Plugin):
     __author__ = ("Vitor Oriel",)

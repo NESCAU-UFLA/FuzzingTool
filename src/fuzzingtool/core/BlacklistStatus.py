@@ -31,13 +31,12 @@ class BlacklistStatus:
         action_callback: The callback function to trigger when detect a blacklisted status
     """
     def __init__(self,
-        status: str,
-        action: str,
-        action_param: str,
-        action_callbacks: Dict[str, Callable[[int], None]]
-    ):
+                 status: str,
+                 action: str,
+                 action_param: str,
+                 action_callbacks: Dict[str, Callable[[int], None]]):
         """Class constructor
-        
+
         @type status: str
         @param status: The blacklist status codes in string format
         @type action: str
@@ -48,8 +47,10 @@ class BlacklistStatus:
         @param action_callbacks: The action callbacks
         """
         self.codes = self.build_status_list(status)
-        self.action_callback = self.set_action_callback(action, action_param, action_callbacks)
-    
+        self.action_callback = self.set_action_callback(
+            action, action_param, action_callbacks
+        )
+
     def build_status_list(self, status: str) -> List[int]:
         """Build the blacklisted status codes
 
@@ -59,14 +60,13 @@ class BlacklistStatus:
         """
         try:
             return [int(status) for status in split_str_to_list(status)]
-        except:
+        except ValueError:
             raise Exception("Status code must be an integer")
-    
+
     def set_action_callback(self,
-        action: str,
-        action_param: str,
-        action_callbacks: str
-    ) -> Callable[[int], None]:
+                            action: str,
+                            action_param: str,
+                            action_callbacks: str) -> Callable[[int], None]:
         """Get the action callback if a blacklisted status code is set
 
         @type action: str
@@ -78,7 +78,7 @@ class BlacklistStatus:
         @returns Callable[[int], None]: A callback function for the blacklisted status code
         """
         if not action:
-            return lambda status : None
+            return lambda status: None
         if action == 'skip':
             return action_callbacks['skip']
         if action == 'wait':

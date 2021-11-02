@@ -35,6 +35,7 @@ PREPARED_REGEXES = {
     'links': r"(http|https)://([\w-]+(\.[\w-]+))([\w.,@?^=%&:/~+#-]*[\w@?^=%&/~+#-])?",
 }
 
+
 @plugin_meta
 class Grep(BaseScanner, Plugin):
     __author__ = ("Vitor Oriel",)
@@ -72,16 +73,18 @@ class Grep(BaseScanner, Plugin):
     def scan(self, result: Result) -> bool:
         total_greped = 0
         for i, regexer in enumerate(self.__regexers):
-            this_greped = set([r.group() for r in regexer.finditer(result.get_response().text)])
+            this_greped = set([
+                r.group() for r in regexer.finditer(result.get_response().text)
+            ])
             total_greped += len(this_greped)
             result.custom['greped'][i] = this_greped
         result.custom['found'] = total_greped
         return True if total_greped else False
-    
+
     def cli_callback(self, result: Result) -> str:
         found = f"{Colors.LIGHT_YELLOW}{Colors.BOLD} IDK"
         quantity_found = result.custom['found']
-        if quantity_found != None:
+        if quantity_found is not None:
             if quantity_found > 0:
                 found_color = f"{Colors.GREEN}{Colors.BOLD}"
             else:

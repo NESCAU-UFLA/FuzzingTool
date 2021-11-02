@@ -18,7 +18,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from ..utils.consts import *
+from ..utils.consts import FUZZING_MARK
+
 
 def check_for_subdomain_fuzz(url: str) -> bool:
     """Checks if the fuzzing tests will occur on subdomain
@@ -34,7 +35,7 @@ def check_for_subdomain_fuzz(url: str) -> bool:
 
 class RequestParser:
     """Class that handle with request arguments parsing
-    
+
     Attributes:
         payload: The payload used in the request
     """
@@ -43,7 +44,7 @@ class RequestParser:
 
     def get_method(self, method: dict) -> str:
         """The new method getter
-        
+
         @type method: dict
         @param method: The method dictionary
         @returns str: The new target method
@@ -52,7 +53,7 @@ class RequestParser:
 
     def get_url(self, url: dict) -> str:
         """The new url getter
-        
+
         @type url: dict
         @param url: The URL dictionary
         @returns str: The new target URL
@@ -61,7 +62,7 @@ class RequestParser:
 
     def get_header(self, headers: dict) -> dict:
         """The new HTTP Header getter
-        
+
         @type httpHeder: dict
         @param headers: The HTTP Header
         @returns dict: The new HTTP Header
@@ -135,5 +136,6 @@ class RequestParser:
             else:
                 ajusted_data[key] = self.__payload
         return ajusted_data
+
 
 request_parser = RequestParser()

@@ -21,7 +21,7 @@
 from importlib import import_module
 
 from .BaseFactories import BaseRequestFactory
-from ..conn.requests import *
+from ..conn.requests import Request
 
 
 class RequestFactory(BaseRequestFactory):

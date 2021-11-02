@@ -35,7 +35,7 @@ class Logger:
 
     def setup(self, host: str) -> str:
         """Setup the log path to save the current logs
-        
+
         @type host: str
         @param host: The target hostname
         @returns str: The log path and name
@@ -49,7 +49,9 @@ class Logger:
         except FileNotFoundError:
             Path(log_dir).mkdir(parents=True, exist_ok=True)
             log_file = open(self.__log_full_path, 'w+')
-        log_file.write(f"Log for {host} on {date_now.strftime('%Y/%m/%d %H:%M')}\n\n")
+        log_file.write(
+            f"Log for {host} on {date_now.strftime('%Y/%m/%d %H:%M')}\n\n"
+        )
         log_file.close()
         return self.__log_full_path
 

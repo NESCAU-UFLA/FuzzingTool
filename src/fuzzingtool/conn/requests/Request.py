@@ -26,19 +26,19 @@ from typing import List, Dict, Tuple
 import urllib3.exceptions
 try:
     import requests
-except:
+except ImportError:
     exit("Requests package not installed. Install all dependencies first.")
 
-from ..RequestParser import *
+from ..RequestParser import request_parser
 from ...utils.consts import *
-from ...utils.http_utils import *
+from ...utils.http_utils import get_pure_url, get_host, get_url_without_scheme
 from ...utils.utils import get_indexes_to_parse
 from ...exceptions.RequestExceptions import RequestException
 
 
 class Request:
     """Class that handle with the requests
-    
+
     Attributes:
         url: The target URL
         method: The request method
@@ -52,18 +52,17 @@ class Request:
         lock: The threads locker to set up the payload on the fuzzing entries
     """
     def __init__(self,
-        url: str,
-        method: str = 'GET',
-        methods: List[str] = [],
-        body: str = '',
-        headers: Dict[str, str] = {},
-        follow_redirects: bool = True,
-        proxy: str = '',
-        proxies: List[str] = [],
-        timeout: int = 0,
-        cookie: str = '',
-        is_session: bool = False,
-    ):
+                 url: str,
+                 method: str = 'GET',
+                 methods: List[str] = [],
+                 body: str = '',
+                 headers: Dict[str, str] = {},
+                 follow_redirects: bool = True,
+                 proxy: str = '',
+                 proxies: List[str] = [],
+                 timeout: int = 0,
+                 cookie: str = '',
+                 is_session: bool = False):
         """Class constructor
 
         @type url: str
@@ -97,7 +96,11 @@ class Request:
         self.__proxies = [self.__setup_proxy(proxy) for proxy in proxies]
         self.__follow_redirects = follow_redirects
         self.__fuzzing_type = self._set_fuzzing_type()
-        self.__timeout = None if not self.is_url_discovery() else 10 if not timeout else timeout
+        self.__timeout = (None
+                          if not self.is_url_discovery()
+                          else 10
+                          if not timeout
+                          else timeout)
         if is_session or self.is_path_fuzzing():
             self.__session = requests.Session()
             self.__request = self.__session_request
@@ -107,7 +110,7 @@ class Request:
         if cookie:
             self.set_header_content('Cookie', cookie)
         self._lock = Lock()
-    
+
     def get_url(self) -> str:
         """The url content getter
 
@@ -167,10 +170,9 @@ class Request:
         self.__build_data_dict(self.__data, 'BODY', body)
 
     def set_header_content(self,
-        key: str,
-        value: str,
-        header: dict = {}
-    ) -> None:
+                           key: str,
+                           value: str,
+                           header: dict = {}) -> None:
         """The header content setter
 
         @type key: str
@@ -196,15 +198,17 @@ class Request:
                 url,
                 proxies=self.__proxy,
                 headers=request_parser.get_header(self.__header),
-                timeout=self.__timeout if self.__timeout else 10, # Default 10 seconds to make a request
+                timeout=(self.__timeout
+                         if self.__timeout
+                         else 10)  # Default 10 seconds to make a request
             )
         except requests.exceptions.ProxyError:
-            raise RequestException(f"Can't connect to the proxy")
+            raise RequestException("Can't connect to the proxy")
         except requests.exceptions.SSLError:
             raise RequestException(f"SSL couldn't be validated on {url}")
         except requests.exceptions.Timeout:
             raise RequestException(f"Connection to {url} timed out")
-        except requests.exceptions.invalid_header as e:
+        except requests.exceptions.InvalidHeader as e:
             e = str(e)
             invalid_header = e[e.rindex(': ')+2:]
             raise RequestException(f"Invalid header {invalid_header}")
@@ -216,7 +220,7 @@ class Request:
 
     def has_redirection(self) -> bool:
         """Test if the connection will have a redirection
-        
+
         @returns bool: The flag to say if occur a redirection or not
         """
         response, *_ = self.request(' ')
@@ -246,7 +250,7 @@ class Request:
             raise RequestException(f"SSL couldn't be validated on {url}")
         except requests.exceptions.Timeout:
             raise RequestException(f"Connection to {url} timed out")
-        except requests.exceptions.invalid_header as e:
+        except requests.exceptions.InvalidHeader as e:
             e = str(e)
             invalid_header = e[e.rindex(': ')+2:]
             raise RequestException(f"Invalid header {invalid_header}: {headers[invalid_header].decode('utf-8')}")
@@ -267,33 +271,33 @@ class Request:
 
     def _set_fuzzing_type(self) -> int:
         """Sets the fuzzing type
-        
+
         @returns int: The fuzzing type int value
         """
         def _is_method_fuzzing() -> bool:
             """Checks if the fuzzing type is MethodFuzzing
-            
+
             @returns bool: The fuzzing flag
             """
             return False if not self.__method['fuzzingIndexes'] else True
 
         def _is_url_fuzzing() -> bool:
             """Checks if the fuzzing type is UrlFuzzing
-            
+
             @returns bool: The fuzzing flag
             """
             return False if not self._url['fuzzingIndexes'] else True
 
         def _is_url_discovery() -> bool:
             """Checks if the fuzzing type is UrlFuzzing for discovery
-            
+
             @returns bool: The fuzzing flag
             """
-            return (_is_url_fuzzing() and not '?' in self._url['content'])
+            return (_is_url_fuzzing() and '?' not in self._url['content'])
 
         def _is_data_fuzzing() -> bool:
             """Checks if the fuzzing type is DataFuzzing
-            
+
             @returns bool: The fuzzing flag
             """
             for _, value in self.__data['PARAM'].items():
@@ -305,7 +309,7 @@ class Request:
             if self.__header['payloadKeys']:
                 return True
             return False
-        
+
         if _is_method_fuzzing():
             return HTTP_METHOD_FUZZING
         if _is_url_discovery():
@@ -346,7 +350,7 @@ class Request:
 
     def __setup_header(self, header: dict) -> dict:
         """Setup the HTTP Header
-        
+
         @type header: dict
         @param header: The HTTP header dictionary
         @returns dict: The HTTP header dictionary
@@ -421,7 +425,7 @@ class Request:
             """
             if '=' in content:
                 key, value = content.split('=')
-                if not FUZZING_MARK in value:
+                if FUZZING_MARK not in value:
                     data_dict[key] = value
                 else:
                     data_dict[key] = ''
@@ -460,13 +464,12 @@ class Request:
                 request_parser.get_header(self.__header),
                 request_parser.get_data(self.__data),
             )
-    
+
     def __session_request(self,
-        method: str,
-        url: str,
-        headers: dict,
-        data: dict
-    ) -> requests.Response:
+                          method: str,
+                          url: str,
+                          headers: dict,
+                          data: dict) -> requests.Response:
         """Performs a request to the target using Session object
 
         @type method: str
@@ -491,13 +494,12 @@ class Request:
             timeout=self.__timeout,
             allow_redirects=self.__follow_redirects,
         )
-    
+
     def __common_request(self,
-        method: str,
-        url: str,
-        headers: dict,
-        data: dict
-    ) -> requests.Response:
+                         method: str,
+                         url: str,
+                         headers: dict,
+                         data: dict) -> requests.Response:
         """Performs a request to the target
 
         @type method: str

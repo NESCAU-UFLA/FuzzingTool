@@ -22,22 +22,24 @@ from typing import List, Tuple, Union
 
 from .consts import FUZZING_MARK
 
-def get_indexes_to_parse(content: str, search_for: str = FUZZING_MARK) -> List[int]:
+
+def get_indexes_to_parse(content: str,
+                         search_for: str = FUZZING_MARK) -> List[int]:
     """Gets the indexes of the searched substring into a string content
-    
+
     @type content: str
     @param content: The parameter content
     @type search_for: str
-    @param search_for: The substring to be searched indexes on the given content
+    @param search_for: The substring to be searched indexes
+                       on the given content
     @returns List[int]: The positions indexes of the searched substring
     """
     return [i for i, char in enumerate(content) if char == search_for]
 
-def split_str_to_list(
-    string: str,
-    separator: str = ',',
-    ignores: str = '\\'
-) -> List[str]:
+
+def split_str_to_list(string: str,
+                      separator: str = ',',
+                      ignores: str = '\\') -> List[str]:
     """Split the given string into a list, using a separator
 
     @type string: str
@@ -62,6 +64,7 @@ def split_str_to_list(
         return string.split(separator)
     return []
 
+
 def stringfy_list(one_list: list) -> str:
     """Stringfies a list
 
@@ -75,12 +78,14 @@ def stringfy_list(one_list: list) -> str:
     output += one_list[-1]
     return output
 
+
 def get_human_length(length: int) -> Tuple[Union[int, float], str]:
     """Get the human readable length from the result
 
     @type length: int
     @param length: The length of the response body
-    @returns Tuple[int|float, str]: The tuple with new length and the readable order
+    @returns Tuple[int|float, str]: The tuple with new length
+                                    and the readable order
     """
     for order in ["B ", "KB", "MB", "GB"]:
         if length < 1024:
@@ -88,17 +93,18 @@ def get_human_length(length: int) -> Tuple[Union[int, float], str]:
         length /= 1024
     return (length, "TB")
 
+
 def check_range_list(content: str) -> List[Union[int, str]]:
     """Checks if the given content has a range list,
        and make a list of the range specified
-    
+
     @type content: str
     @param content: The string content to check for range
     @returns List[int|str]: The list with the compiled content
     """
     def get_number_range(left: str, right: str) -> List[int]:
         """Get the number range list
-        
+
         @type left: str
         @param left: The left string of the division mark
         @type right: str
@@ -110,7 +116,7 @@ def check_range_list(content: str) -> List[Union[int, str]]:
         while is_number and i > 0:
             try:
                 int(left[i-1])
-            except:
+            except ValueError:
                 is_number = False
             else:
                 i -= 1
@@ -120,7 +126,7 @@ def check_range_list(content: str) -> List[Union[int, str]]:
         while is_number and i < (len(right)-1):
             try:
                 int(right[i+1])
-            except:
+            except ValueError:
                 is_number = False
             else:
                 i += 1
@@ -142,7 +148,7 @@ def check_range_list(content: str) -> List[Union[int, str]]:
 
     def get_letter_range(left: str, right: str) -> List[str]:
         """Get the alphabet range list [a-z] [A-Z] [z-a] [Z-A]
-        
+
         @type left: str
         @param left: The left string of the division mark
         @type right: str
@@ -170,15 +176,16 @@ def check_range_list(content: str) -> List[Union[int, str]]:
                 order_left_digit -= 1
         return compiled_list
 
-    if '\-' in content:
-        content = content.replace('\-', '-')
+    if '\\-' in content:
+        content = content.replace('\\-', '-')
     elif '-' in content:
         left, right = content.split('-', 1)
         try:
             # Checks if the left and right digits from the mark are integers
             int(left[-1])
             int(right[0])
-            return get_number_range(left, right)
-        except:
+        except ValueError:
             return get_letter_range(left, right)
+        else:
+            return get_number_range(left, right)
     return [content]

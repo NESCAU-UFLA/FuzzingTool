@@ -31,7 +31,7 @@ class DataScanner(BaseScanner):
 
     def scan(self, result: Result) -> bool:
         return True
-    
+
     def cli_callback(self, result: Result) -> str:
         payload, RTT, length = get_formated_result(
             result.payload, result.RTT, result.length

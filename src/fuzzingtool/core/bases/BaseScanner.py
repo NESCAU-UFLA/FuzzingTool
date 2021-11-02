@@ -28,7 +28,7 @@ class BaseScanner(ABC):
     @abstractmethod
     def inspect_result(self, result: Result) -> None:
         """Inspects the FuzingTool result to add new information if needed
-        
+
         @type result: Result
         @param result: The result object
         """

@@ -20,9 +20,10 @@
 
 from ..reports.BaseReport import BaseReport
 
+
 def report_meta(cls: BaseReport) -> BaseReport:
     """Decorator to check for BaseReport metadata
-    
+
     @type cls: BaseReport
     @param cls: The class that call this decorator
     """
@@ -30,7 +31,9 @@ def report_meta(cls: BaseReport) -> BaseReport:
     class_attr = vars(cls)
     for meta in metadata:
         if meta not in class_attr:
-            raise Exception(f"Metadata {meta} not specified on report {cls.__name__}")
+            raise Exception(
+                f"Metadata {meta} not specified on report {cls.__name__}"
+            )
     if not cls.__author__:
         raise Exception(f"Author cannot be empty on report {cls.__name__}")
     if not cls.__version__:

@@ -24,18 +24,21 @@ from typing import Type
 from .BaseFactories import BasePluginFactory
 from ..utils.file_utils import get_plugin_names_from_category
 from ..utils.utils import split_str_to_list
-from ..core.plugins import *
-from ..exceptions.MainExceptions import InvalidPluginName, MissingParameter, BadArgumentFormat
+from ..core.plugins import Plugin
+from ..exceptions.MainExceptions import (InvalidPluginName,
+                                         MissingParameter, BadArgumentFormat)
 
 
 class PluginFactory(BasePluginFactory):
     convert_cli_plugin_parameter = {
         str: lambda string, _: string,
-        list: lambda string, Plugin: split_str_to_list(string, separator=Plugin.__params__['cli_list_separator']),
+        list: lambda string, Plugin: split_str_to_list(
+            string, separator=Plugin.__params__['cli_list_separator']
+        ),
     }
 
     def class_creator(name: str, category: str) -> Type[Plugin]:
-        if not name in get_plugin_names_from_category(category):
+        if name not in get_plugin_names_from_category(category):
             raise InvalidPluginName(f"Plugin {name} does not exists")
         Plugin = import_module(
             f"fuzzingtool.core.plugins.{category}.{name}",
@@ -52,7 +55,9 @@ class PluginFactory(BasePluginFactory):
             return Plugin()
         try:
             if type(params) is str:
-                params = PluginFactory.convert_cli_plugin_parameter[Plugin.__params__['type']](params, Plugin)
+                params = PluginFactory.convert_cli_plugin_parameter[
+                    Plugin.__params__['type']
+                ](params, Plugin)
             return Plugin(params)
         except MissingParameter as e:
             raise Exception(f"Plugin {name} missing parameter: {str(e)}")

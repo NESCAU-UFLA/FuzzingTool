@@ -34,7 +34,7 @@ class SubdomainRequest(Request):
     """Class that handle with the requests for subdomain fuzzing"""
     def __init__(self, url: str, **kwargs):
         """Class constructor
-        
+
         @type url: str
         @param url: The target URL
         """
@@ -49,7 +49,7 @@ class SubdomainRequest(Request):
         """
         try:
             return socket.gethostbyname(hostname)
-        except:
+        except socket.gaierror:
             raise InvalidHostname(f"Can't resolve hostname {hostname}")
 
     def request(self, payload: str) -> Tuple[Response, float, Dict[str, str]]:
@@ -58,6 +58,6 @@ class SubdomainRequest(Request):
             host = get_host(request_parser.get_url(self._url))
         ip = self.resolve_hostname(host)
         return (*(super().request(payload)), {'ip': ip})
-    
+
     def _set_fuzzing_type(self) -> int:
         return SUBDOMAIN_FUZZING

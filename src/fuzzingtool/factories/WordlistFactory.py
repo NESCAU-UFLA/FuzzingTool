@@ -24,7 +24,7 @@ from .BaseFactories import BaseWordlistFactory
 from .PluginFactory import PluginFactory
 from ..utils.http_utils import get_host, get_pure_url
 from ..conn.requests.Request import Request
-from ..core.defaults.wordlists import *
+from ..core.defaults.wordlists import ListWordlist, FileWordlist
 from ..exceptions.MainExceptions import InvalidPluginName, MissingParameter
 
 
@@ -33,7 +33,8 @@ class WordlistFactory(BaseWordlistFactory):
         try:
             Wordlist = PluginFactory.class_creator(name, 'wordlists')
             if (not params and requester and
-                Wordlist.__params__['metavar'] in ["TARGET_HOST", "TARGET_URL"]):
+                    Wordlist.__params__['metavar'] in
+                    ["TARGET_HOST", "TARGET_URL"]):
                 if "TARGET_HOST" in Wordlist.__params__['metavar']:
                     params = get_host(get_pure_url(requester.get_url()))
                 if "TARGET_URL" in Wordlist.__params__['metavar']:
