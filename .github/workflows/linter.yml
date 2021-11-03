@@ -1,0 +1,22 @@
+name: Linter
+
+on: 
+  pull_request:
+    branches:
+      - develop
+      - main
+
+jobs:
+  linter:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Installing linter
+        run: pip install flake8
+
+      - name: Running linter (first round)
+        run: flake8 --extend-ignore=W292,E265,E101,E111,E114,W291,E251,W293,E231,E303,E222,F403,F841 --max-line-length=100
+        continue-on-error: true
+
+      - name: Running linter (second round)
+        run: flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics --max-line-length=100
