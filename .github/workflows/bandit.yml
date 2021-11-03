@@ -1,0 +1,18 @@
+name: Bandit-SAST
+
+on: 
+  pull_request:
+    branches:
+      - develop
+      - main
+
+jobs:
+  bandit-sast:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - name: Installing bandit
+        run: pip install bandit
+      
+      - name: Running bandit
+        run: python3 -m bandit -r .
