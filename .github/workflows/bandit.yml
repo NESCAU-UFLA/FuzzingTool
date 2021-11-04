@@ -13,6 +13,10 @@ jobs:
       - uses: actions/checkout@master
       - name: Installing bandit
         run: pip install bandit
+
+      - name: Running bandit (1st round)
+        run: python3 -m bandit -r .
+        continue-on-error: true
       
-      - name: Running bandit
+      - name: Running bandit (2nd round)
         run: python3 -m bandit -ll -r .
