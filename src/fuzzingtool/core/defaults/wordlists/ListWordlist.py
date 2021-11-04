@@ -36,5 +36,7 @@ class ListWordlist(BaseWordlist):
         super().__init__()
 
     def _build(self) -> List[str]:
-        return [check_range_list(payload)
-                for payload in split_str_to_list(self.payload_list)]
+        builded_list = []
+        for payload in split_str_to_list(self.payload_list):
+            builded_list.extend(check_range_list(payload))
+        return builded_list
