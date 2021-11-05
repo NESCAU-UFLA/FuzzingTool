@@ -18,13 +18,15 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+from typing import List
+
+from dns import resolver, query, zone
+
 from ..Plugin import Plugin
 from ...bases.BaseWordlist import BaseWordlist
 from ....decorators.plugin_meta import plugin_meta
-from ....exceptions.MainExceptions import MissingParameter
+from ....exceptions.main_exceptions import MissingParameter
 
-from dns import resolver, query, zone
-from typing import List
 
 @plugin_meta
 class DnsZone(BaseWordlist, Plugin):
@@ -44,23 +46,25 @@ class DnsZone(BaseWordlist, Plugin):
         BaseWordlist.__init__(self)
 
     def _build(self) -> List[str]:
-        nameServers = resolver.resolve(self.host, 'NS')
-        nameServersIps = []
-        for ns in nameServers:
+        name_servers = resolver.resolve(self.host, 'NS')
+        name_servers_ips = []
+        for ns in name_servers:
             records = resolver.resolve(str(ns), 'A')
             for record in records:
-                nameServersIps.append(str(record))
-        if not nameServersIps:
+                name_servers_ips.append(str(record))
+        if not name_servers_ips:
             raise Exception("Couldn't find any name servers")
-        transferedSubdomains = []
-        for ip in nameServersIps:
+        transfered_subdomains = []
+        for ip in name_servers_ips:
             try:
                 zones = zone.from_xfr(query.xfr(ip.rstrip('.'), self.host))
-                transferedSubdomains.extend([str(subdomain) for subdomain in zones])
-            except:
+                transfered_subdomains.extend([str(subdomain)
+                                              for subdomain in zones])
+            except Exception:
                 continue
-        if not transferedSubdomains:
-            raise Exception(f"Couldn't make the zone transfer for any of the {len(nameServersIps)} name servers")
-        if '@' in transferedSubdomains:
-            transferedSubdomains.remove('@')
-        return list(set(transferedSubdomains))
+        if not transfered_subdomains:
+            raise Exception("Couldn't make the zone transfer for any of the "
+                            f"{len(name_servers_ips)} name servers")
+        if '@' in transfered_subdomains:
+            transfered_subdomains.remove('@')
+        return list(set(transfered_subdomains))

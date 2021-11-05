@@ -18,12 +18,13 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+from urllib.parse import quote, unquote
+
 from ..Plugin import Plugin
 from ...bases.BaseEncoder import BaseEncoder
 from ....decorators.plugin_meta import plugin_meta
-from ....exceptions.MainExceptions import BadArgumentFormat
+from ....exceptions.main_exceptions import BadArgumentFormat
 
-from urllib.parse import quote, unquote
 
 @plugin_meta
 class Url(BaseEncoder, Plugin):
@@ -36,24 +37,24 @@ class Url(BaseEncoder, Plugin):
     __type__ = "Encoder"
     __version__ = "0.2"
 
-    def __init__(self, encodeLevel: int):
-        if not encodeLevel:
-            encodeLevel = 1
+    def __init__(self, encode_level: int):
+        if not encode_level:
+            encode_level = 1
         else:
             try:
-                encodeLevel = int(encodeLevel)
-            except:
+                encode_level = int(encode_level)
+            except ValueError:
                 raise BadArgumentFormat("the encoding level must be an integer")
-        self.encodeLevel = encodeLevel
+        self.encode_level = encode_level
 
     def encode(self, payload: str) -> str:
         encoded = payload
-        for _ in range(self.encodeLevel):
+        for _ in range(self.encode_level):
             encoded = quote(encoded)
         return encoded
 
     def decode(self, payload: str) -> str:
         decoded = payload
-        for _ in range(self.encodeLevel):
+        for _ in range(self.encode_level):
             decoded = unquote(decoded)
         return decoded

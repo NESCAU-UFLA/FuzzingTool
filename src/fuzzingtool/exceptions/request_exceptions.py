@@ -21,5 +21,6 @@
 class RequestException(Exception):
     pass
 
+
 class InvalidHostname(Exception):
     pass

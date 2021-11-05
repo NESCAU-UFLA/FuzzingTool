@@ -18,9 +18,10 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from ..utils.consts import *
+from ..utils.consts import FUZZING_MARK
 
-def checkForSubdomainFuzz(url: str) -> bool:
+
+def check_for_subdomain_fuzz(url: str) -> bool:
     """Checks if the fuzzing tests will occur on subdomain
 
     @type url: str
@@ -31,43 +32,44 @@ def checkForSubdomainFuzz(url: str) -> bool:
         return True
     return False
 
+
 class RequestParser:
     """Class that handle with request arguments parsing
-    
+
     Attributes:
         payload: The payload used in the request
     """
     def __init__(self):
         self.__payload = ''
 
-    def getMethod(self, method: dict) -> str:
+    def get_method(self, method: dict) -> str:
         """The new method getter
-        
+
         @type method: dict
         @param method: The method dictionary
         @returns str: The new target method
         """
-        return method['content'] if not method['fuzzingIndexes'] else self.__getAjustedContentByIndexes(method)
+        return method['content'] if not method['fuzzingIndexes'] else self.__get_ajusted_content_by_indexes(method)
 
-    def getUrl(self, url: dict) -> str:
+    def get_url(self, url: dict) -> str:
         """The new url getter
-        
+
         @type url: dict
         @param url: The URL dictionary
         @returns str: The new target URL
         """
-        return url['content'] if not url['fuzzingIndexes'] else self.__getAjustedContentByIndexes(url)
+        return url['content'] if not url['fuzzingIndexes'] else self.__get_ajusted_content_by_indexes(url)
 
-    def getHeader(self, headers: dict) -> dict:
+    def get_header(self, headers: dict) -> dict:
         """The new HTTP Header getter
-        
+
         @type httpHeder: dict
         @param headers: The HTTP Header
         @returns dict: The new HTTP Header
         """
-        return headers['content'] if not headers['payloadKeys'] else self.__getAjustedHeader(headers)
+        return headers['content'] if not headers['payloadKeys'] else self.__get_ajusted_header(headers)
 
-    def getData(self, data: dict) -> dict:
+    def get_data(self, data: dict) -> dict:
         """The new data getter
 
         @type data: dict
@@ -75,11 +77,11 @@ class RequestParser:
         @returns dict: The new request parameters
         """
         return {
-            'PARAM': {} if not data['PARAM'] else self.__getAjustedData(data['PARAM']),
-            'BODY': {} if not data['BODY'] else self.__getAjustedData(data['BODY'])
+            'PARAM': {} if not data['PARAM'] else self.__get_ajusted_data(data['PARAM']),
+            'BODY': {} if not data['BODY'] else self.__get_ajusted_data(data['BODY'])
         }
 
-    def setPayload(self, payload: str) -> None:
+    def set_payload(self, payload: str) -> None:
         """The payload setter
 
         @type payload: str
@@ -87,52 +89,53 @@ class RequestParser:
         """
         self.__payload = payload
 
-    def __getAjustedContentByIndexes(self, content: dict) -> str:
+    def __get_ajusted_content_by_indexes(self, content: dict) -> str:
         """Put the payload into the given content
 
         @type content: dict
         @param content: The target content dictionary
         @returns str: The new content
         """
-        ajustedContent = content['content']
+        ajusted_content = content['content']
         for i in content['fuzzingIndexes']:
-            head = ajustedContent[:i]
-            tail = ajustedContent[(i+1):]
-            ajustedContent = head + self.__payload + tail
-        return ajustedContent
+            head = ajusted_content[:i]
+            tail = ajusted_content[(i+1):]
+            ajusted_content = head + self.__payload + tail
+        return ajusted_content
 
-    def __getAjustedHeader(self, header: dict) -> dict:
+    def __get_ajusted_header(self, header: dict) -> dict:
         """Put the payload in the header value that contains the fuzzing mark
 
         @type header: dict
         @param header: The HTTP Header dictionary
         @returns dict: The new HTTP Header
         """
-        ajustedHeader = {}
+        ajusted_header = {}
         for key, value in header['content'].items():
-            ajustedHeader[key] = value
+            ajusted_header[key] = value
         for key in header['payloadKeys']:
             result = ''
-            value = ajustedHeader[key]
+            value = ajusted_header[key]
             for i in range(len(value)-1):
                 result += value[i] + self.__payload
             result += value[-1]
-            ajustedHeader[key] = result.encode('utf-8')
-        return ajustedHeader
+            ajusted_header[key] = result.encode('utf-8')
+        return ajusted_header
 
-    def __getAjustedData(self, data: dict) -> dict:
+    def __get_ajusted_data(self, data: dict) -> dict:
         """Put the payload into the Data requestParameters dictionary
 
         @type data: dict
         @param dara: The request parameters
         @returns dict: The new request parameters
         """
-        ajustedData = {}
+        ajusted_data = {}
         for key, value in data.items():
             if value:
-                ajustedData[key] = value
+                ajusted_data[key] = value
             else:
-                ajustedData[key] = self.__payload
-        return ajustedData
+                ajusted_data[key] = self.__payload
+        return ajusted_data
 
-requestParser = RequestParser()
+
+request_parser = RequestParser()

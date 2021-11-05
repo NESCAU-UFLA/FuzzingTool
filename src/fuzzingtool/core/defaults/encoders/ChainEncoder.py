@@ -18,14 +18,14 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from ...bases.BaseEncoder import BaseEncoder
-from ...plugins.encoders import *
-
 from typing import List
+
+from ...bases.BaseEncoder import BaseEncoder
+
 
 class ChainEncoder(BaseEncoder):
     """Class that handle with the chain encoders
-    
+
     Attributes:
         encoders: The encoders list to be chained
     """

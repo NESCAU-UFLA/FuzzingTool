@@ -18,21 +18,20 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+import json
+from typing import List
+
 from ..BaseReport import BaseReport
 from ...core.Result import Result
 from ...decorators.report_meta import report_meta
 
-import json
-from typing import List, NoReturn
 
 @report_meta
 class JsonReport(BaseReport):
     __author__ = ("Vitor Oriel",)
     __version__ = "0.1"
-    __alias__ = 'json'
 
-    def _getType(self) -> str:
-        return JsonReport.__alias__
+    file_extension = 'json'
 
     def _header(self) -> None:
         pass

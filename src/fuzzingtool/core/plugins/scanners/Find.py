@@ -18,15 +18,16 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+import re
+
 from ..Plugin import Plugin
 from ...bases.BaseScanner import BaseScanner
 from ...Result import Result
-from ....interfaces.cli.CliOutput import Colors, getFormatedResult
+from ....interfaces.cli.CliOutput import Colors, get_formated_result
 from ....decorators.plugin_meta import plugin_meta
 from ....decorators.append_args import append_args
-from ....exceptions.MainExceptions import MissingParameter, BadArgumentFormat
+from ....exceptions.main_exceptions import MissingParameter, BadArgumentFormat
 
-import re
 
 @plugin_meta
 class Find(BaseScanner, Plugin):
@@ -52,29 +53,31 @@ class Find(BaseScanner, Plugin):
             raise BadArgumentFormat("invalid regex")
 
     @append_args
-    def inspectResult(self, result: Result) -> None:
+    def inspect_result(self, result: Result) -> None:
         result.custom['found'] = None
 
     def scan(self, result: Result) -> bool:
-        found = True if self.__regexer.search(result.getResponse().text) else False
+        found = (True
+                 if self.__regexer.search(result.get_response().text)
+                 else False)
         result.custom['found'] = found
         return found
-    
-    def cliCallback(self, result: Result) -> str:
+
+    def cli_callback(self, result: Result) -> str:
         found = f"{Colors.LIGHT_YELLOW}{Colors.BOLD}IDK"
-        wasFound = result.custom['found']
-        if wasFound != None:
-            if wasFound:
+        was_found = result.custom['found']
+        if was_found is not None:
+            if was_found:
                 found = f"{Colors.GREEN}{Colors.BOLD}YES"
             else:
                 found = f"{Colors.LIGHT_RED}{Colors.BOLD}NO "
-        payload, RTT, length = getFormatedResult(
+        payload, RTT, length = get_formated_result(
             result.payload, result.RTT, result.length
         )
         return (
-            f"{payload} {Colors.GRAY}["+
-            f"{Colors.LIGHT_GRAY}Regex found{Colors.RESET} {found}{Colors.RESET} | "+
-            f"{Colors.LIGHT_GRAY}Code{Colors.RESET} {result.status} | "+
-            f"{Colors.LIGHT_GRAY}RTT{Colors.RESET} {RTT} | "+
+            f"{payload} {Colors.GRAY}["
+            f"{Colors.LIGHT_GRAY}Regex found{Colors.RESET} {found}{Colors.RESET} | "
+            f"{Colors.LIGHT_GRAY}Code{Colors.RESET} {result.status} | "
+            f"{Colors.LIGHT_GRAY}RTT{Colors.RESET} {RTT} | "
             f"{Colors.LIGHT_GRAY}Size{Colors.RESET} {length}{Colors.GRAY}]{Colors.RESET}"
         )

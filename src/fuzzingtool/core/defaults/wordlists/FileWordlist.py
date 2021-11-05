@@ -18,20 +18,21 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from ...bases.BaseWordlist import BaseWordlist
-from ....utils.file_utils import readFile
-
 from typing import List
+
+from ...bases.BaseWordlist import BaseWordlist
+from ....utils.file_utils import read_file
+
 
 class FileWordlist(BaseWordlist):
     __author__ = ("Vitor Oriel",)
 
-    def __init__(self, filePath: str):
-        self.filePath = filePath
+    def __init__(self, file_path: str):
+        self.file_path = file_path
         super().__init__()
 
     def _build(self) -> List[str]:
         try:
-            return set(readFile(self.filePath))
+            return set(read_file(self.file_path))
         except Exception as e:
             raise e

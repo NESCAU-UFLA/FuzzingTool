@@ -18,12 +18,13 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+from typing import List
+
 from ..Plugin import Plugin
 from ...bases.BaseWordlist import BaseWordlist
 from ....decorators.plugin_meta import plugin_meta
-from ....exceptions.MainExceptions import MissingParameter, BadArgumentFormat
+from ....exceptions.main_exceptions import MissingParameter, BadArgumentFormat
 
-from typing import List
 
 @plugin_meta
 class Overflow(BaseWordlist, Plugin):
@@ -36,33 +37,37 @@ class Overflow(BaseWordlist, Plugin):
     __type__ = ""
     __version__ = "0.1"
 
-    def __init__(self, sourceParam: str):
-        if not sourceParam:
+    def __init__(self, source_param: str):
+        if not source_param:
             raise MissingParameter("quantity of payloads")
-        if ',' in sourceParam:
-            quantityOfPayloads, payload = sourceParam.split(',', 1)
+        if ',' in source_param:
+            quantity_of_payloads, payload = source_param.split(',', 1)
             if ':' in payload:
                 try:
-                    initPayload, payload, endPayload = payload.split(':', 3)
-                except:
-                    raise BadArgumentFormat("invalid quantity of values to unpack (expected initPayload:payload:endPayload)")
+                    init_payload, payload, end_payload = payload.split(':', 3)
+                except ValueError:
+                    raise BadArgumentFormat(
+                        "invalid quantity of values to unpack "
+                        "(expected init_payload:payload:end_payload)"
+                    )
             else:
-                initPayload, endPayload = '', ''
-            quantityOfPayloads = quantityOfPayloads
+                init_payload, end_payload = '', ''
+            quantity_of_payloads = quantity_of_payloads
         else:
-            quantityOfPayloads = sourceParam
-            initPayload, payload, endPayload = '', '', ''
+            quantity_of_payloads = source_param
+            init_payload, payload, end_payload = '', '', ''
         try:
-            quantityOfPayloads = int(quantityOfPayloads)
-        except:
+            quantity_of_payloads = int(quantity_of_payloads)
+        except ValueError:
             raise BadArgumentFormat("the quantity of payloads must be integer")
-        self.quantityOfPayloads = quantityOfPayloads
-        self.initPayload = initPayload
+        self.quantity_of_payloads = quantity_of_payloads
+        self.init_payload = init_payload
         self.payload = payload
-        self.endPayload = endPayload
+        self.end_payload = end_payload
         BaseWordlist.__init__(self)
 
     def _build(self) -> List[str]:
         return [
-            f"{self.initPayload}{self.payload*i}{self.endPayload}" for i in range(self.quantityOfPayloads)
+            f"{self.init_payload}{self.payload*i}{self.end_payload}"
+            for i in range(self.quantity_of_payloads)
         ]

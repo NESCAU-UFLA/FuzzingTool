@@ -20,28 +20,29 @@
 
 from ...bases.BaseScanner import BaseScanner
 from ...Result import Result
-from ....interfaces.cli.CliOutput import Colors, getFormatedResult
+from ....interfaces.cli.CliOutput import Colors, get_formated_result
+
 
 class DataScanner(BaseScanner):
     __author__ = ("Vitor Oriel",)
 
-    def inspectResult(self, result: Result) -> None:
+    def inspect_result(self, result: Result) -> None:
         result.custom['PayloadLength'] = len(result.payload)
 
     def scan(self, result: Result) -> bool:
         return True
-    
-    def cliCallback(self, result: Result) -> str:
-        payload, RTT, length = getFormatedResult(
+
+    def cli_callback(self, result: Result) -> str:
+        payload, RTT, length = get_formated_result(
             result.payload, result.RTT, result.length
         )
         words = '{:>6}'.format(result.words)
         lines = '{:>5}'.format(result.lines)
         return (
-            f"{payload} {Colors.GRAY}["+
-            f"{Colors.LIGHT_GRAY}Code{Colors.RESET} {result.status} | "+
-            f"{Colors.LIGHT_GRAY}RTT{Colors.RESET} {RTT} | "+
-            f"{Colors.LIGHT_GRAY}Size{Colors.RESET} {length} | "+
-            f"{Colors.LIGHT_GRAY}Words{Colors.RESET} {words} | "+
+            f"{payload} {Colors.GRAY}["
+            f"{Colors.LIGHT_GRAY}Code{Colors.RESET} {result.status} | "
+            f"{Colors.LIGHT_GRAY}RTT{Colors.RESET} {RTT} | "
+            f"{Colors.LIGHT_GRAY}Size{Colors.RESET} {length} | "
+            f"{Colors.LIGHT_GRAY}Words{Colors.RESET} {words} | "
             f"{Colors.LIGHT_GRAY}Lines{Colors.RESET} {lines}{Colors.GRAY}]{Colors.RESET}"
         )

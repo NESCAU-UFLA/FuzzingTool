@@ -18,21 +18,23 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+import re
+
 from ..Plugin import Plugin
 from ...bases.BaseScanner import BaseScanner
 from ...Result import Result
-from ....utils.utils import stringfyList
-from ....interfaces.cli.CliOutput import Colors, getFormatedResult
+from ....utils.utils import stringfy_list
+from ....interfaces.cli.CliOutput import Colors, get_formated_result
 from ....decorators.plugin_meta import plugin_meta
 from ....decorators.append_args import append_args
-from ....exceptions.MainExceptions import MissingParameter, BadArgumentFormat
+from ....exceptions.main_exceptions import MissingParameter, BadArgumentFormat
 
-import re
 
 PREPARED_REGEXES = {
     'email': r"([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+)",
     'links': r"(http|https)://([\w-]+(\.[\w-]+))([\w.,@?^=%&:/~+#-]*[\w@?^=%&/~+#-])?",
 }
+
 
 @plugin_meta
 class Grep(BaseScanner, Plugin):
@@ -43,7 +45,8 @@ class Grep(BaseScanner, Plugin):
         'cli_list_separator': ';',
     }
     __desc__ = ("Grep content based on a regex match into the response body. "
-                f"You can use these prepared regexes: {stringfyList(list(PREPARED_REGEXES.keys()))}")
+                "You can use these prepared regexes: "
+                + stringfy_list(list(PREPARED_REGEXES.keys())))
     __type__ = ""
     __version__ = "0.2"
 
@@ -64,36 +67,38 @@ class Grep(BaseScanner, Plugin):
                 raise BadArgumentFormat(f"invalid regex: {regex}")
 
     @append_args
-    def inspectResult(self, result: Result) -> None:
+    def inspect_result(self, result: Result) -> None:
         result.custom['found'] = None
         result.custom['greped'] = {i: [] for i in range(len(self.__regexers))}
 
     def scan(self, result: Result) -> bool:
-        totalGreped = 0
+        total_greped = 0
         for i, regexer in enumerate(self.__regexers):
-            thisGreped = set([r.group() for r in regexer.finditer(result.getResponse().text)])
-            totalGreped += len(thisGreped)
-            result.custom['greped'][i] = thisGreped
-        result.custom['found'] = totalGreped
-        return True if totalGreped else False
-    
-    def cliCallback(self, result: Result) -> str:
+            this_greped = set([
+                r.group() for r in regexer.finditer(result.get_response().text)
+            ])
+            total_greped += len(this_greped)
+            result.custom['greped'][i] = this_greped
+        result.custom['found'] = total_greped
+        return True if total_greped else False
+
+    def cli_callback(self, result: Result) -> str:
         found = f"{Colors.LIGHT_YELLOW}{Colors.BOLD} IDK"
-        quantityFound = result.custom['found']
-        if quantityFound != None:
-            if quantityFound > 0:
-                foundColor = f"{Colors.GREEN}{Colors.BOLD}"
+        quantity_found = result.custom['found']
+        if quantity_found is not None:
+            if quantity_found > 0:
+                found_color = f"{Colors.GREEN}{Colors.BOLD}"
             else:
-                foundColor = f"{Colors.LIGHT_RED}{Colors.BOLD}"
-            quantityFound = '{:>4}'.format(str(quantityFound))
-            found = f"{foundColor}{quantityFound}"
-        payload, RTT, length = getFormatedResult(
+                found_color = f"{Colors.LIGHT_RED}{Colors.BOLD}"
+            quantity_found = '{:>4}'.format(str(quantity_found))
+            found = f"{found_color}{quantity_found}"
+        payload, RTT, length = get_formated_result(
             result.payload, result.RTT, result.length
         )
         return (
-            f"{payload} {Colors.GRAY}["+
-            f"{Colors.LIGHT_GRAY}Found{Colors.RESET} {found}{Colors.RESET} | "+
-            f"{Colors.LIGHT_GRAY}Code{Colors.RESET} {result.status} | "+
-            f"{Colors.LIGHT_GRAY}RTT{Colors.RESET} {RTT} | "+
+            f"{payload} {Colors.GRAY}["
+            f"{Colors.LIGHT_GRAY}Found{Colors.RESET} {found}{Colors.RESET} | "
+            f"{Colors.LIGHT_GRAY}Code{Colors.RESET} {result.status} | "
+            f"{Colors.LIGHT_GRAY}RTT{Colors.RESET} {RTT} | "
             f"{Colors.LIGHT_GRAY}Size{Colors.RESET} {length}{Colors.GRAY}]{Colors.RESET}"
         )

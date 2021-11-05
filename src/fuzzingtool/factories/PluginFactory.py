@@ -18,23 +18,27 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from .BaseFactories import BasePluginFactory
-from ..utils.file_utils import getPluginNamesFromCategory
-from ..utils.utils import splitStrToList
-from ..core.plugins import *
-from ..exceptions.MainExceptions import InvalidPluginName, MissingParameter, BadArgumentFormat
-
 from importlib import import_module
 from typing import Type
 
+from .BaseFactories import BasePluginFactory
+from ..utils.file_utils import get_plugin_names_from_category
+from ..utils.utils import split_str_to_list
+from ..core.plugins import Plugin
+from ..exceptions.main_exceptions import (InvalidPluginName,
+                                          MissingParameter, BadArgumentFormat)
+
+
 class PluginFactory(BasePluginFactory):
-    convertCliPluginParameter = {
+    convert_cli_plugin_parameter = {
         str: lambda string, _: string,
-        list: lambda string, Plugin: splitStrToList(string, separator=Plugin.__params__['cli_list_separator']),
+        list: lambda string, Plugin: split_str_to_list(
+            string, separator=Plugin.__params__['cli_list_separator']
+        ),
     }
 
-    def classCreator(name: str, category: str) -> Type[Plugin]:
-        if not name in getPluginNamesFromCategory(category):
+    def class_creator(name: str, category: str) -> Type[Plugin]:
+        if name not in get_plugin_names_from_category(category):
             raise InvalidPluginName(f"Plugin {name} does not exists")
         Plugin = import_module(
             f"fuzzingtool.core.plugins.{category}.{name}",
@@ -42,16 +46,18 @@ class PluginFactory(BasePluginFactory):
         )
         return getattr(Plugin, name)
 
-    def objectCreator(name: str, category: str, params) -> Plugin:
+    def object_creator(name: str, category: str, params) -> Plugin:
         try:
-            Plugin = PluginFactory.classCreator(name, category)
+            Plugin = PluginFactory.class_creator(name, category)
         except InvalidPluginName as e:
             raise Exception(str(e))
         if not Plugin.__params__:
             return Plugin()
         try:
             if type(params) is str:
-                params = PluginFactory.convertCliPluginParameter[Plugin.__params__['type']](params, Plugin)
+                params = PluginFactory.convert_cli_plugin_parameter[
+                    Plugin.__params__['type']
+                ](params, Plugin)
             return Plugin(params)
         except MissingParameter as e:
             raise Exception(f"Plugin {name} missing parameter: {str(e)}")

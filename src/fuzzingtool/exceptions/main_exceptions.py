@@ -21,11 +21,14 @@
 class SkipTargetException(Exception):
     pass
 
+
 class InvalidPluginName(Exception):
     pass
 
+
 class MissingParameter(Exception):
     pass
+
 
 class BadArgumentFormat(Exception):
     pass

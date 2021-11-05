@@ -20,29 +20,32 @@
 
 from .consts import FUZZING_MARK
 
-def getHost(url: str) -> str:
+
+def get_host(url: str) -> str:
     """Get the target host from url
 
     @type url: str
     @param url: The target URL
     @returns str: The payloaded target
     """
-    url = getUrlWithoutScheme(url)
+    url = get_url_without_scheme(url)
     if '/' in url:
         return url[:url.index('/')]
     return url
 
-def getPath(url: str) -> str:
+
+def get_path(url: str) -> str:
     """Get the target path from url
 
     @type url: str
     @param url: The target URL
     @returns str: The payloaded path
     """
-    url = getUrlWithoutScheme(url)
+    url = get_url_without_scheme(url)
     return url[url.index('/'):]
 
-def getPureUrl(url: str) -> str:
+
+def get_pure_url(url: str) -> str:
     """Gets the URL without the FUZZING_MARK variable
 
     @type url: str
@@ -55,7 +58,8 @@ def getPureUrl(url: str) -> str:
         return url.replace(FUZZING_MARK, '')
     return url
 
-def getUrlWithoutScheme(url: str) -> str:
+
+def get_url_without_scheme(url: str) -> str:
     """Get the target url without scheme
 
     @type url: str

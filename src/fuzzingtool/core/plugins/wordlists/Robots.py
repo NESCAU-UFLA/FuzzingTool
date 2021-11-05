@@ -20,13 +20,19 @@
 
 from ..Plugin import Plugin
 from ...bases.BaseWordlist import BaseWordlist
-from ....utils.http_utils import getPath
+from ....utils.http_utils import get_path
 from ....conn.requests.Request import Request
 from ....decorators.plugin_meta import plugin_meta
-from ....exceptions.RequestExceptions import RequestException
-from ....exceptions.MainExceptions import MissingParameter
+from ....exceptions.request_exceptions import RequestException
+from ....exceptions.main_exceptions import MissingParameter
 
 from typing import List
+
+ROBOTS_HTTP_HEADER = {
+    'User-Agent': "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:87.0) Gecko/20100101 Firefox/87.0",
+    'Referer': "https://google.com/",
+}
+
 
 @plugin_meta
 class Robots(BaseWordlist, Plugin):
@@ -48,13 +54,11 @@ class Robots(BaseWordlist, Plugin):
         BaseWordlist.__init__(self)
 
     def _build(self) -> List[str]:
+        global ROBOTS_HTTP_HEADER
         requester = Request(
             url=f"{self.url}robots.txt",
             method='GET',
-            headers={
-                'User-Agent': "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:87.0) Gecko/20100101 Firefox/87.0",
-                'Referer': "https://google.com/",
-            },
+            headers=ROBOTS_HTTP_HEADER,
         )
         try:
             response, *_ = requester.request()
@@ -69,6 +73,6 @@ class Robots(BaseWordlist, Plugin):
             )):
                 _, path = line.split(': ', 1)
                 if '://' in path:
-                    path = getPath(path)
+                    path = get_path(path)
                 paths.append(path[1:])
         return paths

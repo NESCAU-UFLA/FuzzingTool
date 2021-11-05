@@ -18,20 +18,19 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+from typing import List
+
 from ..BaseReport import BaseReport
 from ...core.Result import Result
 from ...decorators.report_meta import report_meta
 
-from typing import List, NoReturn
 
 @report_meta
 class TxtReport(BaseReport):
     __author__ = ("Vitor Oriel",)
     __version__ = "0.1"
-    __alias__ = 'txt'
 
-    def _getType(self) -> str:
-        return TxtReport.__alias__
+    file_extension = 'txt'
 
     def _header(self) -> None:
         pass

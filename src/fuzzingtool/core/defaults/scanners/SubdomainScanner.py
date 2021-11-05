@@ -21,27 +21,28 @@
 from ...bases.BaseScanner import BaseScanner
 from ...Result import Result
 from ....decorators.append_args import append_args
-from ....interfaces.cli.CliOutput import Colors, getFormatedResult
+from ....interfaces.cli.CliOutput import Colors, get_formated_result
+
 
 class SubdomainScanner(BaseScanner):
     __author__ = ("Vitor Oriel",)
 
     @append_args
-    def inspectResult(self, result: Result) -> None:
+    def inspect_result(self, result: Result) -> None:
         pass
 
     def scan(self, result: Result) -> bool:
         return True
 
-    def cliCallback(self, result: Result) -> str:
-        url, RTT, length = getFormatedResult(
+    def cli_callback(self, result: Result) -> str:
+        url, RTT, length = get_formated_result(
             result.url, result.RTT, result.length
         )
         ip = '{:>15}'.format(result.custom['ip'])
         return (
-            f"{url} {Colors.GRAY}["+
-            f'{Colors.LIGHT_GRAY}IP{Colors.RESET} {ip}'" | "+
-            f"{Colors.LIGHT_GRAY}Code{Colors.RESET} {result.status} | "+
-            f"{Colors.LIGHT_GRAY}RTT{Colors.RESET} {RTT} | "+
+            f"{url} {Colors.GRAY}["
+            f'{Colors.LIGHT_GRAY}IP{Colors.RESET} {ip}'" | "
+            f"{Colors.LIGHT_GRAY}Code{Colors.RESET} {result.status} | "
+            f"{Colors.LIGHT_GRAY}RTT{Colors.RESET} {RTT} | "
             f"{Colors.LIGHT_GRAY}Size{Colors.RESET} {length}{Colors.GRAY}]{Colors.RESET}"
         )

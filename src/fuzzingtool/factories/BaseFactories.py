@@ -20,24 +20,26 @@
 
 from abc import ABC, abstractmethod
 
+
 class BaseRequestFactory(ABC):
     @staticmethod
     @abstractmethod
-    def creator(requestType: str, url: str, **kwargs):
+    def creator(request_type: str, url: str, **kwargs):
         """Build the requests based on their types
 
-        @type requestType: str
-        @param requestType: The request type
+        @type request_type: str
+        @param request_type: The request type
         @type url: str
         @param url: The target URL
         @returns Request: A request object
         """
         pass
 
+
 class BasePluginFactory(ABC):
     @staticmethod
     @abstractmethod
-    def classCreator(name: str, category: str):
+    def class_creator(name: str, category: str):
         """Get the import for the plugin
 
         @type name: str
@@ -50,7 +52,7 @@ class BasePluginFactory(ABC):
 
     @staticmethod
     @abstractmethod
-    def objectCreator(name: str, category: str, params):
+    def object_creator(name: str, category: str, params):
         """Build the plugins based on their categories
 
         @type name: str
@@ -62,6 +64,7 @@ class BasePluginFactory(ABC):
         @returns Plugin: The selected plugin object
         """
         pass
+
 
 class BaseWordlistFactory(ABC):
     @staticmethod

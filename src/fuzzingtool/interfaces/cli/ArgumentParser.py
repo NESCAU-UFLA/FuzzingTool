@@ -18,37 +18,41 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from .CliOutput import CliOutput as CO
-from ... import version
-from ...utils.consts import FUZZING_MARK
-from ...utils.utils import stringfyList
-from ...utils.file_utils import getPluginNamesFromCategory
-from ...factories.PluginFactory import PluginFactory
-from ...reports.Report import Report
-from ...exceptions.MainExceptions import BadArgumentFormat
-
 from sys import argv
 import argparse
 
+from .CliOutput import CliOutput as CO
+from ... import version
+from ...utils.consts import FUZZING_MARK
+from ...utils.utils import stringfy_list
+from ...utils.file_utils import get_plugin_names_from_category
+from ...factories.PluginFactory import PluginFactory
+from ...reports.Report import Report
+from ...exceptions.main_exceptions import BadArgumentFormat
+
+
 class ArgumentParser(argparse.ArgumentParser):
     """Class to handle with the arguments parsing
-       Overrides the error method from argparse.ArgumentParser, raising an exception instead of exiting
+       Overrides the error method from argparse.ArgumentParser,
+       raising an exception instead of exiting
     """
     def __init__(self):
         usage = "Usage: FuzzingTool [-u|-r TARGET]+ [-w WORDLIST]+ [options]*"
-        examples = "For usage examples, see: https://github.com/NESCAU-UFLA/FuzzingTool/wiki/Usage-Examples"
+        examples = ("For usage examples, see: "
+                    "https://github.com/NESCAU-UFLA/FuzzingTool/wiki/Usage-Examples")
         if len(argv) < 2:
-            self.error(f"Invalid format! Use -h on 2nd parameter to show the help menu.\n\n{usage}\n\n{examples}")
+            self.error("Invalid format! Use -h on 2nd parameter "
+                       f"to show the help menu.\n\n{usage}\n\n{examples}")
         if len(argv) == 2 and ('-h=' in argv[1] or '--help=' in argv[1]):
-            askedHelp = argv[1].split('=')[1]
-            if 'wordlists' == askedHelp:
-                self._showWordlistsHelp()
-            elif 'encoders' == askedHelp:
-                self._showEncodersHelp()
-            elif 'scanners' == askedHelp:
-                self._showScannersHelp()
+            asked_help = argv[1].split('=')[1]
+            if 'wordlists' == asked_help:
+                self._show_wordlists_help()
+            elif 'encoders' == asked_help:
+                self._show_encoders_help()
+            elif 'scanners' == asked_help:
+                self._show_scanners_help()
             else:
-                self.error(f"Help argument '{askedHelp}' not available")
+                self.error(f"Help argument '{asked_help}' not available")
         super().__init__(
             usage=argparse.SUPPRESS,
             description=usage,
@@ -57,73 +61,85 @@ class ArgumentParser(argparse.ArgumentParser):
                 prog, indent_increment=4, max_help_position=30, width=100
             )
         )
-        self.__buildOptions()
+        self.__build_options()
 
     def error(self, message: str) -> None:
         raise BadArgumentFormat(message)
-    
-    def getOptions(self) -> argparse.Namespace:
+
+    def get_options(self) -> argparse.Namespace:
         """Get the FuzzingTool options
-        
+
         @returns argparse.Namespace: The Namespace with the arguments
         """
         return self.parse_args()
-    
-    def _showWordlistsHelp(self) -> None:
+
+    def _show_wordlists_help(self) -> None:
         """Show the help menu for wordlists and exit"""
-        CO.helpTitle(0, "Wordlist options: (-w)")
+        CO.help_title(0, "Wordlist options: (-w)")
         CO.print("     You can set just one global wordlist, multiple wordlists and wordlists per target!")
-        CO.helpTitle(2, "Default: The default wordlists are selected by default if no one from plugins was choiced\n")
-        CO.helpContent(5, "FILEPATH", "Set the path of the wordlist file")
-        CO.helpContent(5, "[PAYLOAD1,PAYLOAD2,]", "Set the payloads list to be used as wordlist")
-        CO.helpTitle(2, "Plugins:\n")
-        self.__showPluginsHelpFromCategory('wordlists')
-        CO.helpTitle(0, "Examples:\n")
-        CO.print(f"FuzzingTool -u https://{FUZZING_MARK}.domainexample.com/ -w /path/to/wordlist/subdomains.txt -t 30 --timeout 5 -V2\n")
-        CO.print(f"FuzzingTool -u https://{FUZZING_MARK}.domainexample1.com/ -u https://{FUZZING_MARK}.domainexample2.com/ -w [wp-admin,admin,webmail,www,cpanel] -t 30 --timeout 5 -V2\n")
-        CO.print(f"FuzzingTool -u https://{FUZZING_MARK}.domainexample.com/ -w CrtSh -t 30 --timeout 5 -V2\n")
-        CO.print(f"FuzzingTool -u https://domainexample.com/{FUZZING_MARK} -w Overflow=5000,:../:etc/passwd -t 30 --timeout 5 -V2\n")
-        CO.helpTitle(0, "Examples with multiple wordlists:\n")
-        CO.print(f"FuzzingTool -u https://{FUZZING_MARK}.domainexample.com/ -w 'DnsZone;CrtSh' -t 30 --timeout 5 -V2\n")
-        CO.print(f"FuzzingTool -u https://domainexample.com/{FUZZING_MARK} -w 'Robots;/path/to/wordlist/paths.txt' -t 30 --timeout 5 -V2\n")
-        CO.helpTitle(0, "Example with wordlists per target:\n")
-        CO.print(f"FuzzingTool -u domainexample.com/{FUZZING_MARK} -u {FUZZING_MARK}.domainexample2.com -w 'Robots;/path/to/wordlist/paths.txt' -w CrtSh -t 30 --timeout 5 -V2\n")
+        CO.help_title(2, "Default: The default wordlists are selected by default if no one from plugins was choiced\n")
+        CO.help_content(5, "FILEPATH", "Set the path of the wordlist file")
+        CO.help_content(5, "[PAYLOAD1,PAYLOAD2,]", "Set the payloads list to be used as wordlist")
+        CO.help_title(2, "Plugins:\n")
+        self.__show_plugins_help_from_category('wordlists')
+        CO.help_title(0, "Examples:\n")
+        CO.print(f"FuzzingTool -u https://{FUZZING_MARK}.domainexample.com/ "
+                 "-w /path/to/wordlist/subdomains.txt -t 30 --timeout 5 -V2\n")
+        CO.print(f"FuzzingTool -u https://{FUZZING_MARK}.domainexample1.com/ "
+                 f"-u https://{FUZZING_MARK}.domainexample2.com/ "
+                 "-w [wp-admin,admin,webmail,www,cpanel] -t 30 --timeout 5 -V2\n")
+        CO.print(f"FuzzingTool -u https://{FUZZING_MARK}.domainexample.com/ "
+                 "-w CrtSh -t 30 --timeout 5 -V2\n")
+        CO.print(f"FuzzingTool -u https://domainexample.com/{FUZZING_MARK} "
+                 "-w Overflow=5000,:../:etc/passwd -t 30 --timeout 5 -V2\n")
+        CO.help_title(0, "Examples with multiple wordlists:\n")
+        CO.print(f"FuzzingTool -u https://{FUZZING_MARK}.domainexample.com/ "
+                 "-w 'DnsZone;CrtSh' -t 30 --timeout 5 -V2\n")
+        CO.print(f"FuzzingTool -u https://domainexample.com/{FUZZING_MARK} "
+                 "-w 'Robots;/path/to/wordlist/paths.txt' -t 30 --timeout 5 -V2\n")
+        CO.help_title(0, "Example with wordlists per target:\n")
+        CO.print(f"FuzzingTool -u domainexample.com/{FUZZING_MARK} "
+                 f"-u {FUZZING_MARK}.domainexample2.com "
+                 "-w 'Robots;/path/to/wordlist/paths.txt' -w CrtSh -t 30 --timeout 5 -V2\n")
         exit(0)
 
-    def _showEncodersHelp(self) -> None:
+    def _show_encoders_help(self) -> None:
         """Show the help menu for encoders and exit"""
-        CO.helpTitle(0, "Encoder options: (-e)")
-        CO.helpTitle(2, "Set the encoder used on the payloads\n")
-        self.__showPluginsHelpFromCategory('encoders')
-        CO.helpTitle(0, "Examples:\n")
-        CO.print(f"FuzzingTool -u https://domainexample.com/page.php?id= -w /path/to/wordlist/sqli.txt -e Url=2 -t 30 --scanner Find=SQL\n")
+        CO.help_title(0, "Encoder options: (-e)")
+        CO.help_title(2, "Set the encoder used on the payloads\n")
+        self.__show_plugins_help_from_category('encoders')
+        CO.help_title(0, "Examples:\n")
+        CO.print("FuzzingTool -u https://domainexample.com/page.php?id= "
+                 "-w /path/to/wordlist/sqli.txt -e Url=2 -t 30 --scanner Find=SQL\n")
         exit(0)
 
-    def _showScannersHelp(self) -> None:
+    def _show_scanners_help(self) -> None:
         """Show the help menu for scanners and exit"""
-        CO.helpTitle(0, "Scanner options:")
-        CO.helpTitle(2, "Default: The default scanners are selected automatically if no one from plugins was choiced\n")
-        CO.helpContent(5, "DataScanner", "Scanner for the data fuzzing")
-        CO.helpContent(5, "PathScanner", "Scanner for the path fuzzing")
-        CO.helpContent(5, "SubdomainScanner", "Scanner for the subdomain fuzzing")
-        CO.helpTitle(2, "Plugins (--scaner SCANNER):\n")
-        self.__showPluginsHelpFromCategory('scanners')
-        CO.helpTitle(0, "Examples:\n")
-        CO.print(f"FuzzingTool -u https://domainexample.com/search.php?query= -w /path/to/wordlist/xss.txt --scanner Reflected -t 30 -o csv\n")
+        CO.help_title(0, "Scanner options:")
+        CO.help_title(2, "Default: The default scanners are selected automatically "
+                         "if no one from plugins was choiced\n")
+        CO.help_content(5, "DataScanner", "Scanner for the data fuzzing")
+        CO.help_content(5, "PathScanner", "Scanner for the path fuzzing")
+        CO.help_content(5, "SubdomainScanner", "Scanner for the subdomain fuzzing")
+        CO.help_title(2, "Plugins (--scaner SCANNER):\n")
+        self.__show_plugins_help_from_category('scanners')
+        CO.help_title(0, "Examples:\n")
+        CO.print("FuzzingTool -u https://domainexample.com/search.php?query= "
+                 "-w /path/to/wordlist/xss.txt --scanner Reflected -t 30 -o csv\n")
         exit(0)
-    
-    def __showPluginsHelpFromCategory(self, category: str) -> None:
+
+    def __show_plugins_help_from_category(self, category: str) -> None:
         """Show the help menu for the plugins
 
         @type category: str
         @param category: The package category to search for his plugins
         """
-        for pluginName in getPluginNamesFromCategory(category):
-            Plugin = PluginFactory.classCreator(pluginName, category)
+        for plugin_name in get_plugin_names_from_category(category):
+            Plugin = PluginFactory.class_creator(plugin_name, category)
             if not Plugin.__type__:
-                typeFuzzing = ''
+                type_fuzzing = ''
             else:
-                typeFuzzing = f" (Used for {Plugin.__type__})"
+                type_fuzzing = f" (Used for {Plugin.__type__})"
             if not Plugin.__params__:
                 params = ''
             else:
@@ -133,73 +149,84 @@ class ArgumentParser(argparse.ArgumentParser):
                     params = f"={metavar}[{separator}{metavar}]*"
                 else:
                     params = f"={Plugin.__params__['metavar']}"
-            CO.helpContent(5, f"{Plugin.__name__}{params}", f"{Plugin.__desc__}{typeFuzzing}\n")
-    
-    def __buildOptions(self) -> None:
+            CO.help_content(5, f"{Plugin.__name__}{params}",
+                            f"{Plugin.__desc__}{type_fuzzing}\n")
+
+    def __build_options(self) -> None:
         """Builds the FuzzingTool options"""
-        self.add_argument('-v', '--version',
+        self.add_argument(
+            '-v', '--version',
             action='version',
             version=f"FuzzingTool v{version()}"
         )
-        self.__buildRequestOpts()
-        self.__buildDictionaryOpts()
-        self.__buildMatchOpts()
-        self.__buildDisplayOpts()
-        self.__buildMoreOpts()
+        self.__build_request_opts()
+        self.__build_dictionary_opts()
+        self.__build_match_opts()
+        self.__build_display_opts()
+        self.__build_more_opts()
 
-    def __buildRequestOpts(self) -> None:
+    def __build_request_opts(self) -> None:
         """Builds the arguments for request options"""
-        requestOpts = self.add_argument_group('Request options')
-        requestOpts.add_argument('-u',
+        request_opts = self.add_argument_group('Request options')
+        request_opts.add_argument(
+            '-u',
             action='append',
             dest='url',
             help="Define the target URL",
             metavar='URL',
         )
-        requestOpts.add_argument('-r',
+        request_opts.add_argument(
+            '-r',
             action='append',
-            dest='rawHttp',
+            dest='raw_http',
             help="Define the file with the raw HTTP request (scheme not specified)",
             metavar='FILE',
         )
-        requestOpts.add_argument('--scheme',
+        request_opts.add_argument(
+            '--scheme',
             action='store',
             dest='scheme',
             help="Define the scheme used in the URL (default http)",
             metavar='SCHEME',
             default="http",
         )
-        requestOpts.add_argument('-X',
+        request_opts.add_argument(
+            '-X',
             action='store',
             dest='method',
             help="Define the request http verbs (method)",
             metavar='METHOD',
         )
-        requestOpts.add_argument('-d',
+        request_opts.add_argument(
+            '-d',
             action='store',
             dest='data',
             help="Define the request body data",
             metavar='DATA',
         )
-        requestOpts.add_argument('--proxy',
+        request_opts.add_argument(
+            '--proxy',
             action='store',
             dest='proxy',
             help="Define the proxy",
             metavar='IP:PORT',
         )
-        requestOpts.add_argument('--proxies',
+        request_opts.add_argument(
+            '--proxies',
             action='store',
             dest='proxies',
             help="Define the file with a list of proxies",
             metavar='FILE',
         )
-        requestOpts.add_argument('--cookie',
+        request_opts.add_argument(
+            '--cookie',
             action='store',
             dest='cookie',
             help="Define the HTTP Cookie header value",
             metavar='COOKIE',
         )
-        requestOpts.add_argument('--timeout',
+        request_opts.add_argument(
+            '--timeout',
             action='store',
             dest='timeout',
             help="Define the request timeout (in seconds)",
@@ -207,142 +234,163 @@ class ArgumentParser(argparse.ArgumentParser):
             type=int,
             default=0,
         )
-        requestOpts.add_argument('--follow-redirects',
+        request_opts.add_argument(
+            '--follow-redirects',
             action='store_true',
-            dest='followRedirects',
+            dest='follow_redirects',
             help="Force to follow redirects",
             default=False,
         )
-    
-    def __buildDictionaryOpts(self) -> None:
+
+    def __build_dictionary_opts(self) -> None:
         """Builds the arguments for dictionary options"""
-        dictionaryOpts = self.add_argument_group('Dictionary options')
-        dictionaryOpts.add_argument('-w',
+        dictionary_opts = self.add_argument_group('Dictionary options')
+        dictionary_opts.add_argument(
+            '-w',
             action='append',
             dest='wordlist',
-            help="Define the wordlists with the payloads, separating with ';' (--help=wordlists for more info)",
+            help=("Define the wordlists with the payloads, separating with ';' "
+                  "(--help=wordlists for more info)"),
             metavar='WORDLIST',
             required=True,
         )
-        dictionaryOpts.add_argument('--unique',
+        dictionary_opts.add_argument(
+            '--unique',
             action='store_true',
             dest='unique',
             help="Removes duplicated payloads from the final wordlist",
             default=False,
         )
-        dictionaryOpts.add_argument('-e',
+        dictionary_opts.add_argument(
+            '-e',
             action='store',
             dest='encoder',
             help="Define the encoder used on payloads (--help=encoders for more info)",
             metavar='ENCODER',
             default='',
         )
-        dictionaryOpts.add_argument('--encode-only',
+        dictionary_opts.add_argument(
+            '--encode-only',
             action='store',
-            dest='encodeOnly',
+            dest='encode_only',
             help="Define the regex pattern to use in the encoder",
             metavar='REGEX',
             default='',
         )
-        dictionaryOpts.add_argument('--prefix',
+        dictionary_opts.add_argument(
+            '--prefix',
             action='store',
             dest='prefix',
             help="Define the prefix(es) used with the payload",
             metavar='PREFIX',
         )
-        dictionaryOpts.add_argument('--suffix',
+        dictionary_opts.add_argument(
+            '--suffix',
             action='store',
             dest='suffix',
             help="Define the suffix(es) used with the payload",
             metavar='SUFFIX',
         )
-        dictionaryOpts.add_argument('--upper',
+        dictionary_opts.add_argument(
+            '--upper',
             action='store_true',
             dest='upper',
             help="Set the uppercase case for the payloads",
             default=False,
         )
-        dictionaryOpts.add_argument('--lower',
+        dictionary_opts.add_argument(
+            '--lower',
             action='store_true',
             dest='lower',
             help="Set the lowercase case for the payloads",
             default=False,
         )
-        dictionaryOpts.add_argument('--capitalize',
+        dictionary_opts.add_argument(
+            '--capitalize',
             action='store_true',
             dest='capitalize',
             help="Set the capitalize case for the payloads",
             default=False,
         )
 
-    def __buildMatchOpts(self) -> None:
+    def __build_match_opts(self) -> None:
         """Builds the arguments for match options"""
-        matchOpts = self.add_argument_group('Match options')
-        matchOpts.add_argument('-Mc',
+        match_opts = self.add_argument_group('Match options')
+        match_opts.add_argument(
+            '-Mc',
             action='store',
-            dest='matchStatus',
+            dest='match_status',
             help="Match responses based on their status codes",
             metavar='STATUS',
         )
-        matchOpts.add_argument('-Ms',
+        match_opts.add_argument(
+            '-Ms',
             action='store',
-            dest='matchLength',
+            dest='match_length',
             help="Match responses based on their length (in bytes)",
             metavar='SIZE',
         )
-        matchOpts.add_argument('-Mt',
+        match_opts.add_argument(
+            '-Mt',
             action='store',
-            dest='matchTime',
+            dest='match_time',
             help="Match responses based on their elapsed time (in seconds)",
             metavar='TIME',
         )
-        matchOpts.add_argument('--scanner',
+        match_opts.add_argument(
+            '--scanner',
             action='store',
             dest='scanner',
             help="Define the custom scanner (--help=scanners for more info)",
             metavar='SCANNER',
         )
 
-    def __buildDisplayOpts(self) -> None:
+    def __build_display_opts(self) -> None:
         """Builds the arguments for cli display options"""
-        displayOpts = self.add_argument_group('Display options')
-        displayOpts.add_argument('-S, --simple-output',
+        display_opts = self.add_argument_group('Display options')
+        display_opts.add_argument(
+            '-S, --simple-output',
             action='store_true',
-            dest="simpleOutput",
+            dest="simple_output",
             help="Set the simple display output mode (affects labels)",
             default=False,
         )
-        displayOpts.add_argument('-V', '-V1',
+        display_opts.add_argument(
+            '-V', '-V1',
             action='store_true',
-            dest='commonVerbose',
+            dest='common_verbose',
             help="Set the common verbose output mode",
             default=False,
         )
-        displayOpts.add_argument('-V2',
+        display_opts.add_argument(
+            '-V2',
             action='store_true',
-            dest='detailedVerbose',
+            dest='detailed_verbose',
             help="Set the detailed verbose output mode",
             default=False,
         )
-        displayOpts.add_argument('--no-colors',
+        display_opts.add_argument(
+            '--no-colors',
             action='store_true',
-            dest='disableColors',
+            dest='disable_colors',
             help="Disable the colors of the program",
             default=False,
         )
 
-    def __buildMoreOpts(self) -> None:
+    def __build_more_opts(self) -> None:
         """Builds the arguments for non categorized options"""
-        moreOpts = self.add_argument_group('More options')
-        moreOpts.add_argument('-t',
+        more_opts = self.add_argument_group('More options')
+        more_opts.add_argument(
+            '-t',
             action='store',
-            dest='numberOfThreads',
+            dest='number_of_threads',
             help="Define the number of threads used in the tests",
             metavar='NUMBEROFTHREADS',
             type=int,
             default=1,
         )
-        moreOpts.add_argument('--delay',
+        more_opts.add_argument(
+            '--delay',
             action='store',
             dest='delay',
             help="Define delay between each request",
@@ -350,16 +398,21 @@ class ArgumentParser(argparse.ArgumentParser):
             type=float,
             default=0,
         )
-        moreOpts.add_argument('-o',
+        more_opts.add_argument(
+            '-o',
             action='store',
-            dest='reportName',
-            help=f"Define the report name and/or format. Available reports: {stringfyList(list(Report.getAvailableReports().keys()))}",
+            dest='report_name',
+            help=("Define the report name and/or format. Available reports: "
+                  + stringfy_list(list(Report.get_available_reports().keys()))),
             metavar='REPORT',
             default='txt'
         )
-        moreOpts.add_argument('--blacklist-status',
+        more_opts.add_argument(
+            '--blacklist-status',
             action='store',
-            dest='blacklistStatus',
-            help="Blacklist status codes from response, and take an action when one is detected. Available actions: skip (to skip the current target), wait=SECONDS (to pause the app for some seconds)",
+            dest='blacklist_status',
+            help=("Blacklist status codes from response, and take an action when one is detected. "
+                  "Available actions: skip (to skip the current target), "
+                  "wait=SECONDS (to pause the app for some seconds)"),
             metavar='STATUS:ACTION',
         )

@@ -18,10 +18,11 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from .interfaces.cli import *
+from .interfaces.cli import CliArguments, Colors, CliController
+
 
 def main_cli() -> None:
     arguments = CliArguments()
-    if arguments.disableColors:
+    if arguments.disable_colors:
         Colors.disable()
     CliController().main(arguments)

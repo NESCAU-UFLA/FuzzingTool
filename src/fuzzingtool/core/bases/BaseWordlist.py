@@ -19,8 +19,8 @@
 # SOFTWARE.
 
 from abc import ABC, abstractmethod
-
 from typing import List
+
 
 class BaseWordlist(ABC):
     """Base wordlist
@@ -44,7 +44,7 @@ class BaseWordlist(ABC):
     @abstractmethod
     def _build(self) -> List[str]:
         """The wordlist builder
-        
+
         @returns List[str]: The builded wordlist
         """
         pass

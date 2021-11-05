@@ -1,11 +1,13 @@
-from src.fuzzingtool import version
-
 import os
 import sys
 from setuptools import setup, find_packages
 
+from src.fuzzingtool import version
+
+
 def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
+
 
 install_requires = [
     'requests>=2.25.1',

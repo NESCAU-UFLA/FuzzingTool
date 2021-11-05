@@ -20,6 +20,7 @@
 
 from abc import ABC
 
+
 class Plugin(ABC):
     """Class to represent a plugin in the app"""
     pass

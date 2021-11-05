@@ -18,16 +18,17 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+from abc import ABC, abstractmethod
+
 from ..Result import Result
 
-from abc import ABC, abstractmethod
 
 class BaseScanner(ABC):
     """Base scanner"""
     @abstractmethod
-    def inspectResult(self, result: Result) -> None:
+    def inspect_result(self, result: Result) -> None:
         """Inspects the FuzingTool result to add new information if needed
-        
+
         @type result: Result
         @param result: The result object
         """
@@ -44,7 +45,7 @@ class BaseScanner(ABC):
         pass
 
     @abstractmethod
-    def cliCallback(self, result: Result) -> str:
+    def cli_callback(self, result: Result) -> str:
         """Get the formated message to be used on output
 
         @type result: Result

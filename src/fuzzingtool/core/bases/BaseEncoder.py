@@ -20,6 +20,7 @@
 
 from abc import ABC, abstractmethod
 
+
 class BaseEncoder(ABC):
     charset = 'utf-8'
 

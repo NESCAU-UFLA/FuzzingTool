@@ -18,16 +18,30 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+import re
+from typing import List
+
+from bs4 import BeautifulSoup as bs
+
 from ..Plugin import Plugin
 from ...bases.BaseWordlist import BaseWordlist
 from ....conn.requests.Request import Request
-from ....exceptions.RequestExceptions import RequestException
+from ....exceptions.request_exceptions import RequestException
 from ....decorators.plugin_meta import plugin_meta
-from ....exceptions.MainExceptions import MissingParameter
+from ....exceptions.main_exceptions import MissingParameter
 
-from bs4 import BeautifulSoup as bs
-import re
-from typing import List
+CRTSH_HTTP_HEADER = {
+    'Host': "crt.sh",
+    'User-Agent': "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:87.0) Gecko/20100101 Firefox/87.0",
+    'Accept': "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+    'Accept-Language': "en-US,en;q=0.5",
+    'Accept-Encoding': "gzip, deflate",
+    'Connection': "keep-alive",
+    'Referer': "https://crt.sh/",
+    'Upgrade-Insecure-Requests': "1",
+    'TE': "Trailers",
+}
+
 
 @plugin_meta
 class CrtSh(BaseWordlist, Plugin):
@@ -47,20 +61,11 @@ class CrtSh(BaseWordlist, Plugin):
         BaseWordlist.__init__(self)
 
     def _build(self) -> List[str]:
+        global CRTSH_HTTP_HEADER
         requester = Request(
             url=f"https://crt.sh/?q={self.host}",
             method='GET',
-            headers={
-                'Host': "crt.sh",
-                'User-Agent': "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:87.0) Gecko/20100101 Firefox/87.0",
-                'Accept': "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
-                'Accept-Language': "en-US,en;q=0.5",
-                'Accept-Encoding': "gzip, deflate",
-                'Connection': "keep-alive",
-                'Referer': "https://crt.sh/",
-                'Upgrade-Insecure-Requests': "1",
-                'TE': "Trailers",
-            },
+            headers=CRTSH_HTTP_HEADER,
         )
         try:
             response, *_ = requester.request()
@@ -68,10 +73,14 @@ class CrtSh(BaseWordlist, Plugin):
             raise Exception(str(e))
         if 'None found' in response.text:
             raise Exception(f"No certified domains was found for '{self.host}'")
-        contentList = [element.string for element in bs(response.text, "html.parser")('td')]
+        content_list = [element.string
+                        for element in bs(response.text, "html.parser")('td')]
         regex = r"([a-zA-Z0-9]+\.)*[a-zA-Z0-9]+"
         for splited in self.host.split('.'):
             regex += r"\."+splited
         regexer = re.compile(regex)
-        domainList = sorted(set([element for element in contentList if regexer.match(str(element))]))
-        return [domain.split(f'.{self.host}')[0] for domain in domainList]
+        domain_list = sorted(set([element
+                                  for element in content_list
+                                  if regexer.match(str(element))]))
+        return [domain.split(f'.{self.host}')[0]
+                for domain in domain_list]

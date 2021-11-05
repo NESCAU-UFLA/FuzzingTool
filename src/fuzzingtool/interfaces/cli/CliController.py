@@ -18,62 +18,69 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from .CliArguments import *
-from .CliOutput import CliOutput, Colors
-from ..ArgumentBuilder import ArgumentBuilder as AB
-from ... import version
-from ...utils.http_utils import *
-from ...utils.file_utils import readFile
-from ...utils.Logger import Logger
-from ...core import *
-from ...conn import *
-from ...factories import *
-from ...reports.Report import Report
-from ...exceptions.MainExceptions import SkipTargetException
-from ...exceptions.RequestExceptions import *
-
 from queue import Queue
 import time
 import threading
 from typing import Tuple, List
+
+from .CliArguments import CliArguments
+from .CliOutput import CliOutput, Colors
+from ..ArgumentBuilder import ArgumentBuilder as AB
+from ... import version
+from ...utils.http_utils import get_host, get_pure_url
+from ...utils.file_utils import read_file
+from ...utils.Logger import Logger
+from ...core import (BlacklistStatus, Dictionary, Fuzzer,
+                     Matcher, Payloader, Result)
+from ...core.defaults.scanners import (DataScanner,
+                                       PathScanner, SubdomainScanner)
+from ...core.bases import BaseScanner, BaseEncoder
+from ...conn.RequestParser import check_for_subdomain_fuzz
+from ...conn.requests import Request
+from ...factories import PluginFactory, RequestFactory, WordlistFactory
+from ...reports.Report import Report
+from ...exceptions.main_exceptions import SkipTargetException
+from ...exceptions.request_exceptions import RequestException, InvalidHostname
+
 
 def banner() -> str:
     """Gets the program banner
 
     @returns str: The program banner
     """
-    banner = (f"{Colors.BLUE_GRAY}   ____                        _____       _\n"+
-              f"{Colors.BLUE_GRAY}  |  __|_ _ ___ ___ _ ___ ___ |_   _|_ ___| |{Colors.RESET} Version {version()}\n"+
-              f"{Colors.BLUE_GRAY}  |  __| | |- _|- _|'|   | . |  | | . | . | |\n"+
-              f"{Colors.BLUE_GRAY}  |_|  |___|___|___|_|_|_|_  |  |_|___|___|_|\n"+
-              f"{Colors.BLUE_GRAY}                         |___|{Colors.RESET}\n\n"+
-              f"  [!] Disclaimer: We're not responsible for the misuse of this tool.\n"+
-              f"      This project was created for educational purposes\n"+
-              f"      and should not be used in environments without legal authorization.\n")
+    banner = (f"{Colors.BLUE_GRAY}   ____                        _____       _\n" +
+              f"{Colors.BLUE_GRAY}  |  __|_ _ ___ ___ _ ___ ___ |_   _|_ ___| |{Colors.RESET} Version {version()}\n" +
+              f"{Colors.BLUE_GRAY}  |  __| | |- _|- _|'|   | . |  | | . | . | |\n" +
+              f"{Colors.BLUE_GRAY}  |_|  |___|___|___|_|_|_|_  |  |_|___|___|_|\n" +
+              f"{Colors.BLUE_GRAY}                         |___|{Colors.RESET}\n\n" +
+              "  [!] Disclaimer: We're not responsible for the misuse of this tool.\n" +
+              "      This project was created for educational purposes\n" +
+              "      and should not be used in environments without legal authorization.\n")
     return banner
+
 
 class CliController:
     """Class that handle with the entire application
 
     Attributes:
         requesters: The requesters list
-        startedTime: The time when start the fuzzing test
+        started_time: The time when start the fuzzing test
         fuzzer: The fuzzer object to handle with the fuzzing test
-        allResults: The results dictionary for each host
+        all_results: The results dictionary for each host
         lock: A thread locker to prevent overwrites on logfiles
-        blacklistStatus: The blacklist status object
+        blacklist_status: The blacklist status object
         logger: The object to handle with the program log
     """
     def __init__(self):
         self.requesters = []
-        self.startedTime = 0
+        self.started_time = 0
         self.fuzzer = None
-        self.allResults = {}
+        self.all_results = {}
         self.lock = threading.Lock()
-        self.blacklistStatus = None
+        self.blacklist_status = None
         self.logger = Logger()
 
-    def isVerboseMode(self) -> bool:
+    def is_verbose_mode(self) -> bool:
         """The verboseMode getter
 
         @returns bool: The verbose mode flag
@@ -83,361 +90,410 @@ class CliController:
     def main(self, arguments: CliArguments) -> None:
         """The main function.
            Prepares the application environment and starts the fuzzing
-        
+
         @type arguments: CliArguments
         @param arguments: The command line interface arguments object
         """
-        self.co = CliOutput() # Abbreviation to cli output
+        self.co = CliOutput()  # Abbreviation to cli output
         self.verbose = arguments.verbose
-        if arguments.simpleOutput:
-            self.co.setSimpleOutputMode()
+        if arguments.simple_output:
+            self.co.set_simple_output_mode()
         else:
             CliOutput.print(banner())
         try:
-            self.co.infoBox("Setting up arguments ...")
+            self.co.info_box("Setting up arguments ...")
             self.init(arguments)
-            if not arguments.simpleOutput:
-                self.co.printConfigs(
-                    output='normal' if not arguments.simpleOutput else 'simple',
-                    verbose='quiet' if not self.verbose[0] else 'common' if not self.verbose[1] else 'detailed',
-                    targets=self.targetsList,
-                    dictionaries=self.dictionariesMetadata,
+            if not arguments.simple_output:
+                self.co.print_configs(
+                    output='normal'
+                           if not arguments.simple_output
+                           else 'simple',
+                    verbose='quiet'
+                            if not self.verbose[0]
+                            else 'common'
+                            if not self.verbose[1]
+                            else 'detailed',
+                    targets=self.targets_list,
+                    dictionaries=self.dictionaries_metadata,
                     prefix=arguments.prefix,
                     suffix=arguments.suffix,
-                    case='lowercase' if arguments.lowercase else 'uppercase' if arguments.uppercase else 'capitalize' if arguments.capitalize else None,
-                    encoder=arguments.strEncoder,
-                    encodeOnly=arguments.encodeOnly,
+                    case='lowercase'
+                         if arguments.lowercase
+                         else 'uppercase'
+                         if arguments.uppercase
+                         else 'capitalize'
+                         if arguments.capitalize
+                         else None,
+                    encoder=arguments.str_encoder,
+                    encode_only=arguments.encode_only,
                     match={
-                        'status': arguments.matchStatus,
-                        'length': arguments.matchLength,
-                        'time': arguments.matchTime,
-                    },
-                    scanner=arguments.strScanner,
-                    blacklistStatus={
-                        'status': arguments.blacklistedStatus,
-                        'action': arguments.blacklistAction,
-                    } if arguments.blacklistedStatus else {},
+                        'status': arguments.match_status,
+                        'length': arguments.match_length,
+                        'time': arguments.match_time,
+                        },
+                    scanner=arguments.str_scanner,
+                    blacklist_status={
+                        'status': arguments.blacklisted_status,
+                        'action': arguments.blacklist_action,
+                        } if arguments.blacklisted_status else {},
                     delay=self.delay,
-                    threads=self.numberOfThreads,
+                    threads=self.number_of_threads,
                     report=arguments.report,
                 )
-            self.checkConnectionAndRedirections()
+            self.check_connection_and_redirections()
         except KeyboardInterrupt:
-            self.co.abortBox("Test aborted by the user")
+            self.co.abort_box("Test aborted by the user")
             exit(0)
         except Exception as e:
-            self.co.errorBox(str(e))
-        self.co.setVerbosityMode(self.isVerboseMode())
+            self.co.error_box(str(e))
+        self.co.set_verbosity_mode(self.is_verbose_mode())
         try:
             self.start()
         except KeyboardInterrupt:
-            if self.fuzzer and self.fuzzer.isRunning():
-                self.co.abortBox("Test aborted, stopping threads ...")
+            if self.fuzzer and self.fuzzer.is_running():
+                self.co.abort_box("Test aborted, stopping threads ...")
                 self.fuzzer.stop()
-            self.co.abortBox("Test aborted by the user")
+            self.co.abort_box("Test aborted by the user")
         finally:
-            self.showFooter()
-            self.co.infoBox("Test completed")
+            self.show_footer()
+            self.co.info_box("Test completed")
 
     def init(self, arguments: CliArguments) -> None:
         """The initialization function.
            Set the application variables including plugins requires
-        
+
         @type arguments: CliArguments
         @param arguments: The command line interface arguments object
         """
-        self.__initRequesters(arguments)
+        self.__init_requesters(arguments)
         scanner = None
         if arguments.scanner:
             scanner, param = arguments.scanner
             try:
-                scanner = PluginFactory.objectCreator(
+                scanner = PluginFactory.object_creator(
                     scanner, 'scanners', param
                 )
             except Exception as e:
                 raise Exception(str(e))
-        self.globalScanner = scanner
-        self.__checkForDuplicatedTargets()
-        matchStatus = arguments.matchStatus
-        if matchStatus:
-            if '200' not in matchStatus:
-                if self.co.askYesNo('warning', "Status code 200 (OK) wasn't included. Do you want to include it to the allowed status codes?"):
-                    matchStatus += ",200"
-        self.globalMatcher = Matcher.fromString(
-            matchStatus,
-            arguments.matchLength,
-            arguments.matchTime
+        self.global_scanner = scanner
+        self.__check_for_duplicated_targets()
+        match_status = arguments.match_status
+        if match_status:
+            if '200' not in match_status:
+                if self.co.ask_yes_no('warning',
+                                      ("Status code 200 (OK) wasn't included. "
+                                       "Do you want to include it to "
+                                       "the allowed status codes?")):
+                    match_status += ",200"
+        self.global_matcher = Matcher.from_string(
+            match_status,
+            arguments.match_length,
+            arguments.match_time
         )
-        if arguments.blacklistedStatus:
-            blacklistedStatus = arguments.blacklistedStatus
-            action = arguments.blacklistAction
-            self.blacklistStatus = BlacklistStatus(
-                status=blacklistedStatus,
+        if arguments.blacklisted_status:
+            blacklisted_status = arguments.blacklisted_status
+            action = arguments.blacklist_action
+            self.blacklist_status = BlacklistStatus(
+                status=blacklisted_status,
                 action=action,
-                actionParam=arguments.blacklistActionParam,
-                actionCallbacks={
-                    'skip': self._skipCallback,
-                    'wait': self._waitCallback,
+                action_param=arguments.blacklist_action_param,
+                action_callbacks={
+                    'skip': self._skip_callback,
+                    'wait': self._wait_callback,
                 },
             )
         self.delay = arguments.delay
-        self.numberOfThreads = arguments.numberOfThreads
-        if self.globalScanner:
-            self.localScanner = self.globalScanner
-            self.co.setMessageCallback(self.localScanner.cliCallback)
+        self.number_of_threads = arguments.number_of_threads
+        if self.global_scanner:
+            self.local_scanner = self.global_scanner
+            self.co.set_message_callback(self.local_scanner.cli_callback)
         self.report = Report.build(arguments.report)
-        self.__initDictionary(arguments)
+        self.__init_dictionary(arguments)
 
-    def checkConnectionAndRedirections(self) -> None:
+    def check_connection_and_redirections(self) -> None:
         """Test the connection to target.
            If data fuzzing is detected, check for redirections
         """
         for requester in self.requesters:
-            self.co.infoBox(f"Validating {requester.getUrl()} ...")
-            if self.isVerboseMode():
-                self.co.infoBox("Testing connection ...")
+            self.co.info_box(f"Validating {requester.get_url()} ...")
+            if self.is_verbose_mode():
+                self.co.info_box("Testing connection ...")
             try:
-                requester.testConnection()
+                requester.test_connection()
             except RequestException as e:
-                if not self.co.askYesNo('warning', f"{str(e)}. Continue anyway?"):
-                    self.co.infoBox(f"Target removed from list.")
+                if not self.co.ask_yes_no('warning',
+                                          f"{str(e)}. Continue anyway?"):
+                    self.co.info_box("Target removed from list.")
                     self.requesters.remove(requester)
             else:
-                if self.isVerboseMode():
-                    self.co.infoBox("Connection status: OK")
-                if requester.isDataFuzzing():
-                    self.checkRedirections(requester)
+                if self.is_verbose_mode():
+                    self.co.info_box("Connection status: OK")
+                if requester.is_data_fuzzing():
+                    self.check_redirections(requester)
         if len(self.requesters) == 0:
             raise Exception("No targets left for fuzzing")
 
-    def checkRedirections(self, requester: Request) -> None:
+    def check_redirections(self, requester: Request) -> None:
         """Check the redirections for a target.
-           Perform a redirection check for each method in requester methods list
-        
+           Perform a redirection check for each method
+           in requester methods list
+
         @type requester: Request
         @param requester: The requester for the target
         """
-        if self.isVerboseMode():
-            self.co.infoBox("Testing redirections ...")
+        if self.is_verbose_mode():
+            self.co.info_box("Testing redirections ...")
         for method in requester.methods:
-            requester.setMethod(method)
-            if self.isVerboseMode():
-                self.co.infoBox(f"Testing with {method} method ...")
+            requester.set_method(method)
+            if self.is_verbose_mode():
+                self.co.info_box(f"Testing with {method} method ...")
             try:
-                if requester.hasRedirection():
-                    if self.co.askYesNo('warning', "You was redirected to another page. Remove this method?"):
+                if requester.has_redirection():
+                    if self.co.ask_yes_no('warning',
+                                          ("You was redirected to another page. "
+                                           "Remove this method?")):
                         requester.methods.remove(method)
-                        self.co.infoBox(f"Method {method} removed from list")
+                        self.co.info_box(f"Method {method} removed from list")
                 else:
-                    if self.isVerboseMode():
-                        self.co.infoBox("No redirections")
+                    if self.is_verbose_mode():
+                        self.co.info_box("No redirections")
             except RequestException as e:
-                self.co.warningBox(f"{str(e)}. Removing method {method}")
+                self.co.warning_box(f"{str(e)}. Removing method {method}")
         if len(requester.methods) == 0:
             self.requesters.remove(requester)
-            self.co.warningBox("No methods left on this target, removed from targets list")
+            self.co.warning_box("No methods left on this target, "
+                                "removed from targets list")
 
     def start(self) -> None:
         """Starts the fuzzing application.
            Each target is fuzzed based on their own methods list
         """
-        self.startedTime = time.time()
+        self.started_time = time.time()
         for requester in self.requesters:
-            self.co.infoBox(f"Start fuzzing on {getHost(getPureUrl(requester.getUrl()))}")
-            startIndex = 1
+            self.co.info_box("Start fuzzing on "
+                             + get_host(get_pure_url(requester.get_url())))
+            start_index = 1
             try:
-                self.prepareTarget(requester)
+                self.prepare_target(requester)
                 for method in self.requester.methods:
-                    self.requester.setMethod(method)
-                    self.prepareFuzzer(startIndex)
-                    startIndex = self.fuzzer.index
-                if not self.isVerboseMode():
+                    self.requester.set_method(method)
+                    self.prepare_fuzzer(start_index)
+                    start_index = self.fuzzer.index
+                if not self.is_verbose_mode():
                     CliOutput.print("")
             except SkipTargetException as e:
-                if self.fuzzer and self.fuzzer.isRunning():
-                    self.co.warningBox("Skip target detected, stopping threads ...")
+                if self.fuzzer and self.fuzzer.is_running():
+                    self.co.warning_box("Skip target detected, stopping threads ...")
                     self.fuzzer.stop()
-                self.co.abortBox(f"{str(e)}. Target skipped")
+                self.co.abort_box(f"{str(e)}. Target skipped")
 
-    def prepareTarget(self, requester: Request) -> None:
+    def prepare_target(self, requester: Request) -> None:
         """Prepare the target variables for the fuzzing tests.
            Both error logger and default scanners are setted
-        
+
         @type requester: Request
         @param requester: The requester for the target
         """
         self.requester = requester
-        self.targetHost = getHost(getPureUrl(requester.getUrl()))
-        if self.isVerboseMode():
-            self.co.infoBox(f"Preparing target {self.targetHost} ...")
+        self.target_host = get_host(get_pure_url(requester.get_url()))
+        if self.is_verbose_mode():
+            self.co.info_box(f"Preparing target {self.target_host} ...")
         before = time.time()
-        self.checkIgnoreErrors(self.targetHost)
-        self.startedTime += (time.time() - before)
+        self.check_ignore_errors(self.target_host)
+        self.started_time += (time.time() - before)
         self.results = []
-        self.allResults[self.targetHost] = self.results
-        self.skipTarget = None
-        self.localMatcher = Matcher(
-            allowedStatus=self.globalMatcher.getAllowedStatus(),
-            comparator=self.globalMatcher.getComparator(),
-            matchFunctions=self.globalMatcher.getMatchFunctions()
+        self.all_results[self.target_host] = self.results
+        self.skip_target = None
+        self.local_matcher = Matcher(
+            allowed_status=self.global_matcher.get_allowed_status(),
+            comparator=self.global_matcher.get_comparator(),
+            match_functions=self.global_matcher.get_match_functions()
         )
-        if (self.requester.isUrlDiscovery() and
-            self.globalMatcher.allowedStatusIsDefault()):
-            self.localMatcher.setAllowedStatus(
-                Matcher.buildAllowedStatus("200-399,401,403")
+        if (self.requester.is_url_discovery() and
+                self.global_matcher.allowed_status_is_default()):
+            self.local_matcher.set_allowed_status(
+                Matcher.build_allowed_status("200-399,401,403")
             )
-        if not self.globalScanner:
-            self.localScanner = self.getDefaultScanner()
-            if (self.requester.isDataFuzzing() and
-                not self.globalMatcher.comparatorIsSet()):
-                self.co.infoBox("DataFuzzing detected, checking for a data comparator ...")
+        if not self.global_scanner:
+            self.local_scanner = self.get_default_scanner()
+            if (self.requester.is_data_fuzzing() and
+                    not self.global_matcher.comparator_is_set()):
+                self.co.info_box("DataFuzzing detected, checking for a data comparator ...")
                 before = time.time()
-                self.localMatcher.setComparator(
-                    self.getDataComparator()
+                self.local_matcher.set_comparator(
+                    self.get_data_comparator()
                 )
-                self.startedTime += (time.time() - before)
-        if not self.globalDictionary:
-            self.localDictionary = self.dictionaries.get()
-        self.totalRequests = len(self.localDictionary)*len(self.requester.methods)
+                self.started_time += (time.time() - before)
+        if not self.global_dictionary:
+            self.local_dictionary = self.dictionaries.get()
+        self.total_requests = (len(self.local_dictionary)
+                               * len(self.requester.methods))
 
-    def prepareFuzzer(self, startIndex: int = 1) -> None:
+    def prepare_fuzzer(self, start_index: int = 1) -> None:
         """Prepare the fuzzer for the fuzzing tests.
-           Refill the dictionary with the wordlist content if a global dictionary was given
-        
-        @type startIndex: int
-        @param startIndex: The index value to start the Fuzzer index
+           Refill the dictionary with the wordlist
+           content if a global dictionary was given
+
+        @type start_index: int
+        @param start_index: The index value to start the Fuzzer index
         """
-        self.localDictionary.reload()
+        self.local_dictionary.reload()
         self.fuzzer = Fuzzer(
             requester=self.requester,
-            dictionary=self.localDictionary,
-            matcher=self.localMatcher,
-            scanner=self.localScanner,
+            dictionary=self.local_dictionary,
+            matcher=self.local_matcher,
+            scanner=self.local_scanner,
             delay=self.delay,
-            numberOfThreads=self.numberOfThreads,
-            blacklistStatus=self.blacklistStatus,
-            startIndex=startIndex,
-            resultCallback=self._resultCallback,
-            exceptionCallbacks=[self._invalidHostnameCallback, self._requestExceptionCallback],
+            number_of_threads=self.number_of_threads,
+            blacklist_status=self.blacklist_status,
+            start_index=start_index,
+            result_callback=self._result_callback,
+            exception_callbacks=[
+                self._invalid_hostname_callback,
+                self._request_exception_callback
+            ],
         )
         self.fuzzer.start()
         while self.fuzzer.join():
-            if self.skipTarget:
-                raise SkipTargetException(self.skipTarget)
+            if self.skip_target:
+                raise SkipTargetException(self.skip_target)
 
-    def getDefaultScanner(self) -> BaseScanner:
+    def get_default_scanner(self) -> BaseScanner:
         """Check what's the scanners that will be used
-        
+
         @returns BaseScanner: The scanner used in the fuzzing tests
         """
-        if self.requester.isUrlDiscovery():
-            if self.requester.isPathFuzzing():
+        if self.requester.is_url_discovery():
+            if self.requester.is_path_fuzzing():
                 scanner = PathScanner()
             else:
                 scanner = SubdomainScanner()
         else:
             scanner = DataScanner()
-        self.co.setMessageCallback(scanner.cliCallback)
+        self.co.set_message_callback(scanner.cli_callback)
         return scanner
 
-    def checkIgnoreErrors(self, host: str) -> None:
+    def check_ignore_errors(self, host: str) -> None:
         """Check if the user wants to ignore the errors during the tests.
            By default, URL fuzzing (path and subdomain) ignore errors
-        
+
         @type host: str
         @param host: The target hostname
         """
-        if self.requester.isUrlDiscovery():
-            self.ignoreErrors = True
-            logPath = self.logger.setup(host)
-            self.co.infoBox(f'The logs will be saved on \'{logPath}\'')
+        if self.requester.is_url_discovery():
+            self.ignore_errors = True
+            log_path = self.logger.setup(host)
+            self.co.info_box(f'The logs will be saved on \'{log_path}\'')
         else:
-            if self.co.askYesNo('info', "Do you want to ignore errors on this target, and save them into a log file?"):
-                self.ignoreErrors = True
-                logPath = self.logger.setup(host)
-                self.co.infoBox(f'The logs will be saved on \'{logPath}\'')
+            if self.co.ask_yes_no('info',
+                                  ("Do you want to ignore errors on this "
+                                   "target, and save them into a log file?")):
+                self.ignore_errors = True
+                log_path = self.logger.setup(host)
+                self.co.info_box(f'The logs will be saved on \'{log_path}\'')
             else:
-                self.ignoreErrors = False
+                self.ignore_errors = False
 
-    def getDataComparator(self) -> dict:
-        """Check if the user wants to insert custom data comparator to validate the responses
-        
+    def get_data_comparator(self) -> dict:
+        """Check if the user wants to insert
+           custom data comparator to validate the responses
+
         @returns dict: The data comparator dictionary for the Matcher object
         """
-        payload = ' ' # Set an arbitraty payload
-        self.co.infoBox(f"Making first request with '{payload}' as payload ...")
+        payload = ' '  # Set an arbitraty payload
+        self.co.info_box(
+            f"Making first request with '{payload}' as payload ..."
+        )
         try:
             # Make the first request to get some info about the target
             response, RTT = self.requester.request(payload)
         except RequestException as e:
             raise SkipTargetException(f"{str(e)}")
-        resultToComparator = Result(response, RTT)
-        self.co.printResult(resultToComparator, False)
+        result_to_comparator = Result(response, RTT)
+        self.co.print_result(result_to_comparator, False)
         length = None
-        defaultLength = int(resultToComparator.length)+300
-        if self.co.askYesNo('info', "Do you want to exclude responses based on custom length?"):
-            length = self.co.askData(f"Insert the length (in bytes, default >{defaultLength})")
+        default_length = int(result_to_comparator.length)+300
+        if self.co.ask_yes_no('info',
+                              ("Do you want to exclude responses "
+                               "based on custom length?")):
+            length = self.co.ask_data(
+                f"Insert the length (in bytes, default >{default_length})"
+            )
             if not length:
-                length = defaultLength
+                length = default_length
         time = None
-        defaultTime = resultToComparator.RTT+5.0
-        if self.co.askYesNo('info', "Do you want to exclude responses based on custom time?"):
-            time = self.co.askData(f"Insert the time (in seconds, default >{defaultTime} seconds)")
+        default_time = result_to_comparator.RTT+5.0
+        if self.co.ask_yes_no('info',
+                              ("Do you want to exclude responses "
+                               "based on custom time?")):
+            time = self.co.ask_data(
+                f"Insert the time (in seconds, default >{default_time} seconds)"
+            )
             if not time:
-                time = defaultTime
-        return Matcher.buildComparator(length, time)
+                time = default_time
+        return Matcher.build_comparator(length, time)
 
-    def showFooter(self) -> None:
+    def show_footer(self) -> None:
         """Show the footer content of the software, after maked the fuzzing.
            The results are shown for each target
         """
         if self.fuzzer:
-            if self.startedTime:
-                self.co.infoBox(f"Time taken: {float('%.2f'%(time.time() - self.startedTime))} seconds")
-            requesterIndex = 0
-            for key, value in self.allResults.items():
+            if self.started_time:
+                self.co.info_box(
+                    f"Time taken: {float('%.2f'%(time.time() - self.started_time))} seconds"
+                )
+            requester_index = 0
+            for key, value in self.all_results.items():
                 if value:
-                    if self.isVerboseMode():
-                        self.co.infoBox(f"Found {len(value)} matched results on target {key}")
-                        if not self.globalScanner:
-                            self.requester = self.requesters[requesterIndex]
-                            self.getDefaultScanner()
+                    if self.is_verbose_mode():
+                        self.co.info_box(
+                            f"Found {len(value)} matched results on target {key}"
+                        )
+                        if not self.global_scanner:
+                            self.requester = self.requesters[requester_index]
+                            self.get_default_scanner()
                         for result in value:
-                            self.co.printResult(result, True)
-                        self.co.infoBox(f'Saving results for {key} ...')
-                    reportPath = self.report.open(key)
+                            self.co.print_result(result, True)
+                        self.co.info_box(f'Saving results for {key} ...')
+                    report_path = self.report.open(key)
                     self.report.write(value)
-                    self.co.infoBox(f"Results saved on {reportPath}")
+                    self.co.info_box(f"Results saved on {report_path}")
                 else:
-                    self.co.infoBox(f"No matched results was found on target {key}")
-                requesterIndex += 1
+                    self.co.info_box(
+                        f"No matched results was found on target {key}"
+                    )
+                requester_index += 1
 
-    def _skipCallback(self, status: int) -> None:
-        """The skip target callback for the blacklistAction
-
-        @type status: int
-        @param status: The identified status code into the blacklist
-        """
-        self.skipTarget = f"Status code {str(status)} detected"
-    
-    def _waitCallback(self, status: int) -> None:
-        """The wait (pause) callback for the blacklistAction
+    def _skip_callback(self, status: int) -> None:
+        """The skip target callback for the blacklist_action
 
         @type status: int
         @param status: The identified status code into the blacklist
         """
-        if not self.fuzzer.isPaused():
+        self.skip_target = f"Status code {str(status)} detected"
+
+    def _wait_callback(self, status: int) -> None:
+        """The wait (pause) callback for the blacklist_action
+
+        @type status: int
+        @param status: The identified status code into the blacklist
+        """
+        if not self.fuzzer.is_paused():
             self.fuzzer.pause()
-            self.co.warningBox(f"Status code {str(status)} detected. Pausing threads ...")
-            self.fuzzer.waitUntilPause()
-            if not self.isVerboseMode():
+            self.co.warning_box(
+                f"Status code {str(status)} detected. Pausing threads ..."
+            )
+            self.fuzzer.wait_until_pause()
+            if not self.is_verbose_mode():
                 CliOutput.print("")
-            self.co.infoBox(f"Waiting for {self.blacklistStatus.actionParam} seconds ...")
-            time.sleep(self.blacklistStatus.actionParam)
-            self.co.infoBox("Resuming target ...")
+            self.co.info_box(
+                f"Waiting for {self.blacklist_status.action_param} seconds ..."
+            )
+            time.sleep(self.blacklist_status.action_param)
+            self.co.info_box("Resuming target ...")
             self.fuzzer.resume()
 
-    def _resultCallback(self, result: dict, validate: bool) -> None:
+    def _result_callback(self, result: dict, validate: bool) -> None:
         """Callback function for the results output
 
         @type result: dict
@@ -448,45 +504,43 @@ class CliController:
         if self.verbose[0]:
             if validate:
                 self.results.append(result)
-            self.co.printResult(result, validate)
+            self.co.print_result(result, validate)
         else:
             if validate:
                 self.results.append(result)
-                self.co.printResult(result, validate)
-            self.co.progressStatus(
-                result.index, self.totalRequests, result.payload
+                self.co.print_result(result, validate)
+            self.co.progress_status(
+                result.index, self.total_requests, result.payload
             )
-    
-    def _requestExceptionCallback(self,
-        e: RequestException,
-        payload: str
-    ) -> None:
+
+    def _request_exception_callback(self,
+                                    e: RequestException,
+                                    payload: str) -> None:
         """Callback that handle with the request exceptions
-        
+
         @type e: RequestException
         @param e: The request exception
         @type payload: str
         @param payload: The payload used in the request
         """
-        if self.ignoreErrors:
+        if self.ignore_errors:
             if not self.verbose[0]:
-                self.co.progressStatus(
-                    self.fuzzer.index, self.totalRequests, payload
+                self.co.progress_status(
+                    self.fuzzer.index, self.total_requests, payload
                 )
             else:
                 if self.verbose[1]:
-                    self.co.notWorkedBox(str(e))
+                    self.co.not_worked_box(str(e))
             with self.lock:
                 self.logger.write(str(e), payload)
         else:
-            self.skipTarget = str(e)
+            self.skip_target = str(e)
 
-    def _invalidHostnameCallback(self,
-        e: InvalidHostname,
-        payload: str
-    ) -> None:
+    def _invalid_hostname_callback(self,
+                                   e: InvalidHostname,
+                                   payload: str) -> None:
         """Callback that handle with the subdomain hostname resolver exceptions
-        
+
         @type e: InvalidHostname
         @param e: The invalid hostname exception
         @type payload: str
@@ -494,122 +548,131 @@ class CliController:
         """
         if self.verbose[0]:
             if self.verbose[1]:
-                self.co.notWorkedBox(str(e))
+                self.co.not_worked_box(str(e))
         else:
-            self.co.progressStatus(
-                self.fuzzer.index, self.totalRequests, payload
+            self.co.progress_status(
+                self.fuzzer.index, self.total_requests, payload
             )
 
-    def __initRequesters(self, arguments: CliArguments) -> None:
+    def __init_requesters(self, arguments: CliArguments) -> None:
         """Initialize the requesters
 
         @type arguments: CliArguments
         @param arguments: The command line interface arguments object
         """
-        self.targetsList = []
-        if arguments.targetsFromUrl:
-            self.targetsList.extend(AB.buildTargetsFromArgs(
-                arguments.targetsFromUrl, arguments.method, arguments.data
+        self.targets_list = []
+        if arguments.targets_from_url:
+            self.targets_list.extend(AB.build_targets_from_args(
+                arguments.targets_from_url, arguments.method, arguments.data
             ))
-        if arguments.targetsFromRawHttp:
-            self.targetsList.extend(AB.buildTargetsFromRawHttp(
-                arguments.targetsFromRawHttp, arguments.scheme
+        if arguments.targets_from_raw_http:
+            self.targets_list.extend(AB.build_targets_from_raw_http(
+                arguments.targets_from_raw_http, arguments.scheme
             ))
-        if not self.targetsList:
+        if not self.targets_list:
             raise Exception("A target is needed to make the fuzzing")
-        for target in self.targetsList:
-            if checkForSubdomainFuzz(target['url']):
-                requestType = 'SubdomainRequest'
+        for target in self.targets_list:
+            if check_for_subdomain_fuzz(target['url']):
+                request_type = 'SubdomainRequest'
             else:
-                requestType = 'Request'
+                request_type = 'Request'
             requester = RequestFactory.creator(
-                requestType,
+                request_type,
                 url=target['url'],
                 methods=target['methods'],
                 body=target['body'],
                 headers=target['header'],
-                followRedirects=arguments.followRedirects,
+                follow_redirects=arguments.follow_redirects,
                 proxy=arguments.proxy,
-                proxies=readFile(arguments.proxies) if arguments.proxies else [],
+                proxies=(read_file(arguments.proxies)
+                         if arguments.proxies else []),
                 timeout=arguments.timeout,
                 cookie=arguments.cookie,
             )
             self.requesters.append(requester)
-            if requester.isMethodFuzzing():
-                target['typeFuzzing'] = "MethodFuzzing"
-            elif requester.isDataFuzzing():
-                target['typeFuzzing'] = "DataFuzzing"
-            elif requester.isUrlDiscovery():
-                if requester.isPathFuzzing():
-                    target['typeFuzzing'] = "PathFuzzing"
+            if requester.is_method_fuzzing():
+                target['type_fuzzing'] = "MethodFuzzing"
+            elif requester.is_data_fuzzing():
+                target['type_fuzzing'] = "DataFuzzing"
+            elif requester.is_url_discovery():
+                if requester.is_path_fuzzing():
+                    target['type_fuzzing'] = "PathFuzzing"
                 else:
-                    target['typeFuzzing'] = "SubdomainFuzzing"
+                    target['type_fuzzing'] = "SubdomainFuzzing"
             else:
-                target['typeFuzzing'] = "Couldn't determine the fuzzing type"
+                target['type_fuzzing'] = "Couldn't determine the fuzzing type"
 
-    def __checkForDuplicatedTargets(self) -> None:
-        """Checks for duplicated targets, if they'll use the same scanner (based on fuzzing type)
-           Also, checks if a global scanner was already specified before make the check
+    def __check_for_duplicated_targets(self) -> None:
+        """Checks for duplicated targets,
+           if they'll use the same scanner (based on fuzzing type)
+           Also, checks if a global scanner was
+           already specified before make the check
         """
-        if not self.globalScanner:
-            targetsChecker = [{
-                'host': getHost(getPureUrl(target['url'])),
-                'typeFuzzing': target['typeFuzzing'],
-            } for target in self.targetsList]
-            if len(set([target['host'] for target in targetsChecker])) != len(self.targetsList):
-                targetsChecker.sort(key=lambda e: e['host'])
-                for i in range(len(targetsChecker)-1):
-                    thisTarget = targetsChecker[i]
-                    nextTarget = targetsChecker[i+1]
-                    if (thisTarget['host'] == nextTarget['host'] and
-                        thisTarget['typeFuzzing'] != nextTarget['typeFuzzing']):
-                        raise Exception("Duplicated target detected with different type of fuzzing scan, exiting.")
+        if not self.global_scanner:
+            targets_checker = [{
+                'host': get_host(get_pure_url(target['url'])),
+                'type_fuzzing': target['type_fuzzing'],
+            } for target in self.targets_list]
+            if len(set([
+                target['host'] for target in targets_checker
+            ])) != len(self.targets_list):
+                targets_checker.sort(key=lambda e: e['host'])
+                for i in range(len(targets_checker)-1):
+                    this_target = targets_checker[i]
+                    next_target = targets_checker[i+1]
+                    if (this_target['host'] == next_target['host'] and
+                        (this_target['type_fuzzing'] !=
+                         next_target['type_fuzzing'])):
+                        raise Exception(
+                            "Duplicated target detected with "
+                            "different type of fuzzing scan, exiting."
+                        )
 
-    def __initDictionary(self, arguments: CliArguments) -> None:
+    def __init_dictionary(self, arguments: CliArguments) -> None:
         """Initialize the dictionary
 
         @type arguments: CliArguments
         @param arguments: The command line interface arguments object
         """
-        def buildEncoders() -> Tuple[
+        def build_encoders() -> Tuple[
             List[BaseEncoder], List[List[BaseEncoder]]
         ]:
             """Build the encoders
 
-            @returns Tuple[List[BaseEncoder], List[List[BaseEncoder]]]: The encoders used in the program
+            @returns Tuple: The encoders used in the program
             """
             if not arguments.encoder:
                 return None
-            if arguments.encodeOnly:
+            if arguments.encode_only:
                 try:
-                    Payloader.encoder.setRegex(arguments.encodeOnly)
+                    Payloader.encoder.set_regex(arguments.encode_only)
                 except Exception as e:
                     raise e
-            encodersDefault = []
-            encodersChain = []
+            encoders_default = []
+            encoders_chain = []
             for encoders in arguments.encoder:
                 if len(encoders) > 1:
-                    appendTo = []
-                    isChain = True
+                    append_to = []
+                    is_chain = True
                 else:
-                    appendTo = encodersDefault
-                    isChain = False
+                    append_to = encoders_default
+                    is_chain = False
                 for encoder in encoders:
                     name, param = encoder
                     try:
-                        encoder = PluginFactory.objectCreator(
+                        encoder = PluginFactory.object_creator(
                             name, 'encoders', param
                         )
                     except Exception as e:
                         raise e
-                    appendTo.append(encoder)
-                if isChain:
-                    encodersChain.append(appendTo)
-            return (encodersDefault, encodersChain)
+                    append_to.append(encoder)
+                if is_chain:
+                    encoders_chain.append(append_to)
+            return (encoders_default, encoders_chain)
 
         def buildDictionary(
             wordlists: List[Tuple[str, str]],
-            isUnique: bool,
+            is_unique: bool,
             requester: Request = None
         ) -> None:
             """Build the dictionary
@@ -620,61 +683,66 @@ class CliController:
             @param requester: The requester for the given dictionary
             @returns Dictionary: The dictionary object
             """
-            lastDictIndex = len(self.dictionariesMetadata)
-            self.dictionariesMetadata.append({
+            last_dict_index = len(self.dictionaries_metadata)
+            self.dictionaries_metadata.append({
                 'wordlists': [],
                 'sizeof': 0
             })
-            buildedWordlist = []
+            builded_wordlist = []
             for wordlist in wordlists:
                 name, params = wordlist
                 if self.verbose[1]:
-                    self.co.infoBox(f"Building wordlist from {name} ...")
-                self.dictionariesMetadata[lastDictIndex]['wordlists'].append(
+                    self.co.info_box(f"Building wordlist from {name} ...")
+                self.dictionaries_metadata[last_dict_index]['wordlists'].append(
                     f"{name}={params}" if params else name
                 )
                 try:
-                    buildedWordlist.extend(WordlistFactory.creator(name, params, requester))
+                    builded_wordlist.extend(
+                        WordlistFactory.creator(name, params, requester).get()
+                    )
                 except Exception as e:
-                    if self.isVerboseMode():
-                        self.co.warningBox(str(e))
+                    if self.is_verbose_mode():
+                        self.co.warning_box(str(e))
                 else:
                     if self.verbose[1]:
-                        self.co.infoBox(f"Wordlist {name} builded")
-            if not buildedWordlist:
+                        self.co.info_box(f"Wordlist {name} builded")
+            if not builded_wordlist:
                 raise Exception("The wordlist is empty")
-            atualLength = len(buildedWordlist)
-            if isUnique:
-                previousLength = atualLength
-                buildedWordlist = set(buildedWordlist)
-                atualLength = len(buildedWordlist)
-                self.dictionariesMetadata[lastDictIndex]['removed'] = previousLength-atualLength
-            dictionary = Dictionary(buildedWordlist)
-            self.dictionariesMetadata[lastDictIndex]['len'] = atualLength
+            atual_length = len(builded_wordlist)
+            if is_unique:
+                previous_length = atual_length
+                builded_wordlist = set(builded_wordlist)
+                atual_length = len(builded_wordlist)
+                self.dictionaries_metadata[last_dict_index]['removed'] = previous_length-atual_length
+            dictionary = Dictionary(builded_wordlist)
+            self.dictionaries_metadata[last_dict_index]['len'] = atual_length
             return dictionary
-        
-        Payloader.setPrefix(arguments.prefix)
-        Payloader.setSuffix(arguments.suffix)
+
+        Payloader.set_prefix(arguments.prefix)
+        Payloader.set_suffix(arguments.suffix)
         if arguments.lowercase:
-            Payloader.setLowercase()
+            Payloader.set_lowercase()
         elif arguments.uppercase:
-            Payloader.setUppercase()
+            Payloader.set_uppercase()
         elif arguments.capitalize:
-            Payloader.setCapitalize()
-        encoders = buildEncoders()
+            Payloader.set_capitalize()
+        encoders = build_encoders()
         if encoders:
-            Payloader.encoder.setEncoders(encoders)
-        self.globalDictionary = None
+            Payloader.encoder.set_encoders(encoders)
+        self.global_dictionary = None
         self.dictionaries = []
-        self.dictionariesMetadata = []
-        lenWordlists = len(arguments.wordlists)
-        lenRequesters = len(self.requesters)
-        if lenWordlists > lenRequesters:
-            raise Exception("The quantity of wordlists is greater than the requesters")
-        elif lenWordlists != lenRequesters:
+        self.dictionaries_metadata = []
+        len_wordlists = len(arguments.wordlists)
+        len_requesters = len(self.requesters)
+        if len_wordlists > len_requesters:
+            raise Exception(
+                "The quantity of wordlists is greater than the requesters"
+            )
+        elif len_wordlists != len_requesters:
             wordlist = arguments.wordlists[0]
-            self.globalDictionary = buildDictionary(wordlist, arguments.unique)
-            self.localDictionary = self.globalDictionary
+            self.global_dictionary = buildDictionary(wordlist,
+                                                     arguments.unique)
+            self.local_dictionary = self.global_dictionary
         else:
             self.dictionaries = Queue()
             for i, wordlist in enumerate(arguments.wordlists):
