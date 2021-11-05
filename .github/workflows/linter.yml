@@ -15,7 +15,7 @@ jobs:
         run: pip install flake8
 
       - name: Running linter (1st round)
-        run: flake8 --extend-ignore=E265,E114,W291,E251,E231,E303,E222,F403,F841 --max-line-length=100
+        run: flake8 --extend-ignore=E265,E114,W291,E251,E231,E303,E222,F403,F841 --per-file-ignores="__init__.py:F401,W292" --max-line-length=100
         continue-on-error: true
 
       - name: Running linter (2nd round)
