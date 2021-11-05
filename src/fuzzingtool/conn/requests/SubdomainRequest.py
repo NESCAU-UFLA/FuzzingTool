@@ -32,14 +32,6 @@ from ...exceptions.request_exceptions import InvalidHostname
 
 class SubdomainRequest(Request):
     """Class that handle with the requests for subdomain fuzzing"""
-    def __init__(self, url: str, **kwargs):
-        """Class constructor
-
-        @type url: str
-        @param url: The target URL
-        """
-        super().__init__(url, **kwargs)
-
     def resolve_hostname(self, hostname: str) -> str:
         """Resolve the ip for the given hostname
 

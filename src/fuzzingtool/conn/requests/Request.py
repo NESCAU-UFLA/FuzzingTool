@@ -23,11 +23,8 @@ import random
 import time
 from typing import List, Dict, Tuple
 
+import requests
 import urllib3.exceptions
-try:
-    import requests
-except ImportError:
-    exit("Requests package not installed. Install all dependencies first.")
 
 from ..RequestParser import request_parser
 from ...utils.consts import (FUZZING_MARK, UNKNOWN_FUZZING, HTTP_METHOD_FUZZING,
