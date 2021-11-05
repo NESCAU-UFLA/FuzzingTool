@@ -91,13 +91,26 @@ class Colors:
     CYAN = '\u001b[36m'
     LIGHT_GRAY = '\u001b[38;5;250m'
     LIGHT_YELLOW = '\u001b[33;1m'
-    LIGHT_RED = "\033[91m"
+    LIGHT_RED = '\033[91m'
     LIGHT_GREEN = '\u001b[38;5;48m'
     BOLD = '\033[1m'
 
     @staticmethod
     def disable():
-        Colors.RESET = Colors.GRAY = Colors.YELLOW = Colors.RED = Colors.GREEN = Colors.BLUE = Colors.BLUE_GRAY = Colors.CYAN = Colors.LIGHT_GRAY = Colors.LIGHT_YELLOW = Colors.LIGHT_RED = Colors.LIGHT_GREEN = Colors.BOLD = ''
+        """Disable the colors of the program"""
+        Colors.RESET = ''
+        Colors.GRAY = ''
+        Colors.YELLOW = ''
+        Colors.RED = ''
+        Colors.GREEN = ''
+        Colors.BLUE = ''
+        Colors.BLUE_GRAY = ''
+        Colors.CYAN = ''
+        Colors.LIGHT_GRAY = ''
+        Colors.LIGHT_YELLOW = ''
+        Colors.LIGHT_RED = ''
+        Colors.LIGHT_GREEN = ''
+        Colors.BOLD = ''
 
 
 class CliOutput:
