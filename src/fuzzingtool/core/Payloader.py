@@ -148,7 +148,7 @@ class Payloader:
         @param prefix: The prefix used in the payload
         """
         Payloader.prefix = prefix
-    
+
     @staticmethod
     def set_suffix(suffix: List[str]) -> None:
         """The suffix setter

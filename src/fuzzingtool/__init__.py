@@ -27,7 +27,7 @@ APP_VERSION = {
 
 def version():
     global APP_VERSION
-    version = (str(APP_VERSION['MAJOR_VERSION']) + "."
-               + str(APP_VERSION['MINOR_VERSION']) + "."
-               + str(APP_VERSION['PATCH']))
+    version = (str(APP_VERSION['MAJOR_VERSION'])
+               + "." + str(APP_VERSION['MINOR_VERSION'])
+               + "." + str(APP_VERSION['PATCH']))
     return version

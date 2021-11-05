@@ -30,7 +30,8 @@ except ImportError:
     exit("Requests package not installed. Install all dependencies first.")
 
 from ..RequestParser import request_parser
-from ...utils.consts import *
+from ...utils.consts import (FUZZING_MARK, UNKNOWN_FUZZING, HTTP_METHOD_FUZZING,
+                             PATH_FUZZING, SUBDOMAIN_FUZZING, DATA_FUZZING)
 from ...utils.http_utils import get_pure_url, get_host, get_url_without_scheme
 from ...utils.utils import get_indexes_to_parse
 from ...exceptions.RequestExceptions import RequestException
@@ -431,7 +432,7 @@ class Request:
                     data_dict[key] = ''
             else:
                 data_dict[content] = ''
-        
+
         for content in content.split('&'):
             build_content(data_dict[where], content)
 
