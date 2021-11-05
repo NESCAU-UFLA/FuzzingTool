@@ -30,6 +30,18 @@ from ....exceptions.request_exceptions import RequestException
 from ....decorators.plugin_meta import plugin_meta
 from ....exceptions.main_exceptions import MissingParameter
 
+CRTSH_HTTP_HEADER = {
+    'Host': "crt.sh",
+    'User-Agent': "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:87.0) Gecko/20100101 Firefox/87.0",
+    'Accept': "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+    'Accept-Language': "en-US,en;q=0.5",
+    'Accept-Encoding': "gzip, deflate",
+    'Connection': "keep-alive",
+    'Referer': "https://crt.sh/",
+    'Upgrade-Insecure-Requests': "1",
+    'TE': "Trailers",
+}
+
 
 @plugin_meta
 class CrtSh(BaseWordlist, Plugin):
@@ -49,20 +61,11 @@ class CrtSh(BaseWordlist, Plugin):
         BaseWordlist.__init__(self)
 
     def _build(self) -> List[str]:
+        global CRTSH_HTTP_HEADER
         requester = Request(
             url=f"https://crt.sh/?q={self.host}",
             method='GET',
-            headers={
-                'Host': "crt.sh",
-                'User-Agent': "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:87.0) Gecko/20100101 Firefox/87.0",
-                'Accept': "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
-                'Accept-Language': "en-US,en;q=0.5",
-                'Accept-Encoding': "gzip, deflate",
-                'Connection': "keep-alive",
-                'Referer': "https://crt.sh/",
-                'Upgrade-Insecure-Requests': "1",
-                'TE': "Trailers",
-            },
+            headers=CRTSH_HTTP_HEADER,
         )
         try:
             response, *_ = requester.request()

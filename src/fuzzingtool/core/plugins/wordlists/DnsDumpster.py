@@ -30,6 +30,17 @@ from ....exceptions.request_exceptions import RequestException
 from ....decorators.plugin_meta import plugin_meta
 from ....exceptions.main_exceptions import MissingParameter
 
+DNSDUMPSTER_HTTP_HEADER = {
+    'Host': "dnsdumpster.com",
+    'User-Agent': "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:87.0) Gecko/20100101 Firefox/87.0",
+    'Accept': "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+    'Accept-Language': "en-US,en;q=0.5",
+    'Accept-Encoding': "gzip, deflate",
+    'Connection': "keep-alive",
+    'Referer': "https://dnsdumpster.com/",
+    'Upgrade-Insecure-Requests': "1",
+}
+
 
 @plugin_meta
 class DnsDumpster(BaseWordlist, Plugin):
@@ -49,19 +60,11 @@ class DnsDumpster(BaseWordlist, Plugin):
         BaseWordlist.__init__(self)
 
     def _build(self) -> List[str]:
+        global DNSDUMPSTER_HTTP_HEADER
         requester = Request(
             url="https://dnsdumpster.com/",
             method='GET',
-            headers={
-                'Host': "dnsdumpster.com",
-                'User-Agent': "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:87.0) Gecko/20100101 Firefox/87.0",
-                'Accept': "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
-                'Accept-Language': "en-US,en;q=0.5",
-                'Accept-Encoding': "gzip, deflate",
-                'Connection': "keep-alive",
-                'Referer': "https://dnsdumpster.com/",
-                'Upgrade-Insecure-Requests': "1",
-            },
+            headers=DNSDUMPSTER_HTTP_HEADER,
             is_session=True,
         )
         try:
