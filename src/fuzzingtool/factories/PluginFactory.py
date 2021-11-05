@@ -26,7 +26,7 @@ from ..utils.file_utils import get_plugin_names_from_category
 from ..utils.utils import split_str_to_list
 from ..core.plugins import Plugin
 from ..exceptions.main_exceptions import (InvalidPluginName,
-                                         MissingParameter, BadArgumentFormat)
+                                          MissingParameter, BadArgumentFormat)
 
 
 class PluginFactory(BasePluginFactory):
