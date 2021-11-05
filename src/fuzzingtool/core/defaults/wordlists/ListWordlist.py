@@ -22,7 +22,7 @@ from typing import List
 
 from ...bases.BaseWordlist import BaseWordlist
 from ....utils.utils import split_str_to_list, check_range_list
-from ....exceptions.MainExceptions import MissingParameter
+from ....exceptions.main_exceptions import MissingParameter
 
 
 class ListWordlist(BaseWordlist):

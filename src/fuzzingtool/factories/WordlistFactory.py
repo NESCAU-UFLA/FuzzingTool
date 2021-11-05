@@ -25,7 +25,7 @@ from .PluginFactory import PluginFactory
 from ..utils.http_utils import get_host, get_pure_url
 from ..conn.requests.Request import Request
 from ..core.defaults.wordlists import ListWordlist, FileWordlist
-from ..exceptions.MainExceptions import InvalidPluginName, MissingParameter
+from ..exceptions.main_exceptions import InvalidPluginName, MissingParameter
 
 
 class WordlistFactory(BaseWordlistFactory):

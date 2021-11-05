@@ -27,7 +27,7 @@ from .Request import Request
 from ..RequestParser import request_parser
 from ...utils.http_utils import get_host
 from ...utils.consts import SUBDOMAIN_FUZZING
-from ...exceptions.RequestExceptions import InvalidHostname
+from ...exceptions.request_exceptions import InvalidHostname
 
 
 class SubdomainRequest(Request):

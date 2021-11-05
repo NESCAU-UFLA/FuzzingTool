@@ -34,7 +34,7 @@ from ...utils.consts import (FUZZING_MARK, UNKNOWN_FUZZING, HTTP_METHOD_FUZZING,
                              PATH_FUZZING, SUBDOMAIN_FUZZING, DATA_FUZZING)
 from ...utils.http_utils import get_pure_url, get_host, get_url_without_scheme
 from ...utils.utils import get_indexes_to_parse
-from ...exceptions.RequestExceptions import RequestException
+from ...exceptions.request_exceptions import RequestException
 
 
 class Request:

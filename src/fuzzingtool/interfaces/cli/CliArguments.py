@@ -22,7 +22,7 @@ from typing import Tuple
 
 from .ArgumentParser import ArgumentParser
 from ...utils.utils import split_str_to_list
-from ...exceptions.MainExceptions import BadArgumentFormat
+from ...exceptions.main_exceptions import BadArgumentFormat
 
 
 def parse_option_with_args(plugin: str) -> Tuple[str, str]:

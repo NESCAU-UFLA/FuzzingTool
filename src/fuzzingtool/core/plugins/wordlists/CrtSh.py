@@ -26,9 +26,9 @@ from bs4 import BeautifulSoup as bs
 from ..Plugin import Plugin
 from ...bases.BaseWordlist import BaseWordlist
 from ....conn.requests.Request import Request
-from ....exceptions.RequestExceptions import RequestException
+from ....exceptions.request_exceptions import RequestException
 from ....decorators.plugin_meta import plugin_meta
-from ....exceptions.MainExceptions import MissingParameter
+from ....exceptions.main_exceptions import MissingParameter
 
 
 @plugin_meta

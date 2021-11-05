@@ -28,7 +28,7 @@ from .Matcher import Matcher
 from .Result import Result
 from .bases.BaseScanner import BaseScanner
 from ..conn.requests import Request
-from ..exceptions.RequestExceptions import RequestException, InvalidHostname
+from ..exceptions.request_exceptions import RequestException, InvalidHostname
 
 
 class Fuzzer:

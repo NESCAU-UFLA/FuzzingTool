@@ -25,7 +25,7 @@ from dns import resolver, query, zone
 from ..Plugin import Plugin
 from ...bases.BaseWordlist import BaseWordlist
 from ....decorators.plugin_meta import plugin_meta
-from ....exceptions.MainExceptions import MissingParameter
+from ....exceptions.main_exceptions import MissingParameter
 
 
 @plugin_meta

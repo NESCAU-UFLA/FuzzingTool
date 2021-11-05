@@ -28,7 +28,7 @@ from ...utils.utils import stringfy_list
 from ...utils.file_utils import get_plugin_names_from_category
 from ...factories.PluginFactory import PluginFactory
 from ...reports.Report import Report
-from ...exceptions.MainExceptions import BadArgumentFormat
+from ...exceptions.main_exceptions import BadArgumentFormat
 
 
 class ArgumentParser(argparse.ArgumentParser):

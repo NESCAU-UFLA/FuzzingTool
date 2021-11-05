@@ -39,8 +39,8 @@ from ...conn.RequestParser import check_for_subdomain_fuzz
 from ...conn.requests import Request
 from ...factories import PluginFactory, RequestFactory, WordlistFactory
 from ...reports.Report import Report
-from ...exceptions.MainExceptions import SkipTargetException
-from ...exceptions.RequestExceptions import RequestException, InvalidHostname
+from ...exceptions.main_exceptions import SkipTargetException
+from ...exceptions.request_exceptions import RequestException, InvalidHostname
 
 
 def banner() -> str:

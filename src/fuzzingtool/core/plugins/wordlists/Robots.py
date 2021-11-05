@@ -23,8 +23,8 @@ from ...bases.BaseWordlist import BaseWordlist
 from ....utils.http_utils import get_path
 from ....conn.requests.Request import Request
 from ....decorators.plugin_meta import plugin_meta
-from ....exceptions.RequestExceptions import RequestException
-from ....exceptions.MainExceptions import MissingParameter
+from ....exceptions.request_exceptions import RequestException
+from ....exceptions.main_exceptions import MissingParameter
 
 from typing import List
 

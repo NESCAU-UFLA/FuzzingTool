@@ -27,7 +27,7 @@ from ....utils.utils import stringfy_list
 from ....interfaces.cli.CliOutput import Colors, get_formated_result
 from ....decorators.plugin_meta import plugin_meta
 from ....decorators.append_args import append_args
-from ....exceptions.MainExceptions import MissingParameter, BadArgumentFormat
+from ....exceptions.main_exceptions import MissingParameter, BadArgumentFormat
 
 
 PREPARED_REGEXES = {
