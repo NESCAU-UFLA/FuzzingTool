@@ -40,9 +40,9 @@ class SubdomainScanner(BaseScanner):
         )
         ip = '{:>15}'.format(result.custom['ip'])
         return (
-            f"{url} {Colors.GRAY}["+
-            f'{Colors.LIGHT_GRAY}IP{Colors.RESET} {ip}'" | "+
-            f"{Colors.LIGHT_GRAY}Code{Colors.RESET} {result.status} | "+
-            f"{Colors.LIGHT_GRAY}RTT{Colors.RESET} {RTT} | "+
+            f"{url} {Colors.GRAY}["
+            f'{Colors.LIGHT_GRAY}IP{Colors.RESET} {ip}'" | "
+            f"{Colors.LIGHT_GRAY}Code{Colors.RESET} {result.status} | "
+            f"{Colors.LIGHT_GRAY}RTT{Colors.RESET} {RTT} | "
             f"{Colors.LIGHT_GRAY}Size{Colors.RESET} {length}{Colors.GRAY}]{Colors.RESET}"
         )

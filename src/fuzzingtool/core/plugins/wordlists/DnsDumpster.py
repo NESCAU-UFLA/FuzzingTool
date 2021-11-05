@@ -50,7 +50,7 @@ class DnsDumpster(BaseWordlist, Plugin):
 
     def _build(self) -> List[str]:
         requester = Request(
-            url=f"https://dnsdumpster.com/",
+            url="https://dnsdumpster.com/",
             method='GET',
             headers={
                 'Host': "dnsdumpster.com",

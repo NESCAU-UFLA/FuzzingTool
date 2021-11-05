@@ -39,10 +39,10 @@ class DataScanner(BaseScanner):
         words = '{:>6}'.format(result.words)
         lines = '{:>5}'.format(result.lines)
         return (
-            f"{payload} {Colors.GRAY}["+
-            f"{Colors.LIGHT_GRAY}Code{Colors.RESET} {result.status} | "+
-            f"{Colors.LIGHT_GRAY}RTT{Colors.RESET} {RTT} | "+
-            f"{Colors.LIGHT_GRAY}Size{Colors.RESET} {length} | "+
-            f"{Colors.LIGHT_GRAY}Words{Colors.RESET} {words} | "+
+            f"{payload} {Colors.GRAY}["
+            f"{Colors.LIGHT_GRAY}Code{Colors.RESET} {result.status} | "
+            f"{Colors.LIGHT_GRAY}RTT{Colors.RESET} {RTT} | "
+            f"{Colors.LIGHT_GRAY}Size{Colors.RESET} {length} | "
+            f"{Colors.LIGHT_GRAY}Words{Colors.RESET} {words} | "
             f"{Colors.LIGHT_GRAY}Lines{Colors.RESET} {lines}{Colors.GRAY}]{Colors.RESET}"
         )

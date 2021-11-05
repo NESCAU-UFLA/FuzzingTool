@@ -197,9 +197,7 @@ class Matcher:
         @type comparator: dict
         @param comparator: The comparator dictionary
         """
-        def get_comparator_and_callback(
-            comparator: str, key: str
-        ) -> Tuple[str, Callable]:
+        def get_comparator_and_callback(comparator: str, key: str) -> Tuple[str, Callable]:
             """Gets the comparator and callback
 
             @type comparator: str
@@ -241,7 +239,9 @@ class Matcher:
             return (comparator, match_callback)
 
         if comparator['Length']:
-            length_comparator, self._match_length = get_comparator_and_callback(comparator['Length'], 'Length')
+            length_comparator, self._match_length = get_comparator_and_callback(
+                comparator['Length'], 'Length'
+            )
             try:
                 length_comparator = int(length_comparator)
             except ValueError:
@@ -250,7 +250,9 @@ class Matcher:
                 )
             comparator['Length'] = length_comparator
         if comparator['Time']:
-            time_comparator, self._match_time = get_comparator_and_callback(comparator['Time'], 'Time')
+            time_comparator, self._match_time = get_comparator_and_callback(
+                comparator['Time'], 'Time'
+            )
             try:
                 time_comparator = float(time_comparator)
             except ValueError:
@@ -259,7 +261,8 @@ class Matcher:
         self._comparator = comparator
 
     def match(self, result: Result) -> bool:
-        """Check if the request content has some predefined characteristics based on a payload, it'll be considered as vulnerable
+        """Check if the request content has some predefined characteristics 
+           based on a payload, it'll be considered as vulnerable
 
         @type result: Result
         @param result: The actual result object

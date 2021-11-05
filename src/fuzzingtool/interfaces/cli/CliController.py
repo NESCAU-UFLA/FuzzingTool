@@ -53,9 +53,9 @@ def banner() -> str:
               f"{Colors.BLUE_GRAY}  |  __| | |- _|- _|'|   | . |  | | . | . | |\n" +
               f"{Colors.BLUE_GRAY}  |_|  |___|___|___|_|_|_|_  |  |_|___|___|_|\n" +
               f"{Colors.BLUE_GRAY}                         |___|{Colors.RESET}\n\n" +
-              f"  [!] Disclaimer: We're not responsible for the misuse of this tool.\n" +
-              f"      This project was created for educational purposes\n" +
-              f"      and should not be used in environments without legal authorization.\n")
+              "  [!] Disclaimer: We're not responsible for the misuse of this tool.\n" +
+              "      This project was created for educational purposes\n" +
+              "      and should not be used in environments without legal authorization.\n")
     return banner
 
 
@@ -360,7 +360,7 @@ class CliController:
 
     def get_default_scanner(self) -> BaseScanner:
         """Check what's the scanners that will be used
-        
+
         @returns BaseScanner: The scanner used in the fuzzing tests
         """
         if self.requester.is_url_discovery():
@@ -376,7 +376,7 @@ class CliController:
     def check_ignore_errors(self, host: str) -> None:
         """Check if the user wants to ignore the errors during the tests.
            By default, URL fuzzing (path and subdomain) ignore errors
-        
+
         @type host: str
         @param host: The target hostname
         """

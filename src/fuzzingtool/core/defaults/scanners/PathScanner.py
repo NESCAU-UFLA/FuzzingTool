@@ -61,9 +61,9 @@ class PathScanner(BaseScanner):
             get_path(result.url), result.RTT, result.length
         )
         return (
-            f"{path} {Colors.GRAY}["+
-            f"{Colors.LIGHT_GRAY}Code{Colors.RESET} {status_color}{status}{Colors.RESET} | "+
-            f"{Colors.LIGHT_GRAY}RTT{Colors.RESET} {RTT} | "+
-            f"{Colors.LIGHT_GRAY}Size{Colors.RESET} {length}{Colors.GRAY}]{Colors.RESET}"+
+            f"{path} {Colors.GRAY}["
+            f"{Colors.LIGHT_GRAY}Code{Colors.RESET} {status_color}{status}{Colors.RESET} | "
+            f"{Colors.LIGHT_GRAY}RTT{Colors.RESET} {RTT} | "
+            f"{Colors.LIGHT_GRAY}Size{Colors.RESET} {length}{Colors.GRAY}]{Colors.RESET}"
             f"{redirected}"
         )

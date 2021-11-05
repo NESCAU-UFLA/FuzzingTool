@@ -83,15 +83,24 @@ class ArgumentParser(argparse.ArgumentParser):
         CO.help_title(2, "Plugins:\n")
         self.__show_plugins_help_from_category('wordlists')
         CO.help_title(0, "Examples:\n")
-        CO.print(f"FuzzingTool -u https://{FUZZING_MARK}.domainexample.com/ -w /path/to/wordlist/subdomains.txt -t 30 --timeout 5 -V2\n")
-        CO.print(f"FuzzingTool -u https://{FUZZING_MARK}.domainexample1.com/ -u https://{FUZZING_MARK}.domainexample2.com/ -w [wp-admin,admin,webmail,www,cpanel] -t 30 --timeout 5 -V2\n")
-        CO.print(f"FuzzingTool -u https://{FUZZING_MARK}.domainexample.com/ -w CrtSh -t 30 --timeout 5 -V2\n")
-        CO.print(f"FuzzingTool -u https://domainexample.com/{FUZZING_MARK} -w Overflow=5000,:../:etc/passwd -t 30 --timeout 5 -V2\n")
+        CO.print(f"FuzzingTool -u https://{FUZZING_MARK}.domainexample.com/ "
+                 "-w /path/to/wordlist/subdomains.txt -t 30 --timeout 5 -V2\n")
+        CO.print(f"FuzzingTool -u https://{FUZZING_MARK}.domainexample1.com/ "
+                 f"-u https://{FUZZING_MARK}.domainexample2.com/ "
+                 "-w [wp-admin,admin,webmail,www,cpanel] -t 30 --timeout 5 -V2\n")
+        CO.print(f"FuzzingTool -u https://{FUZZING_MARK}.domainexample.com/ "
+                 "-w CrtSh -t 30 --timeout 5 -V2\n")
+        CO.print(f"FuzzingTool -u https://domainexample.com/{FUZZING_MARK} "
+                 "-w Overflow=5000,:../:etc/passwd -t 30 --timeout 5 -V2\n")
         CO.help_title(0, "Examples with multiple wordlists:\n")
-        CO.print(f"FuzzingTool -u https://{FUZZING_MARK}.domainexample.com/ -w 'DnsZone;CrtSh' -t 30 --timeout 5 -V2\n")
-        CO.print(f"FuzzingTool -u https://domainexample.com/{FUZZING_MARK} -w 'Robots;/path/to/wordlist/paths.txt' -t 30 --timeout 5 -V2\n")
+        CO.print(f"FuzzingTool -u https://{FUZZING_MARK}.domainexample.com/ "
+                 "-w 'DnsZone;CrtSh' -t 30 --timeout 5 -V2\n")
+        CO.print(f"FuzzingTool -u https://domainexample.com/{FUZZING_MARK} "
+                 "-w 'Robots;/path/to/wordlist/paths.txt' -t 30 --timeout 5 -V2\n")
         CO.help_title(0, "Example with wordlists per target:\n")
-        CO.print(f"FuzzingTool -u domainexample.com/{FUZZING_MARK} -u {FUZZING_MARK}.domainexample2.com -w 'Robots;/path/to/wordlist/paths.txt' -w CrtSh -t 30 --timeout 5 -V2\n")
+        CO.print(f"FuzzingTool -u domainexample.com/{FUZZING_MARK} "
+                 f"-u {FUZZING_MARK}.domainexample2.com "
+                 "-w 'Robots;/path/to/wordlist/paths.txt' -w CrtSh -t 30 --timeout 5 -V2\n")
         exit(0)
 
     def _show_encoders_help(self) -> None:
@@ -100,20 +109,23 @@ class ArgumentParser(argparse.ArgumentParser):
         CO.help_title(2, "Set the encoder used on the payloads\n")
         self.__show_plugins_help_from_category('encoders')
         CO.help_title(0, "Examples:\n")
-        CO.print(f"FuzzingTool -u https://domainexample.com/page.php?id= -w /path/to/wordlist/sqli.txt -e Url=2 -t 30 --scanner Find=SQL\n")
+        CO.print("FuzzingTool -u https://domainexample.com/page.php?id= "
+                 "-w /path/to/wordlist/sqli.txt -e Url=2 -t 30 --scanner Find=SQL\n")
         exit(0)
 
     def _show_scanners_help(self) -> None:
         """Show the help menu for scanners and exit"""
         CO.help_title(0, "Scanner options:")
-        CO.help_title(2, "Default: The default scanners are selected automatically if no one from plugins was choiced\n")
+        CO.help_title(2, "Default: The default scanners are selected automatically "
+                         "if no one from plugins was choiced\n")
         CO.help_content(5, "DataScanner", "Scanner for the data fuzzing")
         CO.help_content(5, "PathScanner", "Scanner for the path fuzzing")
         CO.help_content(5, "SubdomainScanner", "Scanner for the subdomain fuzzing")
         CO.help_title(2, "Plugins (--scaner SCANNER):\n")
         self.__show_plugins_help_from_category('scanners')
         CO.help_title(0, "Examples:\n")
-        CO.print(f"FuzzingTool -u https://domainexample.com/search.php?query= -w /path/to/wordlist/xss.txt --scanner Reflected -t 30 -o csv\n")
+        CO.print("FuzzingTool -u https://domainexample.com/search.php?query= "
+                 "-w /path/to/wordlist/xss.txt --scanner Reflected -t 30 -o csv\n")
         exit(0)
 
     def __show_plugins_help_from_category(self, category: str) -> None:
@@ -137,11 +149,13 @@ class ArgumentParser(argparse.ArgumentParser):
                     params = f"={metavar}[{separator}{metavar}]*"
                 else:
                     params = f"={Plugin.__params__['metavar']}"
-            CO.help_content(5, f"{Plugin.__name__}{params}", f"{Plugin.__desc__}{type_fuzzing}\n")
+            CO.help_content(5, f"{Plugin.__name__}{params}",
+                            f"{Plugin.__desc__}{type_fuzzing}\n")
 
     def __build_options(self) -> None:
         """Builds the FuzzingTool options"""
-        self.add_argument('-v', '--version',
+        self.add_argument(
+            '-v', '--version',
             action='version',
             version=f"FuzzingTool v{version()}"
         )
@@ -154,56 +168,65 @@ class ArgumentParser(argparse.ArgumentParser):
     def __build_request_opts(self) -> None:
         """Builds the arguments for request options"""
         request_opts = self.add_argument_group('Request options')
-        request_opts.add_argument('-u',
+        request_opts.add_argument(
+            '-u',
             action='append',
             dest='url',
             help="Define the target URL",
             metavar='URL',
         )
-        request_opts.add_argument('-r',
+        request_opts.add_argument(
+            '-r',
             action='append',
             dest='raw_http',
             help="Define the file with the raw HTTP request (scheme not specified)",
             metavar='FILE',
         )
-        request_opts.add_argument('--scheme',
+        request_opts.add_argument(
+            '--scheme',
             action='store',
             dest='scheme',
             help="Define the scheme used in the URL (default http)",
             metavar='SCHEME',
             default="http",
         )
-        request_opts.add_argument('-X',
+        request_opts.add_argument(
+            '-X',
             action='store',
             dest='method',
             help="Define the request http verbs (method)",
             metavar='METHOD',
         )
-        request_opts.add_argument('-d',
+        request_opts.add_argument(
+            '-d',
             action='store',
             dest='data',
             help="Define the request body data",
             metavar='DATA',
         )
-        request_opts.add_argument('--proxy',
+        request_opts.add_argument(
+            '--proxy',
             action='store',
             dest='proxy',
             help="Define the proxy",
             metavar='IP:PORT',
         )
-        request_opts.add_argument('--proxies',
+        request_opts.add_argument(
+            '--proxies',
             action='store',
             dest='proxies',
             help="Define the file with a list of proxies",
             metavar='FILE',
         )
-        request_opts.add_argument('--cookie',
+        request_opts.add_argument(
+            '--cookie',
             action='store',
             dest='cookie',
             help="Define the HTTP Cookie header value",
             metavar='COOKIE',
         )
-        request_opts.add_argument('--timeout',
+        request_opts.add_argument(
+            '--timeout',
             action='store',
             dest='timeout',
             help="Define the request timeout (in seconds)",
@@ -211,68 +234,79 @@ class ArgumentParser(argparse.ArgumentParser):
             type=int,
             default=0,
         )
-        request_opts.add_argument('--follow-redirects',
+        request_opts.add_argument(
+            '--follow-redirects',
             action='store_true',
             dest='follow_redirects',
             help="Force to follow redirects",
             default=False,
         )
-    
+
     def __build_dictionary_opts(self) -> None:
         """Builds the arguments for dictionary options"""
         dictionary_opts = self.add_argument_group('Dictionary options')
-        dictionary_opts.add_argument('-w',
+        dictionary_opts.add_argument(
+            '-w',
             action='append',
             dest='wordlist',
-            help="Define the wordlists with the payloads, separating with ';' (--help=wordlists for more info)",
+            help=("Define the wordlists with the payloads, separating with ';' "
+                  "(--help=wordlists for more info)"),
             metavar='WORDLIST',
             required=True,
         )
-        dictionary_opts.add_argument('--unique',
+        dictionary_opts.add_argument(
+            '--unique',
             action='store_true',
             dest='unique',
             help="Removes duplicated payloads from the final wordlist",
             default=False,
         )
-        dictionary_opts.add_argument('-e',
+        dictionary_opts.add_argument(
+            '-e',
             action='store',
             dest='encoder',
             help="Define the encoder used on payloads (--help=encoders for more info)",
             metavar='ENCODER',
             default='',
         )
-        dictionary_opts.add_argument('--encode-only',
+        dictionary_opts.add_argument(
+            '--encode-only',
             action='store',
             dest='encode_only',
             help="Define the regex pattern to use in the encoder",
             metavar='REGEX',
             default='',
         )
-        dictionary_opts.add_argument('--prefix',
+        dictionary_opts.add_argument(
+            '--prefix',
             action='store',
             dest='prefix',
             help="Define the prefix(es) used with the payload",
             metavar='PREFIX',
         )
-        dictionary_opts.add_argument('--suffix',
+        dictionary_opts.add_argument(
+            '--suffix',
             action='store',
             dest='suffix',
             help="Define the suffix(es) used with the payload",
             metavar='SUFFIX',
         )
-        dictionary_opts.add_argument('--upper',
+        dictionary_opts.add_argument(
+            '--upper',
             action='store_true',
             dest='upper',
             help="Set the uppercase case for the payloads",
             default=False,
         )
-        dictionary_opts.add_argument('--lower',
+        dictionary_opts.add_argument(
+            '--lower',
             action='store_true',
             dest='lower',
             help="Set the lowercase case for the payloads",
             default=False,
         )
-        dictionary_opts.add_argument('--capitalize',
+        dictionary_opts.add_argument(
+            '--capitalize',
             action='store_true',
             dest='capitalize',
             help="Set the capitalize case for the payloads",
@@ -282,25 +316,29 @@ class ArgumentParser(argparse.ArgumentParser):
     def __build_match_opts(self) -> None:
         """Builds the arguments for match options"""
         match_opts = self.add_argument_group('Match options')
-        match_opts.add_argument('-Mc',
+        match_opts.add_argument(
+            '-Mc',
             action='store',
             dest='match_status',
             help="Match responses based on their status codes",
             metavar='STATUS',
         )
-        match_opts.add_argument('-Ms',
+        match_opts.add_argument(
+            '-Ms',
             action='store',
             dest='match_length',
             help="Match responses based on their length (in bytes)",
             metavar='SIZE',
         )
-        match_opts.add_argument('-Mt',
+        match_opts.add_argument(
+            '-Mt',
             action='store',
             dest='match_time',
             help="Match responses based on their elapsed time (in seconds)",
             metavar='TIME',
         )
-        match_opts.add_argument('--scanner',
+        match_opts.add_argument(
+            '--scanner',
             action='store',
             dest='scanner',
             help="Define the custom scanner (--help=scanners for more info)",
@@ -310,25 +348,29 @@ class ArgumentParser(argparse.ArgumentParser):
     def __build_display_opts(self) -> None:
         """Builds the arguments for cli display options"""
         display_opts = self.add_argument_group('Display options')
-        display_opts.add_argument('-S, --simple-output',
+        display_opts.add_argument(
+            '-S, --simple-output',
             action='store_true',
             dest="simple_output",
             help="Set the simple display output mode (affects labels)",
             default=False,
         )
-        display_opts.add_argument('-V', '-V1',
+        display_opts.add_argument(
+            '-V', '-V1',
             action='store_true',
             dest='common_verbose',
             help="Set the common verbose output mode",
             default=False,
         )
-        display_opts.add_argument('-V2',
+        display_opts.add_argument(
+            '-V2',
             action='store_true',
             dest='detailed_verbose',
             help="Set the detailed verbose output mode",
             default=False,
         )
-        display_opts.add_argument('--no-colors',
+        display_opts.add_argument(
+            '--no-colors',
             action='store_true',
             dest='disable_colors',
             help="Disable the colors of the program",
@@ -338,7 +380,8 @@ class ArgumentParser(argparse.ArgumentParser):
     def __build_more_opts(self) -> None:
         """Builds the arguments for non categorized options"""
         more_opts = self.add_argument_group('More options')
-        more_opts.add_argument('-t',
+        more_opts.add_argument(
+            '-t',
             action='store',
             dest='number_of_threads',
             help="Define the number of threads used in the tests",
@@ -346,7 +389,8 @@ class ArgumentParser(argparse.ArgumentParser):
             type=int,
             default=1,
         )
-        more_opts.add_argument('--delay',
+        more_opts.add_argument(
+            '--delay',
             action='store',
             dest='delay',
             help="Define delay between each request",
@@ -354,16 +398,21 @@ class ArgumentParser(argparse.ArgumentParser):
             type=float,
             default=0,
         )
-        more_opts.add_argument('-o',
+        more_opts.add_argument(
+            '-o',
             action='store',
             dest='report_name',
-            help=f"Define the report name and/or format. Available reports: {stringfy_list(list(Report.get_available_reports().keys()))}",
+            help=("Define the report name and/or format. Available reports: "
+                  + stringfy_list(list(Report.get_available_reports().keys()))),
             metavar='REPORT',
             default='txt'
         )
-        more_opts.add_argument('--blacklist-status',
+        more_opts.add_argument(
+            '--blacklist-status',
             action='store',
             dest='blacklist_status',
-            help="Blacklist status codes from response, and take an action when one is detected. Available actions: skip (to skip the current target), wait=SECONDS (to pause the app for some seconds)",
+            help=("Blacklist status codes from response, and take an action when one is detected. "
+                  "Available actions: skip (to skip the current target), "
+                  "wait=SECONDS (to pause the app for some seconds)"),
             metavar='STATUS:ACTION',
         )

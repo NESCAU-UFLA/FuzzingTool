@@ -45,7 +45,8 @@ class Grep(BaseScanner, Plugin):
         'cli_list_separator': ';',
     }
     __desc__ = ("Grep content based on a regex match into the response body. "
-                f"You can use these prepared regexes: {stringfy_list(list(PREPARED_REGEXES.keys()))}")
+                "You can use these prepared regexes: "
+                + stringfy_list(list(PREPARED_REGEXES.keys())))
     __type__ = ""
     __version__ = "0.2"
 
@@ -95,9 +96,9 @@ class Grep(BaseScanner, Plugin):
             result.payload, result.RTT, result.length
         )
         return (
-            f"{payload} {Colors.GRAY}["+
-            f"{Colors.LIGHT_GRAY}Found{Colors.RESET} {found}{Colors.RESET} | "+
-            f"{Colors.LIGHT_GRAY}Code{Colors.RESET} {result.status} | "+
-            f"{Colors.LIGHT_GRAY}RTT{Colors.RESET} {RTT} | "+
+            f"{payload} {Colors.GRAY}["
+            f"{Colors.LIGHT_GRAY}Found{Colors.RESET} {found}{Colors.RESET} | "
+            f"{Colors.LIGHT_GRAY}Code{Colors.RESET} {result.status} | "
+            f"{Colors.LIGHT_GRAY}RTT{Colors.RESET} {RTT} | "
             f"{Colors.LIGHT_GRAY}Size{Colors.RESET} {length}{Colors.GRAY}]{Colors.RESET}"
         )
