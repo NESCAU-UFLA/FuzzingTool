@@ -18,6 +18,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from .CliArguments import CliArguments
-from .CliController import CliController
-from .CliOutput import CliOutput, Colors
+from .cli_arguments import CliArguments
+from .cli_controller import CliController
+from .cli_output import CliOutput, Colors
