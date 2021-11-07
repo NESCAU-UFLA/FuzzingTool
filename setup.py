@@ -15,6 +15,10 @@ install_requires = [
     'dnspython>=2.1.0',
 ]
 
+dev_requires = [
+    'pytest'
+]
+
 if sys.platform.startswith("win"):
     install_requires.append("colorama>=0.4.0")
 
@@ -37,6 +41,9 @@ setup(
         ]
     },
     install_requires=install_requires,
+    extras_require={
+        'dev': dev_requires
+    },
     python_requires=">=3.6",
     classifiers=[
         "Development Status :: 4 - Beta",

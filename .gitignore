@@ -1,5 +1,5 @@
 # Pycache
-src/**/__pycache__/
+__pycache__/
 
 # Distribution / packaging
 .Python
