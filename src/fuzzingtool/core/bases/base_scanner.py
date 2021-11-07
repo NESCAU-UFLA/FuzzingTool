@@ -1,5 +1,3 @@
-#!/usr/bin/python3
-
 # Copyright (c) 2020 - present Vitor Oriel <https://github.com/VitorOriel>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -20,7 +18,38 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from fuzzingtool.fuzzingtool import main_cli
+from abc import ABC, abstractmethod
 
-if __name__ == "__main__":
-    main_cli()
+from ..result import Result
+
+
+class BaseScanner(ABC):
+    """Base scanner"""
+    @abstractmethod
+    def inspect_result(self, result: Result) -> None:
+        """Inspects the FuzingTool result to add new information if needed
+
+        @type result: Result
+        @param result: The result object
+        """
+        pass
+
+    @abstractmethod
+    def scan(self, result: Result) -> bool:
+        """Scan the FuzzingTool result
+
+        @type result: Result
+        @param result: The result object
+        @reeturns bool: A match flag
+        """
+        pass
+
+    @abstractmethod
+    def cli_callback(self, result: Result) -> str:
+        """Get the formated message to be used on output
+
+        @type result: Result
+        @param result: The result object
+        @returns str: The message
+        """
+        pass

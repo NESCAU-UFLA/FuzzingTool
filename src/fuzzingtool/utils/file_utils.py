@@ -51,24 +51,6 @@ def split_filenames(files: list) -> List[str]:
     return [file.split('.')[0] for file in files]
 
 
-def get_plugin_names_from_category(category: str) -> List[str]:
-    """Gets the plugin filenames
-
-    @type category: str
-    @param category: The category of the plugins
-    @returns List[str]: The list with the plugin filenames
-    """
-    try:
-        _, _, plugin_files = next(
-            walk(f"./fuzzingtool/core/plugins/{category}/")
-        )
-    except Exception:
-        _, _, plugin_files = next(walk(
-            f"{dirname(dirname(abspath(__file__)))}/core/plugins/{category}/"
-        ))
-    return split_filenames(plugin_files)
-
-
 def get_reports() -> List[str]:
     """Gets the report filenames
 

@@ -18,6 +18,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from .DataScanner import DataScanner
-from .PathScanner import PathScanner
-from .SubdomainScanner import SubdomainScanner
+from .data_scanner import DataScanner
+from .path_scanner import PathScanner
+from .subdomain_scanner import SubdomainScanner

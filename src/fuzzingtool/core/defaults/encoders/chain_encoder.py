@@ -1,5 +1,3 @@
-#!/usr/bin/python3
-
 # Copyright (c) 2020 - present Vitor Oriel <https://github.com/VitorOriel>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -20,7 +18,34 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from fuzzingtool.fuzzingtool import main_cli
+from typing import List
 
-if __name__ == "__main__":
-    main_cli()
+from ...bases.base_encoder import BaseEncoder
+
+
+class ChainEncoder(BaseEncoder):
+    """Class that handle with the chain encoders
+
+    Attributes:
+        encoders: The encoders list to be chained
+    """
+    def __init__(self, encoders: List[BaseEncoder]):
+        """Class constructor
+
+        @type encoders: List[BaseEncoder]
+        @param encoders: The encoders list to be chained
+        """
+        self.__encoders = encoders
+
+    def getEncoders(self) -> List[BaseEncoder]:
+        """The encoders list getter
+
+        @return List[BaseEncoder]: The encoders list
+        """
+        return self.__encoders
+
+    def encode(self, payload: str) -> str:
+        encoded = payload
+        for encoder in self.__encoders:
+            encoded = encoder.encode(encoded)
+        return encoded

@@ -18,7 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from ..core.plugins.Plugin import Plugin
+from ..core.plugins.plugin import Plugin
 
 
 def plugin_meta(cls: Plugin) -> Plugin:

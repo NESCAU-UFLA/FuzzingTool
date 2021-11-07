@@ -1,5 +1,3 @@
-#!/usr/bin/python3
-
 # Copyright (c) 2020 - present Vitor Oriel <https://github.com/VitorOriel>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -20,7 +18,21 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from fuzzingtool.fuzzingtool import main_cli
+from typing import List
 
-if __name__ == "__main__":
-    main_cli()
+from ...bases.base_wordlist import BaseWordlist
+from ....utils.file_utils import read_file
+
+
+class FileWordlist(BaseWordlist):
+    __author__ = ("Vitor Oriel",)
+
+    def __init__(self, file_path: str):
+        self.file_path = file_path
+        super().__init__()
+
+    def _build(self) -> List[str]:
+        try:
+            return set(read_file(self.file_path))
+        except Exception as e:
+            raise e

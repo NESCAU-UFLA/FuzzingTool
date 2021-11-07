@@ -18,7 +18,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from .CrtSh import CrtSh
-from .DnsZone import DnsZone
-from .Overflow import Overflow
-from .Robots import Robots
+from .crt_sh import CrtSh
+from .dns_dumpster import DnsDumpster
+from .dns_zone import DnsZone
+from .overflow import Overflow
+from .robots import Robots

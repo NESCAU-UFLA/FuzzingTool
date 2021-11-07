@@ -1,5 +1,3 @@
-#!/usr/bin/python3
-
 # Copyright (c) 2020 - present Vitor Oriel <https://github.com/VitorOriel>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -20,7 +18,23 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from fuzzingtool.fuzzingtool import main_cli
+import base64
 
-if __name__ == "__main__":
-    main_cli()
+from ..plugin import Plugin
+from ...bases.base_encoder import BaseEncoder
+from ....decorators.plugin_meta import plugin_meta
+
+
+@plugin_meta
+class Base64(BaseEncoder, Plugin):
+    __author__ = ("Vitor Oriel",)
+    __params__ = {}
+    __desc__ = "Encode payload using Base64 encoder"
+    __type__ = "Encoder"
+    __version__ = "0.1"
+
+    def encode(self, payload: str) -> str:
+        return base64.b64encode(payload.encode(BaseEncoder.charset)).decode(BaseEncoder.charset)
+
+    def decode(self, payload: str) -> str:
+        return base64.b64decode(payload).decode(BaseEncoder.charset)

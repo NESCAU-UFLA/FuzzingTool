@@ -18,7 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from ..reports.BaseReport import BaseReport
+from ..reports.base_report import BaseReport
 
 
 def report_meta(cls: BaseReport) -> BaseReport:
