@@ -1,0 +1,27 @@
+name: SonarCloud
+
+on: 
+  pull_request:
+    branches:
+      - develop
+      - master
+
+jobs:
+  sonarcloud:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        # Disabling shallow clone is recommended for improving relevancy of reporting
+        fetch-depth: 0
+    - name: SonarCloud Scan
+      uses: sonarsource/sonarcloud-github-action@master
+      env:
+        GITHUB_TOKEN: ${{ secrets.TOKEN_GITHUB }}
+        SONAR_TOKEN: ${{ secrets.SONARCLOUD_TOKEN }}
+      with:
+        projectBaseDir: src/fuzzingtool
+        args: >
+          -Dsonar.organization=nescau-ufla
+          -Dsonar.projectKey=NESCAU-UFLA_FuzzingTool
+          -Dsonar.python.version=3
