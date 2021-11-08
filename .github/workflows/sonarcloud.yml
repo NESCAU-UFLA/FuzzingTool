@@ -24,3 +24,4 @@ jobs:
           -Dsonar.organization=nescau-ufla
           -Dsonar.projectKey=NESCAU-UFLA_FuzzingTool
           -Dsonar.sources=src/fuzzingtool/
+          -Dsonar.python.version=3
