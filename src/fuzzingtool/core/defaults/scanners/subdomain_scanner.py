@@ -1,5 +1,3 @@
-#!/usr/bin/python3
-
 # Copyright (c) 2020 - present Vitor Oriel <https://github.com/VitorOriel>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -20,7 +18,31 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from fuzzingtool.fuzzingtool import main_cli
+from ...bases.base_scanner import BaseScanner
+from ...result import Result
+from ....decorators.append_args import append_args
+from ....interfaces.cli.cli_output import Colors, get_formated_result
 
-if __name__ == "__main__":
-    main_cli()
+
+class SubdomainScanner(BaseScanner):
+    __author__ = ("Vitor Oriel",)
+
+    @append_args
+    def inspect_result(self, result: Result) -> None:
+        pass
+
+    def scan(self, result: Result) -> bool:
+        return True
+
+    def cli_callback(self, result: Result) -> str:
+        url, RTT, length = get_formated_result(
+            result.url, result.RTT, result.length
+        )
+        ip = '{:>15}'.format(result.custom['ip'])
+        return (
+            f"{url} {Colors.GRAY}["
+            f'{Colors.LIGHT_GRAY}IP{Colors.RESET} {ip}'" | "
+            f"{Colors.LIGHT_GRAY}Code{Colors.RESET} {result.status} | "
+            f"{Colors.LIGHT_GRAY}RTT{Colors.RESET} {RTT} | "
+            f"{Colors.LIGHT_GRAY}Size{Colors.RESET} {length}{Colors.GRAY}]{Colors.RESET}"
+        )

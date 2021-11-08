@@ -1,5 +1,4 @@
 import os
-import sys
 from setuptools import setup, find_packages
 
 from src.fuzzingtool import version
@@ -19,9 +18,6 @@ dev_requires = [
     'pytest'
 ]
 
-if sys.platform.startswith("win"):
-    install_requires.append("colorama>=0.4.0")
-
 setup(
     name="FuzzingTool",
     version=version(),
@@ -37,7 +33,7 @@ setup(
     package_dir={'fuzzingtool': 'src/fuzzingtool'},
     entry_points={
         'console_scripts': [
-            'FuzzingTool = fuzzingtool.FuzzingTool:main_cli'
+            'FuzzingTool = fuzzingtool.fuzzingtool:main_cli'
         ]
     },
     install_requires=install_requires,

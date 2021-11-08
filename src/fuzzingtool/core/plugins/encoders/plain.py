@@ -1,5 +1,3 @@
-#!/usr/bin/python3
-
 # Copyright (c) 2020 - present Vitor Oriel <https://github.com/VitorOriel>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -20,7 +18,18 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from fuzzingtool.fuzzingtool import main_cli
+from ..plugin import Plugin
+from ...bases.base_encoder import BaseEncoder
+from ....decorators.plugin_meta import plugin_meta
 
-if __name__ == "__main__":
-    main_cli()
+
+@plugin_meta
+class Plain(BaseEncoder, Plugin):
+    __author__ = ("Vitor Oriel",)
+    __params__ = {}
+    __desc__ = "Do not encode the payload"
+    __type__ = ""
+    __version__ = "0.2"
+
+    def encode(self, payload: str) -> str:
+        return payload

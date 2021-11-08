@@ -1,5 +1,3 @@
-#!/usr/bin/python3
-
 # Copyright (c) 2020 - present Vitor Oriel <https://github.com/VitorOriel>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -20,7 +18,16 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from fuzzingtool.fuzzingtool import main_cli
+from importlib import import_module
 
-if __name__ == "__main__":
-    main_cli()
+from .base_factories import BaseRequestFactory
+from ..conn.requesters import Request
+
+
+class RequestFactory(BaseRequestFactory):
+    def creator(request_type, url, **kwargs) -> Request:
+        Request = import_module(
+            f"fuzzingtool.conn.requesters",
+            package=request_type
+        )
+        return getattr(Request, request_type)(url, **kwargs)

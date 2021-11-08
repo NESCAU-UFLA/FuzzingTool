@@ -1,5 +1,3 @@
-#!/usr/bin/python3
-
 # Copyright (c) 2020 - present Vitor Oriel <https://github.com/VitorOriel>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -20,7 +18,26 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from fuzzingtool.fuzzingtool import main_cli
+import json
+from typing import List
 
-if __name__ == "__main__":
-    main_cli()
+from ..base_report import BaseReport
+from ...core.result import Result
+from ...decorators.report_meta import report_meta
+
+
+@report_meta
+class JsonReport(BaseReport):
+    __author__ = ("Vitor Oriel",)
+    __version__ = "0.1"
+
+    file_extension = 'json'
+
+    def _header(self) -> None:
+        pass
+
+    def _results(self, results: List[Result]) -> None:
+        json.dump([dict(result) for result in results], self._file)
+
+    def _footer(self) -> None:
+        pass

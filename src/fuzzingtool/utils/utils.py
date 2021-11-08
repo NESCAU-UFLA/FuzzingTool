@@ -158,17 +158,15 @@ def check_range_list(content: str) -> List[Union[int, str]]:
         left_digit, left_str = left[-1], left[:-1]
         right_digit, right_str = right[0], right[1:]
         compiled_list = []
-        if ord(left_digit) <= ord(right_digit):
-            order_left_digit = ord(left_digit)
-            order_right_digit = ord(right_digit)
+        order_left_digit = ord(left_digit)
+        order_right_digit = ord(right_digit)
+        if order_left_digit <= order_right_digit:
             while order_left_digit <= order_right_digit:
                 compiled_list.append(
                     f"{left_str}{chr(order_left_digit)}{right_str}"
                 )
                 order_left_digit += 1
         else:
-            order_left_digit = ord(left_digit)
-            order_right_digit = ord(right_digit)
             while order_left_digit >= order_right_digit:
                 compiled_list.append(
                     f"{left_str}{chr(order_left_digit)}{right_str}"

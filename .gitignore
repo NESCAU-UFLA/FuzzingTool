@@ -20,3 +20,6 @@ var/
 
 # VSCode
 .vscode
+
+# Coverage
+coverage.xml

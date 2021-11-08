@@ -1,5 +1,3 @@
-#!/usr/bin/python3
-
 # Copyright (c) 2020 - present Vitor Oriel <https://github.com/VitorOriel>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -20,7 +18,25 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from fuzzingtool.fuzzingtool import main_cli
+from typing import List
 
-if __name__ == "__main__":
-    main_cli()
+from ...bases.base_wordlist import BaseWordlist
+from ....utils.utils import split_str_to_list, check_range_list
+from ....exceptions.main_exceptions import MissingParameter
+
+
+class ListWordlist(BaseWordlist):
+    __author__ = ("Vitor Oriel",)
+
+    def __init__(self, payload_list: str):
+        payload_list = payload_list[1:-1]
+        if not payload_list:
+            raise MissingParameter("list of payloads")
+        self.payload_list = payload_list
+        super().__init__()
+
+    def _build(self) -> List[str]:
+        builded_list = []
+        for payload in split_str_to_list(self.payload_list):
+            builded_list.extend(check_range_list(payload))
+        return builded_list

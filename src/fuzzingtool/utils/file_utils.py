@@ -18,8 +18,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from os import walk
-from os.path import dirname, abspath
 from typing import List
 
 
@@ -37,49 +35,3 @@ def read_file(file_name: str) -> List[str]:
                     if not line.startswith('#!')]
     except FileNotFoundError:
         raise Exception(f"File '{file_name}' not found")
-
-
-def split_filenames(files: list) -> List[str]:
-    """Splits the files, removing the extension and __init__.py
-
-    @type files: list
-    @param files: The filenames to split
-    @returns List[str]: The splited content, without extension
-    """
-    if '__init__.py' in files:
-        files.remove('__init__.py')
-    return [file.split('.')[0] for file in files]
-
-
-def get_plugin_names_from_category(category: str) -> List[str]:
-    """Gets the plugin filenames
-
-    @type category: str
-    @param category: The category of the plugins
-    @returns List[str]: The list with the plugin filenames
-    """
-    try:
-        _, _, plugin_files = next(
-            walk(f"./fuzzingtool/core/plugins/{category}/")
-        )
-    except Exception:
-        _, _, plugin_files = next(walk(
-            f"{dirname(dirname(abspath(__file__)))}/core/plugins/{category}/"
-        ))
-    return split_filenames(plugin_files)
-
-
-def get_reports() -> List[str]:
-    """Gets the report filenames
-
-    @returns List[str]: The list with the report filenames
-    """
-    try:
-        _, _, report_files = next(
-            walk("./fuzzingtool/reports/reports/")
-        )
-    except Exception:
-        _, _, report_files = next(walk(
-            f"{dirname(dirname(abspath(__file__)))}/reports/reports/"
-        ))
-    return split_filenames(report_files)
