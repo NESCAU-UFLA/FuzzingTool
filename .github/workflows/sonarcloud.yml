@@ -21,6 +21,6 @@ jobs:
         SONAR_TOKEN: ${{ secrets.SONARCLOUD_TOKEN }}
       with:
         args: >
-          -Dsonar.organization=NESCAU-UFLA
-          -Dsonar.projectKey=FuzzingTool
+          -Dsonar.organization=nescau-ufla
+          -Dsonar.projectKey=NESCAU-UFLA_FuzzingTool
           -Dsonar.sources=src/fuzzingtool/
