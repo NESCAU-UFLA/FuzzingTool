@@ -20,4 +20,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.TOKEN_GITHUB }}
         SONAR_TOKEN: ${{ secrets.SONARCLOUD_TOKEN }}
       with:
-        projectBaseDir: src/fuzzingtool
+        args: >
+          -Dsonar.organization=NESCAU-UFLA
+          -Dsonar.projectKey=FuzzingTool
+          -Dsonar.sources=src/fuzzingtool/
