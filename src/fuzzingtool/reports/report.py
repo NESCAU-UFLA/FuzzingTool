@@ -18,13 +18,11 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from importlib import import_module
 from typing import Dict, Type
 
 from . import reports
 from .base_report import BaseReport
 from ..utils.utils import stringfy_list
-from ..utils.file_utils import get_reports
 
 
 class Report:

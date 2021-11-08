@@ -30,7 +30,7 @@ class Html(BaseEncoder, Plugin):
     __author__ = ("Vitor Oriel",)
     __params__ = {}
     __desc__ = "Encode payload using HTML entities encoder"
-    __type__ = "Encoder"
+    __type__ = ''
     __version__ = "0.1"
 
     def encode(self, payload: str) -> str:
