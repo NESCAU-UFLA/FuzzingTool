@@ -52,7 +52,6 @@ class Overflow(BaseWordlist, Plugin):
                     )
             else:
                 init_payload, end_payload = '', ''
-            quantity_of_payloads = quantity_of_payloads
         else:
             quantity_of_payloads = source_param
             init_payload, payload, end_payload = '', '', ''

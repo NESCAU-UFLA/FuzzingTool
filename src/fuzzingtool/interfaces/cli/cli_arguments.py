@@ -35,7 +35,6 @@ def parse_option_with_args(plugin: str) -> Tuple[str, str]:
     if '=' in plugin:
         plugin, param = plugin.split('=', 1)
     else:
-        plugin = plugin
         param = ''
     return (plugin, param)
 
