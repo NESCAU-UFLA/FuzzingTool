@@ -23,3 +23,6 @@ var/
 
 # Coverage
 coverage.xml
+
+# Tests
+.pytest_cache
