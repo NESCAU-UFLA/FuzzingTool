@@ -29,7 +29,7 @@ class BaseWordlist(ABC):
         wordlist: The list with the payloads
     """
     def __init__(self):
-        self.__wordlist = self._build()
+        self.__wordlist = []
 
     def __len__(self) -> int:
         return len(self.__wordlist)
@@ -40,6 +40,10 @@ class BaseWordlist(ABC):
         @returns List[str]: The list with the payloads
         """
         return self.__wordlist
+
+    def build(self) -> None:
+        """Builds the wordlist"""
+        self.__wordlist = self._build()
 
     @abstractmethod
     def _build(self) -> List[str]:

@@ -39,8 +39,10 @@ from ...conn.request_parser import check_for_subdomain_fuzz
 from ...conn.requesters import Request
 from ...factories import PluginFactory, RequestFactory, WordlistFactory
 from ...reports.report import Report
-from ...exceptions.main_exceptions import SkipTargetException
+from ...exceptions.base_exceptions import FuzzingToolException
+from ...exceptions.main_exceptions import SkipTargetException, WordlistCreationError
 from ...exceptions.request_exceptions import RequestException, InvalidHostname
+from ...exceptions.plugin_exceptions import PluginCreationError
 
 
 def banner() -> str:
@@ -104,50 +106,12 @@ class CliController:
             self.co.info_box("Setting up arguments ...")
             self.init(arguments)
             if not arguments.simple_output:
-                self.co.print_configs(
-                    output='normal'
-                           if not arguments.simple_output
-                           else 'simple',
-                    verbose='quiet'
-                            if not self.verbose[0]
-                            else 'common'
-                            if not self.verbose[1]
-                            else 'detailed',
-                    targets=self.targets_list,
-                    dictionaries=self.dictionaries_metadata,
-                    prefix=arguments.prefix,
-                    suffix=arguments.suffix,
-                    case='lowercase'
-                         if arguments.lowercase
-                         else 'uppercase'
-                         if arguments.uppercase
-                         else 'capitalize'
-                         if arguments.capitalize
-                         else None,
-                    encoder=arguments.str_encoder,
-                    encode_only=arguments.encode_only,
-                    match={
-                        'status': arguments.match_status,
-                        'length': arguments.match_length,
-                        'time': arguments.match_time,
-                        },
-                    scanner=arguments.str_scanner,
-                    blacklist_status={
-                        'status': arguments.blacklisted_status,
-                        'action': arguments.blacklist_action,
-                        } if arguments.blacklisted_status else {},
-                    delay=self.delay,
-                    threads=self.number_of_threads,
-                    report=arguments.report,
-                )
-            self.check_connection_and_redirections()
-        except KeyboardInterrupt:
-            self.co.abort_box("Test aborted by the user")
-            exit(0)
-        except Exception as e:
+                self.print_configs(arguments)
+        except FuzzingToolException as e:
             self.co.error_box(str(e))
         self.co.set_verbosity_mode(self.is_verbose_mode())
         try:
+            self.check_connection_and_redirections()
             self.start()
         except KeyboardInterrupt:
             if self.fuzzer and self.fuzzer.is_running():
@@ -169,12 +133,9 @@ class CliController:
         scanner = None
         if arguments.scanner:
             scanner, param = arguments.scanner
-            try:
-                scanner = PluginFactory.object_creator(
-                    scanner, 'scanners', param
-                )
-            except Exception as e:
-                raise Exception(str(e))
+            scanner = PluginFactory.object_creator(
+                scanner, 'scanners', param
+            )
         self.global_scanner = scanner
         self.__check_for_duplicated_targets()
         match_status = arguments.match_status
@@ -210,6 +171,49 @@ class CliController:
         self.report = Report.build(arguments.report)
         self.__init_dictionary(arguments)
 
+    def print_configs(self, arguments: CliArguments) -> None:
+        """Print the program configuration
+        
+        @type arguments: CliArguments
+        @param arguments: The command line interface arguments object
+        """
+        self.co.print_configs(
+            output='normal'
+                    if not arguments.simple_output
+                    else 'simple',
+            verbose='quiet'
+                    if not self.verbose[0]
+                    else 'common'
+                    if not self.verbose[1]
+                    else 'detailed',
+            targets=self.targets_list,
+            dictionaries=self.dictionaries_metadata,
+            prefix=arguments.prefix,
+            suffix=arguments.suffix,
+            case='lowercase'
+                 if arguments.lowercase
+                 else 'uppercase'
+                 if arguments.uppercase
+                 else 'capitalize'
+                 if arguments.capitalize
+                 else None,
+            encoder=arguments.str_encoder,
+            encode_only=arguments.encode_only,
+            match={
+                'status': arguments.match_status,
+                'length': arguments.match_length,
+                'time': arguments.match_time,
+                },
+            scanner=arguments.str_scanner,
+            blacklist_status={
+                'status': arguments.blacklisted_status,
+                'action': arguments.blacklist_action,
+                } if arguments.blacklisted_status else {},
+            delay=self.delay,
+            threads=self.number_of_threads,
+            report=arguments.report,
+        )
+
     def check_connection_and_redirections(self) -> None:
         """Test the connection to target.
            If data fuzzing is detected, check for redirections
@@ -231,7 +235,7 @@ class CliController:
                 if requester.is_data_fuzzing():
                     self.check_redirections(requester)
         if len(self.requesters) == 0:
-            raise Exception("No targets left for fuzzing")
+            self.co.error_box("No targets left for fuzzing")
 
     def check_redirections(self, requester: Request) -> None:
         """Check the redirections for a target.
@@ -408,7 +412,7 @@ class CliController:
             # Make the first request to get some info about the target
             response, RTT = self.requester.request(payload)
         except RequestException as e:
-            raise SkipTargetException(f"{str(e)}")
+            raise SkipTargetException(str(e))
         result_to_comparator = Result(response, RTT)
         self.co.print_result(result_to_comparator, False)
         length = None
@@ -570,7 +574,7 @@ class CliController:
                 arguments.targets_from_raw_http, arguments.scheme
             ))
         if not self.targets_list:
-            raise Exception("A target is needed to make the fuzzing")
+            self.co.error_box("A target is needed to make the fuzzing")
         for target in self.targets_list:
             if check_for_subdomain_fuzz(target['url']):
                 request_type = 'SubdomainRequest'
@@ -623,7 +627,7 @@ class CliController:
                     if (this_target['host'] == next_target['host'] and
                         (this_target['type_fuzzing'] !=
                          next_target['type_fuzzing'])):
-                        raise Exception(
+                        self.co.error_box(
                             "Duplicated target detected with "
                             "different type of fuzzing scan, exiting."
                         )
@@ -644,10 +648,7 @@ class CliController:
             if not arguments.encoder:
                 return None
             if arguments.encode_only:
-                try:
-                    Payloader.encoder.set_regex(arguments.encode_only)
-                except Exception as e:
-                    raise e
+                Payloader.encoder.set_regex(arguments.encode_only)
             encoders_default = []
             encoders_chain = []
             for encoders in arguments.encoder:
@@ -659,12 +660,9 @@ class CliController:
                     is_chain = False
                 for encoder in encoders:
                     name, param = encoder
-                    try:
-                        encoder = PluginFactory.object_creator(
-                            name, 'encoders', param
-                        )
-                    except Exception as e:
-                        raise e
+                    encoder = PluginFactory.object_creator(
+                        name, 'encoders', param
+                    )
                     append_to.append(encoder)
                 if is_chain:
                     encoders_chain.append(append_to)
@@ -700,14 +698,14 @@ class CliController:
                     builded_wordlist.extend(
                         WordlistFactory.creator(name, params, requester).get()
                     )
-                except Exception as e:
+                except WordlistCreationError as e:
                     if self.is_verbose_mode():
                         self.co.warning_box(str(e))
                 else:
                     if self.verbose[1]:
                         self.co.info_box(f"Wordlist {name} builded")
             if not builded_wordlist:
-                raise Exception("The wordlist is empty")
+                self.co.error_box("The wordlist is empty")
             atual_length = len(builded_wordlist)
             if is_unique:
                 previous_length = atual_length
@@ -735,7 +733,7 @@ class CliController:
         len_wordlists = len(arguments.wordlists)
         len_requesters = len(self.requesters)
         if len_wordlists > len_requesters:
-            raise Exception(
+            self.co.error_box(
                 "The quantity of wordlists is greater than the requesters"
             )
         elif len_wordlists != len_requesters:

@@ -24,8 +24,9 @@ from typing import Type, List
 from .base_factories import BasePluginFactory
 from ..utils.utils import split_str_to_list
 from ..core.plugins import Plugin, encoders, scanners, wordlists
-from ..exceptions.main_exceptions import (InvalidPluginName,
-                                          MissingParameter, BadArgumentFormat)
+from ..exceptions.main_exceptions import MissingParameter, BadArgumentFormat
+from ..exceptions.plugin_exceptions import (InvalidPluginCategory, InvalidPlugin,
+                                            PluginCreationError)
 
 
 class PluginFactory(BasePluginFactory):
@@ -46,7 +47,7 @@ class PluginFactory(BasePluginFactory):
             plugins = [cls for _, cls in plugin_categories[category].__dict__.items()
                        if isinstance(cls, type(Plugin))]
         except KeyError:
-            raise Exception(f"Invalid plugin category {category}!")
+            raise InvalidPluginCategory(f"Invalid plugin category {category}!")
         return plugins
 
     def class_creator(name: str, category: str) -> Type[Plugin]:
@@ -57,23 +58,23 @@ class PluginFactory(BasePluginFactory):
         try:
             Plugin = getattr(plugin_module, name)
         except AttributeError:
-            raise InvalidPluginName(f"Plugin {name} does not exists")
+            raise InvalidPlugin(f"Plugin {name} does not exists")
         return Plugin
 
     def object_creator(name: str, category: str, params) -> Plugin:
         try:
             Plugin = PluginFactory.class_creator(name, category)
-        except InvalidPluginName as e:
-            raise Exception(str(e))
+        except InvalidPlugin as e:
+            raise PluginCreationError(str(e))
         if not Plugin.__params__:
             return Plugin()
+        if isinstance(params, str):
+            params = PluginFactory.convert_cli_plugin_parameter[
+                Plugin.__params__['type']
+            ](params, Plugin)
         try:
-            if type(params) is str:
-                params = PluginFactory.convert_cli_plugin_parameter[
-                    Plugin.__params__['type']
-                ](params, Plugin)
             return Plugin(params)
         except MissingParameter as e:
-            raise Exception(f"Plugin {name} missing parameter: {str(e)}")
+            raise PluginCreationError(f"Plugin {name} missing parameter: {str(e)}")
         except BadArgumentFormat as e:
-            raise Exception(f"Plugin {name} bad argument format: {str(e)}")
+            raise PluginCreationError(f"Plugin {name} bad argument format: {str(e)}")

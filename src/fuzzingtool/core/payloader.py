@@ -23,7 +23,7 @@ from typing import List, Tuple
 
 from .bases.base_encoder import BaseEncoder
 from .defaults.encoders import ChainEncoder
-
+from ..exceptions.main_exceptions import BadArgumentFormat
 
 class EncodeManager:
     """Class that handle with the encoder management
@@ -49,7 +49,7 @@ class EncodeManager:
         try:
             self.regexer = re.compile(regex, re.IGNORECASE)
         except re.error:
-            raise Exception(f"Invalid regex format {regex}")
+            raise BadArgumentFormat(f"Invalid regex format {regex}")
 
     def set_encoders(self,
                      encoders: Tuple[

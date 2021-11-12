@@ -21,6 +21,8 @@
 from typing import List, Dict, Callable
 
 from ..utils.utils import split_str_to_list
+from ..exceptions.main_exceptions import (BadArgumentType, MissingParameter,
+                                          InvalidArgument)
 
 
 class BlacklistStatus:
@@ -61,7 +63,7 @@ class BlacklistStatus:
         try:
             return [int(status) for status in split_str_to_list(status)]
         except ValueError:
-            raise Exception("Status code must be an integer")
+            raise BadArgumentType("Status code must be an integer")
 
     def set_action_callback(self,
                             action: str,
@@ -78,15 +80,15 @@ class BlacklistStatus:
         @returns Callable[[int], None]: A callback function for the blacklisted status code
         """
         if not action:
-            return lambda status: None
+            return lambda _: None
         if action == 'skip':
             return action_callbacks['skip']
         if action == 'wait':
             if not action_param:
-                raise Exception("Must set a time to wait")
+                raise MissingParameter("Must set a time to wait")
             try:
                 self.action_param = float(action_param)
             except ValueError:
-                raise Exception("Time to wait must be a number")
+                raise BadArgumentType("Time to wait must be a number")
             return action_callbacks['wait']
-        raise Exception(f"Invalid type of blacklist action: {action}")
+        raise InvalidArgument(f"Invalid type of blacklist action: {action}")
