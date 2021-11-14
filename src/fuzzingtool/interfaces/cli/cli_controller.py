@@ -697,7 +697,8 @@ class CliController:
                     f"{name}={params}" if params else name
                 )
                 try:
-                    wordlist_obj = WordlistFactory.creator(name, params, requester).build()
+                    wordlist_obj = WordlistFactory.creator(name, params, requester)
+                    wordlist_obj.build()
                 except (WordlistCreationError, BuildWordlistFails) as e:
                     if self.is_verbose_mode():
                         self.co.warning_box(str(e))

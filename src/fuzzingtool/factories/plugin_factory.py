@@ -37,6 +37,7 @@ class PluginFactory(BasePluginFactory):
         ),
     }
 
+    @staticmethod
     def get_plugins_from_category(category: str) -> List[Type[Plugin]]:
         plugin_categories = {
             'encoders': encoders,
@@ -50,6 +51,7 @@ class PluginFactory(BasePluginFactory):
             raise InvalidPluginCategory(f"Invalid plugin category {category}!")
         return plugins
 
+    @staticmethod
     def class_creator(name: str, category: str) -> Type[Plugin]:
         plugin_module = import_module(
             f"fuzzingtool.core.plugins.{category}",
@@ -61,6 +63,7 @@ class PluginFactory(BasePluginFactory):
             raise InvalidPlugin(f"Plugin {name} does not exists")
         return Plugin
 
+    @staticmethod
     def object_creator(name: str, category: str, params) -> Plugin:
         try:
             Plugin = PluginFactory.class_creator(name, category)

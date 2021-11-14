@@ -25,6 +25,7 @@ from ..conn.requesters import Request
 
 
 class RequestFactory(BaseRequestFactory):
+    @staticmethod
     def creator(request_type, url, **kwargs) -> Request:
         Request = import_module(
             f"fuzzingtool.conn.requesters",
