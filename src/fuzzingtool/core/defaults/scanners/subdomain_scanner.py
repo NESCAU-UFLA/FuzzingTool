@@ -29,6 +29,7 @@ class SubdomainScanner(BaseScanner):
 
     @append_args
     def inspect_result(self, result: Result) -> None:
+        """The decorator append_args will deal with the IP custom result attribute."""
         pass
 
     def scan(self, result: Result) -> bool:
