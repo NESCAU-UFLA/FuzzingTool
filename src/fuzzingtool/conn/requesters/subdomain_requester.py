@@ -23,14 +23,14 @@ from typing import Tuple, Dict
 
 from requests import Response
 
-from .request import Request
+from .requester import Requester
 from ..request_parser import request_parser
 from ...utils.http_utils import get_host
 from ...utils.consts import SUBDOMAIN_FUZZING
 from ...exceptions.request_exceptions import InvalidHostname
 
 
-class SubdomainRequest(Request):
+class SubdomainRequester(Requester):
     """Class that handle with the requests for subdomain fuzzing"""
     def resolve_hostname(self, hostname: str) -> str:
         """Resolve the ip for the given hostname
@@ -44,7 +44,7 @@ class SubdomainRequest(Request):
         except socket.gaierror:
             raise InvalidHostname(f"Can't resolve hostname {hostname}")
 
-    def request(self, payload: str) -> Tuple[Response, float, Dict[str, str]]:
+    def request(self, payload: str = '') -> Tuple[Response, float, Dict[str, str]]:
         with self._lock:
             request_parser.set_payload(payload)
             host = get_host(request_parser.get_url(self._url))

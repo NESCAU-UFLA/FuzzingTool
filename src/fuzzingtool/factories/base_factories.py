@@ -31,7 +31,7 @@ class BaseRequestFactory(ABC):
         @param request_type: The request type
         @type url: str
         @param url: The target URL
-        @returns Request: A request object
+        @returns Requester: A request object
         """
         pass
 
@@ -87,7 +87,7 @@ class BaseWordlistFactory(ABC):
         @param name: The wordlist name
         @type params: str
         @param params: The wordlist parameters
-        @type requester: Request
+        @type requester: Requester
         @param requester: The requester for the given wordlist
         @returns BaseWordlist: The asked wordlist
         """

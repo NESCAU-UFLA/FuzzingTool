@@ -27,7 +27,7 @@ from .dictionary import Dictionary
 from .matcher import Matcher
 from .result import Result
 from .bases.base_scanner import BaseScanner
-from ..conn.requesters import Request
+from ..conn.requesters import Requester
 from ..exceptions.request_exceptions import RequestException, InvalidHostname
 
 
@@ -46,7 +46,7 @@ class Fuzzer:
         start_index: The actual request index
     """
     def __init__(self,
-                 requester: Request,
+                 requester: Requester,
                  dictionary: Dictionary,
                  matcher: Matcher,
                  scanner: BaseScanner,
@@ -58,7 +58,7 @@ class Fuzzer:
                  exception_callbacks: List[Callable[[str, str], None]]):
         """Class constructor
 
-        @type requester: requester
+        @type requester: Requester
         @param requester: The requester object to deal with the requests
         @type dict: Dictionary
         @param dict: The dicttionary object to deal with the payload dictionary

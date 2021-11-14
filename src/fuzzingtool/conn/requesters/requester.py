@@ -34,7 +34,7 @@ from ...utils.utils import get_indexes_to_parse
 from ...exceptions.request_exceptions import RequestException
 
 
-class Request:
+class Requester:
     """Class that handle with the requests
 
     Attributes:

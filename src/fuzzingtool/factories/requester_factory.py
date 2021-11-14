@@ -21,14 +21,14 @@
 from importlib import import_module
 
 from .base_factories import BaseRequestFactory
-from ..conn.requesters import Request
+from ..conn.requesters import Requester
 
 
-class RequestFactory(BaseRequestFactory):
+class RequesterFactory(BaseRequestFactory):
     @staticmethod
-    def creator(request_type, url, **kwargs) -> Request:
-        Request = import_module(
+    def creator(request_type, url, **kwargs) -> Requester:
+        Requester = import_module(
             f"fuzzingtool.conn.requesters",
             package=request_type
         )
-        return getattr(Request, request_type)(url, **kwargs)
+        return getattr(Requester, request_type)(url, **kwargs)

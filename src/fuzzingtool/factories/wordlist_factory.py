@@ -22,7 +22,7 @@ from .base_factories import BaseWordlistFactory
 from .plugin_factory import PluginFactory
 from ..core.bases.base_wordlist import BaseWordlist
 from ..utils.http_utils import get_host, get_pure_url
-from ..conn.requesters.request import Request
+from ..conn.requesters.requester import Requester
 from ..core.defaults.wordlists import ListWordlist, FileWordlist
 from ..exceptions.main_exceptions import BuildWordlistFails, WordlistCreationError
 from ..exceptions.plugin_exceptions import InvalidPlugin, PluginCreationError
@@ -30,7 +30,7 @@ from ..exceptions.plugin_exceptions import InvalidPlugin, PluginCreationError
 
 class WordlistFactory(BaseWordlistFactory):
     @staticmethod
-    def creator(name: str, params: str, requester: Request) -> BaseWordlist:
+    def creator(name: str, params: str, requester: Requester) -> BaseWordlist:
         try:
             Wordlist = PluginFactory.class_creator(name, 'wordlists')
         except InvalidPlugin:
