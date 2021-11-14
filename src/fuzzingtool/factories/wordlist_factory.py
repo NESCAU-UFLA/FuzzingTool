@@ -29,6 +29,7 @@ from ..exceptions.plugin_exceptions import InvalidPlugin, PluginCreationError
 
 
 class WordlistFactory(BaseWordlistFactory):
+    @staticmethod
     def creator(name: str, params: str, requester: Request) -> BaseWordlist:
         try:
             Wordlist = PluginFactory.class_creator(name, 'wordlists')
@@ -50,10 +51,4 @@ class WordlistFactory(BaseWordlistFactory):
                 wordlist = PluginFactory.object_creator(name, 'wordlists', params)
             except PluginCreationError as e:
                 raise WordlistCreationError(str(e))
-        try:
-            wordlist.build()
-        except BuildWordlistFails as e:
-            raise WordlistCreationError(str(e))
-        if not len(wordlist):
-            raise WordlistCreationError("The generated wordlist is empty")
         return wordlist

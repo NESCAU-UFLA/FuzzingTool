@@ -23,6 +23,8 @@ import time
 import threading
 from typing import Tuple, List
 
+from fuzzingtool.core.bases.base_wordlist import BaseWordlist
+
 from .cli_arguments import CliArguments
 from .cli_output import CliOutput, Colors
 from ..argument_builder import ArgumentBuilder as AB
@@ -40,9 +42,9 @@ from ...conn.requesters import Request
 from ...factories import PluginFactory, RequestFactory, WordlistFactory
 from ...reports.report import Report
 from ...exceptions.base_exceptions import FuzzingToolException
-from ...exceptions.main_exceptions import SkipTargetException, WordlistCreationError
+from ...exceptions.main_exceptions import (SkipTargetException,
+                                           WordlistCreationError, BuildWordlistFails)
 from ...exceptions.request_exceptions import RequestException, InvalidHostname
-from ...exceptions.plugin_exceptions import PluginCreationError
 
 
 def banner() -> str:
@@ -695,13 +697,12 @@ class CliController:
                     f"{name}={params}" if params else name
                 )
                 try:
-                    builded_wordlist.extend(
-                        WordlistFactory.creator(name, params, requester).get()
-                    )
-                except WordlistCreationError as e:
+                    wordlist_obj = WordlistFactory.creator(name, params, requester).build()
+                except (WordlistCreationError, BuildWordlistFails) as e:
                     if self.is_verbose_mode():
                         self.co.warning_box(str(e))
                 else:
+                    builded_wordlist.extend(wordlist_obj.get())
                     if self.verbose[1]:
                         self.co.info_box(f"Wordlist {name} builded")
             if not builded_wordlist:
