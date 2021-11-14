@@ -18,9 +18,12 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-class RequestException(Exception):
+from .base_exceptions import FuzzingToolException
+
+
+class RequestException(FuzzingToolException):
     pass
 
 
-class InvalidHostname(Exception):
+class InvalidHostname(FuzzingToolException):
     pass

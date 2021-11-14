@@ -18,32 +18,5 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from .base_exceptions import FuzzingToolException
-
-
-class SkipTargetException(FuzzingToolException):
-    pass
-
-
-class MissingParameter(FuzzingToolException):
-    pass
-
-
-class BadArgumentFormat(FuzzingToolException):
-    pass
-
-
-class BadArgumentType(FuzzingToolException):
-    pass
-
-
-class InvalidArgument(FuzzingToolException):
-    pass
-
-
-class BuildWordlistFails(FuzzingToolException):
-    pass
-
-
-class WordlistCreationError(FuzzingToolException):
+class FuzzingToolException(Exception):
     pass

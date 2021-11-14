@@ -28,7 +28,7 @@ from ...bases.base_wordlist import BaseWordlist
 from ....conn.requesters.request import Request
 from ....exceptions.request_exceptions import RequestException
 from ....decorators.plugin_meta import plugin_meta
-from ....exceptions.main_exceptions import MissingParameter
+from ....exceptions.main_exceptions import MissingParameter, BuildWordlistFails
 
 CRTSH_HTTP_HEADER = {
     'Host': "crt.sh",
@@ -70,9 +70,9 @@ class CrtSh(BaseWordlist, Plugin):
         try:
             response, *_ = requester.request()
         except RequestException as e:
-            raise Exception(str(e))
+            raise BuildWordlistFails(str(e))
         if 'None found' in response.text:
-            raise Exception(f"No certified domains was found for '{self.host}'")
+            raise BuildWordlistFails(f"No certified domains was found for '{self.host}'")
         content_list = [element.string
                         for element in bs(response.text, "html.parser")('td')]
         regex = r"([a-zA-Z0-9]+\.)*[a-zA-Z0-9]+"

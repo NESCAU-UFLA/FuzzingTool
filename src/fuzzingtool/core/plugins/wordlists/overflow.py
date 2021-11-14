@@ -23,7 +23,8 @@ from typing import List
 from ..plugin import Plugin
 from ...bases.base_wordlist import BaseWordlist
 from ....decorators.plugin_meta import plugin_meta
-from ....exceptions.main_exceptions import MissingParameter, BadArgumentFormat
+from ....exceptions.main_exceptions import (MissingParameter, BadArgumentFormat,
+                                            BadArgumentType)
 
 
 @plugin_meta
@@ -58,7 +59,7 @@ class Overflow(BaseWordlist, Plugin):
         try:
             quantity_of_payloads = int(quantity_of_payloads)
         except ValueError:
-            raise BadArgumentFormat("the quantity of payloads must be integer")
+            raise BadArgumentType("the quantity of payloads must be integer")
         self.quantity_of_payloads = quantity_of_payloads
         self.init_payload = init_payload
         self.payload = payload

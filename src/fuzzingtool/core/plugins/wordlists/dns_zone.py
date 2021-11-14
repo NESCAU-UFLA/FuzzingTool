@@ -25,7 +25,7 @@ from dns import resolver, query, zone
 from ..plugin import Plugin
 from ...bases.base_wordlist import BaseWordlist
 from ....decorators.plugin_meta import plugin_meta
-from ....exceptions.main_exceptions import MissingParameter
+from ....exceptions.main_exceptions import MissingParameter, BuildWordlistFails
 
 
 @plugin_meta
@@ -53,7 +53,7 @@ class DnsZone(BaseWordlist, Plugin):
             for record in records:
                 name_servers_ips.append(str(record))
         if not name_servers_ips:
-            raise Exception("Couldn't find any name servers")
+            raise BuildWordlistFails("Couldn't find any name servers")
         transfered_subdomains = []
         for ip in name_servers_ips:
             try:
@@ -63,8 +63,8 @@ class DnsZone(BaseWordlist, Plugin):
             except Exception:
                 continue
         if not transfered_subdomains:
-            raise Exception("Couldn't make the zone transfer for any of the "
-                            f"{len(name_servers_ips)} name servers")
+            raise BuildWordlistFails("Couldn't make the zone transfer for any of the "
+                                     f"{len(name_servers_ips)} name servers")
         if '@' in transfered_subdomains:
             transfered_subdomains.remove('@')
         return list(set(transfered_subdomains))

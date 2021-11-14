@@ -81,7 +81,7 @@ class BaseWordlistFactory(ABC):
     @staticmethod
     @abstractmethod
     def creator(name: str, params: str, requester):
-        """Build the wordlists
+        """Generates the wordlist
 
         @type name: str
         @param name: The wordlist name
@@ -89,6 +89,6 @@ class BaseWordlistFactory(ABC):
         @param params: The wordlist parameters
         @type requester: Request
         @param requester: The requester for the given wordlist
-        @returns List[str]: The wordlist list
+        @returns BaseWordlist: The asked wordlist
         """
         pass

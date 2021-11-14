@@ -22,7 +22,7 @@ from typing import List, Dict, Tuple, Callable
 
 from .result import Result
 from ..utils.utils import split_str_to_list
-
+from ..exceptions.main_exceptions import BadArgumentType
 
 class Matcher:
     """Class to handle with the match validations
@@ -66,7 +66,7 @@ class Matcher:
                         code_left, code_right = code_right, code_left
                     allowed_range[:] = [code_left, code_right]
             except ValueError:
-                raise Exception(
+                raise BadArgumentType(
                     f"The match status argument ({status}) must be integer"
                 )
 
@@ -245,7 +245,7 @@ class Matcher:
             try:
                 length_comparator = int(length_comparator)
             except ValueError:
-                raise Exception(
+                raise BadArgumentType(
                     f"The length comparator must be an integer, not '{length_comparator}'!"
                 )
             comparator['Length'] = length_comparator
@@ -256,7 +256,7 @@ class Matcher:
             try:
                 time_comparator = float(time_comparator)
             except ValueError:
-                raise Exception(f"The time comparator must be a number, not '{time_comparator}'!")
+                raise BadArgumentType(f"The time comparator must be a number, not '{time_comparator}'!")
             comparator['Time'] = time_comparator
         self._comparator = comparator
 

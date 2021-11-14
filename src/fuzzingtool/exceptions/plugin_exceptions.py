@@ -21,29 +21,13 @@
 from .base_exceptions import FuzzingToolException
 
 
-class SkipTargetException(FuzzingToolException):
+class InvalidPluginCategory(FuzzingToolException):
     pass
 
 
-class MissingParameter(FuzzingToolException):
+class InvalidPlugin(FuzzingToolException):
     pass
 
 
-class BadArgumentFormat(FuzzingToolException):
-    pass
-
-
-class BadArgumentType(FuzzingToolException):
-    pass
-
-
-class InvalidArgument(FuzzingToolException):
-    pass
-
-
-class BuildWordlistFails(FuzzingToolException):
-    pass
-
-
-class WordlistCreationError(FuzzingToolException):
+class PluginCreationError(FuzzingToolException):
     pass
