@@ -32,23 +32,23 @@ class WordlistFactory(BaseWordlistFactory):
     @staticmethod
     def creator(name: str, params: str, requester: Requester) -> BaseWordlist:
         try:
-            Wordlist = PluginFactory.class_creator(name, 'wordlists')
+            wordlist_cls = PluginFactory.class_creator(name, 'wordlists')
         except InvalidPlugin:
             if name.startswith('[') and name.endswith(']'):
-                wordlist = ListWordlist(name)
+                wordlist_obj = ListWordlist(name)
             else:
                 # For default, read the wordlist from a file
-                wordlist = FileWordlist(name)
+                wordlist_obj = FileWordlist(name)
         else:
             if (not params and requester and
-                    Wordlist.__params__['metavar'] in
+                    wordlist_cls.__params__['metavar'] in
                     ["TARGET_HOST", "TARGET_URL"]):
-                if "TARGET_HOST" in Wordlist.__params__['metavar']:
+                if "TARGET_HOST" in wordlist_cls.__params__['metavar']:
                     params = get_host(get_pure_url(requester.get_url()))
-                elif "TARGET_URL" in Wordlist.__params__['metavar']:
+                elif "TARGET_URL" in wordlist_cls.__params__['metavar']:
                     params = get_pure_url(requester.get_url())
             try:
-                wordlist = PluginFactory.object_creator(name, 'wordlists', params)
+                wordlist_obj = PluginFactory.object_creator(name, 'wordlists', params)
             except PluginCreationError as e:
                 raise WordlistCreationError(str(e))
-        return wordlist
+        return wordlist_obj
