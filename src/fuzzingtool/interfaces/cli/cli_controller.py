@@ -141,13 +141,13 @@ class CliController:
         self.global_scanner = scanner
         self.__check_for_duplicated_targets()
         match_status = arguments.match_status
-        if match_status:
-            if '200' not in match_status:
-                if self.co.ask_yes_no('warning',
-                                      ("Status code 200 (OK) wasn't included. "
-                                       "Do you want to include it to "
-                                       "the allowed status codes?")):
-                    match_status += ",200"
+        if (match_status and
+                '200' not in match_status and
+                self.co.ask_yes_no('warning',
+                                   ("Status code 200 (OK) wasn't included. "
+                                    "Do you want to include it to "
+                                    "the allowed status codes?"))):
+            match_status += ",200"
         self.global_matcher = Matcher.from_string(
             match_status,
             arguments.match_length,
@@ -254,12 +254,12 @@ class CliController:
             if self.is_verbose_mode():
                 self.co.info_box(f"Testing with {method} method ...")
             try:
-                if requester.has_redirection():
-                    if self.co.ask_yes_no('warning',
-                                          ("You was redirected to another page. "
-                                           "Remove this method?")):
-                        requester.methods.remove(method)
-                        self.co.info_box(f"Method {method} removed from list")
+                if (requester.has_redirection() and
+                        self.co.ask_yes_no('warning',
+                                           ("You was redirected to another page. "
+                                            "Remove this method?"))):
+                    requester.methods.remove(method)
+                    self.co.info_box(f"Method {method} removed from list")
                 else:
                     if self.is_verbose_mode():
                         self.co.info_box("No redirections")
