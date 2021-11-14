@@ -19,6 +19,7 @@
 # SOFTWARE.
 
 from ..reports.base_report import BaseReport
+from ..exceptions.main_exceptions import ReportMetadataException as RMException
 
 
 def report_meta(cls: BaseReport) -> BaseReport:
@@ -31,11 +32,11 @@ def report_meta(cls: BaseReport) -> BaseReport:
     class_attr = vars(cls)
     for meta in metadata:
         if meta not in class_attr:
-            raise Exception(
+            raise RMException(
                 f"Metadata {meta} not specified on report {cls.__name__}"
             )
     if not cls.__author__:
-        raise Exception(f"Author cannot be empty on report {cls.__name__}")
+        raise RMException(f"Author cannot be empty on report {cls.__name__}")
     if not cls.__version__:
-        raise Exception(f"Version cannot be blank on report {cls.__name__}")
+        raise RMException(f"Version cannot be blank on report {cls.__name__}")
     return cls
