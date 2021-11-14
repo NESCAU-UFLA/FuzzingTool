@@ -410,10 +410,10 @@ class CliController:
         )
         try:
             # Make the first request to get some info about the target
-            response, RTT = self.requester.request(payload)
+            response, rtt = self.requester.request(payload)
         except RequestException as e:
             raise SkipTargetException(str(e))
-        result_to_comparator = Result(response, RTT)
+        result_to_comparator = Result(response, rtt)
         self.co.print_result(result_to_comparator, False)
         length = None
         default_length = int(result_to_comparator.length)+300
@@ -426,7 +426,7 @@ class CliController:
             if not length:
                 length = default_length
         time = None
-        default_time = result_to_comparator.RTT+5.0
+        default_time = result_to_comparator.rtt+5.0
         if self.co.ask_yes_no('info',
                               ("Do you want to exclude responses "
                                "based on custom time?")):

@@ -36,14 +36,14 @@ class SubdomainScanner(BaseScanner):
         return True
 
     def cli_callback(self, result: Result) -> str:
-        url, RTT, length = get_formated_result(
-            result.url, result.RTT, result.length
+        url, rtt, length = get_formated_result(
+            result.url, result.rtt, result.length
         )
         ip = '{:>15}'.format(result.custom['ip'])
         return (
             f"{url} {Colors.GRAY}["
             f'{Colors.LIGHT_GRAY}IP{Colors.RESET} {ip}'" | "
             f"{Colors.LIGHT_GRAY}Code{Colors.RESET} {result.status} | "
-            f"{Colors.LIGHT_GRAY}RTT{Colors.RESET} {RTT} | "
+            f"{Colors.LIGHT_GRAY}rtt{Colors.RESET} {rtt} | "
             f"{Colors.LIGHT_GRAY}Size{Colors.RESET} {length}{Colors.GRAY}]{Colors.RESET}"
         )

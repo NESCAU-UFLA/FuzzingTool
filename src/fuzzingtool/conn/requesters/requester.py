@@ -241,7 +241,7 @@ class Requester:
         try:
             before = time.time()
             response = self.__request(method, url, headers, data)
-            RTT = (time.time() - before)
+            rtt = (time.time() - before)
         except requests.exceptions.ProxyError:
             raise RequestException("Can't connect to the proxy")
         except requests.exceptions.TooManyRedirects:
@@ -267,7 +267,7 @@ class Requester:
         except ValueError as e:
             raise RequestException(str(e))
         else:
-            return (response, RTT)
+            return (response, rtt)
 
     def _set_fuzzing_type(self) -> int:
         """Sets the fuzzing type
