@@ -24,6 +24,7 @@ from .result import Result
 from ..utils.utils import split_str_to_list
 from ..exceptions.main_exceptions import BadArgumentType
 
+
 class Matcher:
     """Class to handle with the match validations
 
