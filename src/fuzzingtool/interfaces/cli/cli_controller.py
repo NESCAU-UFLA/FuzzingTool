@@ -668,7 +668,7 @@ class CliController:
                     encoders_chain.append(append_to)
             return (encoders_default, encoders_chain)
 
-        def buildDictionary(
+        def build_dictionary(
             wordlists: List[Tuple[str, str]],
             is_unique: bool,
             requester: Requester = None
@@ -738,12 +738,12 @@ class CliController:
             )
         elif len_wordlists != len_requesters:
             wordlist = arguments.wordlists[0]
-            self.global_dictionary = buildDictionary(wordlist,
+            self.global_dictionary = build_dictionary(wordlist,
                                                      arguments.unique)
             self.local_dictionary = self.global_dictionary
         else:
             self.dictionaries = Queue()
             for i, wordlist in enumerate(arguments.wordlists):
-                self.dictionaries.put(buildDictionary(
+                self.dictionaries.put(build_dictionary(
                     wordlist, arguments.unique, self.requesters[i]
                 ))
