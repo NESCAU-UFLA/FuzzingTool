@@ -63,7 +63,7 @@ class PathScanner(BaseScanner):
         return (
             f"{path} {Colors.GRAY}["
             f"{Colors.LIGHT_GRAY}Code{Colors.RESET} {status_color}{status}{Colors.RESET} | "
-            f"{Colors.LIGHT_GRAY}rtt{Colors.RESET} {rtt} | "
+            f"{Colors.LIGHT_GRAY}RTT{Colors.RESET} {rtt} | "
             f"{Colors.LIGHT_GRAY}Size{Colors.RESET} {length}{Colors.GRAY}]{Colors.RESET}"
             f"{redirected}"
         )
