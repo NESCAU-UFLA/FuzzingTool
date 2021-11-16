@@ -47,3 +47,7 @@ class BuildWordlistFails(FuzzingToolException):
 
 class WordlistCreationError(FuzzingToolException):
     pass
+
+
+class MetadataException(FuzzingToolException):
+    pass

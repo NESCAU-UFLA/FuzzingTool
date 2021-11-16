@@ -34,6 +34,7 @@ class CsvReport(BaseReport):
     file_extension = 'csv'
 
     def _header(self) -> None:
+        """Do not write any header"""
         pass
 
     def _results(self, results: List[Result]) -> None:
@@ -46,4 +47,5 @@ class CsvReport(BaseReport):
             writer.writerow(dict(content))
 
     def _footer(self) -> None:
+        """Do not write any footer"""
         pass

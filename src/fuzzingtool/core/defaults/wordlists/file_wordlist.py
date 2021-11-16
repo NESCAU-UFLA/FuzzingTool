@@ -34,6 +34,6 @@ class FileWordlist(BaseWordlist):
 
     def _build(self) -> List[str]:
         try:
-            return set(read_file(self.file_path))
-        except Exception as e:
+            return list(set(read_file(self.file_path)))
+        except FileNotFoundError as e:
             raise BuildWordlistFails(str(e))

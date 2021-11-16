@@ -32,8 +32,8 @@ from ..exceptions.plugin_exceptions import (InvalidPluginCategory, InvalidPlugin
 class PluginFactory(BasePluginFactory):
     convert_cli_plugin_parameter = {
         str: lambda string, _: string,
-        list: lambda string, Plugin: split_str_to_list(
-            string, separator=Plugin.__params__['cli_list_separator']
+        list: lambda string, plugin_cls: split_str_to_list(
+            string, separator=plugin_cls.__params__['cli_list_separator']
         ),
     }
 
@@ -58,25 +58,25 @@ class PluginFactory(BasePluginFactory):
             package=name
         )
         try:
-            Plugin = getattr(plugin_module, name)
+            plugin_cls = getattr(plugin_module, name)
         except AttributeError:
             raise InvalidPlugin(f"Plugin {name} does not exists")
-        return Plugin
+        return plugin_cls
 
     @staticmethod
     def object_creator(name: str, category: str, params) -> Plugin:
         try:
-            Plugin = PluginFactory.class_creator(name, category)
+            plugin_cls = PluginFactory.class_creator(name, category)
         except InvalidPlugin as e:
             raise PluginCreationError(str(e))
-        if not Plugin.__params__:
-            return Plugin()
+        if not plugin_cls.__params__:
+            return plugin_cls()
         if isinstance(params, str):
             params = PluginFactory.convert_cli_plugin_parameter[
-                Plugin.__params__['type']
-            ](params, Plugin)
+                plugin_cls.__params__['type']
+            ](params, plugin_cls)
         try:
-            return Plugin(params)
+            return plugin_cls(params)
         except MissingParameter as e:
             raise PluginCreationError(f"Plugin {name} missing parameter: {str(e)}")
         except BadArgumentFormat as e:

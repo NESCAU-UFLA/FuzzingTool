@@ -25,7 +25,7 @@ from bs4 import BeautifulSoup as bs
 
 from ..plugin import Plugin
 from ...bases.base_wordlist import BaseWordlist
-from ....conn.requesters.request import Request
+from ....conn.requesters.requester import Requester
 from ....exceptions.request_exceptions import RequestException
 from ....decorators.plugin_meta import plugin_meta
 from ....exceptions.main_exceptions import MissingParameter, BuildWordlistFails
@@ -61,7 +61,7 @@ class DnsDumpster(BaseWordlist, Plugin):
 
     def _build(self) -> List[str]:
         global DNSDUMPSTER_HTTP_HEADER
-        requester = Request(
+        requester = Requester(
             url="https://dnsdumpster.com/",
             method='GET',
             headers=DNSDUMPSTER_HTTP_HEADER,

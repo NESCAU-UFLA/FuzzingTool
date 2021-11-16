@@ -139,7 +139,7 @@ class Matcher:
         @type length: str
         @param length: The length to be compared with the response body
         @type time: str
-        @param time: The time to be compared with the RTT
+        @param time: The time to be compared with the rtt
         @returns Matcher: A Matcher object
         """
         return cls(
@@ -272,7 +272,7 @@ class Matcher:
             if not self._comparator['Length'] is None:
                 return self._match_length(int(result.length))
             if not self._comparator['Time'] is None:
-                return self._match_time(result.RTT)
+                return self._match_time(result.rtt)
             return True
         return False
 

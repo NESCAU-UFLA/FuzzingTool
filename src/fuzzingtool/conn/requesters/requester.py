@@ -34,7 +34,7 @@ from ...utils.utils import get_indexes_to_parse
 from ...exceptions.request_exceptions import RequestException
 
 
-class Request:
+class Requester:
     """Class that handle with the requests
 
     Attributes:
@@ -52,12 +52,12 @@ class Request:
     def __init__(self,
                  url: str,
                  method: str = 'GET',
-                 methods: List[str] = [],
+                 methods: List[str] = None,
                  body: str = '',
-                 headers: Dict[str, str] = {},
+                 headers: Dict[str, str] = None,
                  follow_redirects: bool = True,
                  proxy: str = '',
-                 proxies: List[str] = [],
+                 proxies: List[str] = None,
                  timeout: int = 0,
                  cookie: str = '',
                  is_session: bool = False):
@@ -91,20 +91,22 @@ class Request:
         self.__data = self.__setup_data(body)
         self.__header = self.__setup_header(headers)
         self.__proxy = self.__setup_proxy(proxy) if proxy else {}
-        self.__proxies = [self.__setup_proxy(proxy) for proxy in proxies]
+        self.__proxies = ([self.__setup_proxy(proxy) for proxy in proxies]
+                          if proxies else [])
         self.__follow_redirects = follow_redirects
         self.__fuzzing_type = self._set_fuzzing_type()
-        self.__timeout = (None
-                          if not self.is_url_discovery()
-                          else 10
-                          if not timeout
-                          else timeout)
+        if not timeout:
+            if self.is_url_discovery():
+                timeout = 10
+            else:
+                timeout = None
+        self.__timeout = timeout
         if is_session or self.is_path_fuzzing():
             self.__session = requests.Session()
             self.__request = self.__session_request
         else:
             self.__request = self.__common_request
-        self.methods = methods
+        self.methods = methods if methods else []
         if cookie:
             self.set_header_content('Cookie', cookie)
         self._lock = Lock()
@@ -239,7 +241,7 @@ class Request:
         try:
             before = time.time()
             response = self.__request(method, url, headers, data)
-            RTT = (time.time() - before)
+            rtt = (time.time() - before)
         except requests.exceptions.ProxyError:
             raise RequestException("Can't connect to the proxy")
         except requests.exceptions.TooManyRedirects:
@@ -265,7 +267,7 @@ class Request:
         except ValueError as e:
             raise RequestException(str(e))
         else:
-            return (response, RTT)
+            return (response, rtt)
 
     def _set_fuzzing_type(self) -> int:
         """Sets the fuzzing type
@@ -353,6 +355,7 @@ class Request:
         @param header: The HTTP header dictionary
         @returns dict: The HTTP header dictionary
         """
+        header = header if header else {}
         header = {
             'content': {**header},
             'payloadKeys': [],

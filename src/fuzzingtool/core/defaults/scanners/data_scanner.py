@@ -33,15 +33,15 @@ class DataScanner(BaseScanner):
         return True
 
     def cli_callback(self, result: Result) -> str:
-        payload, RTT, length = get_formated_result(
-            result.payload, result.RTT, result.length
+        payload, rtt, length = get_formated_result(
+            result.payload, result.rtt, result.length
         )
         words = '{:>6}'.format(result.words)
         lines = '{:>5}'.format(result.lines)
         return (
             f"{payload} {Colors.GRAY}["
             f"{Colors.LIGHT_GRAY}Code{Colors.RESET} {result.status} | "
-            f"{Colors.LIGHT_GRAY}RTT{Colors.RESET} {RTT} | "
+            f"{Colors.LIGHT_GRAY}rtt{Colors.RESET} {rtt} | "
             f"{Colors.LIGHT_GRAY}Size{Colors.RESET} {length} | "
             f"{Colors.LIGHT_GRAY}Words{Colors.RESET} {words} | "
             f"{Colors.LIGHT_GRAY}Lines{Colors.RESET} {lines}{Colors.GRAY}]{Colors.RESET}"

@@ -19,6 +19,7 @@
 # SOFTWARE.
 
 from ..core.plugins.plugin import Plugin
+from ..exceptions.main_exceptions import MetadataException
 
 
 def plugin_meta(cls: Plugin) -> Plugin:
@@ -32,35 +33,35 @@ def plugin_meta(cls: Plugin) -> Plugin:
     class_attr = vars(cls)
     for meta in metadata:
         if meta not in class_attr:
-            raise Exception(
+            raise MetadataException(
                 f"Metadata {meta} not specified in plugin {cls.__name__}"
             )
     if not cls.__author__:
-        raise Exception(f"Author cannot be empty on plugin {cls.__name__}")
+        raise MetadataException(f"Author cannot be empty on plugin {cls.__name__}")
     if cls.__params__:
         if not (type(cls.__params__) is dict):
-            raise Exception("The parameters must be a "
-                            f"dictionary on plugin {cls.__name__}")
+            raise MetadataException("The parameters must be a "
+                                    f"dictionary on plugin {cls.__name__}")
         param_dict_keys = cls.__params__.keys()
         for key in ['metavar', 'type']:
             if key not in param_dict_keys:
-                raise Exception(f"Key {key} must be in parameters "
-                                f"dict on plugin {cls.__name__}")
+                raise MetadataException(f"Key {key} must be in parameters "
+                                        f"dict on plugin {cls.__name__}")
             if not cls.__params__[key]:
-                raise Exception(f"Value of {key} cannot be empty in "
-                                f"parameters dict on plugin {cls.__name__}")
+                raise MetadataException(f"Value of {key} cannot be empty in "
+                                        f"parameters dict on plugin {cls.__name__}")
         if cls.__params__['type'] is list:
             if 'cli_list_separator' not in param_dict_keys:
-                raise Exception("The key 'cli_list_separator' must be present "
-                                "when parameter type is list "
-                                f"on plugin {cls.__name__}")
+                raise MetadataException("The key 'cli_list_separator' must be present "
+                                        "when parameter type is list "
+                                        f"on plugin {cls.__name__}")
             if not cls.__params__['cli_list_separator']:
-                raise Exception("Value of 'cli_list_separator' "
-                                f"cannot be blank on {cls.__name__}")
+                raise MetadataException("Value of 'cli_list_separator' "
+                                        f"cannot be blank on {cls.__name__}")
     if not cls.__desc__:
-        raise Exception(
+        raise MetadataException(
             f"Description cannot be blank on plugin {cls.__name__}"
         )
     if not cls.__version__:
-        raise Exception(f"Version cannot be blank on plugin {cls.__name__}")
+        raise MetadataException(f"Version cannot be blank on plugin {cls.__name__}")
     return cls

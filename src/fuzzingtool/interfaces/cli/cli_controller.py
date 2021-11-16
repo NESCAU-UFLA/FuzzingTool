@@ -23,8 +23,6 @@ import time
 import threading
 from typing import Tuple, List
 
-from fuzzingtool.core.bases.base_wordlist import BaseWordlist
-
 from .cli_arguments import CliArguments
 from .cli_output import CliOutput, Colors
 from ..argument_builder import ArgumentBuilder as AB
@@ -38,8 +36,8 @@ from ...core.defaults.scanners import (DataScanner,
                                        PathScanner, SubdomainScanner)
 from ...core.bases import BaseScanner, BaseEncoder
 from ...conn.request_parser import check_for_subdomain_fuzz
-from ...conn.requesters import Request
-from ...factories import PluginFactory, RequestFactory, WordlistFactory
+from ...conn.requesters import Requester
+from ...factories import PluginFactory, RequesterFactory, WordlistFactory
 from ...reports.report import Report
 from ...exceptions.base_exceptions import FuzzingToolException
 from ...exceptions.main_exceptions import (SkipTargetException,
@@ -239,12 +237,12 @@ class CliController:
         if len(self.requesters) == 0:
             self.co.error_box("No targets left for fuzzing")
 
-    def check_redirections(self, requester: Request) -> None:
+    def check_redirections(self, requester: Requester) -> None:
         """Check the redirections for a target.
            Perform a redirection check for each method
            in requester methods list
 
-        @type requester: Request
+        @type requester: Requester
         @param requester: The requester for the target
         """
         if self.is_verbose_mode():
@@ -293,11 +291,11 @@ class CliController:
                     self.fuzzer.stop()
                 self.co.abort_box(f"{str(e)}. Target skipped")
 
-    def prepare_target(self, requester: Request) -> None:
+    def prepare_target(self, requester: Requester) -> None:
         """Prepare the target variables for the fuzzing tests.
            Both error logger and default scanners are setted
 
-        @type requester: Request
+        @type requester: Requester
         @param requester: The requester for the target
         """
         self.requester = requester
@@ -412,10 +410,10 @@ class CliController:
         )
         try:
             # Make the first request to get some info about the target
-            response, RTT = self.requester.request(payload)
+            response, rtt = self.requester.request(payload)
         except RequestException as e:
             raise SkipTargetException(str(e))
-        result_to_comparator = Result(response, RTT)
+        result_to_comparator = Result(response, rtt)
         self.co.print_result(result_to_comparator, False)
         length = None
         default_length = int(result_to_comparator.length)+300
@@ -428,7 +426,7 @@ class CliController:
             if not length:
                 length = default_length
         time = None
-        default_time = result_to_comparator.RTT+5.0
+        default_time = result_to_comparator.rtt+5.0
         if self.co.ask_yes_no('info',
                               ("Do you want to exclude responses "
                                "based on custom time?")):
@@ -579,11 +577,11 @@ class CliController:
             self.co.error_box("A target is needed to make the fuzzing")
         for target in self.targets_list:
             if check_for_subdomain_fuzz(target['url']):
-                request_type = 'SubdomainRequest'
+                requester_type = 'SubdomainRequester'
             else:
-                request_type = 'Request'
-            requester = RequestFactory.creator(
-                request_type,
+                requester_type = 'Requester'
+            requester = RequesterFactory.creator(
+                requester_type,
                 url=target['url'],
                 methods=target['methods'],
                 body=target['body'],
@@ -673,13 +671,13 @@ class CliController:
         def buildDictionary(
             wordlists: List[Tuple[str, str]],
             is_unique: bool,
-            requester: Request = None
+            requester: Requester = None
         ) -> None:
             """Build the dictionary
 
             @type wordlists: List[Tuple[str, str]]
             @param wordlists: The wordlists used in the dictionary
-            @type requester: Request
+            @type requester: Requester
             @param requester: The requester for the given dictionary
             @returns Dictionary: The dictionary object
             """

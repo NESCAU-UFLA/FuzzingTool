@@ -34,4 +34,4 @@ def read_file(file_name: str) -> List[str]:
                     for line in this_file
                     if not line.startswith('#!')]
     except FileNotFoundError:
-        raise Exception(f"File '{file_name}' not found")
+        raise FileNotFoundError(f"File '{file_name}' not found")
