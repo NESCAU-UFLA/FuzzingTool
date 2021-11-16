@@ -25,6 +25,32 @@ from ..utils.utils import split_str_to_list
 from ..exceptions.main_exceptions import BadArgumentType
 
 
+def get_allowed_status(status: str,
+                       allowed_list: List[int],
+                       allowed_range: List[int]) -> None:
+    """Get the allowed status code list and range
+
+    @type status: str
+    @param status: The status cod given in the terminal
+    @type allowed_list: List[int]
+    @param allowed_list: The allowed status codes list
+    @type allowed_range: List[int]
+    @param allowed_range: The range of allowed status codes
+    """
+    try:
+        if '-' not in status:
+            allowed_list.append(int(status))
+        else:
+            code_left, code_right = (int(code) for code in status.split('-', 1))
+            if code_right < code_left:
+                code_left, code_right = code_right, code_left
+            allowed_range[:] = [code_left, code_right]
+    except ValueError:
+        raise BadArgumentType(
+            f"The match status argument ({status}) must be integer"
+        )
+
+
 class Matcher:
     """Class to handle with the match validations
 
@@ -43,34 +69,6 @@ class Matcher:
         @returns dict: The allowed status code,
                        list and range, parsed into a dict
         """
-        def get_allowed_status(
-            status: str,
-            allowed_list: List[int],
-            allowed_range: List[int]
-        ) -> None:
-            """Get the allowed status code list and range
-
-            @type status: str
-            @param status: The status cod given in the terminal
-            @type allowed_list: List[int]
-            @param allowed_list: The allowed status codes list
-            @type allowed_range: List[int]
-            @param allowed_range: The range of allowed status codes
-            """
-            try:
-                if '-' not in status:
-                    allowed_list.append(int(status))
-                else:
-                    code_left, code_right = (int(code)
-                                             for code in status.split('-', 1))
-                    if code_right < code_left:
-                        code_left, code_right = code_right, code_left
-                    allowed_range[:] = [code_left, code_right]
-            except ValueError:
-                raise BadArgumentType(
-                    f"The match status argument ({status}) must be integer"
-                )
-
         if not allowed_status:
             is_default = True
             allowed_list = [200]
@@ -202,49 +200,8 @@ class Matcher:
         @type comparator: dict
         @param comparator: The comparator dictionary
         """
-        def get_comparator_and_callback(comparator: str, key: str) -> Tuple[str, Callable]:
-            """Gets the comparator and callback
-
-            @type comparator: str
-            @param comparator: The value to be compared
-            @type key: str
-            @param key: Where it'll be compared (Length or Time)
-            @returns Tuple[str, Callable]: The comparator and match callback
-            """
-            def set_match(
-                match: Dict[str, Callable], comparator: str
-            ) -> Tuple[Callable, str]:
-                """Set the match function and new comparator value
-
-                @type match: Dict[str, Callable]
-                @param match: The dictionary with available comparations
-                @type comparator: str
-                @param comparator: The value to be compared
-                @returns Tuple[Callable, str]: The callback match function,
-                                               and the new comparator value
-                """
-                comparator = str(comparator)
-                for key, value in match.items():
-                    if key in comparator:
-                        return (value, comparator.split(key, 1)[1])
-                raise IndexError
-
-            match_dict = {
-                '>=': lambda to_compare: to_compare >= self._comparator[key],
-                '<=': lambda to_compare: to_compare <= self._comparator[key],
-                '>': lambda to_compare: to_compare > self._comparator[key],
-                '<': lambda to_compare: to_compare < self._comparator[key],
-                '==': lambda to_compare: to_compare == self._comparator[key],
-                '!=': lambda to_compare: to_compare != self._comparator[key],
-            }
-            try:
-                match_callback, comparator = set_match(match_dict, comparator)
-            except IndexError:
-                match_callback = lambda to_compare: self._comparator[key] < to_compare
-            return (comparator, match_callback)
-
         if comparator['Length']:
-            length_comparator, self._match_length = get_comparator_and_callback(
+            length_comparator, self._match_length = self.__get_comparator_and_callback(
                 comparator['Length'], 'Length'
             )
             try:
@@ -255,7 +212,7 @@ class Matcher:
                 )
             comparator['Length'] = length_comparator
         if comparator['Time']:
-            time_comparator, self._match_time = get_comparator_and_callback(
+            time_comparator, self._match_time = self.__get_comparator_and_callback(
                 comparator['Time'], 'Time'
             )
             try:
@@ -310,3 +267,46 @@ class Matcher:
         @returns bool: if match returns True else False
         """
         pass
+
+    def __get_comparator_and_callback(self,
+                                    comparator: str,
+                                    key: str) -> Tuple[str, Callable]:
+        """Gets the comparator and callback
+
+        @type comparator: str
+        @param comparator: The value to be compared
+        @type key: str
+        @param key: Where it'll be compared (Length or Time)
+        @returns Tuple[str, Callable]: The comparator and match callback
+        """
+        def set_match(
+            match: Dict[str, Callable], comparator: str
+        ) -> Tuple[Callable, str]:
+            """Set the match function and new comparator value
+
+            @type match: Dict[str, Callable]
+            @param match: The dictionary with available comparations
+            @type comparator: str
+            @param comparator: The value to be compared
+            @returns Tuple[Callable, str]: The callback match function,
+                                            and the new comparator value
+            """
+            comparator = str(comparator)
+            for key, value in match.items():
+                if key in comparator:
+                    return (value, comparator.split(key, 1)[1])
+            raise IndexError
+
+        match_dict = {
+            '>=': lambda to_compare: to_compare >= self._comparator[key],
+            '<=': lambda to_compare: to_compare <= self._comparator[key],
+            '>': lambda to_compare: to_compare > self._comparator[key],
+            '<': lambda to_compare: to_compare < self._comparator[key],
+            '==': lambda to_compare: to_compare == self._comparator[key],
+            '!=': lambda to_compare: to_compare != self._comparator[key],
+        }
+        try:
+            match_callback, comparator = set_match(match_dict, comparator)
+        except IndexError:
+            match_callback = lambda to_compare: self._comparator[key] < to_compare
+        return (comparator, match_callback)
