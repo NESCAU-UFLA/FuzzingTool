@@ -24,6 +24,7 @@ from typing import List, Union, Dict
 from ..utils.consts import FUZZING_MARK
 from ..utils.utils import split_str_to_list
 from ..utils.file_utils import read_file
+from ..exceptions.main_exceptions import BadArgumentFormat
 
 
 class ArgumentBuilder:
@@ -76,11 +77,11 @@ class ArgumentBuilder:
         @returns List[dict]: The targets data builded into a list of dictionary
         """
         def build_header_from_raw_http(
-            header_list: List[deque]
+            header_list: deque
         ) -> Dict[str, str]:
             """Get the HTTP header
 
-            @tyoe header_list: List[deque]
+            @tyoe header_list: deque
             @param header_list: The list with HTTP header
             @returns Dict[str, str]: The HTTP header parsed into a dict
             """
@@ -99,8 +100,8 @@ class ArgumentBuilder:
         for raw_http_filename in raw_http_filenames:
             try:
                 header_list = deque(read_file(raw_http_filename))
-            except Exception as e:
-                raise Exception(str(e))
+            except ValueError:
+                raise BadArgumentFormat("Invalid header format. E.g. Key: value")
             method, path, _ = header_list.popleft().split(' ')
             methods = split_str_to_list(method)
             headers = build_header_from_raw_http(header_list)
