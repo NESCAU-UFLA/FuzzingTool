@@ -101,15 +101,8 @@ class Matcher:
         }
 
     def __init__(self,
-                 allowed_status: dict = {
-                     'is_default': True,
-                     'List': [200],
-                     'Range': [],
-                 },
-                 comparator: dict = {
-                     'Length': None,
-                     'Time': None,
-                 },
+                 allowed_status: dict = None,
+                 comparator: dict = None,
                  match_functions: Tuple[Callable, Callable] = None):
         """Class constructor
 
@@ -120,6 +113,17 @@ class Matcher:
         @type match_functions: Tuple[Callable, Callable]
         @param match_functions: The callback functions for the match comparator
         """
+        if not allowed_status:
+            allowed_status = {
+                'is_default': True,
+                'List': [200],
+                'Range': [],
+            }
+        if not comparator:
+            comparator = {
+                'Length': None,
+                'Time': None,
+            }
         self._allowed_status = allowed_status
         if match_functions:
             self._comparator = comparator
