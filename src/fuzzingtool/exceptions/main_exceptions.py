@@ -49,5 +49,5 @@ class WordlistCreationError(FuzzingToolException):
     pass
 
 
-class ReportMetadataException(FuzzingToolException):
+class MetadataException(FuzzingToolException):
     pass

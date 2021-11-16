@@ -21,10 +21,6 @@
 from .base_exceptions import FuzzingToolException
 
 
-class PluginMetadataException(FuzzingToolException):
-    pass
-
-
 class InvalidPluginCategory(FuzzingToolException):
     pass
 

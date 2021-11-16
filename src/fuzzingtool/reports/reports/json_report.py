@@ -34,10 +34,12 @@ class JsonReport(BaseReport):
     file_extension = 'json'
 
     def _header(self) -> None:
+        """Do not write any header"""
         pass
 
     def _results(self, results: List[Result]) -> None:
         json.dump([dict(result) for result in results], self._file)
 
     def _footer(self) -> None:
+        """Do not write any footer"""
         pass
