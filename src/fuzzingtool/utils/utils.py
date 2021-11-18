@@ -102,78 +102,6 @@ def check_range_list(content: str) -> List[Union[int, str]]:
     @param content: The string content to check for range
     @returns List[int|str]: The list with the compiled content
     """
-    def get_number_range(left: str, right: str) -> List[int]:
-        """Get the number range list
-
-        @type left: str
-        @param left: The left string of the division mark
-        @type right: str
-        @param right: The right string of the division mark
-        @returns List[int]: The list with the range
-        """
-        is_number = True
-        i = len(left)
-        while is_number and i > 0:
-            try:
-                int(left[i-1])
-            except ValueError:
-                is_number = False
-            else:
-                i -= 1
-        left_digit, left_str = int(left[i:]), left[:i]
-        is_number = True
-        i = 0
-        while is_number and i < (len(right)-1):
-            try:
-                int(right[i+1])
-            except ValueError:
-                is_number = False
-            else:
-                i += 1
-        right_digit, right_str = int(right[:(i+1)]), right[(i+1):]
-        compiled_list = []
-        if left_digit < right_digit:
-            while left_digit <= right_digit:
-                compiled_list.append(
-                    f"{left_str}{str(left_digit)}{right_str}"
-                )
-                left_digit += 1
-        else:
-            while right_digit <= left_digit:
-                compiled_list.append(
-                    f"{left_str}{str(left_digit)}{right_str}"
-                )
-                left_digit -= 1
-        return compiled_list
-
-    def get_letter_range(left: str, right: str) -> List[str]:
-        """Get the alphabet range list [a-z] [A-Z] [z-a] [Z-A]
-
-        @type left: str
-        @param left: The left string of the division mark
-        @type right: str
-        @param right: The right string of the division mark
-        @returns List[str]: The list with the range
-        """
-        left_digit, left_str = left[-1], left[:-1]
-        right_digit, right_str = right[0], right[1:]
-        compiled_list = []
-        order_left_digit = ord(left_digit)
-        order_right_digit = ord(right_digit)
-        if order_left_digit <= order_right_digit:
-            while order_left_digit <= order_right_digit:
-                compiled_list.append(
-                    f"{left_str}{chr(order_left_digit)}{right_str}"
-                )
-                order_left_digit += 1
-        else:
-            while order_left_digit >= order_right_digit:
-                compiled_list.append(
-                    f"{left_str}{chr(order_left_digit)}{right_str}"
-                )
-                order_left_digit -= 1
-        return compiled_list
-
     if '\\-' in content:
         content = content.replace('\\-', '-')
     elif '-' in content:
@@ -183,7 +111,81 @@ def check_range_list(content: str) -> List[Union[int, str]]:
             int(left[-1])
             int(right[0])
         except ValueError:
-            return get_letter_range(left, right)
+            return _get_letter_range(left, right)
         else:
-            return get_number_range(left, right)
+            return _get_number_range(left, right)
     return [content]
+
+
+def _get_letter_range(left: str, right: str) -> List[str]:
+    """Get the alphabet range list [a-z] [A-Z] [z-a] [Z-A]
+
+    @type left: str
+    @param left: The left string of the division mark
+    @type right: str
+    @param right: The right string of the division mark
+    @returns List[str]: The list with the range
+    """
+    left_digit, left_str = left[-1], left[:-1]
+    right_digit, right_str = right[0], right[1:]
+    compiled_list = []
+    order_left_digit = ord(left_digit)
+    order_right_digit = ord(right_digit)
+    if order_left_digit <= order_right_digit:
+        while order_left_digit <= order_right_digit:
+            compiled_list.append(
+                f"{left_str}{chr(order_left_digit)}{right_str}"
+            )
+            order_left_digit += 1
+    else:
+        while order_left_digit >= order_right_digit:
+            compiled_list.append(
+                f"{left_str}{chr(order_left_digit)}{right_str}"
+            )
+            order_left_digit -= 1
+    return compiled_list
+
+
+def _get_number_range(left: str, right: str) -> List[int]:
+    """Get the number range list
+
+    @type left: str
+    @param left: The left string of the division mark
+    @type right: str
+    @param right: The right string of the division mark
+    @returns List[int]: The list with the range
+    """
+    is_number = True
+    i = len(left)
+    while is_number and i > 0:
+        try:
+            int(left[i-1])
+        except ValueError:
+            is_number = False
+        else:
+            i -= 1
+    left_digit, left_str = int(left[i:]), left[:i]
+    is_number = True
+    i = 0
+    while is_number and i < (len(right)-1):
+        try:
+            int(right[i+1])
+        except ValueError:
+            is_number = False
+        else:
+            i += 1
+    right_digit, right_str = int(right[:(i+1)]), right[(i+1):]
+    compiled_list = []
+    if left_digit < right_digit:
+        while left_digit <= right_digit:
+            compiled_list.append(
+                f"{left_str}{str(left_digit)}{right_str}"
+            )
+            left_digit += 1
+    else:
+        while right_digit <= left_digit:
+            compiled_list.append(
+                f"{left_str}{str(left_digit)}{right_str}"
+            )
+            left_digit -= 1
+    return compiled_list
