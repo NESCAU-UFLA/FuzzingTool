@@ -21,6 +21,10 @@
 from .base_exceptions import FuzzingToolException
 
 
+class ControllerException(FuzzingToolException):
+    pass
+
+
 class SkipTargetException(FuzzingToolException):
     pass
 

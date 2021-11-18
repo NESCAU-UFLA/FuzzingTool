@@ -21,7 +21,7 @@
 from queue import Queue
 import time
 import threading
-from typing import Tuple, List
+from typing import Tuple, List, Union
 
 from .cli_arguments import CliArguments
 from .cli_output import CliOutput, Colors
@@ -40,7 +40,7 @@ from ...conn.requesters import Requester
 from ...factories import PluginFactory, RequesterFactory, WordlistFactory
 from ...reports.report import Report
 from ...exceptions.base_exceptions import FuzzingToolException
-from ...exceptions.main_exceptions import (SkipTargetException,
+from ...exceptions.main_exceptions import (ControllerException, SkipTargetException,
                                            WordlistCreationError, BuildWordlistFails)
 from ...exceptions.request_exceptions import RequestException, InvalidHostname
 
@@ -235,7 +235,7 @@ class CliController:
                 if requester.is_data_fuzzing():
                     self.check_redirections(requester)
         if len(self.requesters) == 0:
-            self.co.error_box("No targets left for fuzzing")
+            raise ControllerException("No targets left for fuzzing")
 
     def check_redirections(self, requester: Requester) -> None:
         """Check the redirections for a target.
@@ -574,7 +574,7 @@ class CliController:
                 arguments.targets_from_raw_http, arguments.scheme
             ))
         if not self.targets_list:
-            self.co.error_box("A target is needed to make the fuzzing")
+            raise ControllerException("A target is needed to make the fuzzing")
         for target in self.targets_list:
             if check_for_subdomain_fuzz(target['url']):
                 requester_type = 'SubdomainRequester'
@@ -627,95 +627,49 @@ class CliController:
                     if (this_target['host'] == next_target['host'] and
                         (this_target['type_fuzzing'] !=
                          next_target['type_fuzzing'])):
-                        self.co.error_box(
+                        raise ControllerException(
                             "Duplicated target detected with "
                             "different type of fuzzing scan, exiting."
                         )
 
-    def __init_dictionary(self, arguments: CliArguments) -> None:
-        """Initialize the dictionary
+    def __build_encoders(self, arguments: CliArguments) -> Union[
+        Tuple[List[BaseEncoder], List[List[BaseEncoder]]], None
+    ]:
+        """Build the encoders
+
+        @type arguments: CliArguments
+        @param arguments: The command line interface arguments object
+        @returns Tuple | None: The encoders used in the program
+        """
+        if not arguments.encoder:
+            return None
+        if arguments.encode_only:
+            Payloader.encoder.set_regex(arguments.encode_only)
+        encoders_default = []
+        encoders_chain = []
+        for encoders in arguments.encoder:
+            if len(encoders) > 1:
+                append_to = []
+                is_chain = True
+            else:
+                append_to = encoders_default
+                is_chain = False
+            for encoder in encoders:
+                name, param = encoder
+                encoder = PluginFactory.object_creator(
+                    name, 'encoders', param
+                )
+                append_to.append(encoder)
+            if is_chain:
+                encoders_chain.append(append_to)
+        return (encoders_default, encoders_chain)
+
+    def __configure_payloader(self, arguments: CliArguments) -> None:
+        """Configure the Payloader options
 
         @type arguments: CliArguments
         @param arguments: The command line interface arguments object
         """
-        def build_encoders() -> Tuple[
-            List[BaseEncoder], List[List[BaseEncoder]]
-        ]:
-            """Build the encoders
-
-            @returns Tuple: The encoders used in the program
-            """
-            if not arguments.encoder:
-                return None
-            if arguments.encode_only:
-                Payloader.encoder.set_regex(arguments.encode_only)
-            encoders_default = []
-            encoders_chain = []
-            for encoders in arguments.encoder:
-                if len(encoders) > 1:
-                    append_to = []
-                    is_chain = True
-                else:
-                    append_to = encoders_default
-                    is_chain = False
-                for encoder in encoders:
-                    name, param = encoder
-                    encoder = PluginFactory.object_creator(
-                        name, 'encoders', param
-                    )
-                    append_to.append(encoder)
-                if is_chain:
-                    encoders_chain.append(append_to)
-            return (encoders_default, encoders_chain)
-
-        def build_dictionary(
-            wordlists: List[Tuple[str, str]],
-            is_unique: bool,
-            requester: Requester = None
-        ) -> None:
-            """Build the dictionary
-
-            @type wordlists: List[Tuple[str, str]]
-            @param wordlists: The wordlists used in the dictionary
-            @type requester: Requester
-            @param requester: The requester for the given dictionary
-            @returns Dictionary: The dictionary object
-            """
-            last_dict_index = len(self.dictionaries_metadata)
-            self.dictionaries_metadata.append({
-                'wordlists': [],
-                'sizeof': 0
-            })
-            builded_wordlist = []
-            for wordlist in wordlists:
-                name, params = wordlist
-                if self.verbose[1]:
-                    self.co.info_box(f"Building wordlist from {name} ...")
-                self.dictionaries_metadata[last_dict_index]['wordlists'].append(
-                    f"{name}={params}" if params else name
-                )
-                try:
-                    wordlist_obj = WordlistFactory.creator(name, params, requester)
-                    wordlist_obj.build()
-                except (WordlistCreationError, BuildWordlistFails) as e:
-                    if self.is_verbose_mode():
-                        self.co.warning_box(str(e))
-                else:
-                    builded_wordlist.extend(wordlist_obj.get())
-                    if self.verbose[1]:
-                        self.co.info_box(f"Wordlist {name} builded")
-            if not builded_wordlist:
-                self.co.error_box("The wordlist is empty")
-            atual_length = len(builded_wordlist)
-            if is_unique:
-                previous_length = atual_length
-                builded_wordlist = set(builded_wordlist)
-                atual_length = len(builded_wordlist)
-                self.dictionaries_metadata[last_dict_index]['removed'] = previous_length-atual_length
-            dictionary = Dictionary(builded_wordlist)
-            self.dictionaries_metadata[last_dict_index]['len'] = atual_length
-            return dictionary
-
         Payloader.set_prefix(arguments.prefix)
         Payloader.set_suffix(arguments.suffix)
         if arguments.lowercase:
@@ -724,26 +678,100 @@ class CliController:
             Payloader.set_uppercase()
         elif arguments.capitalize:
             Payloader.set_capitalize()
-        encoders = build_encoders()
+        encoders = self.__build_encoders(arguments)
         if encoders:
             Payloader.encoder.set_encoders(encoders)
+
+    def __build_wordlist(
+        self,
+        wordlists: List[Tuple[str, str]],
+        requester: Requester = None
+    ):
+        """Build the wordlist
+
+        @type wordlists: List[Tuple[str, str]]
+        @param wordlists: The wordlists used in the dictionary
+        @type requester: Requester
+        @param requester: The requester for the given dictionary
+        @returns List: The builded wordlist list
+        """
+        builded_wordlist = []
+        for wordlist in wordlists:
+            name, params = wordlist
+            if self.verbose[1]:
+                self.co.info_box(f"Building wordlist from {name} ...")
+            self.dictionaries_metadata[-1]['wordlists'].append(
+                f"{name}={params}" if params else name
+            )
+            try:
+                wordlist_obj = WordlistFactory.creator(name, params, requester)
+                wordlist_obj.build()
+            except (WordlistCreationError, BuildWordlistFails) as e:
+                if self.is_verbose_mode():
+                    self.co.warning_box(str(e))
+            else:
+                builded_wordlist.extend(wordlist_obj.get())
+                if self.verbose[1]:
+                    self.co.info_box(f"Wordlist {name} builded")
+        if not builded_wordlist:
+            raise ControllerException("The wordlist is empty")
+        return builded_wordlist
+
+    def __build_dictionary(
+        self,
+        wordlists: List[Tuple[str, str]],
+        is_unique: bool,
+        requester: Requester = None
+    ) -> None:
+        """Build the dictionary
+
+        @type wordlists: List[Tuple[str, str]]
+        @param wordlists: The wordlists used in the dictionary
+        @type is_unique: bool
+        @param is_unique: A flag to say if the dictionary will contains only unique payloads
+        @type requester: Requester
+        @param requester: The requester for the given dictionary
+        @returns Dictionary: The dictionary object
+        """
+        self.dictionaries_metadata.append({
+            'wordlists': [],
+            'len': 0
+        })
+        builded_wordlist = self.__build_wordlist(wordlists, requester)
+        atual_length = len(builded_wordlist)
+        if is_unique:
+            previous_length = atual_length
+            builded_wordlist = set(builded_wordlist)
+            atual_length = len(builded_wordlist)
+            self.dictionaries_metadata[-1]['removed'] = previous_length-atual_length
+        dictionary = Dictionary(builded_wordlist)
+        self.dictionaries_metadata[-1]['len'] = atual_length
+        return dictionary
+
+    def __init_dictionary(self, arguments: CliArguments) -> None:
+        """Initialize the dictionary
+
+        @type arguments: CliArguments
+        @param arguments: The command line interface arguments object
+        """
+        self.__configure_payloader(arguments)
         self.global_dictionary = None
         self.dictionaries = []
         self.dictionaries_metadata = []
         len_wordlists = len(arguments.wordlists)
         len_requesters = len(self.requesters)
         if len_wordlists > len_requesters:
-            self.co.error_box(
+            raise ControllerException(
                 "The quantity of wordlists is greater than the requesters"
             )
         elif len_wordlists != len_requesters:
             wordlist = arguments.wordlists[0]
-            self.global_dictionary = build_dictionary(wordlist,
-                                                     arguments.unique)
+            self.global_dictionary = self.__build_dictionary(wordlist,
+                                                             arguments.unique)
             self.local_dictionary = self.global_dictionary
         else:
             self.dictionaries = Queue()
             for i, wordlist in enumerate(arguments.wordlists):
-                self.dictionaries.put(build_dictionary(
+                self.dictionaries.put(self.__build_dictionary(
                     wordlist, arguments.unique, self.requesters[i]
                 ))
