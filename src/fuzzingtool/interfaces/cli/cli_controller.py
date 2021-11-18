@@ -558,6 +558,25 @@ class CliController:
                 self.fuzzer.index, self.total_requests, payload
             )
 
+    def __get_target_fuzzing_type(self, requester: Requester) -> str:
+        """Get the target fuzzing type, as a string format
+        
+        @type requester: Requester
+        @param requester: The actual iterated requester
+        @return str: The fuzzing type, as a string
+        """
+        if requester.is_method_fuzzing():
+            return "MethodFuzzing"
+        elif requester.is_data_fuzzing():
+            return "DataFuzzing"
+        elif requester.is_url_discovery():
+            if requester.is_path_fuzzing():
+                return "PathFuzzing"
+            else:
+                return "SubdomainFuzzing"
+        else:
+            return "Couldn't determine the fuzzing type"
+
     def __init_requesters(self, arguments: CliArguments) -> None:
         """Initialize the requesters
 
@@ -594,17 +613,7 @@ class CliController:
                 cookie=arguments.cookie,
             )
             self.requesters.append(requester)
-            if requester.is_method_fuzzing():
-                target['type_fuzzing'] = "MethodFuzzing"
-            elif requester.is_data_fuzzing():
-                target['type_fuzzing'] = "DataFuzzing"
-            elif requester.is_url_discovery():
-                if requester.is_path_fuzzing():
-                    target['type_fuzzing'] = "PathFuzzing"
-                else:
-                    target['type_fuzzing'] = "SubdomainFuzzing"
-            else:
-                target['type_fuzzing'] = "Couldn't determine the fuzzing type"
+            target['type_fuzzing'] = self.__get_target_fuzzing_type(requester)
 
     def __check_for_duplicated_targets(self) -> None:
         """Checks for duplicated targets,
