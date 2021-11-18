@@ -132,17 +132,13 @@ def _get_letter_range(left: str, right: str) -> List[str]:
     order_left_digit = ord(left_digit)
     order_right_digit = ord(right_digit)
     if order_left_digit <= order_right_digit:
-        while order_left_digit <= order_right_digit:
-            compiled_list.append(
-                f"{left_str}{chr(order_left_digit)}{right_str}"
-            )
-            order_left_digit += 1
+        range_list = range(order_left_digit, order_right_digit+1)
     else:
-        while order_left_digit >= order_right_digit:
-            compiled_list.append(
-                f"{left_str}{chr(order_left_digit)}{right_str}"
-            )
-            order_left_digit -= 1
+        range_list = range(order_left_digit, order_right_digit-1, -1)
+    for c in range_list:
+        compiled_list.append(
+            f"{left_str}{chr(c)}{right_str}"
+        )
     return compiled_list
 
 
@@ -177,15 +173,11 @@ def _get_number_range(left: str, right: str) -> List[int]:
     right_digit, right_str = int(right[:(i+1)]), right[(i+1):]
     compiled_list = []
     if left_digit < right_digit:
-        while left_digit <= right_digit:
-            compiled_list.append(
-                f"{left_str}{str(left_digit)}{right_str}"
-            )
-            left_digit += 1
+        range_list = range(left_digit, right_digit+1)
     else:
-        while right_digit <= left_digit:
-            compiled_list.append(
-                f"{left_str}{str(left_digit)}{right_str}"
-            )
-            left_digit -= 1
+        range_list = range(left_digit, right_digit-1, -1)
+    for d in range_list:
+        compiled_list.append(
+            f"{left_str}{str(d)}{right_str}"
+        )
     return compiled_list
