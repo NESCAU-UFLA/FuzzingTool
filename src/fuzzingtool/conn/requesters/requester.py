@@ -26,7 +26,8 @@ from typing import List, Dict, Tuple
 import requests
 import urllib3.exceptions
 
-from ..request_parser import request_parser
+from ..request_parser import (check_is_method_fuzzing, check_is_url_discovery,
+                              check_is_data_fuzzing, request_parser)
 from ...utils.consts import (FUZZING_MARK, UNKNOWN_FUZZING, HTTP_METHOD_FUZZING,
                              PATH_FUZZING, SUBDOMAIN_FUZZING, DATA_FUZZING)
 from ...utils.http_utils import get_pure_url, get_host, get_url_without_scheme
@@ -274,47 +275,11 @@ class Requester:
 
         @returns int: The fuzzing type int value
         """
-        def _is_method_fuzzing() -> bool:
-            """Checks if the fuzzing type is MethodFuzzing
-
-            @returns bool: The fuzzing flag
-            """
-            return False if not self.__method['fuzzingIndexes'] else True
-
-        def _is_url_fuzzing() -> bool:
-            """Checks if the fuzzing type is UrlFuzzing
-
-            @returns bool: The fuzzing flag
-            """
-            return False if not self._url['fuzzingIndexes'] else True
-
-        def _is_url_discovery() -> bool:
-            """Checks if the fuzzing type is UrlFuzzing for discovery
-
-            @returns bool: The fuzzing flag
-            """
-            return (_is_url_fuzzing() and '?' not in self._url['content'])
-
-        def _is_data_fuzzing() -> bool:
-            """Checks if the fuzzing type is DataFuzzing
-
-            @returns bool: The fuzzing flag
-            """
-            for _, value in self.__data['PARAM'].items():
-                if not value:
-                    return True
-            for _, value in self.__data['BODY'].items():
-                if not value:
-                    return True
-            if self.__header['payloadKeys']:
-                return True
-            return False
-
-        if _is_method_fuzzing():
+        if check_is_method_fuzzing(self.__method):
             return HTTP_METHOD_FUZZING
-        if _is_url_discovery():
+        if check_is_url_discovery(self._url):
             return PATH_FUZZING
-        if _is_data_fuzzing():
+        if check_is_data_fuzzing(self.__data, self.__header):
             return DATA_FUZZING
         return UNKNOWN_FUZZING
 

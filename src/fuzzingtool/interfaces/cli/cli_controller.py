@@ -35,7 +35,7 @@ from ...core import (BlacklistStatus, Dictionary, Fuzzer,
 from ...core.defaults.scanners import (DataScanner,
                                        PathScanner, SubdomainScanner)
 from ...core.bases import BaseScanner, BaseEncoder
-from ...conn.request_parser import check_for_subdomain_fuzz
+from ...conn.request_parser import check_is_subdomain_fuzzing
 from ...conn.requesters import Requester
 from ...factories import PluginFactory, RequesterFactory, WordlistFactory
 from ...reports.report import Report
@@ -576,7 +576,7 @@ class CliController:
         if not self.targets_list:
             raise ControllerException("A target is needed to make the fuzzing")
         for target in self.targets_list:
-            if check_for_subdomain_fuzz(target['url']):
+            if check_is_subdomain_fuzzing(target['url']):
                 requester_type = 'SubdomainRequester'
             else:
                 requester_type = 'Requester'
