@@ -18,7 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from ..utils.consts import FUZZING_MARK
+from ..utils.consts import FUZZING_MARK, FUZZING_MARK_LEN
 
 
 def check_is_subdomain_fuzzing(url: str) -> bool:
@@ -148,7 +148,7 @@ class RequestParser:
         ajusted_content = content['content']
         for i in content['fuzzingIndexes']:
             head = ajusted_content[:i]
-            tail = ajusted_content[(i+1):]
+            tail = ajusted_content[(i+FUZZING_MARK_LEN):]
             ajusted_content = head + self.__payload + tail
         return ajusted_content
 

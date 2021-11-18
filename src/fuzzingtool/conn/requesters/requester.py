@@ -28,7 +28,8 @@ import urllib3.exceptions
 
 from ..request_parser import (check_is_method_fuzzing, check_is_url_discovery,
                               check_is_data_fuzzing, request_parser)
-from ...utils.consts import (FUZZING_MARK, UNKNOWN_FUZZING, HTTP_METHOD_FUZZING,
+from ...utils.consts import (FUZZING_MARK, FUZZING_MARK_LEN,
+                             UNKNOWN_FUZZING, HTTP_METHOD_FUZZING,
                              PATH_FUZZING, SUBDOMAIN_FUZZING, DATA_FUZZING)
 from ...utils.http_utils import get_pure_url, get_host, get_url_without_scheme
 from ...utils.utils import get_indexes_to_parse
@@ -346,7 +347,7 @@ class Requester:
         last_index = 0
         for i in get_indexes_to_parse(value):
             header_value.append(value[last_index:i])
-            last_index = i+1
+            last_index = i+FUZZING_MARK_LEN
         if last_index == len(value):
             header_value.append('')
         else:
