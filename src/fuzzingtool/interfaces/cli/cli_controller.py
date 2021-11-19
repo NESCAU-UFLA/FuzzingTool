@@ -310,26 +310,8 @@ class CliController:
         self.results = []
         self.all_results[self.target_host] = self.results
         self.skip_target = None
-        self.local_matcher = Matcher(
-            allowed_status=self.global_matcher.get_allowed_status(),
-            comparator=self.global_matcher.get_comparator(),
-            match_functions=self.global_matcher.get_match_functions()
-        )
-        if (self.requester.is_url_discovery() and
-                self.global_matcher.allowed_status_is_default()):
-            self.local_matcher.set_allowed_status(
-                Matcher.build_allowed_status("200-399,401,403")
-            )
-        if not self.global_scanner:
-            self.local_scanner = self.get_default_scanner()
-            if (self.requester.is_data_fuzzing() and
-                    not self.global_matcher.comparator_is_set()):
-                self.co.info_box("DataFuzzing detected, checking for a data comparator ...")
-                before = time.time()
-                self.local_matcher.set_comparator(
-                    self.get_data_comparator()
-                )
-                self.started_time += (time.time() - before)
+        self.__prepare_local_matcher()
+        self.__prepare_local_scanner()
         if not self.global_dictionary:
             self.local_dictionary = self.dictionaries.get()
         self.total_requests = (len(self.local_dictionary)
@@ -364,21 +346,6 @@ class CliController:
             if self.skip_target:
                 raise SkipTargetException(self.skip_target)
 
-    def get_default_scanner(self) -> BaseScanner:
-        """Check what's the scanners that will be used
-
-        @returns BaseScanner: The scanner used in the fuzzing tests
-        """
-        if self.requester.is_url_discovery():
-            if self.requester.is_path_fuzzing():
-                scanner = PathScanner()
-            else:
-                scanner = SubdomainScanner()
-        else:
-            scanner = DataScanner()
-        self.co.set_message_callback(scanner.cli_callback)
-        return scanner
-
     def check_ignore_errors(self, host: str) -> None:
         """Check if the user wants to ignore the errors during the tests.
            By default, URL fuzzing (path and subdomain) ignore errors
@@ -400,45 +367,6 @@ class CliController:
             else:
                 self.ignore_errors = False
 
-    def get_data_comparator(self) -> dict:
-        """Check if the user wants to insert
-           custom data comparator to validate the responses
-
-        @returns dict: The data comparator dictionary for the Matcher object
-        """
-        payload = ' '  # Set an arbitraty payload
-        self.co.info_box(
-            f"Making first request with '{payload}' as payload ..."
-        )
-        try:
-            # Make the first request to get some info about the target
-            response, rtt = self.requester.request(payload)
-        except RequestException as e:
-            raise SkipTargetException(str(e))
-        result_to_comparator = Result(response, rtt)
-        self.co.print_result(result_to_comparator, False)
-        length = None
-        default_length = int(result_to_comparator.length)+300
-        if self.co.ask_yes_no('info',
-                              ("Do you want to exclude responses "
-                               "based on custom length?")):
-            length = self.co.ask_data(
-                f"Insert the length (in bytes, default >{default_length})"
-            )
-            if not length:
-                length = default_length
-        time = None
-        default_time = result_to_comparator.rtt+5.0
-        if self.co.ask_yes_no('info',
-                              ("Do you want to exclude responses "
-                               "based on custom time?")):
-            time = self.co.ask_data(
-                f"Insert the time (in seconds, default >{default_time} seconds)"
-            )
-            if not time:
-                time = default_time
-        return Matcher.build_comparator(length, time)
-
     def show_footer(self) -> None:
         """Show the footer content of the software, after maked the fuzzing.
            The results are shown for each target
@@ -457,7 +385,7 @@ class CliController:
                         )
                         if not self.global_scanner:
                             self.requester = self.requesters[requester_index]
-                            self.get_default_scanner()
+                            self.__get_default_scanner()
                         for result in value:
                             self.co.print_result(result, True)
                         self.co.info_box(f'Saving results for {key} ...')
@@ -786,3 +714,83 @@ class CliController:
                 self.dictionaries.put(self.__build_dictionary(
                     wordlist, arguments.unique, self.requesters[i]
                 ))
+
+    def __prepare_local_matcher(self) -> None:
+        """Prepares the local matcher"""
+        self.local_matcher = Matcher(
+            allowed_status=self.global_matcher.get_allowed_status(),
+            comparator=self.global_matcher.get_comparator(),
+            match_functions=self.global_matcher.get_match_functions()
+        )
+        if (self.requester.is_url_discovery() and
+                self.global_matcher.allowed_status_is_default()):
+            self.local_matcher.set_allowed_status(
+                Matcher.build_allowed_status("200-399,401,403")
+            )
+
+    def __get_default_scanner(self) -> BaseScanner:
+        """Check what's the scanners that will be used
+
+        @returns BaseScanner: The scanner used in the fuzzing tests
+        """
+        if self.requester.is_url_discovery():
+            if self.requester.is_path_fuzzing():
+                scanner = PathScanner()
+            else:
+                scanner = SubdomainScanner()
+        else:
+            scanner = DataScanner()
+        self.co.set_message_callback(scanner.cli_callback)
+        return scanner
+
+    def __get_data_comparator(self) -> dict:
+        """Check if the user wants to insert
+           custom data comparator to validate the responses
+
+        @returns dict: The data comparator dictionary for the Matcher object
+        """
+        payload = ' '  # Set an arbitraty payload
+        self.co.info_box(
+            f"Making first request with '{payload}' as payload ..."
+        )
+        try:
+            # Make the first request to get some info about the target
+            response, rtt = self.requester.request(payload)
+        except RequestException as e:
+            raise SkipTargetException(str(e))
+        result_to_comparator = Result(response, rtt)
+        self.co.print_result(result_to_comparator, False)
+        length = None
+        default_length = int(result_to_comparator.length)+300
+        if self.co.ask_yes_no('info',
+                              ("Do you want to exclude responses "
+                               "based on custom length?")):
+            length = self.co.ask_data(
+                f"Insert the length (in bytes, default >{default_length})"
+            )
+            if not length:
+                length = default_length
+        time = None
+        default_time = result_to_comparator.rtt+5.0
+        if self.co.ask_yes_no('info',
+                              ("Do you want to exclude responses "
+                               "based on custom time?")):
+            time = self.co.ask_data(
+                f"Insert the time (in seconds, default >{default_time} seconds)"
+            )
+            if not time:
+                time = default_time
+        return Matcher.build_comparator(length, time)
+
+    def __prepare_local_scanner(self) -> None:
+        """Prepares the local scanner"""
+        if not self.global_scanner:
+            self.local_scanner = self.__get_default_scanner()
+            if (self.requester.is_data_fuzzing() and
+                    not self.global_matcher.comparator_is_set()):
+                self.co.info_box("DataFuzzing detected, checking for a data comparator ...")
+                before = time.time()
+                self.local_matcher.set_comparator(
+                    self.__get_data_comparator()
+                )
+                self.started_time += (time.time() - before)
