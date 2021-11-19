@@ -179,26 +179,30 @@ class CliController:
         @type arguments: CliArguments
         @param arguments: The command line interface arguments object
         """
+        if self.verbose[1]:
+            verbose = 'detailed'
+        elif self.verbose[0]:
+            verbose = 'common'
+        else:
+            verbose = 'quiet'
+        if arguments.lowercase:
+            case = 'lowercase'
+        elif arguments.uppercase:
+            case = 'uppercase'
+        elif arguments.capitalize:
+            case = 'capitalize'
+        else:
+            case = None
         self.co.print_configs(
             output='normal'
                     if not arguments.simple_output
                     else 'simple',
-            verbose='quiet'
-                    if not self.verbose[0]
-                    else 'common'
-                    if not self.verbose[1]
-                    else 'detailed',
+            verbose=verbose,
             targets=self.targets_list,
             dictionaries=self.dictionaries_metadata,
             prefix=arguments.prefix,
             suffix=arguments.suffix,
-            case='lowercase'
-                 if arguments.lowercase
-                 else 'uppercase'
-                 if arguments.uppercase
-                 else 'capitalize'
-                 if arguments.capitalize
-                 else None,
+            case=case,
             encoder=arguments.str_encoder,
             encode_only=arguments.encode_only,
             match={
