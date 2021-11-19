@@ -357,19 +357,15 @@ class CliController:
         @type host: str
         @param host: The target hostname
         """
-        if self.requester.is_url_discovery():
+        if (self.requester.is_url_discovery() or
+                self.co.ask_yes_no('info',
+                                   ("Do you want to ignore errors on this "
+                                    "target, and save them into a log file?"))):
             self.ignore_errors = True
             log_path = self.logger.setup(host)
             self.co.info_box(f'The logs will be saved on \'{log_path}\'')
         else:
-            if self.co.ask_yes_no('info',
-                                  ("Do you want to ignore errors on this "
-                                   "target, and save them into a log file?")):
-                self.ignore_errors = True
-                log_path = self.logger.setup(host)
-                self.co.info_box(f'The logs will be saved on \'{log_path}\'')
-            else:
-                self.ignore_errors = False
+            self.ignore_errors = False
 
     def show_footer(self) -> None:
         """Show the footer content of the software, after maked the fuzzing.
