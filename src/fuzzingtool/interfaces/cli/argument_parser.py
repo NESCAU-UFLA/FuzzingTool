@@ -134,22 +134,22 @@ class ArgumentParser(argparse.ArgumentParser):
         @type category: str
         @param category: The package category to search for his plugins
         """
-        for Plugin in PluginFactory.get_plugins_from_category(category):
-            if not Plugin.__type__:
+        for plugin_cls in PluginFactory.get_plugins_from_category(category):
+            if not plugin_cls.__type__:
                 type_fuzzing = ''
             else:
-                type_fuzzing = f" (Used for {Plugin.__type__})"
-            if not Plugin.__params__:
+                type_fuzzing = f" (Used for {plugin_cls.__type__})"
+            if not plugin_cls.__params__:
                 params = ''
             else:
-                if Plugin.__params__['type'] is list:
-                    metavar = Plugin.__params__['metavar']
-                    separator = Plugin.__params__['cli_list_separator']
+                if plugin_cls.__params__['type'] is list:
+                    metavar = plugin_cls.__params__['metavar']
+                    separator = plugin_cls.__params__['cli_list_separator']
                     params = f"={metavar}[{separator}{metavar}]*"
                 else:
-                    params = f"={Plugin.__params__['metavar']}"
-            CO.help_content(5, f"{Plugin.__name__}{params}",
-                            f"{Plugin.__desc__}{type_fuzzing}\n")
+                    params = f"={plugin_cls.__params__['metavar']}"
+            CO.help_content(5, f"{plugin_cls.__name__}{params}",
+                            f"{plugin_cls.__desc__}{type_fuzzing}\n")
 
     def __build_options(self) -> None:
         """Builds the FuzzingTool options"""
