@@ -25,6 +25,7 @@ from .bases.base_encoder import BaseEncoder
 from .defaults.encoders import ChainEncoder
 from ..exceptions.main_exceptions import BadArgumentFormat
 
+
 class EncodeManager:
     """Class that handle with the encoder management
 
@@ -91,7 +92,7 @@ class EncodeManager:
             encoder: BaseEncoder,
             payload: str,
             i: int,
-            strings: list
+            m_strings: set
         ) -> Tuple[int, str]:
             """Encode a substring using the actual encoder
 
@@ -101,12 +102,12 @@ class EncodeManager:
             @param payload: The payload used in the request
             @type i: int
             @param i: The index of the actual char of the payload
-            @type strings: list
-            @param strings: The matched strings list from the regexer
+            @type m_strings: set
+            @param m_strings: The matched strings list from the regexer
             @returns Tuple[int, str]: The encoded substring if match
                                       the regex, else return the actual char
             """
-            for string in strings:
+            for string in m_strings:
                 last_index = i+len(string)
                 to_check = payload[i:last_index]
                 if to_check == string:
@@ -115,14 +116,14 @@ class EncodeManager:
 
         if not self.regexer:
             return encoder.encode(payload)
-        strings = set([match.group()
-                       for match in self.regexer.finditer(payload)])
-        if not strings:
+        m_strings = set([match.group()
+                         for match in self.regexer.finditer(payload)])
+        if not m_strings:
             return payload
         encoded = ''
         i = 0
         while i < len(payload):
-            i, char = encode_substring(encoder, payload, i, strings)
+            i, char = encode_substring(encoder, payload, i, m_strings)
             encoded += char
         return encoded
 

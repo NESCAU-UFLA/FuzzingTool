@@ -58,6 +58,6 @@ class Reflected(BaseScanner, Plugin):
             f"{payload} {Colors.GRAY}["
             f"{Colors.LIGHT_GRAY}Reflected{Colors.RESET} {reflected}{Colors.RESET} | "
             f"{Colors.LIGHT_GRAY}Code{Colors.RESET} {result.status} | "
-            f"{Colors.LIGHT_GRAY}rtt{Colors.RESET} {rtt} | "
+            f"{Colors.LIGHT_GRAY}RTT{Colors.RESET} {rtt} | "
             f"{Colors.LIGHT_GRAY}Size{Colors.RESET} {length}{Colors.GRAY}]{Colors.RESET}"
         )
