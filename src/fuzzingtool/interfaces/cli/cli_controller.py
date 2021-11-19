@@ -118,6 +118,8 @@ class CliController:
                 self.co.abort_box("Test aborted, stopping threads ...")
                 self.fuzzer.stop()
             self.co.abort_box("Test aborted by the user")
+        except FuzzingToolException as e:
+            self.co.error_box(str(e))
         finally:
             self.show_footer()
             self.co.info_box("Test completed")
