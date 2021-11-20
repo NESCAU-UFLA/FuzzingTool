@@ -175,30 +175,34 @@ class CliController:
 
     def print_configs(self, arguments: CliArguments) -> None:
         """Print the program configuration
-        
+
         @type arguments: CliArguments
         @param arguments: The command line interface arguments object
         """
+        if self.verbose[1]:
+            verbose = 'detailed'
+        elif self.verbose[0]:
+            verbose = 'common'
+        else:
+            verbose = 'quiet'
+        if arguments.lowercase:
+            case = 'lowercase'
+        elif arguments.uppercase:
+            case = 'uppercase'
+        elif arguments.capitalize:
+            case = 'capitalize'
+        else:
+            case = None
         self.co.print_configs(
             output='normal'
-                    if not arguments.simple_output
-                    else 'simple',
-            verbose='quiet'
-                    if not self.verbose[0]
-                    else 'common'
-                    if not self.verbose[1]
-                    else 'detailed',
+                   if not arguments.simple_output
+                   else 'simple',
+            verbose=verbose,
             targets=self.targets_list,
             dictionaries=self.dictionaries_metadata,
             prefix=arguments.prefix,
             suffix=arguments.suffix,
-            case='lowercase'
-                 if arguments.lowercase
-                 else 'uppercase'
-                 if arguments.uppercase
-                 else 'capitalize'
-                 if arguments.capitalize
-                 else None,
+            case=case,
             encoder=arguments.str_encoder,
             encode_only=arguments.encode_only,
             match={
@@ -353,19 +357,15 @@ class CliController:
         @type host: str
         @param host: The target hostname
         """
-        if self.requester.is_url_discovery():
+        if (self.requester.is_url_discovery() or
+                self.co.ask_yes_no('info',
+                                   ("Do you want to ignore errors on this "
+                                    "target, and save them into a log file?"))):
             self.ignore_errors = True
             log_path = self.logger.setup(host)
             self.co.info_box(f'The logs will be saved on \'{log_path}\'')
         else:
-            if self.co.ask_yes_no('info',
-                                  ("Do you want to ignore errors on this "
-                                   "target, and save them into a log file?")):
-                self.ignore_errors = True
-                log_path = self.logger.setup(host)
-                self.co.info_box(f'The logs will be saved on \'{log_path}\'')
-            else:
-                self.ignore_errors = False
+            self.ignore_errors = False
 
     def show_footer(self) -> None:
         """Show the footer content of the software, after maked the fuzzing.
@@ -379,19 +379,7 @@ class CliController:
             requester_index = 0
             for key, value in self.all_results.items():
                 if value:
-                    if self.is_verbose_mode():
-                        self.co.info_box(
-                            f"Found {len(value)} matched results on target {key}"
-                        )
-                        if not self.global_scanner:
-                            self.requester = self.requesters[requester_index]
-                            self.__get_default_scanner()
-                        for result in value:
-                            self.co.print_result(result, True)
-                        self.co.info_box(f'Saving results for {key} ...')
-                    report_path = self.report.open(key)
-                    self.report.write(value)
-                    self.co.info_box(f"Results saved on {report_path}")
+                    self.__handle_valid_results(key, value, requester_index)
                 else:
                     self.co.info_box(
                         f"No matched results was found on target {key}"
@@ -490,7 +478,7 @@ class CliController:
 
     def __get_target_fuzzing_type(self, requester: Requester) -> str:
         """Get the target fuzzing type, as a string format
-        
+
         @type requester: Requester
         @param requester: The actual iterated requester
         @return str: The fuzzing type, as a string
@@ -794,3 +782,30 @@ class CliController:
                     self.__get_data_comparator()
                 )
                 self.started_time += (time.time() - before)
+
+    def __handle_valid_results(self,
+                               host: str,
+                               results: list,
+                               requester_index: int) -> None:
+        """Handle the valid results from footer
+
+        @type host: str
+        @param host: The target host
+        @type results: list
+        @param results: The target results from the fuzzing
+        @type requester_index: int
+        @param requester_index: The requester of the target
+        """
+        if self.is_verbose_mode():
+            self.co.info_box(
+                f"Found {len(results)} matched results on target {host}"
+            )
+            if not self.global_scanner:
+                self.requester = self.requesters[requester_index]
+                self.__get_default_scanner()
+            for result in results:
+                self.co.print_result(result, True)
+            self.co.info_box(f'Saving results for {host} ...')
+        report_path = self.report.open(host)
+        self.report.write(results)
+        self.co.info_box(f"Results saved on {report_path}")

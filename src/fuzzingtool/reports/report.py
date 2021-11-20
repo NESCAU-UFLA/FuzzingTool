@@ -23,6 +23,7 @@ from typing import Dict, Type
 from . import reports
 from .base_report import BaseReport
 from ..utils.utils import stringfy_list
+from ..exceptions.main_exceptions import InvalidArgument
 
 
 class Report:
@@ -55,7 +56,7 @@ class Report:
         try:
             return available_reports[report_type](report_name)
         except KeyError:
-            raise Exception(
+            raise InvalidArgument(
                 f"Unsupported report format for {report_type}! Accepts: "
                 + stringfy_list(list(available_reports.keys()))
             )
