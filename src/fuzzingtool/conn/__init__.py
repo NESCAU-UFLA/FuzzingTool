@@ -18,5 +18,5 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from .requesters import *
-from .request_parser import *
+from .RequestParser import *
+from .requests import *
