@@ -18,10 +18,10 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from .Hex import Hex
-from .Base64 import Base64
-from .Html import Html
-from .HtmlDec import HtmlDec
-from .HtmlHex import HtmlHex
-from .Plain import Plain
-from .Url import Url
+from .base64 import Base64
+from .hex import Hex
+from .html import Html
+from .html_dec import HtmlDec
+from .html_hex import HtmlHex
+from .plain import Plain
+from .url import Url

@@ -18,6 +18,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from .BaseEncoder import BaseEncoder
-from .BaseScanner import BaseScanner
-from .BaseWordlist import BaseWordlist
+from .base_encoder import BaseEncoder
+from .base_scanner import BaseScanner
+from .base_wordlist import BaseWordlist
