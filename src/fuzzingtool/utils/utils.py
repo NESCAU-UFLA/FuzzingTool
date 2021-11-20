@@ -18,28 +18,26 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from typing import List, Tuple, Union
-
 from .consts import FUZZING_MARK
 
+from typing import List, Tuple, Union
 
-def get_indexes_to_parse(content: str,
-                         search_for: str = FUZZING_MARK) -> List[int]:
+def getIndexesToParse(content: str, searchFor: str = FUZZING_MARK) -> List[int]:
     """Gets the indexes of the searched substring into a string content
-
+    
     @type content: str
     @param content: The parameter content
-    @type search_for: str
-    @param search_for: The substring to be searched indexes
-                       on the given content
+    @type searchFor: str
+    @param searchFor: The substring to be searched indexes on the given content
     @returns List[int]: The positions indexes of the searched substring
     """
-    return [i for i, char in enumerate(content) if char == search_for]
+    return [i for i, char in enumerate(content) if char == searchFor]
 
-
-def split_str_to_list(string: str,
-                      separator: str = ',',
-                      ignores: str = '\\') -> List[str]:
+def splitStrToList(
+    string: str,
+    separator: str = ',',
+    ignores: str = '\\'
+) -> List[str]:
     """Split the given string into a list, using a separator
 
     @type string: str
@@ -64,28 +62,25 @@ def split_str_to_list(string: str,
         return string.split(separator)
     return []
 
-
-def stringfy_list(one_list: list) -> str:
+def stringfyList(oneList: list) -> str:
     """Stringfies a list
 
-    @type one_list: list
-    @param one_list: A list to be stringed
+    @type oneList: list
+    @param oneList: A list to be stringed
     @returns str: The stringed list
     """
     output = ''
-    for i in range(len(one_list)-1):
-        output += f"{one_list[i]},"
-    output += one_list[-1]
+    for i in range(len(oneList)-1):
+        output += f"{oneList[i]},"
+    output += oneList[-1]
     return output
 
-
-def get_human_length(length: int) -> Tuple[Union[int, float], str]:
+def getHumanLength(length: int) -> Tuple[Union[int, float], str]:
     """Get the human readable length from the result
 
     @type length: int
     @param length: The length of the response body
-    @returns Tuple[int|float, str]: The tuple with new length
-                                    and the readable order
+    @returns Tuple[int|float, str]: The tuple with new length and the readable order
     """
     for order in ["B ", "KB", "MB", "GB"]:
         if length < 1024:
@@ -93,91 +88,97 @@ def get_human_length(length: int) -> Tuple[Union[int, float], str]:
         length /= 1024
     return (length, "TB")
 
-
-def check_range_list(content: str) -> List[Union[int, str]]:
+def checkRangeList(content: str) -> List[Union[int, str]]:
     """Checks if the given content has a range list,
        and make a list of the range specified
-
+    
     @type content: str
     @param content: The string content to check for range
     @returns List[int|str]: The list with the compiled content
     """
-    if '\\-' in content:
-        content = content.replace('\\-', '-')
+    def getNumberRange(left: str, right: str) -> List[int]:
+        """Get the number range list
+        
+        @type left: str
+        @param left: The left string of the division mark
+        @type right: str
+        @param right: The right string of the division mark
+        @returns List[int]: The list with the range
+        """
+        isNumber = True
+        i = len(left)
+        while isNumber and i > 0:
+            try:
+                int(left[i-1])
+            except:
+                isNumber = False
+            else:
+                i -= 1
+        leftDigit, leftStr = int(left[i:]), left[:i]
+        isNumber = True
+        i = 0
+        while isNumber and i < (len(right)-1):
+            try:
+                int(right[i+1])
+            except Exception as e:
+                isNumber = False
+            else:
+                i += 1
+        rightDigit, rightStr = int(right[:(i+1)]), right[(i+1):]
+        compiledList = []
+        if leftDigit < rightDigit:
+            while leftDigit <= rightDigit:
+                compiledList.append(
+                    f"{leftStr}{str(leftDigit)}{rightStr}"
+                )
+                leftDigit += 1
+        else:
+            while rightDigit <= leftDigit:
+                compiledList.append(
+                    f"{leftStr}{str(leftDigit)}{rightStr}"
+                )
+                leftDigit -= 1
+        return compiledList
+
+    def getLetterRange(left: str, right: str) -> List[str]:
+        """Get the alphabet range list [a-z] [A-Z] [z-a] [Z-A]
+        
+        @type left: str
+        @param left: The left string of the division mark
+        @type right: str
+        @param right: The right string of the division mark
+        @returns List[str]: The list with the range
+        """
+        leftDigit, leftStr = left[-1], left[:-1]
+        rightDigit, rightStr = right[0], right[1:]
+        compiledList = []
+        if ord(leftDigit) <= ord(rightDigit):
+            orderLeftDigit = ord(leftDigit)
+            orderRightDigit = ord(rightDigit)
+            while orderLeftDigit <= orderRightDigit:
+                compiledList.append(
+                    f"{leftStr}{chr(orderLeftDigit)}{rightStr}"
+                )
+                orderLeftDigit += 1
+        else:
+            orderLeftDigit = ord(leftDigit)
+            orderRightDigit = ord(rightDigit)
+            while orderLeftDigit >= orderRightDigit:
+                compiledList.append(
+                    f"{leftStr}{chr(orderLeftDigit)}{rightStr}"
+                )
+                orderLeftDigit -= 1
+        return compiledList
+
+    if '\-' in content:
+        content = content.replace('\-', '-')
     elif '-' in content:
         left, right = content.split('-', 1)
         try:
             # Checks if the left and right digits from the mark are integers
             int(left[-1])
             int(right[0])
-        except ValueError:
-            return _get_letter_range(left, right)
-        else:
-            return _get_number_range(left, right)
+            return getNumberRange(left, right)
+        except:
+            return getLetterRange(left, right)
     return [content]
-
-
-def _get_letter_range(left: str, right: str) -> List[str]:
-    """Get the alphabet range list [a-z] [A-Z] [z-a] [Z-A]
-
-    @type left: str
-    @param left: The left string of the division mark
-    @type right: str
-    @param right: The right string of the division mark
-    @returns List[str]: The list with the range
-    """
-    left_digit, left_str = left[-1], left[:-1]
-    right_digit, right_str = right[0], right[1:]
-    compiled_list = []
-    order_left_digit = ord(left_digit)
-    order_right_digit = ord(right_digit)
-    if order_left_digit <= order_right_digit:
-        range_list = range(order_left_digit, order_right_digit+1)
-    else:
-        range_list = range(order_left_digit, order_right_digit-1, -1)
-    for c in range_list:
-        compiled_list.append(
-            f"{left_str}{chr(c)}{right_str}"
-        )
-    return compiled_list
-
-
-def _get_number_range(left: str, right: str) -> List[int]:
-    """Get the number range list
-
-    @type left: str
-    @param left: The left string of the division mark
-    @type right: str
-    @param right: The right string of the division mark
-    @returns List[int]: The list with the range
-    """
-    is_number = True
-    i = len(left)
-    while is_number and i > 0:
-        try:
-            int(left[i-1])
-        except ValueError:
-            is_number = False
-        else:
-            i -= 1
-    left_digit, left_str = int(left[i:]), left[:i]
-    is_number = True
-    i = 0
-    while is_number and i < (len(right)-1):
-        try:
-            int(right[i+1])
-        except ValueError:
-            is_number = False
-        else:
-            i += 1
-    right_digit, right_str = int(right[:(i+1)]), right[(i+1):]
-    compiled_list = []
-    if left_digit < right_digit:
-        range_list = range(left_digit, right_digit+1)
-    else:
-        range_list = range(left_digit, right_digit-1, -1)
-    for d in range_list:
-        compiled_list.append(
-            f"{left_str}{str(d)}{right_str}"
-        )
-    return compiled_list

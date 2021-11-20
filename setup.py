@@ -1,18 +1,20 @@
-import os
-from setuptools import setup, find_packages
-
 from src.fuzzingtool import version
 
+import os
+import sys
+from setuptools import setup, find_packages
 
 def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
-
 
 install_requires = [
     'requests>=2.25.1',
     'beautifulsoup4>=4.9.3',
     'dnspython>=2.1.0',
 ]
+
+if sys.platform.startswith("win"):
+    install_requires.append("colorama>=0.4.0")
 
 setup(
     name="FuzzingTool",
@@ -29,7 +31,7 @@ setup(
     package_dir={'fuzzingtool': 'src/fuzzingtool'},
     entry_points={
         'console_scripts': [
-            'FuzzingTool = fuzzingtool.fuzzingtool:main_cli'
+            'FuzzingTool = fuzzingtool.FuzzingTool:main_cli'
         ]
     },
     install_requires=install_requires,

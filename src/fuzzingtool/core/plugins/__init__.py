@@ -18,7 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from .plugin import Plugin
+from .Plugin import Plugin
 from .encoders import *
 from .scanners import *
 from .wordlists import *

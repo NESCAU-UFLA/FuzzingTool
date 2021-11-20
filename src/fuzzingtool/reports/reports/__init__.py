@@ -18,6 +18,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from .csv_report import CsvReport
-from .json_report import JsonReport
-from .txt_report import TxtReport
+from .CsvReport import CsvReport
+from .JsonReport import JsonReport
+from .TxtReport import TxtReport

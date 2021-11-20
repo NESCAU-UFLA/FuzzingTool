@@ -18,5 +18,5 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from .file_wordlist import FileWordlist
-from .list_wordlist import ListWordlist
+from .FileWordlist import FileWordlist
+from .ListWordlist import ListWordlist

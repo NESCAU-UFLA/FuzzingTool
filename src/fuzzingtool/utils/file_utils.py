@@ -18,20 +18,55 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+from os import walk
+from os.path import dirname, abspath
+
 from typing import List
 
-
-def read_file(file_name: str) -> List[str]:
+def readFile(fileName: str) -> List[str]:
     """Reads content of a file.
 
-    @type file_name: str
-    @param file_name: The file path and name
+    @type fileName: str
+    @param fileName: The file path and name
     @returns List[str]: The content into the file
     """
     try:
-        with open(f'{file_name}', 'r') as this_file:
-            return [line.rstrip('\n')
-                    for line in this_file
-                    if not line.startswith('#!')]
+        with open(f'{fileName}', 'r') as thisFile:
+            return [line.rstrip('\n') for line in thisFile if not line.startswith('#!')]
     except FileNotFoundError:
-        raise FileNotFoundError(f"File '{file_name}' not found")
+        raise Exception(f"File '{fileName}' not found")
+
+def splitFilenames(files: list) -> List[str]:
+    """Splits the files, removing the extension and __init__.py
+
+    @type files: list
+    @param files: The filenames to split
+    @returns List[str]: The splited content, without extension
+    """
+    if '__init__.py' in files:
+        files.remove('__init__.py')
+    return [file.split('.')[0] for file in files]
+
+def getPluginNamesFromCategory(category: str) -> List[str]:
+    """Gets the plugin filenames
+
+    @type category: str
+    @param category: The category of the plugins
+    @returns List[str]: The list with the plugin filenames
+    """
+    try:
+        _, _, pluginFiles = next(walk(f"./fuzzingtool/core/plugins/{category}/"))
+    except:
+        _, _, pluginFiles = next(walk(f"{dirname(dirname(abspath(__file__)))}/core/plugins/{category}/"))
+    return splitFilenames(pluginFiles)
+
+def getReports() -> List[str]:
+    """Gets the report filenames
+    
+    @returns List[str]: The list with the report filenames
+    """
+    try:
+        _, _, reportFiles = next(walk(f"./fuzzingtool/reports/reports/"))
+    except:
+        _, _, reportFiles = next(walk(f"{dirname(dirname(abspath(__file__)))}/reports/reports/"))
+    return splitFilenames(reportFiles)
