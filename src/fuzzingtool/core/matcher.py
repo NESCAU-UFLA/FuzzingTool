@@ -269,8 +269,8 @@ class Matcher:
         pass
 
     def __get_comparator_and_callback(self,
-                                    comparator: str,
-                                    key: str) -> Tuple[str, Callable]:
+                                      comparator: str,
+                                      key: str) -> Tuple[str, Callable]:
         """Gets the comparator and callback
 
         @type comparator: str

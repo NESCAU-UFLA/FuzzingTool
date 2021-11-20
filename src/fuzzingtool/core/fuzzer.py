@@ -197,7 +197,7 @@ class Fuzzer:
                         payload: str,
                         *args):
         """Threats the result
-        
+
         @type response: Response
         @param response: The response object from the request
         @type rtt: float
