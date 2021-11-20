@@ -18,17 +18,66 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from ..utils.consts import FUZZING_MARK
+from ..utils.consts import FUZZING_MARK, FUZZING_MARK_LEN
 
 
-def check_for_subdomain_fuzz(url: str) -> bool:
+def check_is_subdomain_fuzzing(url: str) -> bool:
     """Checks if the fuzzing tests will occur on subdomain
 
     @type url: str
     @param url: The target URL
     @returns bool: The subdomain fuzzing flag
     """
-    if ('.' in url and FUZZING_MARK in url) and url.index(FUZZING_MARK) < url.index('.'):
+    return (('.' in url and FUZZING_MARK in url)
+            and url.index(FUZZING_MARK) < url.index('.'))
+
+
+def check_is_method_fuzzing(method: dict) -> bool:
+    """Checks if the fuzzing type is MethodFuzzing
+
+    @type url: dict
+    @param url: The target URL dict
+    @returns bool: The method fuzzing flag
+    """
+    return False if not method['fuzzingIndexes'] else True
+
+
+def check_is_url_fuzzing(url: dict) -> bool:
+    """Checks if the fuzzing type is UrlFuzzing
+
+    @type url: dict
+    @param url: The target URL dict
+    @returns bool: The url fuzzing flag
+    """
+    return False if not url['fuzzingIndexes'] else True
+
+
+def check_is_url_discovery(url: dict) -> bool:
+    """Checks if the fuzzing type is UrlFuzzing for discovery
+
+    @type url: dict
+    @param url: The target URL dict
+    @returns bool: The url discovery fuzzing flag
+    """
+    return (check_is_url_fuzzing(url) and '?' not in url['content'])
+
+
+def check_is_data_fuzzing(data: dict, header: dict) -> bool:
+    """Checks if the fuzzing type is DataFuzzing
+
+    @type data: dict
+    @param data: The target data
+    @type header: dict
+    @param header: The target HTTP header
+    @returns bool: The data fuzzing flag
+    """
+    for _, value in data['PARAM'].items():
+        if not value:
+            return True
+    for _, value in data['BODY'].items():
+        if not value:
+            return True
+    if header['payloadKeys']:
         return True
     return False
 
@@ -99,7 +148,7 @@ class RequestParser:
         ajusted_content = content['content']
         for i in content['fuzzingIndexes']:
             head = ajusted_content[:i]
-            tail = ajusted_content[(i+1):]
+            tail = ajusted_content[(i+FUZZING_MARK_LEN):]
             ajusted_content = head + self.__payload + tail
         return ajusted_content
 

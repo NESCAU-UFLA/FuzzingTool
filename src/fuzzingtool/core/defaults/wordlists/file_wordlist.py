@@ -22,6 +22,7 @@ from typing import List
 
 from ...bases.base_wordlist import BaseWordlist
 from ....utils.file_utils import read_file
+from ....exceptions.main_exceptions import BuildWordlistFails
 
 
 class FileWordlist(BaseWordlist):
@@ -33,6 +34,6 @@ class FileWordlist(BaseWordlist):
 
     def _build(self) -> List[str]:
         try:
-            return set(read_file(self.file_path))
-        except Exception as e:
-            raise e
+            return list(set(read_file(self.file_path)))
+        except FileNotFoundError as e:
+            raise BuildWordlistFails(str(e))

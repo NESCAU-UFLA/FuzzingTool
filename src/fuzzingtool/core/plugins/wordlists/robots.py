@@ -18,15 +18,15 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+from typing import List
+
 from ..plugin import Plugin
 from ...bases.base_wordlist import BaseWordlist
 from ....utils.http_utils import get_path
-from ....conn.requesters.request import Request
+from ....conn.requesters.requester import Requester
 from ....decorators.plugin_meta import plugin_meta
 from ....exceptions.request_exceptions import RequestException
-from ....exceptions.main_exceptions import MissingParameter
-
-from typing import List
+from ....exceptions.main_exceptions import MissingParameter, BuildWordlistFails
 
 ROBOTS_HTTP_HEADER = {
     'User-Agent': "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:87.0) Gecko/20100101 Firefox/87.0",
@@ -55,15 +55,16 @@ class Robots(BaseWordlist, Plugin):
 
     def _build(self) -> List[str]:
         global ROBOTS_HTTP_HEADER
-        requester = Request(
+        requester = Requester(
             url=f"{self.url}robots.txt",
             method='GET',
             headers=ROBOTS_HTTP_HEADER,
+            timeout=5,
         )
         try:
             response, *_ = requester.request()
         except RequestException as e:
-            raise Exception(str(e))
+            raise BuildWordlistFails(str(e))
         paths = []
         for line in response.text.split('\n'):
             if (line and not line.startswith('#') and (

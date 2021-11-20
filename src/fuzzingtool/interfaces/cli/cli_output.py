@@ -56,14 +56,14 @@ def fix_payload_to_output(payload: str,
 
 
 def get_formated_result(payload: str,
-                        RTT: float,
+                        rtt: float,
                         length: int) -> Tuple[str, str, str]:
     """Format the result into a dict of strings
 
     @type payload: str
     @param payload: The payload used in the request
-    @type RTT: float
-    @param RTT: The request and response elapsed time
+    @type rtt: float
+    @param rtt: The request and response elapsed time
     @type length: int
     @param length: The response body length in bytes
     @returns tuple[str, str, str]: The result formated with strings
@@ -74,7 +74,7 @@ def get_formated_result(payload: str,
     length = '{:>7}'.format(length)
     return (
         '{:<30}'.format(fix_payload_to_output(payload)),
-        '{:>10}'.format(RTT),
+        '{:>10}'.format(rtt),
         f"{length} {order}",
     )
 

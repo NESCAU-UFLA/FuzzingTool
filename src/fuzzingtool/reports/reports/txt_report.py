@@ -33,6 +33,7 @@ class TxtReport(BaseReport):
     file_extension = 'txt'
 
     def _header(self) -> None:
+        """Do not write any header"""
         pass
 
     def _results(self, results: List[Result]) -> None:
@@ -42,4 +43,5 @@ class TxtReport(BaseReport):
             self._file.write('\n')
 
     def _footer(self) -> None:
+        """Do not write any footer"""
         pass

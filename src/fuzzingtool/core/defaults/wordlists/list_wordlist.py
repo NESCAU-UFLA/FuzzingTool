@@ -22,7 +22,6 @@ from typing import List
 
 from ...bases.base_wordlist import BaseWordlist
 from ....utils.utils import split_str_to_list, check_range_list
-from ....exceptions.main_exceptions import MissingParameter
 
 
 class ListWordlist(BaseWordlist):
@@ -30,8 +29,6 @@ class ListWordlist(BaseWordlist):
 
     def __init__(self, payload_list: str):
         payload_list = payload_list[1:-1]
-        if not payload_list:
-            raise MissingParameter("list of payloads")
         self.payload_list = payload_list
         super().__init__()
 

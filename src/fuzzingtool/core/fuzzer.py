@@ -22,12 +22,14 @@ from threading import Thread, Event
 import time
 from typing import Callable, List
 
+from requests.models import Response
+
 from .blacklist_status import BlacklistStatus
 from .dictionary import Dictionary
 from .matcher import Matcher
 from .result import Result
 from .bases.base_scanner import BaseScanner
-from ..conn.requesters import Request
+from ..conn.requesters import Requester
 from ..exceptions.request_exceptions import RequestException, InvalidHostname
 
 
@@ -46,7 +48,7 @@ class Fuzzer:
         start_index: The actual request index
     """
     def __init__(self,
-                 requester: Request,
+                 requester: Requester,
                  dictionary: Dictionary,
                  matcher: Matcher,
                  scanner: BaseScanner,
@@ -58,7 +60,7 @@ class Fuzzer:
                  exception_callbacks: List[Callable[[str, str], None]]):
         """Class constructor
 
-        @type requester: requester
+        @type requester: Requester
         @param requester: The requester object to deal with the requests
         @type dict: Dictionary
         @param dict: The dicttionary object to deal with the payload dictionary
@@ -134,26 +136,15 @@ class Fuzzer:
     def run(self) -> None:
         """Run the threads"""
         while not self.__dict.is_empty():
-            payloads = next(self.__dict)
-            for payload in payloads:
+            for payload in next(self.__dict):
                 try:
-                    response, RTT, *args = self.__requester.request(payload)
+                    response, rtt, *args = self.__requester.request(payload)
                 except InvalidHostname as e:
                     self.exception_callbacks[0](e, payload)
                 except RequestException as e:
                     self.exception_callbacks[1](e, payload)
                 else:
-                    if (self.__blacklist_status and
-                            response.status_code in self.__blacklist_status.codes):
-                        self.__blacklist_status.action_callback(response.status_code)
-                    result = Result(response, RTT, self.index, payload)
-                    self.__scanner.inspect_result(result, *args)
-                    self.result_callback(
-                        result,
-                        (self.__scanner.scan(result)
-                         if self.__matcher.match(result)
-                         else False)
-                    )
+                    self.__threat_result(response, rtt, payload, *args)
                 finally:
                     self.index += 1
                     time.sleep(self.__delay)
@@ -196,5 +187,32 @@ class Fuzzer:
 
     def wait_until_pause(self) -> None:
         while self.__paused_threads < (self.__running_threads-1):
+            """Do nothing until all threads are paused"""
             pass
         time.sleep(0.1)
+
+    def __threat_result(self,
+                        response: Response,
+                        rtt: float,
+                        payload: str,
+                        *args):
+        """Threats the result
+
+        @type response: Response
+        @param response: The response object from the request
+        @type rtt: float
+        @param rtt: The elapsed time between request and response
+        @type payload: str
+        @param payload: The payload used in the request
+        """
+        if (self.__blacklist_status and
+                response.status_code in self.__blacklist_status.codes):
+            self.__blacklist_status.action_callback(response.status_code)
+        result = Result(response, rtt, self.index, payload)
+        self.__scanner.inspect_result(result, *args)
+        self.result_callback(
+            result,
+            (self.__scanner.scan(result)
+             if self.__matcher.match(result)
+             else False)
+        )

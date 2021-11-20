@@ -31,7 +31,7 @@ class BaseRequestFactory(ABC):
         @param request_type: The request type
         @type url: str
         @param url: The target URL
-        @returns Request: A request object
+        @returns Requester: A request object
         """
         pass
 
@@ -81,14 +81,14 @@ class BaseWordlistFactory(ABC):
     @staticmethod
     @abstractmethod
     def creator(name: str, params: str, requester):
-        """Build the wordlists
+        """Generates the wordlist
 
         @type name: str
         @param name: The wordlist name
         @type params: str
         @param params: The wordlist parameters
-        @type requester: Request
+        @type requester: Requester
         @param requester: The requester for the given wordlist
-        @returns List[str]: The wordlist list
+        @returns BaseWordlist: The asked wordlist
         """
         pass

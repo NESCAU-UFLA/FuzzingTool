@@ -57,13 +57,13 @@ class PathScanner(BaseScanner):
         redirected = result.custom['redirected']
         if redirected:
             redirected = f" {Colors.LIGHT_YELLOW}Redirected to {redirected}{Colors.RESET}"
-        path, RTT, length = get_formated_result(
-            get_path(result.url), result.RTT, result.length
+        path, rtt, length = get_formated_result(
+            get_path(result.url), result.rtt, result.length
         )
         return (
             f"{path} {Colors.GRAY}["
             f"{Colors.LIGHT_GRAY}Code{Colors.RESET} {status_color}{status}{Colors.RESET} | "
-            f"{Colors.LIGHT_GRAY}RTT{Colors.RESET} {RTT} | "
+            f"{Colors.LIGHT_GRAY}RTT{Colors.RESET} {rtt} | "
             f"{Colors.LIGHT_GRAY}Size{Colors.RESET} {length}{Colors.GRAY}]{Colors.RESET}"
             f"{redirected}"
         )

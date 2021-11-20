@@ -18,16 +18,5 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from importlib import import_module
-
-from .base_factories import BaseRequestFactory
-from ..conn.requesters import Request
-
-
-class RequestFactory(BaseRequestFactory):
-    def creator(request_type, url, **kwargs) -> Request:
-        Request = import_module(
-            f"fuzzingtool.conn.requesters",
-            package=request_type
-        )
-        return getattr(Request, request_type)(url, **kwargs)
+class FuzzingToolException(Exception):
+    pass

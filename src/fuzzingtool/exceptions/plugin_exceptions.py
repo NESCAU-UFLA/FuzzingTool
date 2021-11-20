@@ -18,34 +18,16 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-import csv
-from typing import List
-
-from ..base_report import BaseReport
-from ...core.result import Result
-from ...decorators.report_meta import report_meta
+from .base_exceptions import FuzzingToolException
 
 
-@report_meta
-class CsvReport(BaseReport):
-    __author__ = ("Vitor Oriel",)
-    __version__ = "0.1"
+class InvalidPluginCategory(FuzzingToolException):
+    pass
 
-    file_extension = 'csv'
 
-    def _header(self) -> None:
-        """Do not write any header"""
-        pass
+class InvalidPlugin(FuzzingToolException):
+    pass
 
-    def _results(self, results: List[Result]) -> None:
-        writer = csv.DictWriter(
-            self._file,
-            fieldnames=[key for key in dict(results[0]).keys()]
-        )
-        writer.writeheader()
-        for content in results:
-            writer.writerow(dict(content))
 
-    def _footer(self) -> None:
-        """Do not write any footer"""
-        pass
+class PluginCreationError(FuzzingToolException):
+    pass

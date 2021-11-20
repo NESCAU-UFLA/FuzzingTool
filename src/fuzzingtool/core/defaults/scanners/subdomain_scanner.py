@@ -29,20 +29,21 @@ class SubdomainScanner(BaseScanner):
 
     @append_args
     def inspect_result(self, result: Result) -> None:
+        """The decorator append_args will deal with the IP custom result attribute."""
         pass
 
     def scan(self, result: Result) -> bool:
         return True
 
     def cli_callback(self, result: Result) -> str:
-        url, RTT, length = get_formated_result(
-            result.url, result.RTT, result.length
+        url, rtt, length = get_formated_result(
+            result.url, result.rtt, result.length
         )
         ip = '{:>15}'.format(result.custom['ip'])
         return (
             f"{url} {Colors.GRAY}["
             f'{Colors.LIGHT_GRAY}IP{Colors.RESET} {ip}'" | "
             f"{Colors.LIGHT_GRAY}Code{Colors.RESET} {result.status} | "
-            f"{Colors.LIGHT_GRAY}RTT{Colors.RESET} {RTT} | "
+            f"{Colors.LIGHT_GRAY}RTT{Colors.RESET} {rtt} | "
             f"{Colors.LIGHT_GRAY}Size{Colors.RESET} {length}{Colors.GRAY}]{Colors.RESET}"
         )

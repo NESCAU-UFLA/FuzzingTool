@@ -26,15 +26,17 @@ from typing import List, Dict, Tuple
 import requests
 import urllib3.exceptions
 
-from ..request_parser import request_parser
-from ...utils.consts import (FUZZING_MARK, UNKNOWN_FUZZING, HTTP_METHOD_FUZZING,
+from ..request_parser import (check_is_method_fuzzing, check_is_url_discovery,
+                              check_is_data_fuzzing, request_parser)
+from ...utils.consts import (FUZZING_MARK, FUZZING_MARK_LEN,
+                             UNKNOWN_FUZZING, HTTP_METHOD_FUZZING,
                              PATH_FUZZING, SUBDOMAIN_FUZZING, DATA_FUZZING)
 from ...utils.http_utils import get_pure_url, get_host, get_url_without_scheme
 from ...utils.utils import get_indexes_to_parse
 from ...exceptions.request_exceptions import RequestException
 
 
-class Request:
+class Requester:
     """Class that handle with the requests
 
     Attributes:
@@ -52,12 +54,12 @@ class Request:
     def __init__(self,
                  url: str,
                  method: str = 'GET',
-                 methods: List[str] = [],
+                 methods: List[str] = None,
                  body: str = '',
-                 headers: Dict[str, str] = {},
+                 headers: Dict[str, str] = None,
                  follow_redirects: bool = True,
                  proxy: str = '',
-                 proxies: List[str] = [],
+                 proxies: List[str] = None,
                  timeout: int = 0,
                  cookie: str = '',
                  is_session: bool = False):
@@ -91,20 +93,22 @@ class Request:
         self.__data = self.__setup_data(body)
         self.__header = self.__setup_header(headers)
         self.__proxy = self.__setup_proxy(proxy) if proxy else {}
-        self.__proxies = [self.__setup_proxy(proxy) for proxy in proxies]
+        self.__proxies = ([self.__setup_proxy(proxy) for proxy in proxies]
+                          if proxies else [])
         self.__follow_redirects = follow_redirects
         self.__fuzzing_type = self._set_fuzzing_type()
-        self.__timeout = (None
-                          if not self.is_url_discovery()
-                          else 10
-                          if not timeout
-                          else timeout)
+        if not timeout:
+            if self.is_url_discovery():
+                timeout = 10
+            else:
+                timeout = None
+        self.__timeout = timeout
         if is_session or self.is_path_fuzzing():
             self.__session = requests.Session()
             self.__request = self.__session_request
         else:
             self.__request = self.__common_request
-        self.methods = methods
+        self.methods = methods if methods else []
         if cookie:
             self.set_header_content('Cookie', cookie)
         self._lock = Lock()
@@ -239,7 +243,7 @@ class Request:
         try:
             before = time.time()
             response = self.__request(method, url, headers, data)
-            RTT = (time.time() - before)
+            rtt = (time.time() - before)
         except requests.exceptions.ProxyError:
             raise RequestException("Can't connect to the proxy")
         except requests.exceptions.TooManyRedirects:
@@ -265,54 +269,18 @@ class Request:
         except ValueError as e:
             raise RequestException(str(e))
         else:
-            return (response, RTT)
+            return (response, rtt)
 
     def _set_fuzzing_type(self) -> int:
         """Sets the fuzzing type
 
         @returns int: The fuzzing type int value
         """
-        def _is_method_fuzzing() -> bool:
-            """Checks if the fuzzing type is MethodFuzzing
-
-            @returns bool: The fuzzing flag
-            """
-            return False if not self.__method['fuzzingIndexes'] else True
-
-        def _is_url_fuzzing() -> bool:
-            """Checks if the fuzzing type is UrlFuzzing
-
-            @returns bool: The fuzzing flag
-            """
-            return False if not self._url['fuzzingIndexes'] else True
-
-        def _is_url_discovery() -> bool:
-            """Checks if the fuzzing type is UrlFuzzing for discovery
-
-            @returns bool: The fuzzing flag
-            """
-            return (_is_url_fuzzing() and '?' not in self._url['content'])
-
-        def _is_data_fuzzing() -> bool:
-            """Checks if the fuzzing type is DataFuzzing
-
-            @returns bool: The fuzzing flag
-            """
-            for _, value in self.__data['PARAM'].items():
-                if not value:
-                    return True
-            for _, value in self.__data['BODY'].items():
-                if not value:
-                    return True
-            if self.__header['payloadKeys']:
-                return True
-            return False
-
-        if _is_method_fuzzing():
+        if check_is_method_fuzzing(self.__method):
             return HTTP_METHOD_FUZZING
-        if _is_url_discovery():
+        if check_is_url_discovery(self._url):
             return PATH_FUZZING
-        if _is_data_fuzzing():
+        if check_is_data_fuzzing(self.__data, self.__header):
             return DATA_FUZZING
         return UNKNOWN_FUZZING
 
@@ -353,6 +321,7 @@ class Request:
         @param header: The HTTP header dictionary
         @returns dict: The HTTP header dictionary
         """
+        header = header if header else {}
         header = {
             'content': {**header},
             'payloadKeys': [],
@@ -378,7 +347,7 @@ class Request:
         last_index = 0
         for i in get_indexes_to_parse(value):
             header_value.append(value[last_index:i])
-            last_index = i+1
+            last_index = i+FUZZING_MARK_LEN
         if last_index == len(value):
             header_value.append('')
         else:

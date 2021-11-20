@@ -18,5 +18,5 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from .request import Request
-from .subdomain_request import SubdomainRequest
+from .requester import Requester
+from .subdomain_requester import SubdomainRequester

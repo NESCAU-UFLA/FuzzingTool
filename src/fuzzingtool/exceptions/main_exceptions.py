@@ -18,17 +18,40 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-class SkipTargetException(Exception):
+from .base_exceptions import FuzzingToolException
+
+
+class ControllerException(FuzzingToolException):
     pass
 
 
-class InvalidPluginName(Exception):
+class SkipTargetException(FuzzingToolException):
     pass
 
 
-class MissingParameter(Exception):
+class MissingParameter(FuzzingToolException):
     pass
 
 
-class BadArgumentFormat(Exception):
+class BadArgumentFormat(FuzzingToolException):
+    pass
+
+
+class BadArgumentType(FuzzingToolException):
+    pass
+
+
+class InvalidArgument(FuzzingToolException):
+    pass
+
+
+class BuildWordlistFails(FuzzingToolException):
+    pass
+
+
+class WordlistCreationError(FuzzingToolException):
+    pass
+
+
+class MetadataException(FuzzingToolException):
     pass

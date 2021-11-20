@@ -18,34 +18,17 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-import csv
-from typing import List
+from importlib import import_module
 
-from ..base_report import BaseReport
-from ...core.result import Result
-from ...decorators.report_meta import report_meta
+from .base_factories import BaseRequestFactory
+from ..conn.requesters import Requester
 
 
-@report_meta
-class CsvReport(BaseReport):
-    __author__ = ("Vitor Oriel",)
-    __version__ = "0.1"
-
-    file_extension = 'csv'
-
-    def _header(self) -> None:
-        """Do not write any header"""
-        pass
-
-    def _results(self, results: List[Result]) -> None:
-        writer = csv.DictWriter(
-            self._file,
-            fieldnames=[key for key in dict(results[0]).keys()]
+class RequesterFactory(BaseRequestFactory):
+    @staticmethod
+    def creator(request_type, url, **kwargs) -> Requester:
+        requester_cls = import_module(
+            "fuzzingtool.conn.requesters",
+            package=request_type
         )
-        writer.writeheader()
-        for content in results:
-            writer.writerow(dict(content))
-
-    def _footer(self) -> None:
-        """Do not write any footer"""
-        pass
+        return getattr(requester_cls, request_type)(url, **kwargs)

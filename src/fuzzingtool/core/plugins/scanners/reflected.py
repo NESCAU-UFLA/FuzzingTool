@@ -51,13 +51,13 @@ class Reflected(BaseScanner, Plugin):
                 reflected = f"{Colors.GREEN}{Colors.BOLD}YES"
             else:
                 reflected = f"{Colors.LIGHT_RED}{Colors.BOLD}NO "
-        payload, RTT, length = get_formated_result(
-            result.payload, result.RTT, result.length
+        payload, rtt, length = get_formated_result(
+            result.payload, result.rtt, result.length
         )
         return (
             f"{payload} {Colors.GRAY}["
             f"{Colors.LIGHT_GRAY}Reflected{Colors.RESET} {reflected}{Colors.RESET} | "
             f"{Colors.LIGHT_GRAY}Code{Colors.RESET} {result.status} | "
-            f"{Colors.LIGHT_GRAY}RTT{Colors.RESET} {RTT} | "
+            f"{Colors.LIGHT_GRAY}RTT{Colors.RESET} {rtt} | "
             f"{Colors.LIGHT_GRAY}Size{Colors.RESET} {length}{Colors.GRAY}]{Colors.RESET}"
         )

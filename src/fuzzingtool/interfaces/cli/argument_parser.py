@@ -44,6 +44,7 @@ class ArgumentParser(argparse.ArgumentParser):
                        f"to show the help menu.\n\n{usage}\n\n{examples}")
         if len(argv) == 2 and ('-h=' in argv[1] or '--help=' in argv[1]):
             asked_help = argv[1].split('=')[1]
+            self.EXAMPLE_TEXT = "Examples:\n"
             if 'wordlists' == asked_help:
                 self._show_wordlists_help()
             elif 'encoders' == asked_help:
@@ -81,7 +82,7 @@ class ArgumentParser(argparse.ArgumentParser):
         CO.help_content(5, "[PAYLOAD1,PAYLOAD2,]", "Set the payloads list to be used as wordlist")
         CO.help_title(2, "Plugins:\n")
         self.__show_plugins_help_from_category('wordlists')
-        CO.help_title(0, "Examples:\n")
+        CO.help_title(0, self.EXAMPLE_TEXT)
         CO.print(f"FuzzingTool -u https://{FUZZING_MARK}.domainexample.com/ "
                  "-w /path/to/wordlist/subdomains.txt -t 30 --timeout 5 -V2\n")
         CO.print(f"FuzzingTool -u https://{FUZZING_MARK}.domainexample1.com/ "
@@ -107,7 +108,7 @@ class ArgumentParser(argparse.ArgumentParser):
         CO.help_title(0, "Encoder options: (-e)")
         CO.help_title(2, "Set the encoder used on the payloads\n")
         self.__show_plugins_help_from_category('encoders')
-        CO.help_title(0, "Examples:\n")
+        CO.help_title(0, self.EXAMPLE_TEXT)
         CO.print("FuzzingTool -u https://domainexample.com/page.php?id= "
                  "-w /path/to/wordlist/sqli.txt -e Url=2 -t 30 --scanner Find=SQL\n")
         exit(0)
@@ -122,7 +123,7 @@ class ArgumentParser(argparse.ArgumentParser):
         CO.help_content(5, "SubdomainScanner", "Scanner for the subdomain fuzzing")
         CO.help_title(2, "Plugins (--scaner SCANNER):\n")
         self.__show_plugins_help_from_category('scanners')
-        CO.help_title(0, "Examples:\n")
+        CO.help_title(0, self.EXAMPLE_TEXT)
         CO.print("FuzzingTool -u https://domainexample.com/search.php?query= "
                  "-w /path/to/wordlist/xss.txt --scanner Reflected -t 30 -o csv\n")
         exit(0)
@@ -133,22 +134,22 @@ class ArgumentParser(argparse.ArgumentParser):
         @type category: str
         @param category: The package category to search for his plugins
         """
-        for Plugin in PluginFactory.get_plugins_from_category(category):
-            if not Plugin.__type__:
+        for plugin_cls in PluginFactory.get_plugins_from_category(category):
+            if not plugin_cls.__type__:
                 type_fuzzing = ''
             else:
-                type_fuzzing = f" (Used for {Plugin.__type__})"
-            if not Plugin.__params__:
+                type_fuzzing = f" (Used for {plugin_cls.__type__})"
+            if not plugin_cls.__params__:
                 params = ''
             else:
-                if Plugin.__params__['type'] is list:
-                    metavar = Plugin.__params__['metavar']
-                    separator = Plugin.__params__['cli_list_separator']
+                if plugin_cls.__params__['type'] is list:
+                    metavar = plugin_cls.__params__['metavar']
+                    separator = plugin_cls.__params__['cli_list_separator']
                     params = f"={metavar}[{separator}{metavar}]*"
                 else:
-                    params = f"={Plugin.__params__['metavar']}"
-            CO.help_content(5, f"{Plugin.__name__}{params}",
-                            f"{Plugin.__desc__}{type_fuzzing}\n")
+                    params = f"={plugin_cls.__params__['metavar']}"
+            CO.help_content(5, f"{plugin_cls.__name__}{params}",
+                            f"{plugin_cls.__desc__}{type_fuzzing}\n")
 
     def __build_options(self) -> None:
         """Builds the FuzzingTool options"""

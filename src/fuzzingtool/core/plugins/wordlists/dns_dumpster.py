@@ -25,10 +25,10 @@ from bs4 import BeautifulSoup as bs
 
 from ..plugin import Plugin
 from ...bases.base_wordlist import BaseWordlist
-from ....conn.requesters.request import Request
+from ....conn.requesters.requester import Requester
 from ....exceptions.request_exceptions import RequestException
 from ....decorators.plugin_meta import plugin_meta
-from ....exceptions.main_exceptions import MissingParameter
+from ....exceptions.main_exceptions import MissingParameter, BuildWordlistFails
 
 DNSDUMPSTER_HTTP_HEADER = {
     'Host': "dnsdumpster.com",
@@ -61,7 +61,7 @@ class DnsDumpster(BaseWordlist, Plugin):
 
     def _build(self) -> List[str]:
         global DNSDUMPSTER_HTTP_HEADER
-        requester = Request(
+        requester = Requester(
             url="https://dnsdumpster.com/",
             method='GET',
             headers=DNSDUMPSTER_HTTP_HEADER,
@@ -70,7 +70,7 @@ class DnsDumpster(BaseWordlist, Plugin):
         try:
             response, *_ = requester.request()
         except RequestException as e:
-            raise Exception(str(e))
+            raise BuildWordlistFails(str(e))
         token = response.cookies['csrftoken']
         requester.set_method('POST')
         requester.set_body(
@@ -79,9 +79,9 @@ class DnsDumpster(BaseWordlist, Plugin):
         try:
             response, *_ = requester.request()
         except RequestException as e:
-            raise Exception(str(e))
+            raise BuildWordlistFails(str(e))
         if 'There was an error getting results' in response.text:
-            raise Exception(f"No domains was found for '{self.host}'")
+            raise BuildWordlistFails(f"No domains was found for '{self.host}'")
         content_list = [element.text
                         for element in
                         bs(response.text, "html.parser").find_all('td', class_='col-md-4')]

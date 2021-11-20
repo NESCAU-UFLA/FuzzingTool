@@ -30,7 +30,7 @@ class Result:
         payload: The payload used in the request
         url: The requested target URL
         method: The method used in the request
-        RTT: The elapsed time on both request and response
+        rtt: The elapsed time on both request and response
         request_time: The elapsed time only for the request
         response_time: The elapsed time only for the response
         status: The response HTTP status code
@@ -42,15 +42,15 @@ class Result:
     """
     def __init__(self,
                  response: Response,
-                 RTT: float,
+                 rtt: float,
                  request_index: int = 0,
                  payload: str = ''):
         """Class constructor
 
         @type response: Response
         @param response: The response given in the request
-        @type RTT: float
-        @param RTT: The elapsed time on both request and response
+        @type rtt: float
+        @param rtt: The elapsed time on both request and response
         @type request_index: int
         @param request_index: The index of the request
         @type payload: str
@@ -60,9 +60,9 @@ class Result:
         self.payload = payload
         self.url = response.url
         self.method = response.request.method
-        self.RTT = float('%.6f' % (RTT))
+        self.rtt = float('%.6f' % (rtt))
         response_time = response.elapsed.total_seconds()
-        self.request_time = float('%.6f' % (RTT-response_time))
+        self.request_time = float('%.6f' % (rtt-response_time))
         self.response_time = response_time
         self.status = response.status_code
         content = response.content
@@ -77,7 +77,7 @@ class Result:
         yield 'payload', self.payload
         yield 'url', self.url
         yield 'method', self.method
-        yield 'RTT', self.RTT
+        yield 'rtt', self.rtt
         yield 'request_time', self.request_time
         yield 'response_time', self.response_time
         yield 'status', self.status

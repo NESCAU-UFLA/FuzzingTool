@@ -18,37 +18,37 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from typing import List
-
 from .base_factories import BaseWordlistFactory
 from .plugin_factory import PluginFactory
+from ..core.bases.base_wordlist import BaseWordlist
 from ..utils.http_utils import get_host, get_pure_url
-from ..conn.requesters.request import Request
+from ..conn.requesters.requester import Requester
 from ..core.defaults.wordlists import ListWordlist, FileWordlist
-from ..exceptions.main_exceptions import InvalidPluginName, MissingParameter
+from ..exceptions.main_exceptions import WordlistCreationError
+from ..exceptions.plugin_exceptions import InvalidPlugin, PluginCreationError
 
 
 class WordlistFactory(BaseWordlistFactory):
-    def creator(name: str, params: str, requester: Request) -> List[str]:
+    @staticmethod
+    def creator(name: str, params: str, requester: Requester) -> BaseWordlist:
         try:
-            Wordlist = PluginFactory.class_creator(name, 'wordlists')
+            wordlist_cls = PluginFactory.class_creator(name, 'wordlists')
+        except InvalidPlugin:
+            if name.startswith('[') and name.endswith(']'):
+                wordlist_obj = ListWordlist(name)
+            else:
+                # For default, read the wordlist from a file
+                wordlist_obj = FileWordlist(name)
+        else:
             if (not params and requester and
-                    Wordlist.__params__['metavar'] in
+                    wordlist_cls.__params__['metavar'] in
                     ["TARGET_HOST", "TARGET_URL"]):
-                if "TARGET_HOST" in Wordlist.__params__['metavar']:
+                if "TARGET_HOST" in wordlist_cls.__params__['metavar']:
                     params = get_host(get_pure_url(requester.get_url()))
-                if "TARGET_URL" in Wordlist.__params__['metavar']:
+                elif "TARGET_URL" in wordlist_cls.__params__['metavar']:
                     params = get_pure_url(requester.get_url())
-            wordlist = PluginFactory.object_creator(name, 'wordlists', params)
-        except InvalidPluginName:
             try:
-                if name.startswith('[') and name.endswith(']'):
-                    wordlist = ListWordlist(name)
-                else:
-                    # For default, read the wordlist from a file
-                    wordlist = FileWordlist(name)
-            except MissingParameter as e:
-                raise Exception(f"Missing parameter: {str(e)}")
-        if len(wordlist) == 0:
-            raise Exception("The generated wordlist is empty")
-        return wordlist
+                wordlist_obj = PluginFactory.object_creator(name, 'wordlists', params)
+            except PluginCreationError as e:
+                raise WordlistCreationError(str(e))
+        return wordlist_obj
