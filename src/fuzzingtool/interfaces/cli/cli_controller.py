@@ -379,19 +379,7 @@ class CliController:
             requester_index = 0
             for key, value in self.all_results.items():
                 if value:
-                    if self.is_verbose_mode():
-                        self.co.info_box(
-                            f"Found {len(value)} matched results on target {key}"
-                        )
-                        if not self.global_scanner:
-                            self.requester = self.requesters[requester_index]
-                            self.__get_default_scanner()
-                        for result in value:
-                            self.co.print_result(result, True)
-                        self.co.info_box(f'Saving results for {key} ...')
-                    report_path = self.report.open(key)
-                    self.report.write(value)
-                    self.co.info_box(f"Results saved on {report_path}")
+                    self.__handle_valid_results(key, value, requester_index)
                 else:
                     self.co.info_box(
                         f"No matched results was found on target {key}"
@@ -794,3 +782,30 @@ class CliController:
                     self.__get_data_comparator()
                 )
                 self.started_time += (time.time() - before)
+
+    def __handle_valid_results(self,
+                               host: str,
+                               results: list,
+                               requester_index: int) -> None:
+        """Handle the valid results from footer
+
+        @type host: str
+        @param host: The target host
+        @type results: list
+        @param results: The target results from the fuzzing
+        @type requester_index: int
+        @param requester_index: The requester of the target
+        """
+        if self.is_verbose_mode():
+            self.co.info_box(
+                f"Found {len(results)} matched results on target {host}"
+            )
+            if not self.global_scanner:
+                self.requester = self.requesters[requester_index]
+                self.__get_default_scanner()
+            for result in results:
+                self.co.print_result(result, True)
+            self.co.info_box(f'Saving results for {host} ...')
+        report_path = self.report.open(host)
+        self.report.write(results)
+        self.co.info_box(f"Results saved on {report_path}")
