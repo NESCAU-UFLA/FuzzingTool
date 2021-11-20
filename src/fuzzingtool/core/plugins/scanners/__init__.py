@@ -18,6 +18,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from .Reflected import Reflected
-from .Find import Find
-from .Grep import Grep
+from .reflected import Reflected
+from .find import Find
+from .grep import Grep

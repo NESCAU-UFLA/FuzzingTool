@@ -20,7 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from fuzzingtool.FuzzingTool import main_cli
+from fuzzingtool.fuzzingtool import main_cli
 
 if __name__ == "__main__":
     main_cli()
