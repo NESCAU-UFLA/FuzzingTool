@@ -28,7 +28,7 @@ class RequesterFactory(BaseRequestFactory):
     @staticmethod
     def creator(request_type, url, **kwargs) -> Requester:
         requester_cls = import_module(
-            f"fuzzingtool.conn.requesters",
+            "fuzzingtool.conn.requesters",
             package=request_type
         )
         return getattr(requester_cls, request_type)(url, **kwargs)

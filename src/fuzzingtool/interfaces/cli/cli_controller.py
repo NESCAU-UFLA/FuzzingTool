@@ -175,7 +175,7 @@ class CliController:
 
     def print_configs(self, arguments: CliArguments) -> None:
         """Print the program configuration
-        
+
         @type arguments: CliArguments
         @param arguments: The command line interface arguments object
         """
@@ -195,8 +195,8 @@ class CliController:
             case = None
         self.co.print_configs(
             output='normal'
-                    if not arguments.simple_output
-                    else 'simple',
+                   if not arguments.simple_output
+                   else 'simple',
             verbose=verbose,
             targets=self.targets_list,
             dictionaries=self.dictionaries_metadata,
@@ -490,7 +490,7 @@ class CliController:
 
     def __get_target_fuzzing_type(self, requester: Requester) -> str:
         """Get the target fuzzing type, as a string format
-        
+
         @type requester: Requester
         @param requester: The actual iterated requester
         @return str: The fuzzing type, as a string
