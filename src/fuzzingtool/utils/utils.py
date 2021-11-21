@@ -72,6 +72,8 @@ def stringfy_list(one_list: list) -> str:
     @param one_list: A list to be stringed
     @returns str: The stringed list
     """
+    if not one_list:
+        return ''
     output = ''
     for i in range(len(one_list)-1):
         output += f"{one_list[i]},"
