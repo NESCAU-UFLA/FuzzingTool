@@ -32,6 +32,6 @@ class TestFileUtils(unittest.TestCase):
         self.assertEqual(returned_data, return_expected)
 
     def test_read_file_exception(self):
-        file_full_path = "path/to/payload_file.txt"
-        with self.assertRaises(Exception):
+        file_full_path = "path/to/not_found/payload_file.txt"
+        with self.assertRaises(FileNotFoundError):
             read_file(file_full_path)
