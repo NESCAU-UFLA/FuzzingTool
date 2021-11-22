@@ -98,9 +98,9 @@ class TestUtils(unittest.TestCase):
         self.assertIsInstance(returned_data, tuple)
         self.assertEqual(returned_data, return_expected)
 
-    def test_get_human_length_with_one_gb(self):
-        return_expected = (1, "GB")
-        test_length = 1073741824  # Equals to 1 GB
+    def test_get_human_length_with_one_tb(self):
+        return_expected = (1, "TB")
+        test_length = 1099511627776  # Equals to 1 TB
         returned_data = get_human_length(test_length)
         self.assertIsInstance(returned_data, tuple)
         self.assertEqual(returned_data, return_expected)
@@ -108,6 +108,13 @@ class TestUtils(unittest.TestCase):
     def test_get_letter_range(self):
         return_expected = ['a', 'b', 'c', 'd']
         test_content = ('a', 'd')
+        returned_data = _get_letter_range(*test_content)
+        self.assertIsInstance(returned_data, list)
+        self.assertEqual(returned_data, return_expected)
+
+    def test_get_letter_range_reversed(self):
+        return_expected = ['d', 'c', 'b', 'a']
+        test_content = ('d', 'a')
         returned_data = _get_letter_range(*test_content)
         self.assertIsInstance(returned_data, list)
         self.assertEqual(returned_data, return_expected)
@@ -120,8 +127,15 @@ class TestUtils(unittest.TestCase):
         self.assertEqual(returned_data, return_expected)
 
     def test_get_number_range(self):
-        return_expected = ['0', '1', '2', '3', '4', '5']
-        test_content = ('0', '5')
+        return_expected = ['10', '11', '12', '13', '14', '15']
+        test_content = ('10', '15')
+        returned_data = _get_number_range(*test_content)
+        self.assertIsInstance(returned_data, list)
+        self.assertEqual(returned_data, return_expected)
+
+    def test_get_number_range_reversed(self):
+        return_expected = ['5', '4', '3', '2', '1', '0']
+        test_content = ('5', '0')
         returned_data = _get_number_range(*test_content)
         self.assertIsInstance(returned_data, list)
         self.assertEqual(returned_data, return_expected)
