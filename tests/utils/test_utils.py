@@ -198,6 +198,6 @@ class TestUtils(unittest.TestCase):
         test_content = "pay0-5load"
         mock_get_number_range.return_value = return_expected
         returned_data = check_range_list(test_content)
-        mock_get_number_range.assert_called_once_with("pay0", '5load')
+        mock_get_number_range.assert_called_once_with("pay0", "5load")
         self.assertIsInstance(returned_data, list)
         self.assertEqual(returned_data, return_expected)
