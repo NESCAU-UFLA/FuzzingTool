@@ -108,12 +108,12 @@ def check_range_list(content: str) -> List[Union[int, str]]:
         content = content.replace('\\-', '-')
     elif '-' in content:
         left, right = content.split('-', 1)
+        if not left or not right:
+            return [content]
         try:
             # Checks if the left and right digits from the mark are integers
             int(left[-1])
             int(right[0])
-        except IndexError:
-            content = [content]
         except ValueError:
             content = _get_letter_range(left, right)
         else:
