@@ -112,10 +112,13 @@ def check_range_list(content: str) -> List[Union[int, str]]:
             # Checks if the left and right digits from the mark are integers
             int(left[-1])
             int(right[0])
+        except IndexError:
+            content = [content]
         except ValueError:
-            return _get_letter_range(left, right)
+            content = _get_letter_range(left, right)
         else:
-            return _get_number_range(left, right)
+            content = _get_number_range(left, right)
+        return content
     return [content]
 
 
