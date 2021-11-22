@@ -174,7 +174,7 @@ class TestUtils(unittest.TestCase):
         test_content = "payA-Dload"
         mock_get_letter_range.return_value = return_expected
         returned_data = check_range_list(test_content)
-        mock_get_letter_range.assert_called_once_with('payA', 'Dload')
+        mock_get_letter_range.assert_called_once_with("payA", "Dload")
         self.assertIsInstance(returned_data, list)
         self.assertEqual(returned_data, return_expected)
 
