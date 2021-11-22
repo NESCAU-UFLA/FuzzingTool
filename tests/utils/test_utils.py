@@ -112,9 +112,26 @@ class TestUtils(unittest.TestCase):
         self.assertIsInstance(returned_data, list)
         self.assertEqual(returned_data, return_expected)
 
+    def test_get_letter_range_inside_text(self):
+        return_expected = ["payAload", "payBload", "payCload", "payDload"]
+        test_content = ("payA", "Dload")
+        returned_data = _get_letter_range(*test_content)
+        self.assertIsInstance(returned_data, list)
+        self.assertEqual(returned_data, return_expected)
+
     def test_get_number_range(self):
         return_expected = ['0', '1', '2', '3', '4', '5']
         test_content = ('0', '5')
+        returned_data = _get_number_range(*test_content)
+        self.assertIsInstance(returned_data, list)
+        self.assertEqual(returned_data, return_expected)
+
+    def test_get_number_range_inside_text(self):
+        return_expected = [
+            "pay0load", "pay1load", "pay2load",
+            "pay3load", "pay4load", "pay5load"
+        ]
+        test_content = ("pay0", "5load")
         returned_data = _get_number_range(*test_content)
         self.assertIsInstance(returned_data, list)
         self.assertEqual(returned_data, return_expected)
@@ -123,12 +140,6 @@ class TestUtils(unittest.TestCase):
         # Test without range
         return_expected = ["payload"]
         test_content = "payload"
-        returned_data = check_range_list(test_content)
-        self.assertIsInstance(returned_data, list)
-        self.assertEqual(returned_data, return_expected)
-        # Test with ignore range
-        return_expected = ["pay-load"]
-        test_content = "pay\\-load"
         returned_data = check_range_list(test_content)
         self.assertIsInstance(returned_data, list)
         self.assertEqual(returned_data, return_expected)
@@ -156,6 +167,20 @@ class TestUtils(unittest.TestCase):
             "pay3load", "pay4load", "pay5load"
         ]
         test_content = "pay0-5load"
+        returned_data = check_range_list(test_content)
+        self.assertIsInstance(returned_data, list)
+        self.assertEqual(returned_data, return_expected)
+
+    def test_check_range_list_with_range_ignorer(self):
+        return_expected = ["pay-load"]
+        test_content = "pay\\-load"
+        returned_data = check_range_list(test_content)
+        self.assertIsInstance(returned_data, list)
+        self.assertEqual(returned_data, return_expected)
+
+    def test_check_range_list_with_invalid_range(self):
+        return_expected = ["pay-"]
+        test_content = "pay-"
         returned_data = check_range_list(test_content)
         self.assertIsInstance(returned_data, list)
         self.assertEqual(returned_data, return_expected)
