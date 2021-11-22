@@ -1,5 +1,5 @@
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from src.fuzzingtool.utils.utils import *
 from src.fuzzingtool.utils.utils import _get_letter_range, _get_number_range
@@ -136,37 +136,9 @@ class TestUtils(unittest.TestCase):
         self.assertIsInstance(returned_data, list)
         self.assertEqual(returned_data, return_expected)
 
-    def test_check_range_list(self):
-        # Test without range
+    def test_check_range_list_without_range(self):
         return_expected = ["payload"]
         test_content = "payload"
-        returned_data = check_range_list(test_content)
-        self.assertIsInstance(returned_data, list)
-        self.assertEqual(returned_data, return_expected)
-        # Test with letter range
-        return_expected = ['a', 'b', 'c', 'd']
-        test_content = "a-d"
-        returned_data = check_range_list(test_content)
-        self.assertIsInstance(returned_data, list)
-        self.assertEqual(returned_data, return_expected)
-        # Test with number range
-        return_expected = ['0', '1', '2', '3', '4', '5']
-        test_content = "0-5"
-        returned_data = check_range_list(test_content)
-        self.assertIsInstance(returned_data, list)
-        self.assertEqual(returned_data, return_expected)
-        # Test with letter range inside text
-        return_expected = ["payAload", "payBload", "payCload", "payDload"]
-        test_content = "payA-Dload"
-        returned_data = check_range_list(test_content)
-        self.assertIsInstance(returned_data, list)
-        self.assertEqual(returned_data, return_expected)
-        # Test with number range inside text
-        return_expected = [
-            "pay0load", "pay1load", "pay2load",
-            "pay3load", "pay4load", "pay5load"
-        ]
-        test_content = "pay0-5load"
         returned_data = check_range_list(test_content)
         self.assertIsInstance(returned_data, list)
         self.assertEqual(returned_data, return_expected)
@@ -182,5 +154,50 @@ class TestUtils(unittest.TestCase):
         return_expected = ["pay-"]
         test_content = "pay-"
         returned_data = check_range_list(test_content)
+        self.assertIsInstance(returned_data, list)
+        self.assertEqual(returned_data, return_expected)
+
+    @patch("src.fuzzingtool.utils.utils._get_letter_range")
+    def test_check_range_list_with_letter_range(self, mock_get_letter_range: Mock):
+        return_expected = ['a', 'b', 'c', 'd']
+        test_content = "a-d"
+        mock_get_letter_range.return_value = return_expected
+        returned_data = check_range_list(test_content)
+        mock_get_letter_range.assert_called_once_with('a', 'd')
+        self.assertIsInstance(returned_data, list)
+        self.assertEqual(returned_data, return_expected)
+
+    @patch("src.fuzzingtool.utils.utils._get_letter_range")
+    def test_check_range_list_with_letter_range_inside_text(self,
+                                                            mock_get_letter_range: Mock):
+        return_expected = ["payAload", "payBload", "payCload", "payDload"]
+        test_content = "payA-Dload"
+        mock_get_letter_range.return_value = return_expected
+        returned_data = check_range_list(test_content)
+        mock_get_letter_range.assert_called_once_with('payA', 'Dload')
+        self.assertIsInstance(returned_data, list)
+        self.assertEqual(returned_data, return_expected)
+
+    @patch("src.fuzzingtool.utils.utils._get_number_range")
+    def test_check_range_list_with_number_range(self, mock_get_number_range: Mock):
+        return_expected = ['0', '1', '2', '3', '4', '5']
+        test_content = "0-5"
+        mock_get_number_range.return_value = return_expected
+        returned_data = check_range_list(test_content)
+        mock_get_number_range.assert_called_once_with('0', '5')
+        self.assertIsInstance(returned_data, list)
+        self.assertEqual(returned_data, return_expected)
+
+    @patch("src.fuzzingtool.utils.utils._get_number_range")
+    def test_check_range_list_with_number_range_inside_text(self,
+                                                            mock_get_number_range: Mock):
+        return_expected = [
+            "pay0load", "pay1load", "pay2load",
+            "pay3load", "pay4load", "pay5load"
+        ]
+        test_content = "pay0-5load"
+        mock_get_number_range.return_value = return_expected
+        returned_data = check_range_list(test_content)
+        mock_get_number_range.assert_called_once_with("pay0", '5load')
         self.assertIsInstance(returned_data, list)
         self.assertEqual(returned_data, return_expected)
