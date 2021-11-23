@@ -1,6 +1,6 @@
 import unittest
 
-from src.fuzzingtool import version, APP_VERSION
+from fuzzingtool import version, APP_VERSION
 
 class TestInit(unittest.TestCase):
     def test_version(self):

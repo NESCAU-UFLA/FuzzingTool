@@ -3,8 +3,8 @@ from unittest.mock import Mock, patch, mock_open
 from datetime import datetime
 from pathlib import Path
 
-from src.fuzzingtool.utils.logger import Logger
-from src.fuzzingtool.utils.consts import OUTPUT_DIRECTORY
+from fuzzingtool.utils.logger import Logger
+from fuzzingtool.utils.consts import OUTPUT_DIRECTORY
 
 
 class TestLogger(unittest.TestCase):
@@ -14,7 +14,7 @@ class TestLogger(unittest.TestCase):
         self.test_host = "test-host.com"
         self.test_output = Path(f"{OUTPUT_DIRECTORY}/{self.test_host}/logs/log-{self.default_datetime.strftime('%Y-%m-%d_%H:%M')}.log")
 
-    @patch("src.fuzzingtool.utils.logger.datetime")
+    @patch("fuzzingtool.utils.logger.datetime")
     @patch("builtins.open", new_callable=mock_open)
     def test_setup(self, mock_file: Mock, mock_date: Mock):
         test_datetime_now = self.default_datetime.strftime('%Y/%m/%d %H:%M')
@@ -26,7 +26,7 @@ class TestLogger(unittest.TestCase):
         self.assertIsInstance(returned_data, Path)
         self.assertEqual(returned_data, self.test_output)
 
-    @patch("src.fuzzingtool.utils.logger.datetime")
+    @patch("fuzzingtool.utils.logger.datetime")
     @patch("builtins.open", new_callable=mock_open)
     def test_write(self, mock_file: Mock, mock_date: Mock):
         test_payload = "wp-admin.php"

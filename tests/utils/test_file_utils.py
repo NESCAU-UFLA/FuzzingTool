@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import Mock, patch, mock_open
 
-from src.fuzzingtool.utils.file_utils import read_file
+from fuzzingtool.utils.file_utils import read_file
 
 BASE_FILE_CONTENT = "payload\n"
 BASE_FILE_COMMENT = "#!"
