@@ -5,7 +5,7 @@ from fuzzingtool.factories.plugin_factory import PluginFactory
 from fuzzingtool.core.plugins import scanners, Grep
 from fuzzingtool.exceptions.plugin_exceptions import InvalidPlugin, InvalidPluginCategory
 
-
+ 
 class TestPluginFactory(unittest.TestCase):
     def test_get_plugins_from_category(self):
         test_category = "scanners"
