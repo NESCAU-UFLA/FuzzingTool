@@ -1,18 +1,23 @@
-name: Linter
+name: Integration
 
-on: 
-  pull_request:
-    branches:
-      - develop
-      - master
+on: [push, pull_request]
 
 jobs:
-  linter:
+  integration:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Installing linter
-        run: pip install flake8
+      - name: "Installing dependencies"
+        run: pip install setuptools flake8 pytest
+
+      - name: "Build"
+        run: |
+          python3 setup.py sdist
+          cd dist
+          pip3 install *
+
+      - name: "Test"
+        run: python3 -m pytest
 
       - name: Running linter (1st round)
         run: flake8 src/fuzzingtool --max-line-length=100 --extend-ignore=E114,E222,E231,E251,E265,E303,E731,W291,F403,F841 --per-file-ignores="__init__.py:F401,W292"
