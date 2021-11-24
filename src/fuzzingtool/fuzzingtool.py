@@ -18,7 +18,9 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from .interfaces.cli import CliArguments, Colors, CliController
+from .interfaces.cli.cli_arguments import CliArguments
+from .interfaces.cli.cli_controller import CliController
+from .interfaces.cli.cli_output import Colors
 
 
 def main_cli() -> None:
