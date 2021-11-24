@@ -1,5 +1,5 @@
 # Pycache
-src/**/__pycache__/
+__pycache__/
 
 # Distribution / packaging
 .Python
@@ -22,4 +22,8 @@ var/
 .vscode
 
 # Coverage
+.coverage
 coverage.xml
+
+# Tests
+.pytest_cache
