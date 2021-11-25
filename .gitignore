@@ -22,7 +22,6 @@ var/
 .vscode
 
 # Coverage
-.coverage
 coverage.xml
 
 # Tests
