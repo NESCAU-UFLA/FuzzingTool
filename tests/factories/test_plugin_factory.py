@@ -2,8 +2,8 @@ import unittest
 from unittest.mock import Mock, patch
 
 from fuzzingtool.factories.plugin_factory import PluginFactory
-from fuzzingtool.core.plugins import scanners, Grep
-from fuzzingtool.exceptions.plugin_exceptions import InvalidPlugin, InvalidPluginCategory
+from fuzzingtool.core.plugins import scanners, Grep, Reflected
+from fuzzingtool.exceptions.plugin_exceptions import InvalidPlugin, InvalidPluginCategory, PluginCreationError
 
 
 class TestPluginFactory(unittest.TestCase):
@@ -49,10 +49,46 @@ class TestPluginFactory(unittest.TestCase):
             PluginFactory.class_creator(test_plugin, test_category)
 
     @patch("fuzzingtool.factories.plugin_factory.PluginFactory.class_creator")
-    def test_object_creator(self, mock_class_creator: Mock):
+    def test_object_creator_with_invalid_plugin(self, mock_class_creator: Mock):
+        test_plugin = "InvalidPluginTest"
+        test_category = "scanners"
+        test_params = ''
+        mock_class_creator.side_effect = InvalidPlugin
+        with self.assertRaises(PluginCreationError):
+            PluginFactory.object_creator(test_plugin, test_category, test_params)
+
+    @patch("fuzzingtool.factories.plugin_factory.PluginFactory.class_creator")
+    def test_object_creator_with_params(self, mock_class_creator: Mock):
         test_name = "Grep"
         test_category = "scanners"
         test_params = "email"
         mock_class_creator.return_value = Grep
         returned_data = PluginFactory.object_creator(test_name, test_category, test_params)
         self.assertIsInstance(returned_data, Grep)
+
+    @patch("fuzzingtool.factories.plugin_factory.PluginFactory.class_creator")
+    def test_object_creator_without_params(self, mock_class_creator: Mock):
+        test_name = "Reflected"
+        test_category = "scanners"
+        test_params = ''  # No need to have params on constructor
+        mock_class_creator.return_value = Reflected
+        returned_data = PluginFactory.object_creator(test_name, test_category, test_params)
+        self.assertIsInstance(returned_data, Reflected)
+
+    @patch("fuzzingtool.factories.plugin_factory.PluginFactory.class_creator")
+    def test_object_creator_with_blank_params(self, mock_class_creator: Mock):
+        test_name = "Grep"
+        test_category = "scanners"
+        test_params = ''
+        mock_class_creator.return_value = Grep
+        with self.assertRaises(PluginCreationError):
+            PluginFactory.object_creator(test_name, test_category, test_params)
+
+    @patch("fuzzingtool.factories.plugin_factory.PluginFactory.class_creator")
+    def test_object_creator_with_invalid_params(self, mock_class_creator: Mock):
+        test_name = "Grep"
+        test_category = "scanners"
+        test_params = "\\"  # Invalid regex
+        mock_class_creator.return_value = Grep
+        with self.assertRaises(PluginCreationError):
+            PluginFactory.object_creator(test_name, test_category, test_params)
