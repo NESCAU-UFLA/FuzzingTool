@@ -10,7 +10,7 @@ class TestPluginFactory(unittest.TestCase):
     def test_get_plugins_from_category(self):
         test_category = "scanners"
         return_expected = [Grep]
-        with patch.dict(scanners.__dict__, {'Grep': Grep, 'Test': None}, clear=True) as _:
+        with patch.dict(scanners.__dict__, {'Grep': Grep, 'Test': None}, clear=True):
             returned_data = PluginFactory.get_plugins_from_category(test_category)
         self.assertIsInstance(returned_data, list)
         self.assertEqual(returned_data, return_expected)
