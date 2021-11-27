@@ -24,6 +24,13 @@ class TestReport(unittest.TestCase):
         self.assertIsInstance(returned_data, BaseReport)
 
     @patch("fuzzingtool.reports.report.Report.get_available_reports")
+    def test_build_with_only_extension(self, mock_get_available_reports: Mock):
+        test_name = "txt"
+        mock_get_available_reports.return_value = {'txt': TxtReport}
+        returned_data = Report.build(test_name)
+        self.assertIsInstance(returned_data, BaseReport)
+
+    @patch("fuzzingtool.reports.report.Report.get_available_reports")
     def test_build_with_invalid_format(self, mock_get_available_reports: Mock):
         test_name = "test_report.test"
         mock_get_available_reports.return_value = {'txt': TxtReport}
