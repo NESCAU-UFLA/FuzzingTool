@@ -22,7 +22,7 @@ from abc import ABC, abstractmethod
 from typing import List
 from pathlib import Path
 
-from ..core.result import Result
+from ..objects.result import Result
 from ..utils.consts import OUTPUT_DIRECTORY
 
 

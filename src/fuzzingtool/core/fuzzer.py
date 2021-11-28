@@ -27,9 +27,9 @@ from requests.models import Response
 from .blacklist_status import BlacklistStatus
 from .dictionary import Dictionary
 from .matcher import Matcher
-from .result import Result
 from .bases.base_scanner import BaseScanner
 from ..conn.requesters import Requester
+from ..objects.result import Result
 from ..exceptions.request_exceptions import RequestException, InvalidHostname
 
 

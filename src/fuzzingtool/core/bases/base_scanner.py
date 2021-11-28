@@ -20,7 +20,7 @@
 
 from abc import ABC, abstractmethod
 
-from ..result import Result
+from ...objects.result import Result
 
 
 class BaseScanner(ABC):
