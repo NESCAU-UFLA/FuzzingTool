@@ -88,9 +88,9 @@ class Requester:
         @type is_session: bool
         @param is_session: The flag to say if the requests will be made as session request
         """
-        self._url = self.__setup_url(url)
+        self._url, url_params = self.__setup_url(url)
         self.__method = self.__setup_method(method)
-        self.__data = self.__setup_data(body)
+        self.__data = self.__setup_data(body, url_params)
         self.__header = self.__setup_header(headers)
         self.__proxy = self.__setup_proxy(proxy) if proxy else {}
         self.__proxies = ([self.__setup_proxy(proxy) for proxy in proxies]
@@ -284,10 +284,10 @@ class Requester:
             return DATA_FUZZING
         return UNKNOWN_FUZZING
 
-    def __setup_url(self, url: str) -> dict:
+    def __setup_url(self, url: str) -> Tuple[dict, str]:
         """The URL setup
 
-        @returns dict: The target URL dictionary
+        @returns Tuple[dict, str]: The target URL dictionary and URL params
         """
         if '://' not in url:
             # No schema was defined, default protocol http
@@ -296,13 +296,13 @@ class Requester:
             # Insert a base path if wasn't specified
             url += '/'
         if '?' in url:
-            url, self.__param = url.split('?', 1)
+            url, params = url.split('?', 1)
         else:
-            self.__param = ''
-        return {
+            params = ''
+        return ({
             'content': url,
             'fuzzingIndexes': get_indexes_to_parse(url)
-        }
+        }, params)
 
     def __setup_method(self, method: str) -> dict:
         """The method setup
@@ -354,20 +354,21 @@ class Requester:
             header_value.append(value[last_index:len(value)])
         return header_value
 
-    def __setup_data(self, body: str) -> dict:
+    def __setup_data(self, body: str, url_params: str) -> dict:
         """Split all the request parameters into a list of arguments used in the request
 
         @type body: str
         @param body: The body data of the request
+        @type url_params: str
+        @param url_params: The URL params of the request
         @returns dict: The entries data of the request
         """
         data_dict = {
             'PARAM': {},
             'BODY': {},
         }
-        if self.__param:
-            self.__build_data_dict(data_dict, 'PARAM', self.__param)
-        del self.__param
+        if url_params:
+            self.__build_data_dict(data_dict, 'PARAM', url_params)
         if body:
             self.__build_data_dict(data_dict, 'BODY', body)
         return data_dict
