@@ -20,7 +20,7 @@
 
 from typing import List, Dict, Tuple, Callable
 
-from .result import Result
+from ..objects.result import Result
 from ..utils.utils import split_str_to_list
 from ..exceptions.main_exceptions import BadArgumentType
 

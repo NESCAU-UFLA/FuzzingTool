@@ -19,6 +19,7 @@
 # SOFTWARE.
 
 from typing import Iterator, Tuple
+
 from requests import Response
 
 

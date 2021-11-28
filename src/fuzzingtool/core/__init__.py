@@ -26,4 +26,3 @@ from .dictionary import Dictionary
 from .fuzzer import Fuzzer
 from .matcher import Matcher
 from .payloader import Payloader
-from .result import Result

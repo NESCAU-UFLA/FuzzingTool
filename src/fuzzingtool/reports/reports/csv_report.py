@@ -22,8 +22,8 @@ import csv
 from typing import List
 
 from ..base_report import BaseReport
-from ...core.result import Result
 from ...decorators.report_meta import report_meta
+from ...objects.result import Result
 
 
 @report_meta

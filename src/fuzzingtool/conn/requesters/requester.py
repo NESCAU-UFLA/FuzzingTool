@@ -26,13 +26,12 @@ from typing import List, Dict, Tuple
 import requests
 import urllib3.exceptions
 
-from ..request_parser import (check_is_method_fuzzing, check_is_url_discovery,
+from ..request_parser import (check_is_url_discovery,
                               check_is_data_fuzzing, request_parser)
-from ...utils.consts import (FUZZING_MARK, FUZZING_MARK_LEN,
-                             UNKNOWN_FUZZING, HTTP_METHOD_FUZZING,
+from ...utils.consts import (UNKNOWN_FUZZING, HTTP_METHOD_FUZZING,
                              PATH_FUZZING, SUBDOMAIN_FUZZING, DATA_FUZZING)
 from ...utils.http_utils import get_pure_url, get_host, get_url_without_scheme
-from ...utils.utils import get_indexes_to_parse
+from ...objects.fuzz_word import FuzzWord
 from ...exceptions.request_exceptions import RequestException
 
 
@@ -88,9 +87,10 @@ class Requester:
         @type is_session: bool
         @param is_session: The flag to say if the requests will be made as session request
         """
-        self._url = self.__setup_url(url)
-        self.__method = self.__setup_method(method)
-        self.__data = self.__setup_data(body)
+        self._url, url_params = self.__setup_url(url)
+        self.__url_params = self.__build_data_dict(url_params)
+        self.__method = FuzzWord(method)
+        self.__body = self.__build_data_dict(body)
         self.__header = self.__setup_header(headers)
         self.__proxy = self.__setup_proxy(proxy) if proxy else {}
         self.__proxies = ([self.__setup_proxy(proxy) for proxy in proxies]
@@ -118,7 +118,7 @@ class Requester:
 
         @returns str: The target URL
         """
-        return self._url['content']
+        return self._url.word
 
     def is_method_fuzzing(self) -> bool:
         """The method fuzzing flag getter
@@ -161,7 +161,7 @@ class Requester:
         @type method: str
         @param method: The request method
         """
-        self.__method = self.__setup_method(method)
+        self.__method = FuzzWord(method)
 
     def set_body(self, body: str) -> None:
         """The body data setter
@@ -169,7 +169,7 @@ class Requester:
         @type body: str
         @param body: The body data of the request
         """
-        self.__build_data_dict(self.__data, 'BODY', body)
+        self.__body = self.__build_data_dict(body)
 
     def set_header_content(self,
                            key: str,
@@ -186,16 +186,15 @@ class Requester:
         """
         if not header:
             header = self.__header
-        if FUZZING_MARK in value:
-            header['payloadKeys'].append(key)
-            header['content'][key] = self.__parse_header_value(value)
-        else:
-            header['content'][key] = value
+        value: FuzzWord = FuzzWord(value)
+        header['content'][key] = value
+        if value.has_fuzzing:
+            header['fuzz_keys'].append(key)
 
     def test_connection(self) -> None:
         """Test the connection with the target, and raise an exception if couldn't connect"""
         try:
-            url = get_pure_url(self._url['content'])
+            url = get_pure_url(self._url.word)
             requests.get(
                 url,
                 proxies=self.__proxy,
@@ -239,10 +238,10 @@ class Requester:
         """
         if self.__proxies:
             self.__proxy = random.choice(self.__proxies)
-        method, url, headers, data = self.__get_request_parameters(payload)
+        method, url, body, url_params, headers = self.__get_request_parameters(payload)
         try:
             before = time.time()
-            response = self.__request(method, url, headers, data)
+            response = self.__request(method, url, body, url_params, headers)
             rtt = (time.time() - before)
         except requests.exceptions.ProxyError:
             raise RequestException("Can't connect to the proxy")
@@ -276,18 +275,18 @@ class Requester:
 
         @returns int: The fuzzing type int value
         """
-        if check_is_method_fuzzing(self.__method):
+        if self.__method.has_fuzzing:
             return HTTP_METHOD_FUZZING
         if check_is_url_discovery(self._url):
             return PATH_FUZZING
-        if check_is_data_fuzzing(self.__data, self.__header):
+        if check_is_data_fuzzing(self.__url_params, self.__body, self.__header):
             return DATA_FUZZING
         return UNKNOWN_FUZZING
 
-    def __setup_url(self, url: str) -> dict:
+    def __setup_url(self, url: str) -> Tuple[dict, str]:
         """The URL setup
 
-        @returns dict: The target URL dictionary
+        @returns Tuple[dict, str]: The target URL dictionary and URL params
         """
         if '://' not in url:
             # No schema was defined, default protocol http
@@ -296,23 +295,10 @@ class Requester:
             # Insert a base path if wasn't specified
             url += '/'
         if '?' in url:
-            url, self.__param = url.split('?', 1)
+            url, params = url.split('?', 1)
         else:
-            self.__param = ''
-        return {
-            'content': url,
-            'fuzzingIndexes': get_indexes_to_parse(url)
-        }
-
-    def __setup_method(self, method: str) -> dict:
-        """The method setup
-
-        @returns dict: The target method dictionary
-        """
-        return {
-            'content': method,
-            'fuzzingIndexes': get_indexes_to_parse(method)
-        }
+            params = ''
+        return (FuzzWord(url), params)
 
     def __setup_header(self, header: dict) -> dict:
         """Setup the HTTP Header
@@ -324,83 +310,34 @@ class Requester:
         header = header if header else {}
         header = {
             'content': {**header},
-            'payloadKeys': [],
+            'fuzz_keys': [],
         }
         for key, value in header['content'].items():
             self.set_header_content(key, value, header)
         if not header['content']:
-            header['content']['User-Agent'] = 'FuzzingTool Requester Agent'
+            self.set_header_content('User-Agent', 'FuzzingTool Requester Agent', header)
         else:
             if 'Content-Length' in header['content'].keys():
                 del header['content']['Content-Length']
-        header['content']['Accept-Encoding'] = 'gzip, deflate'
+        self.set_header_content('Accept-Encoding', 'gzip, deflate', header)
         return header
 
-    def __parse_header_value(self, value: str) -> List[str]:
-        """Parse the header value into a list
+    def __build_data_dict(self, data: str) -> Dict[FuzzWord, FuzzWord]:
+        """Build the data string into a data dict
 
-        @type value: str
-        @param value: The HTTP Header value
-        @returns List[str]: The list with the HTTP Header value content
+        @type datat: str
+        @param datat: The data to be used in the request
+        @returns Dict[FuzzWord, FuzzWord]: The data dictionary
         """
-        header_value = []
-        last_index = 0
-        for i in get_indexes_to_parse(value):
-            header_value.append(value[last_index:i])
-            last_index = i+FUZZING_MARK_LEN
-        if last_index == len(value):
-            header_value.append('')
-        else:
-            header_value.append(value[last_index:len(value)])
-        return header_value
-
-    def __setup_data(self, body: str) -> dict:
-        """Split all the request parameters into a list of arguments used in the request
-
-        @type body: str
-        @param body: The body data of the request
-        @returns dict: The entries data of the request
-        """
-        data_dict = {
-            'PARAM': {},
-            'BODY': {},
-        }
-        if self.__param:
-            self.__build_data_dict(data_dict, 'PARAM', self.__param)
-        del self.__param
-        if body:
-            self.__build_data_dict(data_dict, 'BODY', body)
-        return data_dict
-
-    def __build_data_dict(self, data_dict: dict, where: str, content: str) -> None:
-        """Build the content into the data dict
-
-        @type data_dict: dict
-        @param data_dict: The final data dict
-        @type where: str
-        @param where: Is on POST or GET?
-        @type content: str
-        @param content: The content of the data
-        """
-        def build_content(data_dict: dict, content: str) -> None:
-            """Build the inner content (for each splited &) into the data dict
-
-            @type data_dict: dict
-            @param data_dict: The final data dict
-            @type content: str
-            @param content: The content of the data
-            """
-            if '=' in content:
-                key, value = content.split('=')
-                if FUZZING_MARK not in value:
-                    data_dict[key] = value
+        data_dict = {}
+        if data:
+            for variable in data.split('&'):
+                if '=' in variable:
+                    key, value = variable.split('=')
+                    data_dict[FuzzWord(key)] = FuzzWord(value)
                 else:
-                    data_dict[key] = ''
-            else:
-                data_dict[content] = ''
-
-        for content in content.split('&'):
-            build_content(data_dict[where], content)
+                    data_dict[FuzzWord(variable)] = FuzzWord()
+        return data_dict
 
     def __setup_proxy(self, proxy: str) -> Dict[str, str]:
         """Setup the proxy
@@ -415,28 +352,30 @@ class Requester:
         }
 
     def __get_request_parameters(self, payload: str) -> Tuple[
-        str, str, dict, dict
+        str, str, dict, dict, dict
     ]:
         """Get the request parameters using in the request fields
 
         @type payload: str
         @param payload: The payload used in the request
-        @returns tuple(str, str, dict, dict): The parameters of the request
+        @returns tuple(str, str, dict, dict, dict): The parameters of the request
         """
         with self._lock:
             request_parser.set_payload(payload)
             return (
                 request_parser.get_method(self.__method),
                 request_parser.get_url(self._url),
+                request_parser.get_data(self.__body),
+                request_parser.get_data(self.__url_params),
                 request_parser.get_header(self.__header),
-                request_parser.get_data(self.__data),
             )
 
     def __session_request(self,
                           method: str,
                           url: str,
-                          headers: dict,
-                          data: dict) -> requests.Response:
+                          body: dict,
+                          url_params: dict,
+                          headers: dict) -> requests.Response:
         """Performs a request to the target using Session object
 
         @type method: str
@@ -445,16 +384,18 @@ class Requester:
         @param url: The target URL
         @type headers: dict
         @param headers: The http header of the request
-        @type data: dict
-        @param data: The data to be send with the request
+        @type body: dict
+        @param body: The body data to be send with the request
+        @type url_params: dict
+        @param url_params: The URL params to be send with the request
         @returns Response: The response object of the request
         """
         return self.__session.send(
             self.__session.prepare_request(requests.Request(
                 method,
                 url,
-                data=data['BODY'],
-                params=data['PARAM'],
+                data=body,
+                params=url_params,
                 headers=headers,
             )),
             proxies=self.__proxy,
@@ -465,8 +406,9 @@ class Requester:
     def __common_request(self,
                          method: str,
                          url: str,
-                         headers: dict,
-                         data: dict) -> requests.Response:
+                         body: dict,
+                         url_params: dict,
+                         headers: dict) -> requests.Response:
         """Performs a request to the target
 
         @type method: str
@@ -475,15 +417,17 @@ class Requester:
         @param url: The target URL
         @type headers: dict
         @param headers: The http header of the request
-        @type data: dict
-        @param data: The data to be send with the request
+        @type body: dict
+        @param body: The body data to be send with the request
+        @type url_params: dict
+        @param url_params: The URL params to be send with the request
         @returns Response: The response object of the request
         """
         return requests.request(
             method,
             url,
-            data=data['BODY'],
-            params=data['PARAM'],
+            data=body,
+            params=url_params,
             headers=headers,
             proxies=self.__proxy,
             timeout=self.__timeout,

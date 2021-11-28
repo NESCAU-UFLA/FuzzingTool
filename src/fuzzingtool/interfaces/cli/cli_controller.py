@@ -30,8 +30,7 @@ from ... import version
 from ...utils.http_utils import get_host, get_pure_url
 from ...utils.file_utils import read_file
 from ...utils.logger import Logger
-from ...core import (BlacklistStatus, Dictionary, Fuzzer,
-                     Matcher, Payloader, Result)
+from ...core import BlacklistStatus, Dictionary, Fuzzer, Matcher, Payloader
 from ...core.defaults.scanners import (DataScanner,
                                        PathScanner, SubdomainScanner)
 from ...core.bases import BaseScanner, BaseEncoder
@@ -39,6 +38,7 @@ from ...conn.request_parser import check_is_subdomain_fuzzing
 from ...conn.requesters import Requester
 from ...factories import PluginFactory, RequesterFactory, WordlistFactory
 from ...reports.report import Report
+from ...objects import Result
 from ...exceptions.base_exceptions import FuzzingToolException
 from ...exceptions.main_exceptions import (ControllerException, SkipTargetException,
                                            WordlistCreationError, BuildWordlistFails)

@@ -22,7 +22,7 @@ import re
 
 from ..plugin import Plugin
 from ...bases.base_scanner import BaseScanner
-from ...result import Result
+from ....objects.result import Result
 from ....interfaces.cli.cli_output import Colors, get_formated_result
 from ....decorators.plugin_meta import plugin_meta
 from ....decorators.append_args import append_args

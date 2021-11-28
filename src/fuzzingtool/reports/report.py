@@ -19,6 +19,7 @@
 # SOFTWARE.
 
 from typing import Dict, Type
+from datetime import datetime
 
 from . import reports
 from .base_report import BaseReport
@@ -49,8 +50,8 @@ class Report:
         if '.' in name:
             report_name, report_type = name.rsplit('.', 1)
         else:
+            report_name = datetime.now().strftime("%Y-%m-%d_%H:%M")
             report_type = name
-            report_name = ''
         report_type = report_type.lower()
         available_reports = Report.get_available_reports()
         try:
