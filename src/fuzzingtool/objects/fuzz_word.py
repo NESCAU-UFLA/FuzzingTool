@@ -26,7 +26,7 @@ class FuzzWord:
     """Class to represent a Fuzzing Word"""
     def __init__(self, word: str = FUZZING_MARK):
         """Class constructor
-        
+
         @type word: str
         @param word: The word that'll be fuzzed or not
         """
@@ -42,7 +42,7 @@ class FuzzWord:
 
     def get_payloaded_word(self, payload: str) -> str:
         """Gets the word with the payload inside
-        
+
         @type payload: str
         @param payload: The payload used in the fuzzing indexes
         @returns str: The word with the payload inside
