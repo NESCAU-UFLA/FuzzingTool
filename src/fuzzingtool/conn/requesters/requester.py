@@ -174,7 +174,7 @@ class Requester:
     def set_header_content(self,
                            key: str,
                            value: str,
-                           header: dict = {}) -> None:
+                           header: dict = None) -> None:
         """The header content setter
 
         @type key: str
@@ -184,7 +184,7 @@ class Requester:
         @type header: dict
         @param header: The header to set the content
         """
-        if not header:
+        if header is None:
             header = self.__header
         value: FuzzWord = FuzzWord(value)
         header[key] = value
