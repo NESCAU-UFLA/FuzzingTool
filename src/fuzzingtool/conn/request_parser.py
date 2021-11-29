@@ -65,8 +65,9 @@ def check_is_data_fuzzing(
     for key, value in body.items():
         if key.has_fuzzing or value.has_fuzzing:
             return True
-    if header['fuzz_keys']:
-        return True
+    for value in header.values():
+        if value.has_fuzzing:
+            return True
     return False
 
 
@@ -97,14 +98,15 @@ class RequestParser:
         """
         return url.get_payloaded_word(self.__payload)
 
-    def get_header(self, headers: dict) -> dict:
+    def get_header(self, header: dict) -> dict:
         """The new HTTP Header getter
 
         @type httpHeder: dict
-        @param headers: The HTTP Header
+        @param header: The HTTP Header
         @returns dict: The new HTTP Header
         """
-        return self.__get_ajusted_header(headers)
+        return {key: value.get_payloaded_word(self.__payload)
+                for key, value in header.items()}
 
     def get_data(self, data: Dict[FuzzWord, FuzzWord]) -> dict:
         """The new data getter
@@ -113,7 +115,12 @@ class RequestParser:
         @param data: The request data dict
         @returns dict: The new request data dict
         """
-        return {} if not data else self.__get_ajusted_data(data)
+        if not data:
+            return {}
+        return {
+            key.get_payloaded_word(self.__payload): value.get_payloaded_word(self.__payload)
+            for key, value in data.items()
+        }
 
     def set_payload(self, payload: str) -> None:
         """The payload setter
@@ -122,32 +129,6 @@ class RequestParser:
         @param payload: The payload used in the request
         """
         self.__payload = payload
-
-    def __get_ajusted_header(self, header: dict) -> dict:
-        """Put the payload in the header value that contains the fuzzing mark
-
-        @type header: dict
-        @param header: The HTTP Header dictionary
-        @returns dict: The new HTTP Header
-        """
-        ajusted_header = {}
-        for key, value in header['content'].items():
-            ajusted_header[key] = value.word
-        for key in header['fuzz_keys']:
-            ajusted_header[key] = value.get_payloaded_word(self.__payload)
-        return ajusted_header
-
-    def __get_ajusted_data(self, data: Dict[FuzzWord, FuzzWord]) -> Dict[str, str]:
-        """Put the payload into the Data requestParameters dictionary
-
-        @type data: Dict[FuzzWord, FuzzWord]
-        @param dara: The request parameters
-        @returns Dict[str, str]: The new request parameters
-        """
-        return {
-            key.get_payloaded_word(self.__payload): value.get_payloaded_word(self.__payload)
-            for key, value in data.items()
-        }
 
 
 request_parser = RequestParser()
