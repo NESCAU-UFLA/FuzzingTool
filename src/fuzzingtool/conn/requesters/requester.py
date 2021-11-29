@@ -305,12 +305,12 @@ class Requester:
         @param header: The HTTP header dictionary
         @returns dict: The HTTP header dictionary
         """
-        header = header if header else {}
-        for key, value in header.items():
-            self.set_header_content(key, value, header)
         if not header:
+            header = {}
             self.set_header_content('User-Agent', 'FuzzingTool Requester Agent', header)
         else:
+            for key, value in header.items():
+                self.set_header_content(key, value, header)
             if 'Content-Length' in header.keys():
                 del header['Content-Length']
         self.set_header_content('Accept-Encoding', 'gzip, deflate', header)
