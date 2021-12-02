@@ -24,4 +24,4 @@ jobs:
         continue-on-error: true
 
       - name: Running linter (2nd round)
-        run: flake8 src/fuzzingtool --max-line-length=100 --count --select=E101,E131,E304,E9,F541,F63,F7,F82,W293 --show-source --statistics
+        run: flake8 src/fuzzingtool --max-line-length=100 --count --select=E101,E131,E304,E9,F541,F63,F7,F82 --show-source --statistics
