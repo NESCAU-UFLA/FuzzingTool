@@ -23,7 +23,7 @@ from typing import Callable
 
 class Payload:
     """Class to represent a Payload
-    
+
     Attributes:
         raw: The payload before the mutation
         final: The payloa after the mutation
@@ -31,7 +31,7 @@ class Payload:
     """
     def __init__(self, payload: str = ''):
         """Class constructor
-        
+
         @type payload: str
         @param payload: The payload that'll be mutated
         """
@@ -64,7 +64,7 @@ class Payload:
         self.config['prefix'] = prefix
         self.final = prefix + self.final
         return self
-    
+
     def with_suffix(self, suffix: str) -> object:
         """Build the payload with suffix
 

@@ -24,7 +24,7 @@ from itertools import count
 
 class BaseItem(ABC):
     """Base item for the FuzzingTool objects
-    
+
     Attributes:
         index: The index of the item
     """
