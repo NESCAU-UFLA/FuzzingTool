@@ -174,7 +174,7 @@ class Requester:
     def set_header_content(self,
                            key: str,
                            value: str,
-                           header: dict = {}) -> None:
+                           header: dict = None) -> None:
         """The header content setter
 
         @type key: str
@@ -184,12 +184,10 @@ class Requester:
         @type header: dict
         @param header: The header to set the content
         """
-        if not header:
+        if header is None:
             header = self.__header
         value: FuzzWord = FuzzWord(value)
-        header['content'][key] = value
-        if value.has_fuzzing:
-            header['fuzz_keys'].append(key)
+        header[key] = value
 
     def test_connection(self) -> None:
         """Test the connection with the target, and raise an exception if couldn't connect"""
@@ -254,7 +252,7 @@ class Requester:
         except requests.exceptions.InvalidHeader as e:
             e = str(e)
             invalid_header = e[e.rindex(': ')+2:]
-            raise RequestException(f"Invalid header {invalid_header}: {headers[invalid_header].decode('utf-8')}")
+            raise RequestException(f"Invalid header {invalid_header}: {headers[invalid_header]}")
         except (
             requests.exceptions.ConnectionError,
             requests.exceptions.RequestException
@@ -283,10 +281,10 @@ class Requester:
             return DATA_FUZZING
         return UNKNOWN_FUZZING
 
-    def __setup_url(self, url: str) -> Tuple[dict, str]:
+    def __setup_url(self, url: str) -> Tuple[FuzzWord, str]:
         """The URL setup
 
-        @returns Tuple[dict, str]: The target URL dictionary and URL params
+        @returns Tuple[FuzzWord, str]: The target URL dictionary and URL params
         """
         if '://' not in url:
             # No schema was defined, default protocol http
@@ -307,18 +305,14 @@ class Requester:
         @param header: The HTTP header dictionary
         @returns dict: The HTTP header dictionary
         """
-        header = header if header else {}
-        header = {
-            'content': {**header},
-            'fuzz_keys': [],
-        }
-        for key, value in header['content'].items():
-            self.set_header_content(key, value, header)
-        if not header['content']:
+        if not header:
+            header = {}
             self.set_header_content('User-Agent', 'FuzzingTool Requester Agent', header)
         else:
-            if 'Content-Length' in header['content'].keys():
-                del header['content']['Content-Length']
+            for key, value in header.items():
+                self.set_header_content(key, value, header)
+            if 'Content-Length' in header.keys():
+                del header['Content-Length']
         self.set_header_content('Accept-Encoding', 'gzip, deflate', header)
         return header
 

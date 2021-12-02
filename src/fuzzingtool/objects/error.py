@@ -18,38 +18,29 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from typing import List
+from .base_objects import BaseItem
+from .payload import Payload
+from ..exceptions.base_exceptions import FuzzingToolException
 
-from ...bases.base_encoder import BaseEncoder
 
-
-class ChainEncoder(BaseEncoder):
-    """Class that handle with the chain encoders
+class Error(BaseItem):
+    """Class that handles the program errors
 
     Attributes:
-        encoders: The encoders list to be chained
+        exception: The raised exception by the requester
+        payload: The payload used in the request
     """
-    def __init__(self, encoders: List[BaseEncoder]):
+    def __init__(self, e: FuzzingToolException, payload: Payload):
         """Class constructor
 
-        @type encoders: List[BaseEncoder]
-        @param encoders: The encoders list to be chained
+        @type e: FuzzingToolException
+        @param e: The raised exception by the requester
+        @type payload: Payload
+        @param payload: The payload object used in the request
         """
-        self.__encoders = encoders
-        self.__str_repr = '@'.join(str(encoder) for encoder in encoders)
+        super().__init__()
+        self.exception = str(e)
+        self.payload = payload.final
 
     def __str__(self) -> str:
-        return self.__str_repr
-
-    def getEncoders(self) -> List[BaseEncoder]:
-        """The encoders list getter
-
-        @return List[BaseEncoder]: The encoders list
-        """
-        return self.__encoders
-
-    def encode(self, payload: str) -> str:
-        encoded = payload
-        for encoder in self.__encoders:
-            encoded = encoder.encode(encoded)
-        return encoded
+        return self.exception
