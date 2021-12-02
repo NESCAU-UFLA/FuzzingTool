@@ -298,6 +298,23 @@ class Requester:
             params = ''
         return (FuzzWord(url), params)
 
+    def __build_data_dict(self, data: str) -> Dict[FuzzWord, FuzzWord]:
+        """Build the data string into a data dict
+
+        @type datat: str
+        @param datat: The data to be used in the request
+        @returns Dict[FuzzWord, FuzzWord]: The data dictionary
+        """
+        data_dict = {}
+        if data:
+            for variable in data.split('&'):
+                if '=' in variable:
+                    key, value = variable.split('=')
+                    data_dict[FuzzWord(key)] = FuzzWord(value)
+                else:
+                    data_dict[FuzzWord(variable)] = FuzzWord()
+        return data_dict
+
     def __setup_header(self, header: dict) -> dict:
         """Setup the HTTP Header
 
@@ -315,23 +332,6 @@ class Requester:
                 del header['Content-Length']
         self.set_header_content('Accept-Encoding', 'gzip, deflate', header)
         return header
-
-    def __build_data_dict(self, data: str) -> Dict[FuzzWord, FuzzWord]:
-        """Build the data string into a data dict
-
-        @type datat: str
-        @param datat: The data to be used in the request
-        @returns Dict[FuzzWord, FuzzWord]: The data dictionary
-        """
-        data_dict = {}
-        if data:
-            for variable in data.split('&'):
-                if '=' in variable:
-                    key, value = variable.split('=')
-                    data_dict[FuzzWord(key)] = FuzzWord(value)
-                else:
-                    data_dict[FuzzWord(variable)] = FuzzWord()
-        return data_dict
 
     def __setup_proxy(self, proxy: str) -> Dict[str, str]:
         """Setup the proxy
