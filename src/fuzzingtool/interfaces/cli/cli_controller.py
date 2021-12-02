@@ -38,11 +38,11 @@ from ...conn.request_parser import check_is_subdomain_fuzzing
 from ...conn.requesters import Requester
 from ...factories import PluginFactory, RequesterFactory, WordlistFactory
 from ...reports.report import Report
-from ...objects import Result
+from ...objects import Error, Result
 from ...exceptions.base_exceptions import FuzzingToolException
 from ...exceptions.main_exceptions import (ControllerException, SkipTargetException,
                                            WordlistCreationError, BuildWordlistFails)
-from ...exceptions.request_exceptions import RequestException, InvalidHostname
+from ...exceptions.request_exceptions import RequestException
 
 
 def banner() -> str:
@@ -282,13 +282,12 @@ class CliController:
         for requester in self.requesters:
             self.co.info_box("Start fuzzing on "
                              + get_host(get_pure_url(requester.get_url())))
-            start_index = 1
+            Result.reset_index()
             try:
                 self.prepare_target(requester)
                 for method in self.requester.methods:
                     self.requester.set_method(method)
-                    self.prepare_fuzzer(start_index)
-                    start_index = self.fuzzer.index
+                    self.prepare_fuzzer()
                 if not self.is_verbose_mode():
                     CliOutput.print("")
             except SkipTargetException as e:
@@ -321,13 +320,10 @@ class CliController:
         self.total_requests = (len(self.local_dictionary)
                                * len(self.requester.methods))
 
-    def prepare_fuzzer(self, start_index: int = 1) -> None:
+    def prepare_fuzzer(self) -> None:
         """Prepare the fuzzer for the fuzzing tests.
            Refill the dictionary with the wordlist
            content if a global dictionary was given
-
-        @type start_index: int
-        @param start_index: The index value to start the Fuzzer index
         """
         self.local_dictionary.reload()
         self.fuzzer = Fuzzer(
@@ -338,7 +334,6 @@ class CliController:
             delay=self.delay,
             number_of_threads=self.number_of_threads,
             blacklist_status=self.blacklist_status,
-            start_index=start_index,
             result_callback=self._result_callback,
             exception_callbacks=[
                 self._invalid_hostname_callback,
@@ -435,45 +430,37 @@ class CliController:
                 result.index, self.total_requests, result.payload
             )
 
-    def _request_exception_callback(self,
-                                    e: RequestException,
-                                    payload: str) -> None:
+    def _request_exception_callback(self, error: Error) -> None:
         """Callback that handle with the request exceptions
 
-        @type e: RequestException
-        @param e: The request exception
-        @type payload: str
-        @param payload: The payload used in the request
+        @type error: Error
+        @param error: The error gived by the exception
         """
         if self.ignore_errors:
             if not self.verbose[0]:
                 self.co.progress_status(
-                    self.fuzzer.index, self.total_requests, payload
+                    error.index, self.total_requests, error.payload
                 )
             else:
                 if self.verbose[1]:
-                    self.co.not_worked_box(str(e))
+                    self.co.not_worked_box(str(error))
             with self.lock:
-                self.logger.write(str(e), payload)
+                self.logger.write(str(error), error.payload)
         else:
-            self.skip_target = str(e)
+            self.skip_target = str(error)
 
-    def _invalid_hostname_callback(self,
-                                   e: InvalidHostname,
-                                   payload: str) -> None:
+    def _invalid_hostname_callback(self, error: Error) -> None:
         """Callback that handle with the subdomain hostname resolver exceptions
 
-        @type e: InvalidHostname
-        @param e: The invalid hostname exception
-        @type payload: str
-        @param payload: The payload used in the request
+        @type error: Error
+        @param error: The error gived by the exception
         """
         if self.verbose[0]:
             if self.verbose[1]:
-                self.co.not_worked_box(str(e))
+                self.co.not_worked_box(str(error))
         else:
             self.co.progress_status(
-                self.fuzzer.index, self.total_requests, payload
+                error.index, self.total_requests, error.payload
             )
 
     def __get_target_fuzzing_type(self, requester: Requester) -> str:

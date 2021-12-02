@@ -22,13 +22,15 @@ from typing import Iterator, Tuple
 
 from requests import Response
 
+from .base_objects import BaseItem
+from .payload import Payload
 
-class Result:
-    """The FuzzingTool result handler
+
+class Result(BaseItem):
+    """The FuzzingTool result object
 
     Attributes:
-        index: The index of the result (same as the request index)
-        payload: The payload used in the request
+        payload: The string payload used in the request
         url: The requested target URL
         method: The method used in the request
         rtt: The elapsed time on both request and response
@@ -39,13 +41,13 @@ class Result:
         words: The quantitty of words in the response body
         lines: The quantity of lines in the response body
         custom: A dictionary to store custom data from the scanners
+        _payload: The Payload object
         response: The Response object from python requests
     """
     def __init__(self,
                  response: Response,
-                 rtt: float,
-                 request_index: int = 0,
-                 payload: str = ''):
+                 rtt: float = 0.0,
+                 payload: Payload = Payload()):
         """Class constructor
 
         @type response: Response
@@ -54,11 +56,11 @@ class Result:
         @param rtt: The elapsed time on both request and response
         @type request_index: int
         @param request_index: The index of the request
-        @type payload: str
+        @type payload: Payload
         @param payload: The payload used in the request
         """
-        self.index = str(request_index)
-        self.payload = payload
+        super().__init__()
+        self.payload = payload.final
         self.url = response.url
         self.method = response.request.method
         self.rtt = float('%.6f' % (rtt))
@@ -71,11 +73,11 @@ class Result:
         self.words = len(content.split())
         self.lines = content.count(b'\n')
         self.custom = {}
+        self._payload = payload
         self.__response = response
 
     def __iter__(self) -> Iterator[Tuple]:
         yield 'index', self.index
-        yield 'payload', self.payload
         yield 'url', self.url
         yield 'method', self.method
         yield 'rtt', self.rtt
@@ -87,6 +89,10 @@ class Result:
         yield 'lines', self.lines
         for key, value in self.custom.items():
             yield key, value
+        yield 'payload', self.payload
+        yield 'payload_raw', self._payload.raw
+        for key, value in self._payload.config.items():
+            yield f"payload_{key}", value
 
     def get_response(self) -> Response:
         """The response getter

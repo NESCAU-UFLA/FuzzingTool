@@ -29,7 +29,7 @@ from .dictionary import Dictionary
 from .matcher import Matcher
 from .bases.base_scanner import BaseScanner
 from ..conn.requesters import Requester
-from ..objects.result import Result
+from ..objects import Error, Payload, Result
 from ..exceptions.request_exceptions import RequestException, InvalidHostname
 
 
@@ -45,7 +45,6 @@ class Fuzzer:
         running: A flag to say if the application is running or not
         blacklist_status: The blacklist status object to handle
                           with the blacklisted status
-        start_index: The actual request index
     """
     def __init__(self,
                  requester: Requester,
@@ -55,7 +54,6 @@ class Fuzzer:
                  delay: float,
                  number_of_threads: int,
                  blacklist_status: BlacklistStatus,
-                 start_index: int,
                  result_callback: Callable[[dict, bool], None],
                  exception_callbacks: List[Callable[[str, str], None]]):
         """Class constructor
@@ -76,8 +74,6 @@ class Fuzzer:
         @type blacklist_status: blacklist_status
         @param blacklist_status: The blacklist status object
                                  to handle with the blacklisted status
-        @type start_index: int
-        @param start_index: The index value to start
         @type result_callback: Callable
         @param result_callback: The callback function for the results
         @type exception_callbacks: List[Callable]
@@ -91,7 +87,6 @@ class Fuzzer:
         self.__delay = delay
         self.__running = True
         self.__blacklist_status = blacklist_status
-        self.index = start_index
         self.result_callback = result_callback
         self.exception_callbacks = exception_callbacks
         self.setup_threads(number_of_threads)
@@ -110,9 +105,7 @@ class Fuzzer:
             join_timeout: The join timeout for the threads
             player: The player event object handler
         """
-        self.__threads = []
-        for _ in range(number_of_threads):
-            self.__threads.append(Thread(target=self.run, daemon=True))
+        self.__threads = [Thread(target=self.run, daemon=True) for _ in range(number_of_threads)]
         self.__running_threads = number_of_threads
         self.__paused_threads = 0
         self.__join_timeout = 0.001*float(number_of_threads)
@@ -138,15 +131,14 @@ class Fuzzer:
         while not self.__dict.is_empty():
             for payload in next(self.__dict):
                 try:
-                    response, rtt, *args = self.__requester.request(payload)
+                    response, rtt, *args = self.__requester.request(str(payload))
                 except InvalidHostname as e:
-                    self.exception_callbacks[0](e, payload)
+                    self.exception_callbacks[0](Error(e, payload))
                 except RequestException as e:
-                    self.exception_callbacks[1](e, payload)
+                    self.exception_callbacks[1](Error(e, payload))
                 else:
                     self.__threat_result(response, rtt, payload, *args)
                 finally:
-                    self.index += 1
                     time.sleep(self.__delay)
             if self.is_paused():
                 self.__paused_threads += 1
@@ -194,7 +186,7 @@ class Fuzzer:
     def __threat_result(self,
                         response: Response,
                         rtt: float,
-                        payload: str,
+                        payload: Payload,
                         *args):
         """Threats the result
 
@@ -202,13 +194,13 @@ class Fuzzer:
         @param response: The response object from the request
         @type rtt: float
         @param rtt: The elapsed time between request and response
-        @type payload: str
+        @type payload: Payload
         @param payload: The payload used in the request
         """
         if (self.__blacklist_status and
                 response.status_code in self.__blacklist_status.codes):
             self.__blacklist_status.action_callback(response.status_code)
-        result = Result(response, rtt, self.index, payload)
+        result = Result(response, rtt, payload)
         self.__scanner.inspect_result(result, *args)
         self.result_callback(
             result,

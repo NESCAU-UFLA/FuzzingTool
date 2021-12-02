@@ -18,38 +18,22 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from typing import List
+from abc import ABC
+from itertools import count
 
-from ...bases.base_encoder import BaseEncoder
 
-
-class ChainEncoder(BaseEncoder):
-    """Class that handle with the chain encoders
-
+class BaseItem(ABC):
+    """Base item for the FuzzingTool objects
+    
     Attributes:
-        encoders: The encoders list to be chained
+        index: The index of the item
     """
-    def __init__(self, encoders: List[BaseEncoder]):
-        """Class constructor
+    index = count(1)
 
-        @type encoders: List[BaseEncoder]
-        @param encoders: The encoders list to be chained
-        """
-        self.__encoders = encoders
-        self.__str_repr = '@'.join(str(encoder) for encoder in encoders)
+    @staticmethod
+    def reset_index() -> None:
+        """Resets the item index"""
+        BaseItem.index = count(1)
 
-    def __str__(self) -> str:
-        return self.__str_repr
-
-    def getEncoders(self) -> List[BaseEncoder]:
-        """The encoders list getter
-
-        @return List[BaseEncoder]: The encoders list
-        """
-        return self.__encoders
-
-    def encode(self, payload: str) -> str:
-        encoded = payload
-        for encoder in self.__encoders:
-            encoded = encoder.encode(encoded)
-        return encoded
+    def __init__(self):
+        self.index = next(BaseItem.index)

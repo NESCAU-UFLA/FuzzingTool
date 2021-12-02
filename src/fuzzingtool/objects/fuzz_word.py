@@ -23,7 +23,13 @@ from ..utils.consts import FUZZING_MARK, FUZZING_MARK_LEN
 
 
 class FuzzWord:
-    """Class to represent a Fuzzing Word"""
+    """Class to represent a Fuzzing Word
+    
+    Attributes:
+        word: The word that'll be fuzzed or not
+        fuzzing_indexes: The fuzzing indexes of the word
+        has_fuzzing: A flag to say if the word will be fuzzed or not
+    """
     def __init__(self, word: str = FUZZING_MARK):
         """Class constructor
 
