@@ -1,11 +1,75 @@
 import unittest
 from unittest.mock import Mock, patch
 
+from requests import Response
+
 from fuzzingtool.conn.requesters.requester import Requester
 from fuzzingtool.objects.fuzz_word import FuzzWord
+from fuzzingtool.utils.consts import (FUZZING_MARK, UNKNOWN_FUZZING, HTTP_METHOD_FUZZING,
+                                      PATH_FUZZING, DATA_FUZZING)
 
 
 class TestRequester(unittest.TestCase):
+    def test_get_url(self):
+        return_expected = "https://test-url.com/"
+        test_url = "https://test-url.com/"
+        returned_data = Requester(test_url).get_url()
+        self.assertIsInstance(returned_data, str)
+        self.assertEqual(returned_data, return_expected)
+
+    def test_set_fuzzing_type_for_method_fuzzing(self):
+        return_expected = HTTP_METHOD_FUZZING
+        test_method = FUZZING_MARK
+        requester = Requester("https://test-url.com/", method=test_method)
+        returned_data = requester._set_fuzzing_type()
+        self.assertIsInstance(returned_data, int)
+        self.assertEqual(returned_data, return_expected)
+        self.assertEqual(requester.is_method_fuzzing(), True)
+
+    def test_set_fuzzing_type_for_path_fuzzing(self):
+        return_expected = PATH_FUZZING
+        test_url = f"https://test-url.com/{FUZZING_MARK}"
+        requester = Requester(test_url)
+        returned_data = requester._set_fuzzing_type()
+        self.assertIsInstance(returned_data, int)
+        self.assertEqual(returned_data, return_expected)
+        self.assertEqual(requester.is_path_fuzzing(), True)
+
+    def test_set_fuzzing_type_for_data_fuzzing_on_url_params(self):
+        return_expected = DATA_FUZZING
+        test_url = f"https://test-url.com/?q={FUZZING_MARK}"
+        requester = Requester(test_url)
+        returned_data = requester._set_fuzzing_type()
+        self.assertIsInstance(returned_data, int)
+        self.assertEqual(returned_data, return_expected)
+        self.assertEqual(requester.is_data_fuzzing(), True)
+
+    def test_set_fuzzing_type_for_data_fuzzing_on_body(self):
+        return_expected = DATA_FUZZING
+        test_body = f"user={FUZZING_MARK}&pass={FUZZING_MARK}"
+        requester = Requester("https://test-url.com/", body=test_body)
+        returned_data = requester._set_fuzzing_type()
+        self.assertIsInstance(returned_data, int)
+        self.assertEqual(returned_data, return_expected)
+        self.assertEqual(requester.is_data_fuzzing(), True)
+
+    def test_set_fuzzing_type_for_data_fuzzing_on_headers(self):
+        return_expected = DATA_FUZZING
+        test_header = {
+            'Cookie': f"TESTSESSID={FUZZING_MARK}"
+        }
+        requester = Requester("https://test-url.com/", headers=test_header)
+        returned_data = requester._set_fuzzing_type()
+        self.assertIsInstance(returned_data, int)
+        self.assertEqual(returned_data, return_expected)
+        self.assertEqual(requester.is_data_fuzzing(), True)
+
+    def test_set_fuzzing_type_for_unknown_fuzzing(self):
+        return_expected = UNKNOWN_FUZZING
+        returned_data = Requester("https://test-url.com/")._set_fuzzing_type()
+        self.assertIsInstance(returned_data, int)
+        self.assertEqual(returned_data, return_expected)
+
     def test_setup_url(self):
         expected_url = "https://test-url.com/"
         expected_params = ''
@@ -70,7 +134,7 @@ class TestRequester(unittest.TestCase):
         self.assertIsInstance(returned_data, dict)
         self.assertEqual(len(returned_data), 1)
         self.assertIsInstance(returned_data['test'], FuzzWord)
-        self.assertEqual(returned_data['test'].word, return_expected['test'].word)
+        self.assertEqual(returned_data['test'], return_expected['test'])
 
     def test_build_data_dict_with_key_and_value(self):
         test_data = 'test=1'
@@ -81,7 +145,7 @@ class TestRequester(unittest.TestCase):
         self.assertIsInstance(returned_data, dict)
         self.assertEqual(len(returned_data), 1)
         self.assertIsInstance(returned_data['test'], FuzzWord)
-        self.assertEqual(returned_data['test'].word, return_expected['test'].word)
+        self.assertEqual(returned_data['test'], return_expected['test'])
 
     def test_build_data_dict_with_multiple_key_and_value(self):
         test_data = 'test=1&othertest=2'
@@ -94,8 +158,8 @@ class TestRequester(unittest.TestCase):
         self.assertEqual(len(returned_data), 2)
         self.assertIsInstance(returned_data['test'], FuzzWord)
         self.assertIsInstance(returned_data['othertest'], FuzzWord)
-        self.assertEqual(returned_data['test'].word, return_expected['test'].word)
-        self.assertEqual(returned_data['othertest'].word, return_expected['othertest'].word)
+        self.assertEqual(returned_data['test'], return_expected['test'])
+        self.assertEqual(returned_data['othertest'], return_expected['othertest'])
 
     def test_setup_header_with_blank_header(self):
         test_header = {}
@@ -107,8 +171,8 @@ class TestRequester(unittest.TestCase):
         self.assertIsInstance(returned_data, dict)
         self.assertIsInstance(returned_data['User-Agent'], FuzzWord)
         self.assertIsInstance(returned_data['Accept-Encoding'], FuzzWord)
-        self.assertEqual(returned_data['User-Agent'].word, return_expected['User-Agent'].word)
-        self.assertEqual(returned_data['Accept-Encoding'].word, return_expected['Accept-Encoding'].word)
+        self.assertEqual(returned_data['User-Agent'], return_expected['User-Agent'])
+        self.assertEqual(returned_data['Accept-Encoding'], return_expected['Accept-Encoding'])
 
     def test_setup_header_with_filled_header(self):
         test_header = {
@@ -124,8 +188,8 @@ class TestRequester(unittest.TestCase):
         self.assertIsInstance(returned_data['User-Agent'], FuzzWord)
         self.assertIsInstance(returned_data['Accept-Encoding'], FuzzWord)
         self.assertEqual(('Content-Length' in returned_data.keys()), False)
-        self.assertEqual(returned_data['User-Agent'].word, return_expected['User-Agent'].word)
-        self.assertEqual(returned_data['Accept-Encoding'].word, return_expected['Accept-Encoding'].word)
+        self.assertEqual(returned_data['User-Agent'], return_expected['User-Agent'])
+        self.assertEqual(returned_data['Accept-Encoding'], return_expected['Accept-Encoding'])
 
     def test_setup_proxy(self):
         test_proxy = "127.0.0.1:443"
