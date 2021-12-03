@@ -103,7 +103,7 @@ class TestRequester(unittest.TestCase):
             'User-Agent': FuzzWord('FuzzingTool Requester Agent'),
             'Accept-Encoding': FuzzWord('gzip, deflate')
         }
-        returned_data = Requester('', headers=test_header)._Requester__header
+        returned_data = Requester._Requester__setup_header(Requester, test_header)
         self.assertIsInstance(returned_data, dict)
         self.assertIsInstance(returned_data['User-Agent'], FuzzWord)
         self.assertIsInstance(returned_data['Accept-Encoding'], FuzzWord)
@@ -119,10 +119,30 @@ class TestRequester(unittest.TestCase):
             'User-Agent': FuzzWord('Test User Agent'),
             'Accept-Encoding': FuzzWord('gzip, deflate')
         }
-        returned_data = Requester('', headers=test_header)._Requester__header
+        returned_data = Requester._Requester__setup_header(Requester, test_header)
         self.assertIsInstance(returned_data, dict)
         self.assertIsInstance(returned_data['User-Agent'], FuzzWord)
         self.assertIsInstance(returned_data['Accept-Encoding'], FuzzWord)
         self.assertEqual(('Content-Length' in returned_data.keys()), False)
         self.assertEqual(returned_data['User-Agent'].word, return_expected['User-Agent'].word)
         self.assertEqual(returned_data['Accept-Encoding'].word, return_expected['Accept-Encoding'].word)
+
+    def test_setup_proxy(self):
+        test_proxy = "127.0.0.1:443"
+        return_expected = {
+            'http': f"http://{test_proxy}",
+            'https': f"https://{test_proxy}"
+        }
+        returned_data = Requester._Requester__setup_proxy(Requester, test_proxy)
+        self.assertIsInstance(returned_data, dict)
+        self.assertEqual(returned_data, return_expected)
+
+    def test_get_request_parameters(self):
+        test_payload = ''
+        returned_data = Requester("https://test-url.com/")._Requester__get_request_parameters(test_payload)
+        returned_method, returned_url, returned_body, returned_url_params, returned_header = returned_data
+        self.assertIsInstance(returned_method, str)
+        self.assertIsInstance(returned_url, str)
+        self.assertIsInstance(returned_body, dict)
+        self.assertIsInstance(returned_url_params, dict)
+        self.assertIsInstance(returned_header, dict)
