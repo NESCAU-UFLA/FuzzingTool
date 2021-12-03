@@ -110,7 +110,7 @@ class Requester:
             self.__request = self.__common_request
         self.methods = methods if methods else []
         if cookie:
-            self.set_header_content('Cookie', cookie)
+            self.__header['Cookie'] = FuzzWord(cookie)
         self._lock = Lock()
 
     def get_url(self) -> str:
@@ -170,24 +170,6 @@ class Requester:
         @param body: The body data of the request
         """
         self.__body = self.__build_data_dict(body)
-
-    def set_header_content(self,
-                           key: str,
-                           value: str,
-                           header: dict = None) -> None:
-        """The header content setter
-
-        @type key: str
-        @param key: The HTTP header key
-        @type value: str
-        @param value: The HTTP header value
-        @type header: dict
-        @param header: The header to set the content
-        """
-        if header is None:
-            header = self.__header
-        value: FuzzWord = FuzzWord(value)
-        header[key] = value
 
     def test_connection(self) -> None:
         """Test the connection with the target, and raise an exception if couldn't connect"""
@@ -323,14 +305,15 @@ class Requester:
         @returns dict: The HTTP header dictionary
         """
         if not header:
-            header = {}
-            self.set_header_content('User-Agent', 'FuzzingTool Requester Agent', header)
+            header = {
+                'User-Agent': FuzzWord('FuzzingTool Requester Agent')
+            }
         else:
             for key, value in header.items():
-                self.set_header_content(key, value, header)
+                header[key] = FuzzWord(value)
             if 'Content-Length' in header.keys():
                 del header['Content-Length']
-        self.set_header_content('Accept-Encoding', 'gzip, deflate', header)
+        header['Accept-Encoding'] = FuzzWord('gzip, deflate')
         return header
 
     def __setup_proxy(self, proxy: str) -> Dict[str, str]:
