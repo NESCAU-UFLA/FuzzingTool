@@ -40,7 +40,10 @@ class TestRequester(unittest.TestCase):
         returned_data = requester.request(test_payload)
         mock_resolve_hostname.assert_called_once_with("test-url.com")
         mock_request.assert_called_once_with(test_payload)
-        *_, returned_ip = returned_data
+        returned_response, returned_rtt, returned_ip = returned_data
+        self.assertIsInstance(returned_response, Response)
+        self.assertIsInstance(returned_rtt, float)
+        self.assertEqual(returned_rtt, 0.0)
         self.assertIsInstance(returned_ip, dict)
         self.assertDictEqual(returned_ip, expected_ip_dict)
 
