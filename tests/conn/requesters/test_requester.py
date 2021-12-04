@@ -1,12 +1,13 @@
 import unittest
 from unittest.mock import Mock, patch
 
-from requests import Response
+import requests
 
 from fuzzingtool.conn.requesters.requester import Requester
 from fuzzingtool.objects.fuzz_word import FuzzWord
 from fuzzingtool.utils.consts import (FUZZING_MARK, UNKNOWN_FUZZING, HTTP_METHOD_FUZZING,
                                       PATH_FUZZING, DATA_FUZZING)
+from fuzzingtool.exceptions.request_exceptions import RequestException
 
 
 class TestRequester(unittest.TestCase):
@@ -16,6 +17,47 @@ class TestRequester(unittest.TestCase):
         returned_data = Requester(test_url).get_url()
         self.assertIsInstance(returned_data, str)
         self.assertEqual(returned_data, return_expected)
+
+    def test_set_method(self):
+        test_method = "GET"
+        requester = Requester("https://test-url.com/")
+        requester.set_method(test_method)
+        returned_data = requester._Requester__method
+        self.assertIsInstance(returned_data, FuzzWord)
+        self.assertEqual(returned_data.word, test_method)
+
+    def test_set_body(self):
+        test_body = "test=1&other=2"
+        return_expected = {
+            FuzzWord('test'): FuzzWord('1'),
+            FuzzWord('other'): FuzzWord('2')
+        }
+        requester = Requester("https://test-url.com/")
+        requester.set_body(test_body)
+        returned_data = requester._Requester__body
+        self.assertDictEqual(returned_data, return_expected)
+
+    @patch("fuzzingtool.conn.requesters.requester.requests.get")
+    def test_test_connection_with_raise_exception(self, mock_get: Mock):
+        requester = Requester("https://test-url.com/")
+        mock_get.side_effect = requests.exceptions.ProxyError
+        with self.assertRaises(RequestException):
+            requester.test_connection()
+        mock_get.side_effect = requests.exceptions.SSLError
+        with self.assertRaises(RequestException):
+            requester.test_connection()
+        mock_get.side_effect = requests.exceptions.Timeout
+        with self.assertRaises(RequestException):
+            requester.test_connection()
+        mock_get.side_effect = requests.exceptions.InvalidHeader("Cookie: TEST_TEST")
+        with self.assertRaises(RequestException):
+            requester.test_connection()
+        mock_get.side_effect = requests.exceptions.ConnectionError
+        with self.assertRaises(RequestException):
+            requester.test_connection()
+        mock_get.side_effect = requests.exceptions.RequestException
+        with self.assertRaises(RequestException):
+            requester.test_connection()
 
     def test_set_fuzzing_type_for_method_fuzzing(self):
         return_expected = HTTP_METHOD_FUZZING
@@ -134,7 +176,7 @@ class TestRequester(unittest.TestCase):
         self.assertIsInstance(returned_data, dict)
         self.assertEqual(len(returned_data), 1)
         self.assertIsInstance(returned_data['test'], FuzzWord)
-        self.assertEqual(returned_data['test'], return_expected['test'])
+        self.assertDictEqual(returned_data, return_expected)
 
     def test_build_data_dict_with_key_and_value(self):
         test_data = 'test=1'
@@ -145,7 +187,7 @@ class TestRequester(unittest.TestCase):
         self.assertIsInstance(returned_data, dict)
         self.assertEqual(len(returned_data), 1)
         self.assertIsInstance(returned_data['test'], FuzzWord)
-        self.assertEqual(returned_data['test'], return_expected['test'])
+        self.assertDictEqual(returned_data, return_expected)
 
     def test_build_data_dict_with_multiple_key_and_value(self):
         test_data = 'test=1&othertest=2'
@@ -158,8 +200,7 @@ class TestRequester(unittest.TestCase):
         self.assertEqual(len(returned_data), 2)
         self.assertIsInstance(returned_data['test'], FuzzWord)
         self.assertIsInstance(returned_data['othertest'], FuzzWord)
-        self.assertEqual(returned_data['test'], return_expected['test'])
-        self.assertEqual(returned_data['othertest'], return_expected['othertest'])
+        self.assertDictEqual(returned_data, return_expected)
 
     def test_setup_header_with_blank_header(self):
         test_header = {}
@@ -171,8 +212,7 @@ class TestRequester(unittest.TestCase):
         self.assertIsInstance(returned_data, dict)
         self.assertIsInstance(returned_data['User-Agent'], FuzzWord)
         self.assertIsInstance(returned_data['Accept-Encoding'], FuzzWord)
-        self.assertEqual(returned_data['User-Agent'], return_expected['User-Agent'])
-        self.assertEqual(returned_data['Accept-Encoding'], return_expected['Accept-Encoding'])
+        self.assertDictEqual(returned_data, return_expected)
 
     def test_setup_header_with_filled_header(self):
         test_header = {
@@ -188,8 +228,7 @@ class TestRequester(unittest.TestCase):
         self.assertIsInstance(returned_data['User-Agent'], FuzzWord)
         self.assertIsInstance(returned_data['Accept-Encoding'], FuzzWord)
         self.assertEqual(('Content-Length' in returned_data.keys()), False)
-        self.assertEqual(returned_data['User-Agent'], return_expected['User-Agent'])
-        self.assertEqual(returned_data['Accept-Encoding'], return_expected['Accept-Encoding'])
+        self.assertDictEqual(returned_data, return_expected)
 
     def test_setup_proxy(self):
         test_proxy = "127.0.0.1:443"
