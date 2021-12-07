@@ -2,7 +2,7 @@ import unittest
 from unittest.mock import Mock, patch
 
 import socket
-from requests import Response
+from requests.models import Response
 
 from fuzzingtool.conn.requesters.subdomain_requester import SubdomainRequester
 from fuzzingtool.utils.consts import SUBDOMAIN_FUZZING

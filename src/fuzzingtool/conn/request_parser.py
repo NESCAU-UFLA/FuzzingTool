@@ -47,7 +47,7 @@ def check_is_url_discovery(url: FuzzWord) -> bool:
 def check_is_data_fuzzing(
     url_params: Dict[FuzzWord, FuzzWord],
     body: Dict[FuzzWord, FuzzWord],
-    header: dict
+    header: Dict[str, FuzzWord]
 ) -> bool:
     """Checks if the fuzzing type is DataFuzzing
 
@@ -55,7 +55,7 @@ def check_is_data_fuzzing(
     @param url_params: The target URL parameters
     @type body: Dict[FuzzWord, FuzzWord]
     @param body: The target body data
-    @type header: dict
+    @type header: Dict[str, FuzzWord]
     @param header: The target HTTP header
     @returns bool: The data fuzzing flag
     """
