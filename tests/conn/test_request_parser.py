@@ -1,5 +1,4 @@
 import unittest
-from unittest.mock import Mock, patch
 
 from fuzzingtool.conn.request_parser import *
 from fuzzingtool.objects.fuzz_word import FuzzWord
@@ -84,3 +83,33 @@ class TestRequestParser(unittest.TestCase):
         returned_data = parser.get_url(test_url)
         self.assertIsInstance(returned_data, str)
         self.assertEqual(returned_data, return_expected)
+
+    def test_get_header(self):
+        test_payload = "payload"
+        return_expected = {
+            'Cookie': f"TESTSESSID={test_payload}",
+            'User-Agent': "FuzzingTool User Agent"
+        }
+        test_header = {
+            'Cookie': FuzzWord(f"TESTSESSID={FUZZING_MARK}"),
+            'User-Agent': FuzzWord("FuzzingTool User Agent")
+        }
+        parser = RequestParser()
+        parser.set_payload(test_payload)
+        returned_data = parser.get_header(test_header)
+        self.assertIsInstance(returned_data, dict)
+        self.assertDictEqual(returned_data, return_expected)
+
+    def test_get_data(self):
+        test_payload = "payload"
+        return_expected = {
+            'login': test_payload,
+        }
+        test_data = {
+            FuzzWord('login'): FuzzWord(FUZZING_MARK),
+        }
+        parser = RequestParser()
+        parser.set_payload(test_payload)
+        returned_data = parser.get_data(test_data)
+        self.assertIsInstance(returned_data, dict)
+        self.assertDictEqual(returned_data, return_expected)
