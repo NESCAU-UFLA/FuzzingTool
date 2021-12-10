@@ -20,7 +20,7 @@
 
 from typing import List
 
-from ..plugin import Plugin
+from ...bases.base_plugin import Plugin
 from ...bases.base_wordlist import BaseWordlist
 from ....utils.http_utils import get_path
 from ....conn.requesters.requester import Requester

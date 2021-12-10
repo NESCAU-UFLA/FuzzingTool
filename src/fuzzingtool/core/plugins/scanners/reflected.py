@@ -18,7 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from ..plugin import Plugin
+from ...bases.base_plugin import Plugin
 from ...bases.base_scanner import BaseScanner
 from ....objects.result import Result
 from ....interfaces.cli.cli_output import Colors, get_formated_result
