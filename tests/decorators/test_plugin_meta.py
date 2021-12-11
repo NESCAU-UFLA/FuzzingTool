@@ -76,9 +76,34 @@ class TestPluginMeta(unittest.TestCase):
                 __author__ = "Test Author"
                 __params__ = {
                     'metavar': "TEST_METAVAR",
-                    'type': ''
+                    'type': None
                 }
                 __desc__ = "Test Description"
                 __type__ = "Test Type"
                 __version__ = "Test Version"
         self.assertEqual(str(e.exception), "Value of type cannot be empty in parameters dict on plugin TestPlugin")
+        with self.assertRaises(MetadataException) as e:
+            @plugin_meta
+            class TestPlugin:
+                __author__ = "Test Author"
+                __params__ = {
+                    'metavar': "TEST_METAVAR",
+                    'type': list
+                }
+                __desc__ = "Test Description"
+                __type__ = "Test Type"
+                __version__ = "Test Version"
+        self.assertEqual(str(e.exception), "The key 'cli_list_separator' must be present when parameter type is list on plugin TestPlugin")
+        with self.assertRaises(MetadataException) as e:
+            @plugin_meta
+            class TestPlugin:
+                __author__ = "Test Author"
+                __params__ = {
+                    'metavar': "TEST_METAVAR",
+                    'type': list,
+                    'cli_list_separator': ''
+                }
+                __desc__ = "Test Description"
+                __type__ = "Test Type"
+                __version__ = "Test Version"
+        self.assertEqual(str(e.exception), "Value of 'cli_list_separator' cannot be blank on TestPlugin")
