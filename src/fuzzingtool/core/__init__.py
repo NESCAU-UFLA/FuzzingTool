@@ -20,7 +20,6 @@
 
 from .bases import *
 from .defaults import *
-from .plugins import *
 from .blacklist_status import BlacklistStatus
 from .dictionary import Dictionary
 from .fuzzer import Fuzzer

@@ -20,7 +20,7 @@
 
 import re
 
-from ..plugin import Plugin
+from ...bases.base_plugin import Plugin
 from ...bases.base_scanner import BaseScanner
 from ....objects.result import Result
 from ....utils.utils import stringfy_list

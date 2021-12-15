@@ -22,7 +22,7 @@ from typing import List
 
 from dns import resolver, query, zone
 
-from ..plugin import Plugin
+from ...bases.base_plugin import Plugin
 from ...bases.base_wordlist import BaseWordlist
 from ....decorators.plugin_meta import plugin_meta
 from ....exceptions.main_exceptions import MissingParameter, BuildWordlistFails

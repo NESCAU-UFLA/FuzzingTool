@@ -18,7 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from ..plugin import Plugin
+from ...bases.base_plugin import Plugin
 from ...bases.base_encoder import BaseEncoder
 from ....decorators.plugin_meta import plugin_meta
 

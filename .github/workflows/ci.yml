@@ -8,7 +8,14 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: "Installing dependencies"
-        run: pip install setuptools flake8 pytest
+        run: pip install flake8 setuptools pytest
+
+      - name: Running linter (1st round)
+        run: flake8 src/fuzzingtool --max-line-length=100 --extend-ignore=E114,E222,E231,E251,E265,E303,E731,W291,F403,F841 --per-file-ignores="__init__.py:F401,W292"
+        continue-on-error: true
+
+      - name: Running linter (2nd round)
+        run: flake8 src/fuzzingtool --max-line-length=100 --count --select=E101,E131,E304,E9,F541,F63,F7,F82 --show-source --statistics
 
       - name: "Build"
         run: |
@@ -18,10 +25,3 @@ jobs:
 
       - name: "Test"
         run: python3 -m pytest
-
-      - name: Running linter (1st round)
-        run: flake8 src/fuzzingtool --max-line-length=100 --extend-ignore=E114,E222,E231,E251,E265,E303,E731,W291,F403,F841 --per-file-ignores="__init__.py:F401,W292"
-        continue-on-error: true
-
-      - name: Running linter (2nd round)
-        run: flake8 src/fuzzingtool --max-line-length=100 --count --select=E101,E131,E304,E9,F541,F63,F7,F82 --show-source --statistics
