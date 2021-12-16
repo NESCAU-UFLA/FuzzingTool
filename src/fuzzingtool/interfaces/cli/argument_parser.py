@@ -44,7 +44,6 @@ class ArgumentParser(argparse.ArgumentParser):
                        f"to show the help menu.\n\n{usage}\n\n{examples}")
         if len(argv) == 2 and ('-h=' in argv[1] or '--help=' in argv[1]):
             asked_help = argv[1].split('=')[1]
-            self.EXAMPLE_TEXT = "Examples:\n"
             if 'wordlists' == asked_help:
                 self._show_wordlists_help()
             elif 'encoders' == asked_help:
@@ -82,25 +81,6 @@ class ArgumentParser(argparse.ArgumentParser):
         CO.help_content(5, "[PAYLOAD1,PAYLOAD2,]", "Set the payloads list to be used as wordlist")
         CO.help_title(2, "Plugins:\n")
         self.__show_plugins_help_from_category('wordlists')
-        CO.help_title(0, self.EXAMPLE_TEXT)
-        CO.print(f"FuzzingTool -u https://{FUZZING_MARK}.domainexample.com/ "
-                 "-w /path/to/wordlist/subdomains.txt -t 30 --timeout 5 -V2\n")
-        CO.print(f"FuzzingTool -u https://{FUZZING_MARK}.domainexample1.com/ "
-                 f"-u https://{FUZZING_MARK}.domainexample2.com/ "
-                 "-w [wp-admin,admin,webmail,www,cpanel] -t 30 --timeout 5 -V2\n")
-        CO.print(f"FuzzingTool -u https://{FUZZING_MARK}.domainexample.com/ "
-                 "-w CrtSh -t 30 --timeout 5 -V2\n")
-        CO.print(f"FuzzingTool -u https://domainexample.com/{FUZZING_MARK} "
-                 "-w Overflow=5000,:../:etc/passwd -t 30 --timeout 5 -V2\n")
-        CO.help_title(0, "Examples with multiple wordlists:\n")
-        CO.print(f"FuzzingTool -u https://{FUZZING_MARK}.domainexample.com/ "
-                 "-w 'DnsZone;CrtSh' -t 30 --timeout 5 -V2\n")
-        CO.print(f"FuzzingTool -u https://domainexample.com/{FUZZING_MARK} "
-                 "-w 'Robots;/path/to/wordlist/paths.txt' -t 30 --timeout 5 -V2\n")
-        CO.help_title(0, "Example with wordlists per target:\n")
-        CO.print(f"FuzzingTool -u domainexample.com/{FUZZING_MARK} "
-                 f"-u {FUZZING_MARK}.domainexample2.com "
-                 "-w 'Robots;/path/to/wordlist/paths.txt' -w CrtSh -t 30 --timeout 5 -V2\n")
         exit(0)
 
     def _show_encoders_help(self) -> None:
@@ -108,9 +88,6 @@ class ArgumentParser(argparse.ArgumentParser):
         CO.help_title(0, "Encoder options: (-e)")
         CO.help_title(2, "Set the encoder used on the payloads\n")
         self.__show_plugins_help_from_category('encoders')
-        CO.help_title(0, self.EXAMPLE_TEXT)
-        CO.print("FuzzingTool -u https://domainexample.com/page.php?id= "
-                 "-w /path/to/wordlist/sqli.txt -e Url=2 -t 30 --scanner Find=SQL\n")
         exit(0)
 
     def _show_scanners_help(self) -> None:
@@ -123,9 +100,6 @@ class ArgumentParser(argparse.ArgumentParser):
         CO.help_content(5, "SubdomainScanner", "Scanner for the subdomain fuzzing")
         CO.help_title(2, "Plugins (--scaner SCANNER):\n")
         self.__show_plugins_help_from_category('scanners')
-        CO.help_title(0, self.EXAMPLE_TEXT)
-        CO.print("FuzzingTool -u https://domainexample.com/search.php?query= "
-                 "-w /path/to/wordlist/xss.txt --scanner Reflected -t 30 -o csv\n")
         exit(0)
 
     def __show_plugins_help_from_category(self, category: str) -> None:
@@ -158,29 +132,34 @@ class ArgumentParser(argparse.ArgumentParser):
             action='version',
             version=f"FuzzingTool v{version()}"
         )
+        self.__build_target_opts()
         self.__build_request_opts()
         self.__build_dictionary_opts()
         self.__build_match_opts()
         self.__build_display_opts()
         self.__build_more_opts()
 
-    def __build_request_opts(self) -> None:
-        """Builds the arguments for request options"""
-        request_opts = self.add_argument_group('Request options')
-        request_opts.add_argument(
+    def __build_target_opts(self) -> None:
+        target_opts = self.add_argument_group('Target options')
+        target_opts = target_opts.add_mutually_exclusive_group()
+        target_opts.add_argument(
             '-u',
-            action='append',
+            action='store',
             dest='url',
             help="Define the target URL",
             metavar='URL',
         )
-        request_opts.add_argument(
+        target_opts.add_argument(
             '-r',
-            action='append',
+            action='store',
             dest='raw_http',
-            help="Define the file with the raw HTTP request (scheme not specified)",
+            help="Define the file with the raw HTTP request of the target (scheme not specified)",
             metavar='FILE',
         )
+
+    def __build_request_opts(self) -> None:
+        """Builds the arguments for request options"""
+        request_opts = self.add_argument_group('Request options')
         request_opts.add_argument(
             '--scheme',
             action='store',
@@ -246,7 +225,7 @@ class ArgumentParser(argparse.ArgumentParser):
         dictionary_opts = self.add_argument_group('Dictionary options')
         dictionary_opts.add_argument(
             '-w',
-            action='append',
+            action='store',
             dest='wordlist',
             help=("Define the wordlists with the payloads, separating with ';' "
                   "(--help=wordlists for more info)"),
@@ -411,7 +390,7 @@ class ArgumentParser(argparse.ArgumentParser):
             action='store',
             dest='blacklist_status',
             help=("Blacklist status codes from response, and take an action when one is detected. "
-                  "Available actions: skip (to skip the current target), "
+                  "Available actions: stop (to stop the app), "
                   "wait=SECONDS (to pause the app for some seconds)"),
             metavar='STATUS:ACTION',
         )

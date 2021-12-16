@@ -29,11 +29,11 @@ from ..exceptions.main_exceptions import BadArgumentFormat
 
 class ArgumentBuilder:
     @staticmethod
-    def build_targets_from_args(
-        urls: List[str],
+    def build_target_from_args(
+        url: str,
         method: Union[str, List[str]],
         body: str
-    ) -> List[dict]:
+    ) -> dict:
         """Build the targets from arguments
 
         @type urls: List[str]
@@ -48,33 +48,30 @@ class ArgumentBuilder:
             methods = split_str_to_list(method)
         else:
             methods = method
-        targets = []
-        for url in urls:
-            if not methods:
-                if body and not ('?' in url or FUZZING_MARK in url):
-                    methods = ['POST']
-                else:
-                    methods = ['GET']
-            targets.append({
-                'url': url,
-                'methods': methods,
-                'body': body,
-                'header': {},
-            })
-        return targets
+        if not methods:
+            if body and not ('?' in url or FUZZING_MARK in url):
+                methods = ['POST']
+            else:
+                methods = ['GET']
+        return {
+            'url': url,
+            'methods': methods,
+            'body': body,
+            'header': {},
+        }
 
     @staticmethod
-    def build_targets_from_raw_http(
-        raw_http_filenames: List[str],
+    def build_target_from_raw_http(
+        raw_http_filename: str,
         scheme: str
-    ) -> List[dict]:
+    ) -> dict:
         """Build the targets from raw http files
 
         @type raw_http_filenames: list
         @param raw_http_filenames: The list with the raw http filenames
         @type scheme: str
         @param scheme: The scheme used in the URL
-        @returns List[dict]: The targets data builded into a list of dictionary
+        @returns dict: The target HTTP data builded into a dict
         """
         def build_header_from_raw_http(
             header_list: deque
@@ -96,24 +93,21 @@ class ArgumentBuilder:
                 i += 1
             return headers
 
-        targets = []
-        for raw_http_filename in raw_http_filenames:
-            try:
-                header_list = deque(read_file(raw_http_filename))
-            except ValueError:
-                raise BadArgumentFormat("Invalid header format. E.g. Key: value")
-            method, path, _ = header_list.popleft().split(' ')
-            methods = split_str_to_list(method)
-            headers = build_header_from_raw_http(header_list)
-            url = f"{scheme}://{headers['Host']}{path}"
-            if len(header_list) > 0:
-                body = header_list.popleft()
-            else:
-                body = ''
-            targets.append({
-                'url': url,
-                'methods': methods,
-                'body': body,
-                'header': headers,
-            })
-        return targets
+        try:
+            header_list = deque(read_file(raw_http_filename))
+        except ValueError:
+            raise BadArgumentFormat("Invalid header format. E.g. Key: value")
+        method, path, _ = header_list.popleft().split(' ')
+        methods = split_str_to_list(method)
+        headers = build_header_from_raw_http(header_list)
+        url = f"{scheme}://{headers['Host']}{path}"
+        if len(header_list) > 0:
+            body = header_list.popleft()
+        else:
+            body = ''
+        return {
+            'url': url,
+            'methods': methods,
+            'body': body,
+            'header': headers,
+        }

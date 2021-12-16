@@ -25,7 +25,7 @@ class ControllerException(FuzzingToolException):
     pass
 
 
-class SkipTargetException(FuzzingToolException):
+class StopActionInterrupt(FuzzingToolException):
     pass
 
 

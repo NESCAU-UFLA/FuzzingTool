@@ -18,7 +18,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from queue import Queue
 import time
 import threading
 from typing import Tuple, List, Union
@@ -40,7 +39,7 @@ from ...factories import PluginFactory, RequesterFactory, WordlistFactory
 from ...reports.report import Report
 from ...objects import Error, Result
 from ...exceptions.base_exceptions import FuzzingToolException
-from ...exceptions.main_exceptions import (ControllerException, SkipTargetException,
+from ...exceptions.main_exceptions import (ControllerException, StopActionInterrupt,
                                            WordlistCreationError, BuildWordlistFails)
 from ...exceptions.request_exceptions import RequestException
 
@@ -74,7 +73,7 @@ class CliController:
         logger: The object to handle with the program log
     """
     def __init__(self):
-        self.requesters = []
+        self.requester = None
         self.started_time = 0
         self.fuzzer = None
         self.all_results = {}
@@ -111,7 +110,7 @@ class CliController:
             self.co.error_box(str(e))
         self.co.set_verbosity_mode(self.is_verbose_mode())
         try:
-            self.check_connection_and_redirections()
+            self.check_connection()
             self.start()
         except KeyboardInterrupt:
             if self.fuzzer and self.fuzzer.is_running():
@@ -135,20 +134,12 @@ class CliController:
         scanner = None
         if arguments.scanner:
             scanner, param = arguments.scanner
-            scanner = PluginFactory.object_creator(
+            scanner: BaseScanner = PluginFactory.object_creator(
                 scanner, 'scanners', param
             )
-        self.global_scanner = scanner
-        self.__check_for_duplicated_targets()
+        self.scanner = scanner
         match_status = arguments.match_status
-        if (match_status and
-                '200' not in match_status and
-                self.co.ask_yes_no('warning',
-                                   ("Status code 200 (OK) wasn't included. "
-                                    "Do you want to include it to "
-                                    "the allowed status codes?"))):
-            match_status += ",200"
-        self.global_matcher = Matcher.from_string(
+        self.matcher = Matcher(
             match_status,
             arguments.match_length,
             arguments.match_time
@@ -161,15 +152,12 @@ class CliController:
                 action=action,
                 action_param=arguments.blacklist_action_param,
                 action_callbacks={
-                    'skip': self._skip_callback,
+                    'stop': self._stop_callback,
                     'wait': self._wait_callback,
                 },
             )
         self.delay = arguments.delay
         self.number_of_threads = arguments.number_of_threads
-        if self.global_scanner:
-            self.local_scanner = self.global_scanner
-            self.co.set_message_callback(self.local_scanner.cli_callback)
         self.report = Report.build(arguments.report)
         self.__init_dictionary(arguments)
 
@@ -198,8 +186,8 @@ class CliController:
                    if not arguments.simple_output
                    else 'simple',
             verbose=verbose,
-            targets=self.targets_list,
-            dictionaries=self.dictionaries_metadata,
+            target=self.target,
+            dictionary=self.dict_metadata,
             prefix=arguments.prefix,
             suffix=arguments.suffix,
             case=case,
@@ -220,104 +208,57 @@ class CliController:
             report=arguments.report,
         )
 
-    def check_connection_and_redirections(self) -> None:
+    def check_connection(self) -> None:
         """Test the connection to target.
            If data fuzzing is detected, check for redirections
         """
-        for requester in self.requesters:
-            self.co.info_box(f"Validating {requester.get_url()} ...")
-            if self.is_verbose_mode():
-                self.co.info_box("Testing connection ...")
-            try:
-                requester.test_connection()
-            except RequestException as e:
-                if not self.co.ask_yes_no('warning',
-                                          f"{str(e)}. Continue anyway?"):
-                    self.co.info_box("Target removed from list.")
-                    self.requesters.remove(requester)
-            else:
-                if self.is_verbose_mode():
-                    self.co.info_box("Connection status: OK")
-                if requester.is_data_fuzzing():
-                    self.check_redirections(requester)
-        if len(self.requesters) == 0:
-            raise ControllerException("No targets left for fuzzing")
-
-    def check_redirections(self, requester: Requester) -> None:
-        """Check the redirections for a target.
-           Perform a redirection check for each method
-           in requester methods list
-
-        @type requester: Requester
-        @param requester: The requester for the target
-        """
+        self.co.info_box(f"Validating {self.requester.get_url()} ...")
         if self.is_verbose_mode():
-            self.co.info_box("Testing redirections ...")
-        for method in requester.methods:
-            requester.set_method(method)
+            self.co.info_box("Testing connection ...")
+        try:
+            self.requester.test_connection()
+        except RequestException as e:
+            if not self.co.ask_yes_no('warning',
+                                      f"{str(e)}. Continue anyway?"):
+                raise ControllerException("No target left for fuzzing")
+        else:
             if self.is_verbose_mode():
-                self.co.info_box(f"Testing with {method} method ...")
-            try:
-                if (requester.has_redirection() and
-                        self.co.ask_yes_no('warning',
-                                           ("You was redirected to another page. "
-                                            "Remove this method?"))):
-                    requester.methods.remove(method)
-                    self.co.info_box(f"Method {method} removed from list")
-                else:
-                    if self.is_verbose_mode():
-                        self.co.info_box("No redirections")
-            except RequestException as e:
-                self.co.warning_box(f"{str(e)}. Removing method {method}")
-        if len(requester.methods) == 0:
-            self.requesters.remove(requester)
-            self.co.warning_box("No methods left on this target, "
-                                "removed from targets list")
+                self.co.info_box("Connection status: OK")
 
     def start(self) -> None:
         """Starts the fuzzing application.
            Each target is fuzzed based on their own methods list
         """
-        self.started_time = time.time()
-        for requester in self.requesters:
-            self.co.info_box("Start fuzzing on "
-                             + get_host(get_pure_url(requester.get_url())))
-            Result.reset_index()
-            try:
-                self.prepare_target(requester)
-                for method in self.requester.methods:
-                    self.requester.set_method(method)
-                    self.prepare_fuzzer()
-                if not self.is_verbose_mode():
-                    CliOutput.print("")
-            except SkipTargetException as e:
-                if self.fuzzer and self.fuzzer.is_running():
-                    self.co.warning_box("Skip target detected, stopping threads ...")
-                    self.fuzzer.stop()
-                self.co.abort_box(f"{str(e)}. Target skipped")
+        self.co.info_box("Start fuzzing on "
+                            + get_host(get_pure_url(self.requester.get_url())))
+        Result.reset_index()
+        try:
+            self.prepare_target()
+            self.started_time = time.time()
+            for method in self.requester.methods:
+                self.requester.set_method(method)
+                self.prepare_fuzzer()
+            if not self.is_verbose_mode():
+                CliOutput.print("")
+        except StopActionInterrupt as e:
+            if self.fuzzer and self.fuzzer.is_running():
+                self.co.warning_box("Stop action detected, stopping threads ...")
+                self.fuzzer.stop()
+            self.co.abort_box(f"{str(e)}. Program stopped.")
 
-    def prepare_target(self, requester: Requester) -> None:
+    def prepare_target(self) -> None:
         """Prepare the target variables for the fuzzing tests.
            Both error logger and default scanners are setted
-
-        @type requester: Requester
-        @param requester: The requester for the target
         """
-        self.requester = requester
-        self.target_host = get_host(get_pure_url(requester.get_url()))
+        self.target_host = get_host(get_pure_url(self.requester.get_url()))
         if self.is_verbose_mode():
             self.co.info_box(f"Preparing target {self.target_host} ...")
-        before = time.time()
         self.check_ignore_errors(self.target_host)
-        self.started_time += (time.time() - before)
         self.results = []
-        self.all_results[self.target_host] = self.results
-        self.skip_target = None
-        self.__prepare_local_matcher()
-        self.__prepare_local_scanner()
-        if not self.global_dictionary:
-            self.local_dictionary = self.dictionaries.get()
-        self.total_requests = (len(self.local_dictionary)
+        self.stop_action = None
+        self.__prepare_matcher()
+        self.__prepare_scanner()
+        self.total_requests = (len(self.dictionary)
                                * len(self.requester.methods))
 
     def prepare_fuzzer(self) -> None:
@@ -325,12 +266,12 @@ class CliController:
            Refill the dictionary with the wordlist
            content if a global dictionary was given
         """
-        self.local_dictionary.reload()
+        self.dictionary.reload()
         self.fuzzer = Fuzzer(
             requester=self.requester,
-            dictionary=self.local_dictionary,
-            matcher=self.local_matcher,
-            scanner=self.local_scanner,
+            dictionary=self.dictionary,
+            matcher=self.matcher,
+            scanner=self.scanner,
             delay=self.delay,
             number_of_threads=self.number_of_threads,
             blacklist_status=self.blacklist_status,
@@ -342,8 +283,8 @@ class CliController:
         )
         self.fuzzer.start()
         while self.fuzzer.join():
-            if self.skip_target:
-                raise SkipTargetException(self.skip_target)
+            if self.stop_action:
+                raise StopActionInterrupt(self.stop_action)
 
     def check_ignore_errors(self, host: str) -> None:
         """Check if the user wants to ignore the errors during the tests.
@@ -371,23 +312,20 @@ class CliController:
                 self.co.info_box(
                     f"Time taken: {float('%.2f'%(time.time() - self.started_time))} seconds"
                 )
-            requester_index = 0
-            for key, value in self.all_results.items():
-                if value:
-                    self.__handle_valid_results(key, value, requester_index)
-                else:
-                    self.co.info_box(
-                        f"No matched results was found on target {key}"
-                    )
-                requester_index += 1
+            if self.results:
+                self.__handle_valid_results(self.target_host, self.results)
+            else:
+                self.co.info_box(
+                    f"No matched results was found for {self.target_host}"
+                )
 
-    def _skip_callback(self, status: int) -> None:
+    def _stop_callback(self, status: int) -> None:
         """The skip target callback for the blacklist_action
 
         @type status: int
         @param status: The identified status code into the blacklist
         """
-        self.skip_target = f"Status code {str(status)} detected"
+        self.stop_action = f"Status code {str(status)} detected"
 
     def _wait_callback(self, status: int) -> None:
         """The wait (pause) callback for the blacklist_action
@@ -410,10 +348,10 @@ class CliController:
             self.co.info_box("Resuming target ...")
             self.fuzzer.resume()
 
-    def _result_callback(self, result: dict, validate: bool) -> None:
+    def _result_callback(self, result: Result, validate: bool) -> None:
         """Callback function for the results output
 
-        @type result: dict
+        @type result: Result
         @param result: The FuzzingTool result
         @type validate: bool
         @param validate: A validator flag for the result, gived by the scanner
@@ -447,7 +385,7 @@ class CliController:
             with self.lock:
                 self.logger.write(str(error), error.payload)
         else:
-            self.skip_target = str(error)
+            self.stop_action = str(error)
 
     def _invalid_hostname_callback(self, error: Error) -> None:
         """Callback that handle with the subdomain hostname resolver exceptions
@@ -488,63 +426,35 @@ class CliController:
         @type arguments: CliArguments
         @param arguments: The command line interface arguments object
         """
-        self.targets_list = []
-        if arguments.targets_from_url:
-            self.targets_list.extend(AB.build_targets_from_args(
-                arguments.targets_from_url, arguments.method, arguments.data
-            ))
-        if arguments.targets_from_raw_http:
-            self.targets_list.extend(AB.build_targets_from_raw_http(
-                arguments.targets_from_raw_http, arguments.scheme
-            ))
-        if not self.targets_list:
-            raise ControllerException("A target is needed to make the fuzzing")
-        for target in self.targets_list:
-            if check_is_subdomain_fuzzing(target['url']):
-                requester_type = 'SubdomainRequester'
-            else:
-                requester_type = 'Requester'
-            requester = RequesterFactory.creator(
-                requester_type,
-                url=target['url'],
-                methods=target['methods'],
-                body=target['body'],
-                headers=target['header'],
-                follow_redirects=arguments.follow_redirects,
-                proxy=arguments.proxy,
-                proxies=(read_file(arguments.proxies)
-                         if arguments.proxies else []),
-                timeout=arguments.timeout,
-                cookie=arguments.cookie,
+        self.target = None
+        if arguments.target_from_url:
+            self.target = AB.build_target_from_args(
+                arguments.target_from_url, arguments.method, arguments.data
             )
-            self.requesters.append(requester)
-            target['type_fuzzing'] = self.__get_target_fuzzing_type(requester)
-
-    def __check_for_duplicated_targets(self) -> None:
-        """Checks for duplicated targets,
-           if they'll use the same scanner (based on fuzzing type)
-           Also, checks if a global scanner was
-           already specified before make the check
-        """
-        if not self.global_scanner:
-            targets_checker = [{
-                'host': get_host(get_pure_url(target['url'])),
-                'type_fuzzing': target['type_fuzzing'],
-            } for target in self.targets_list]
-            if len(set([
-                target['host'] for target in targets_checker
-            ])) != len(self.targets_list):
-                targets_checker.sort(key=lambda e: e['host'])
-                for i in range(len(targets_checker)-1):
-                    this_target = targets_checker[i]
-                    next_target = targets_checker[i+1]
-                    if (this_target['host'] == next_target['host'] and
-                        (this_target['type_fuzzing'] !=
-                         next_target['type_fuzzing'])):
-                        raise ControllerException(
-                            "Duplicated target detected with "
-                            "different type of fuzzing scan, exiting."
-                        )
+        if arguments.target_from_raw_http:
+            self.target = AB.build_target_from_raw_http(
+                arguments.target_from_raw_http, arguments.scheme
+            )
+        if not self.target:
+            raise ControllerException("A target is needed to make the fuzzing")
+        if check_is_subdomain_fuzzing(self.target['url']):
+            requester_type = 'SubdomainRequester'
+        else:
+            requester_type = 'Requester'
+        self.requester = RequesterFactory.creator(
+            requester_type,
+            url=self.target['url'],
+            methods=self.target['methods'],
+            body=self.target['body'],
+            headers=self.target['header'],
+            follow_redirects=arguments.follow_redirects,
+            proxy=arguments.proxy,
+            proxies=(read_file(arguments.proxies)
+                        if arguments.proxies else []),
+            timeout=arguments.timeout,
+            cookie=arguments.cookie,
+        )
+        self.target['type_fuzzing'] = self.__get_target_fuzzing_type(self.requester)
 
     def __build_encoders(self, arguments: CliArguments) -> Union[
         Tuple[List[BaseEncoder], List[List[BaseEncoder]]], None
@@ -600,7 +510,7 @@ class CliController:
         self,
         wordlists: List[Tuple[str, str]],
         requester: Requester = None
-    ):
+    ) -> list:
         """Build the wordlist
 
         @type wordlists: List[Tuple[str, str]]
@@ -614,7 +524,7 @@ class CliController:
             name, params = wordlist
             if self.verbose[1]:
                 self.co.info_box(f"Building wordlist from {name} ...")
-            self.dictionaries_metadata[-1]['wordlists'].append(
+            self.dict_metadata['wordlists'].append(
                 f"{name}={params}" if params else name
             )
             try:
@@ -636,7 +546,7 @@ class CliController:
         wordlists: List[Tuple[str, str]],
         is_unique: bool,
         requester: Requester = None
-    ) -> None:
+    ) -> Dictionary:
         """Build the dictionary
 
         @type wordlists: List[Tuple[str, str]]
@@ -647,19 +557,19 @@ class CliController:
         @param requester: The requester for the given dictionary
         @returns Dictionary: The dictionary object
         """
-        self.dictionaries_metadata.append({
+        self.dict_metadata = {
             'wordlists': [],
             'len': 0
-        })
+        }
         builded_wordlist = self.__build_wordlist(wordlists, requester)
         atual_length = len(builded_wordlist)
         if is_unique:
             previous_length = atual_length
             builded_wordlist = set(builded_wordlist)
             atual_length = len(builded_wordlist)
-            self.dictionaries_metadata[-1]['removed'] = previous_length-atual_length
+            self.dict_metadata['removed'] = previous_length-atual_length
         dictionary = Dictionary(builded_wordlist)
-        self.dictionaries_metadata[-1]['len'] = atual_length
+        self.dict_metadata['len'] = atual_length
         return dictionary
 
     def __init_dictionary(self, arguments: CliArguments) -> None:
@@ -669,39 +579,17 @@ class CliController:
         @param arguments: The command line interface arguments object
         """
         self.__configure_payloader(arguments)
-        self.global_dictionary = None
-        self.dictionaries = []
-        self.dictionaries_metadata = []
-        len_wordlists = len(arguments.wordlists)
-        len_requesters = len(self.requesters)
-        if len_wordlists > len_requesters:
-            raise ControllerException(
-                "The quantity of wordlists is greater than the requesters"
-            )
-        elif len_wordlists != len_requesters:
-            wordlist = arguments.wordlists[0]
-            self.global_dictionary = self.__build_dictionary(wordlist,
-                                                             arguments.unique)
-            self.local_dictionary = self.global_dictionary
-        else:
-            self.dictionaries = Queue()
-            for i, wordlist in enumerate(arguments.wordlists):
-                self.dictionaries.put(self.__build_dictionary(
-                    wordlist, arguments.unique, self.requesters[i]
-                ))
-
-    def __prepare_local_matcher(self) -> None:
-        """Prepares the local matcher"""
-        self.local_matcher = Matcher(
-            allowed_status=self.global_matcher.get_allowed_status(),
-            comparator=self.global_matcher.get_comparator(),
-            match_functions=self.global_matcher.get_match_functions()
+        self.dictionary = []
+        self.dict_metadata = []
+        self.dictionary = self.__build_dictionary(
+            arguments.wordlist, arguments.unique, self.requester
         )
+
+    def __prepare_matcher(self) -> None:
+        """Prepares the local matcher"""
         if (self.requester.is_url_discovery() and
-                self.global_matcher.allowed_status_is_default()):
-            self.local_matcher.set_allowed_status(
-                Matcher.build_allowed_status("200-399,401,403")
-            )
+                self.matcher.allowed_status_is_default()):
+            self.matcher.set_allowed_status("200-399,401,403")
 
     def __get_default_scanner(self) -> BaseScanner:
         """Check what's the scanners that will be used
@@ -718,11 +606,11 @@ class CliController:
         self.co.set_message_callback(scanner.cli_callback)
         return scanner
 
-    def __get_data_comparator(self) -> dict:
+    def __get_data_comparator(self) -> tuple:
         """Check if the user wants to insert
            custom data comparator to validate the responses
 
-        @returns dict: The data comparator dictionary for the Matcher object
+        @returns tuple: The data comparator tuple for the Matcher object
         """
         payload = ' '  # Set an arbitraty payload
         self.co.info_box(
@@ -732,7 +620,7 @@ class CliController:
             # Make the first request to get some info about the target
             response, rtt = self.requester.request(payload)
         except RequestException as e:
-            raise SkipTargetException(str(e))
+            raise StopActionInterrupt(str(e))
         result_to_comparator = Result(response, rtt)
         self.co.print_result(result_to_comparator, False)
         length = None
@@ -755,41 +643,32 @@ class CliController:
             )
             if not time:
                 time = default_time
-        return Matcher.build_comparator(length, time)
+        return (length, time)
 
-    def __prepare_local_scanner(self) -> None:
-        """Prepares the local scanner"""
-        if not self.global_scanner:
-            self.local_scanner = self.__get_default_scanner()
+    def __prepare_scanner(self) -> None:
+        """Prepares the scanner"""
+        if not self.scanner:
+            self.scanner = self.__get_default_scanner()
             if (self.requester.is_data_fuzzing() and
-                    not self.global_matcher.comparator_is_set()):
+                    not self.matcher.comparator_is_set()):
                 self.co.info_box("DataFuzzing detected, checking for a data comparator ...")
-                before = time.time()
-                self.local_matcher.set_comparator(
-                    self.__get_data_comparator()
-                )
-                self.started_time += (time.time() - before)
+                self.matcher.set_comparator(*self.__get_data_comparator())
+        self.co.set_message_callback(self.scanner.cli_callback)
 
     def __handle_valid_results(self,
                                host: str,
-                               results: list,
-                               requester_index: int) -> None:
+                               results: list) -> None:
         """Handle the valid results from footer
 
         @type host: str
         @param host: The target host
         @type results: list
         @param results: The target results from the fuzzing
-        @type requester_index: int
-        @param requester_index: The requester of the target
         """
         if self.is_verbose_mode():
             self.co.info_box(
                 f"Found {len(results)} matched results on target {host}"
             )
-            if not self.global_scanner:
-                self.requester = self.requesters[requester_index]
-                self.__get_default_scanner()
             for result in results:
                 self.co.print_result(result, True)
             self.co.info_box(f'Saving results for {host} ...')

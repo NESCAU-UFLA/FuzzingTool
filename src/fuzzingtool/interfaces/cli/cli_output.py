@@ -313,8 +313,8 @@ class CliOutput:
     def print_configs(self,
                       output: str,
                       verbose: str,
-                      targets: list,
-                      dictionaries: list,
+                      target: dict,
+                      dictionary: dict,
                       prefix: list,
                       suffix: list,
                       case: str,
@@ -332,10 +332,10 @@ class CliOutput:
         @param output: The display output mode
         @type verbose: str
         @param verbose: The verbosity mode
-        @type targets: list
-        @param tagets: The targets list
-        @type dictionaries: list
-        @param dictionaries: The dictionaries used in the tests
+        @type target: dict
+        @param taget: The target
+        @type dictionary: dict
+        @param dictionary: The dictionary used in the tests
         @type prefix: list
         @param prefix: The prefixes used with the payload
         @type suffix: list
@@ -363,44 +363,27 @@ class CliOutput:
         @param report: The report name and/or format
         """
         print("")
-        global_dict = False
-        if len(dictionaries) != len(targets):
-            global_dict = True
-            this_dict = dictionaries[0]
         spaces = 3
         self.print_config("Output mode", output)
         self.print_config("Verbosity mode", verbose)
-        for i, target in enumerate(targets):
-            self.print_config("Target", get_host(get_pure_url(target['url'])))
-            self.print_config("Methods",
-                              stringfy_list(target['methods']),
-                              spaces)
-            self.print_config("HTTP headers",
-                              'custom' if target['header'] else 'default',
-                              spaces)
-            if target['body']:
-                self.print_config("Body data", target['body'], spaces)
-            self.print_config("Fuzzing type", target['type_fuzzing'], spaces)
-            if not global_dict:
-                this_dict = dictionaries[i]
-                dict_size = this_dict['len']
-                if 'removed' in this_dict.keys() and this_dict['removed']:
-                    dict_size = (f"{this_dict['len']} "
-                                 f"(removed {this_dict['removed']} "
-                                 f"duplicated payloads)")
-                self.print_config("Dictionary size", dict_size, spaces)
-                self.print_config("Wordlists",
-                                  stringfy_list(this_dict['wordlists']),
-                                  spaces)
-        if global_dict:
-            dict_size = this_dict['len']
-            if 'removed' in this_dict.keys() and this_dict['removed']:
-                dict_size = (f"{this_dict['len']} "
-                             f"(removed {this_dict['removed']} "
-                             f"duplicated payloads)")
-            self.print_config("Dictionary size", dict_size)
-            self.print_config("Wordlists",
-                              stringfy_list(this_dict['wordlists']))
+        self.print_config("Target", get_host(get_pure_url(target['url'])))
+        self.print_config("Methods",
+                            stringfy_list(target['methods']),
+                            spaces)
+        self.print_config("HTTP headers",
+                            'custom' if target['header'] else 'default',
+                            spaces)
+        if target['body']:
+            self.print_config("Body data", target['body'], spaces)
+        self.print_config("Fuzzing type", target['type_fuzzing'], spaces)
+        dict_size = dictionary['len']
+        if 'removed' in dictionary.keys() and dictionary['removed']:
+            dict_size = (f"{dictionary['len']} "
+                            f"(removed {dictionary['removed']} "
+                            f"duplicated payloads)")
+        self.print_config("Dictionary size", dict_size)
+        self.print_config("Wordlists",
+                          stringfy_list(dictionary['wordlists']))
         if prefix:
             self.print_config("Prefix", stringfy_list(prefix))
         if suffix:
