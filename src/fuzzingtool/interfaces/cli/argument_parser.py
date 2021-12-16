@@ -132,29 +132,34 @@ class ArgumentParser(argparse.ArgumentParser):
             action='version',
             version=f"FuzzingTool v{version()}"
         )
+        self.__build_target_opts()
         self.__build_request_opts()
         self.__build_dictionary_opts()
         self.__build_match_opts()
         self.__build_display_opts()
         self.__build_more_opts()
 
-    def __build_request_opts(self) -> None:
-        """Builds the arguments for request options"""
-        request_opts = self.add_argument_group('Request options')
-        request_opts.add_argument(
+    def __build_target_opts(self) -> None:
+        target_opts = self.add_argument_group('Target options')
+        target_opts = target_opts.add_mutually_exclusive_group()
+        target_opts.add_argument(
             '-u',
-            action='append',
+            action='store',
             dest='url',
             help="Define the target URL",
             metavar='URL',
         )
-        request_opts.add_argument(
+        target_opts.add_argument(
             '-r',
-            action='append',
+            action='store',
             dest='raw_http',
-            help="Define the file with the raw HTTP request (scheme not specified)",
+            help="Define the file with the raw HTTP request of the target (scheme not specified)",
             metavar='FILE',
         )
+
+    def __build_request_opts(self) -> None:
+        """Builds the arguments for request options"""
+        request_opts = self.add_argument_group('Request options')
         request_opts.add_argument(
             '--scheme',
             action='store',
@@ -220,7 +225,7 @@ class ArgumentParser(argparse.ArgumentParser):
         dictionary_opts = self.add_argument_group('Dictionary options')
         dictionary_opts.add_argument(
             '-w',
-            action='append',
+            action='store',
             dest='wordlist',
             help=("Define the wordlists with the payloads, separating with ';' "
                   "(--help=wordlists for more info)"),

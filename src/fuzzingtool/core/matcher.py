@@ -60,49 +60,10 @@ class Matcher:
         allowed_status: The dictionary with the
                         allowed status codes (and range)
     """
-    @staticmethod
-    def build_allowed_status(allowed_status: str) -> dict:
-        """Build the matcher attribute for allowed status
-
-        @type allowed_status: str
-        @param allowed_status: The allowed status codes to match results
-        @returns dict: The allowed status code,
-                       list and range, parsed into a dict
-        """
-        if not allowed_status:
-            is_default = True
-            allowed_list = [200]
-        else:
-            is_default = False
-            allowed_list = []
-        allowed_range = []
-        for status in split_str_to_list(allowed_status):
-            get_allowed_status(status, allowed_list, allowed_range)
-        return {
-            'is_default': is_default,
-            'List': allowed_list,
-            'Range': allowed_range,
-        }
-
-    @staticmethod
-    def build_comparator(length: str, time: str) -> dict:
-        """Build the matcher attribute for data comparator
-
-        @type length: str
-        @param length: The length attribute for match results
-        @type time: str
-        @param time: The time attribute for match results
-        @returns dict: The data comparators parsed into a dict
-        """
-        return {
-            'Length': None if not length else length,
-            'Time': None if not time else time,
-        }
-
     def __init__(self,
-                 allowed_status: dict = None,
-                 comparator: dict = None,
-                 match_functions: Tuple[Callable, Callable] = None):
+                 allowed_status: str,
+                 length: str,
+                 time: str):
         """Class constructor
 
         @type allowed_status: dict
@@ -112,43 +73,8 @@ class Matcher:
         @type match_functions: Tuple[Callable, Callable]
         @param match_functions: The callback functions for the match comparator
         """
-        if not allowed_status:
-            allowed_status = {
-                'is_default': True,
-                'List': [200],
-                'Range': [],
-            }
-        if not comparator:
-            comparator = {
-                'Length': None,
-                'Time': None,
-            }
-        self._allowed_status = allowed_status
-        if match_functions:
-            self._comparator = comparator
-            self._match_length, self._match_time = match_functions
-        else:
-            self.set_comparator(comparator)
-
-    @classmethod
-    def from_string(cls,
-                    allowed_status: str,
-                    length: str,
-                    time: str) -> object:
-        """Creates a Matcher object com strings
-
-        @type allowed_status: str
-        @param allowed_status: The allowed status codes
-        @type length: str
-        @param length: The length to be compared with the response body
-        @type time: str
-        @param time: The time to be compared with the rtt
-        @returns Matcher: A Matcher object
-        """
-        return cls(
-            Matcher.build_allowed_status(allowed_status),
-            Matcher.build_comparator(length, time)
-        )
+        self._allowed_status = self.__build_allowed_status(allowed_status)
+        self._comparator = self.__build_comparator(length, time)
 
     def get_allowed_status(self) -> dict:
         """The allowed status getter
@@ -164,13 +90,6 @@ class Matcher:
         """
         return self._comparator
 
-    def get_match_functions(self) -> Tuple[Callable, Callable]:
-        """Gets the match functions
-
-        @returns Tuple[Callable, Callable]: The match functions
-        """
-        return (self._match_length, self._match_time)
-
     def allowed_status_is_default(self) -> bool:
         """Check if the allowed status is set as default config
 
@@ -184,43 +103,25 @@ class Matcher:
         @returns bool: if any of the comparators are seted
                        returns True, else False
         """
-        return self._comparator['Length'] or self._comparator['Time']
+        return self._comparator['length'] or self._comparator['time']
 
-    def set_allowed_status(self, allowed_status: dict) -> None:
+    def set_allowed_status(self, allowed_status: str) -> None:
         """The allowed status setter
 
-        @type allowed_status: dict
-        @param allowed_status: The allowed status dictionary
+        @type allowed_status: str
+        @param allowed_status: The allowed status
         """
-        self._allowed_status = allowed_status
+        self._allowed_status = self.__build_allowed_status(allowed_status)
 
-    def set_comparator(self, comparator: dict) -> None:
+    def set_comparator(self, length: str, time: str) -> None:
         """The comparator setter
 
-        @type comparator: dict
-        @param comparator: The comparator dictionary
+        @type length: str
+        @param length: The length to be compared with response body
+        @type time: str
+        @param time: The time to be compared with the RTT
         """
-        if comparator['Length']:
-            length_comparator, self._match_length = self.__get_comparator_and_callback(
-                comparator['Length'], 'Length'
-            )
-            try:
-                length_comparator = int(length_comparator)
-            except ValueError:
-                raise BadArgumentType(
-                    f"The length comparator must be an integer, not '{length_comparator}'!"
-                )
-            comparator['Length'] = length_comparator
-        if comparator['Time']:
-            time_comparator, self._match_time = self.__get_comparator_and_callback(
-                comparator['Time'], 'Time'
-            )
-            try:
-                time_comparator = float(time_comparator)
-            except ValueError:
-                raise BadArgumentType(f"The time comparator must be a number, not '{time_comparator}'!")
-            comparator['Time'] = time_comparator
-        self._comparator = comparator
+        self._comparator = self.__build_comparator(length, time)
 
     def match(self, result: Result) -> bool:
         """Check if the request content has some predefined characteristics 
@@ -231,9 +132,9 @@ class Matcher:
         @returns bool: A match flag
         """
         if self._match_status(result.status):
-            if not self._comparator['Length'] is None:
+            if not self._comparator['length'] is None:
                 return self._match_length(int(result.length))
-            if not self._comparator['Time'] is None:
+            if not self._comparator['time'] is None:
                 return self._match_time(result.rtt)
             return True
         return False
@@ -245,10 +146,10 @@ class Matcher:
         @param status: The result status code
         @returns bool: if match returns True else False
         """
-        return (status in self._allowed_status['List']
-                or (self._allowed_status['Range']
-                    and (self._allowed_status['Range'][0] <= status
-                         and status <= self._allowed_status['Range'][1])))
+        return (status in self._allowed_status['list']
+                or (self._allowed_status['range']
+                    and (self._allowed_status['range'][0] <= status
+                         and status <= self._allowed_status['range'][1])))
 
     def _match_length(self, length: int) -> bool:
         """Check if the result length match with the comparator dict
@@ -267,6 +168,63 @@ class Matcher:
         @returns bool: if match returns True else False
         """
         pass
+
+    def __build_allowed_status(self, allowed_status: str) -> dict:
+        """Build the matcher attribute for allowed status
+
+        @type allowed_status: str
+        @param allowed_status: The allowed status codes to match results
+        @returns dict: The allowed status code,
+                       list and range, parsed into a dict
+        """
+        if not allowed_status:
+            is_default = True
+            allowed_list = [200]
+        else:
+            is_default = False
+            allowed_list = []
+        allowed_range = []
+        for status in split_str_to_list(allowed_status):
+            get_allowed_status(status, allowed_list, allowed_range)
+        return {
+            'is_default': is_default,
+            'list': allowed_list,
+            'range': allowed_range,
+        }
+
+    def __build_comparator(self, length: str, time: str) -> None:
+        """The comparator setter
+
+        @type length: str
+        @param length: The length to be compared with response body
+        @type time: str
+        @param time: The time to be compared with the RTT
+        """
+        comparator = {
+            'length': None,
+            'time': None
+        }
+        if length:
+            length_comparator, self._match_length = self.__get_comparator_and_callback(
+                length, 'length'
+            )
+            try:
+                length_comparator = int(length_comparator)
+            except ValueError:
+                raise BadArgumentType(
+                    f"The length comparator must be an integer, not '{length_comparator}'!"
+                )
+            comparator['length'] = length_comparator
+        if time:
+            time_comparator, self._match_time = self.__get_comparator_and_callback(
+                time, 'time'
+            )
+            try:
+                time_comparator = float(time_comparator)
+            except ValueError:
+                raise BadArgumentType(f"The time comparator must be a number, not '{time_comparator}'!")
+            comparator['time'] = time_comparator
+        return comparator
 
     def __get_comparator_and_callback(self,
                                       comparator: str,

@@ -65,21 +65,20 @@ class CliArguments:
 
     def set_targets_from_args(self) -> None:
         """Set the targets from url"""
-        self.targets_from_url = self.options.url
+        self.target_from_url = self.options.url
         self.method = self.options.method
         self.data = self.options.data
 
     def set_targets_from_raw_http(self) -> None:
         """Set the targets from raw http"""
-        self.targets_from_raw_http = self.options.raw_http
+        self.target_from_raw_http = self.options.raw_http
         self.scheme = self.options.scheme
 
     def set_dictionary_arguments(self) -> None:
         """Set the dictionary arguments"""
-        self.wordlists = [[
-            parse_option_with_args(w)
-            for w in split_str_to_list(wordlist, separator=';')]
-            for wordlist in self.options.wordlist
+        self.wordlist = [
+            parse_option_with_args(wordlist)
+            for wordlist in split_str_to_list(self.options.wordlist, separator=';')
         ]
         self.unique = self.options.unique
         self.prefix = split_str_to_list(self.options.prefix)
