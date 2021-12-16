@@ -64,14 +64,14 @@ class ArgumentBuilder:
     def build_target_from_raw_http(
         raw_http_filename: str,
         scheme: str
-    ) -> List[dict]:
+    ) -> dict:
         """Build the targets from raw http files
 
         @type raw_http_filenames: list
         @param raw_http_filenames: The list with the raw http filenames
         @type scheme: str
         @param scheme: The scheme used in the URL
-        @returns List[dict]: The targets data builded into a list of dictionary
+        @returns dict: The target HTTP data builded into a dict
         """
         def build_header_from_raw_http(
             header_list: deque

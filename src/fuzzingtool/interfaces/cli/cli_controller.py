@@ -606,11 +606,11 @@ class CliController:
         self.co.set_message_callback(scanner.cli_callback)
         return scanner
 
-    def __get_data_comparator(self) -> dict:
+    def __get_data_comparator(self) -> tuple:
         """Check if the user wants to insert
            custom data comparator to validate the responses
 
-        @returns dict: The data comparator dictionary for the Matcher object
+        @returns tuple: The data comparator tuple for the Matcher object
         """
         payload = ' '  # Set an arbitraty payload
         self.co.info_box(

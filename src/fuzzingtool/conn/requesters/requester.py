@@ -199,16 +199,6 @@ class Requester:
         ):
             raise RequestException(f"Failed to establish a connection to {url}")
 
-    def has_redirection(self) -> bool:
-        """Test if the connection will have a redirection
-
-        @returns bool: The flag to say if occur a redirection or not
-        """
-        response, *_ = self.request(' ')
-        if '302' in str(response.history):
-            return True
-        return False
-
     def request(self, payload: str = '') -> Tuple[requests.Response, float]:
         """Make a request and get the response
 

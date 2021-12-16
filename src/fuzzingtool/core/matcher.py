@@ -192,13 +192,14 @@ class Matcher:
             'range': allowed_range,
         }
 
-    def __build_comparator(self, length: str, time: str) -> None:
+    def __build_comparator(self, length: str, time: str) -> dict:
         """The comparator setter
 
         @type length: str
         @param length: The length to be compared with response body
         @type time: str
         @param time: The time to be compared with the RTT
+        @returns dict: The data comparator
         """
         comparator = {
             'length': None,
