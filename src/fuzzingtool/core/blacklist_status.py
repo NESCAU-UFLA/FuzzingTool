@@ -81,8 +81,8 @@ class BlacklistStatus:
         """
         if not action:
             return lambda _: None
-        if action == 'skip':
-            return action_callbacks['skip']
+        if action == 'stop':
+            return action_callbacks['stop']
         if action == 'wait':
             if not action_param:
                 raise MissingParameter("Must set a time to wait")

@@ -152,7 +152,7 @@ class CliController:
                 action=action,
                 action_param=arguments.blacklist_action_param,
                 action_callbacks={
-                    'skip': self._skip_callback,
+                    'stop': self._stop_callback,
                     'wait': self._wait_callback,
                 },
             )
@@ -242,9 +242,9 @@ class CliController:
                 CliOutput.print("")
         except StopActionInterrupt as e:
             if self.fuzzer and self.fuzzer.is_running():
-                self.co.warning_box("Skip target detected, stopping threads ...")
+                self.co.warning_box("Stop action detected, stopping threads ...")
                 self.fuzzer.stop()
-            self.co.abort_box(f"{str(e)}. Target skipped")
+            self.co.abort_box(f"{str(e)}. Program stopped.")
 
     def prepare_target(self) -> None:
         """Prepare the target variables for the fuzzing tests.
@@ -319,7 +319,7 @@ class CliController:
                     f"No matched results was found for {self.target_host}"
                 )
 
-    def _skip_callback(self, status: int) -> None:
+    def _stop_callback(self, status: int) -> None:
         """The skip target callback for the blacklist_action
 
         @type status: int

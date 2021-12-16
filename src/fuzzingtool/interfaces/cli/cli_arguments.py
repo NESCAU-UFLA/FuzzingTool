@@ -137,5 +137,5 @@ class CliArguments:
                 else:
                     self.blacklist_action = blacklist_action
             else:
-                self.blacklist_action = 'skip'
+                self.blacklist_action = 'stop'
             self.blacklisted_status = status

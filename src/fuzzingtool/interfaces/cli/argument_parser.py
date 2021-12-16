@@ -390,7 +390,7 @@ class ArgumentParser(argparse.ArgumentParser):
             action='store',
             dest='blacklist_status',
             help=("Blacklist status codes from response, and take an action when one is detected. "
-                  "Available actions: skip (to skip the current target), "
+                  "Available actions: stop (to stop the app), "
                   "wait=SECONDS (to pause the app for some seconds)"),
             metavar='STATUS:ACTION',
         )
