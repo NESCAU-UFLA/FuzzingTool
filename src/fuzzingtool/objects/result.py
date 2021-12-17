@@ -103,12 +103,24 @@ class Result(BaseItem):
         return self.__response
 
     def get_payload_config(self) -> dict:
+        """Get the payload config as a dict
+
+        @returns dict: The payload raw and configs
+        """
         payload_config = {'payload_raw': self._payload.raw}
         payload_config.update({f"payload_{key}": value for key, value in self._payload.config.items()})
         return payload_config
 
     def get_response_headers_dict(self) -> dict:
+        """Get the raw response headers, as a dict
+        
+        @returns dict: The raw HTTP header from the response
+        """
         return {'headers': self.headers}
 
     def get_response_body_dict(self) -> dict:
+        """Get the response body, as a dict
+        
+        @returns dict: The response body
+        """
         return {'body': self.__response.text}
