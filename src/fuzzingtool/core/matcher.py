@@ -19,6 +19,7 @@
 # SOFTWARE.
 
 from typing import List, Dict, Tuple, Callable
+import operator
 
 from ..objects.result import Result
 from ..utils.utils import split_str_to_list
@@ -132,10 +133,10 @@ class Matcher:
         @returns bool: A match flag
         """
         if self._match_status(result.status):
-            if not self._comparator['length'] is None:
-                return self._match_length(int(result.length))
-            if not self._comparator['time'] is None:
-                return self._match_time(result.rtt)
+            if self._comparator['length'] is not None:
+                return self._match_length(int(result.length), self._comparator['length'])
+            if self._comparator['time'] is not None:
+                return self._match_time(result.rtt, self._comparator['time'])
             return True
         return False
 
@@ -151,20 +152,24 @@ class Matcher:
                     and (self._allowed_status['range'][0] <= status
                          and status <= self._allowed_status['range'][1])))
 
-    def _match_length(self, length: int) -> bool:
+    def _match_length(self, length: int, comparator_length: int) -> bool:
         """Check if the result length match with the comparator dict
 
         @type length: int
         @param length: The result length
+        @type comparator_length: int
+        @param comparator_length: The length comparator
         @returns bool: if match returns True else False
         """
         pass
 
-    def _match_time(self, time: float) -> bool:
+    def _match_time(self, time: float, comparator_time: float) -> bool:
         """Check if the result time match with the comparator dict
 
         @type time: int
         @param time: The result time
+        @type comparator_time: int
+        @param comparator_time: The time comparator
         @returns bool: if match returns True else False
         """
         pass
@@ -206,9 +211,7 @@ class Matcher:
             'time': None
         }
         if length:
-            length_comparator, self._match_length = self.__get_comparator_and_callback(
-                length, 'length'
-            )
+            length_comparator, self._match_length = self.__get_comparator_and_callback(length)
             try:
                 length_comparator = int(length_comparator)
             except ValueError:
@@ -217,9 +220,7 @@ class Matcher:
                 )
             comparator['length'] = length_comparator
         if time:
-            time_comparator, self._match_time = self.__get_comparator_and_callback(
-                time, 'time'
-            )
+            time_comparator, self._match_time = self.__get_comparator_and_callback(time)
             try:
                 time_comparator = float(time_comparator)
             except ValueError:
@@ -228,14 +229,11 @@ class Matcher:
         return comparator
 
     def __get_comparator_and_callback(self,
-                                      comparator: str,
-                                      key: str) -> Tuple[str, Callable]:
+                                      comparator: str) -> Tuple[str, Callable]:
         """Gets the comparator and callback
 
         @type comparator: str
         @param comparator: The value to be compared
-        @type key: str
-        @param key: Where it'll be compared (Length or Time)
         @returns Tuple[str, Callable]: The comparator and match callback
         """
         def set_match(
@@ -257,15 +255,15 @@ class Matcher:
             raise IndexError
 
         match_dict = {
-            '>=': lambda to_compare: to_compare >= self._comparator[key],
-            '<=': lambda to_compare: to_compare <= self._comparator[key],
-            '>': lambda to_compare: to_compare > self._comparator[key],
-            '<': lambda to_compare: to_compare < self._comparator[key],
-            '==': lambda to_compare: to_compare == self._comparator[key],
-            '!=': lambda to_compare: to_compare != self._comparator[key],
+            '>=': operator.ge,
+            '<=': operator.le,
+            '>': operator.gt,
+            '<': operator.lt,
+            '==': operator.eq,
+            '!=': operator.ne,
         }
         try:
             match_callback, comparator = set_match(match_dict, comparator)
         except IndexError:
-            match_callback = lambda to_compare: self._comparator[key] < to_compare
+            match_callback = operator.lt
         return (comparator, match_callback)
