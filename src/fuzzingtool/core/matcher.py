@@ -134,7 +134,7 @@ class Matcher:
         """
         if self._match_status(result.status):
             if self._comparator['length'] is not None:
-                return self._match_length(int(result.length), self._comparator['length'])
+                return self._match_length(int(result.body_length), self._comparator['length'])
             if self._comparator['time'] is not None:
                 return self._match_time(result.rtt, self._comparator['time'])
             return True

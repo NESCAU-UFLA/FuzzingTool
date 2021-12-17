@@ -24,6 +24,7 @@ from requests import Response
 
 from .base_objects import BaseItem
 from .payload import Payload
+from ..utils.http_utils import build_raw_response_header
 
 
 class Result(BaseItem):
@@ -37,7 +38,9 @@ class Result(BaseItem):
         request_time: The elapsed time only for the request
         response_time: The elapsed time only for the response
         status: The response HTTP status code
-        length: The length of the response body content
+        headers: The response raw HTTP headers
+        headers_length: The length of the raw HTTP headers
+        body_length: The length of the response body content
         words: The quantitty of words in the response body
         lines: The quantity of lines in the response body
         custom: A dictionary to store custom data from the scanners
@@ -54,8 +57,6 @@ class Result(BaseItem):
         @param response: The response given in the request
         @type rtt: float
         @param rtt: The elapsed time on both request and response
-        @type request_index: int
-        @param request_index: The index of the request
         @type payload: Payload
         @param payload: The payload used in the request
         """
@@ -69,7 +70,9 @@ class Result(BaseItem):
         self.response_time = response_time
         self.status = response.status_code
         content = response.content
-        self.length = len(content)
+        self.headers = build_raw_response_header(response)
+        self.headers_length = len(self.headers)
+        self.body_length = len(content)
         self.words = len(content.split())
         self.lines = content.count(b'\n')
         self.custom = {}
@@ -84,15 +87,13 @@ class Result(BaseItem):
         yield 'request_time', self.request_time
         yield 'response_time', self.response_time
         yield 'status', self.status
-        yield 'length', self.length
+        yield 'headers_length', self.headers_length
+        yield 'body_length', self.body_length
         yield 'words', self.words
         yield 'lines', self.lines
         for key, value in self.custom.items():
             yield key, value
         yield 'payload', self.payload
-        yield 'payload_raw', self._payload.raw
-        for key, value in self._payload.config.items():
-            yield f"payload_{key}", value
 
     def get_response(self) -> Response:
         """The response getter
@@ -100,3 +101,14 @@ class Result(BaseItem):
         @returns Response: The response of the request
         """
         return self.__response
+
+    def get_payload_config(self) -> dict:
+        payload_config = {'payload_raw': self._payload.raw}
+        payload_config.update({f"payload_{key}": value for key, value in self._payload.config.items()})
+        return payload_config
+
+    def get_response_headers_dict(self) -> dict:
+        return {'headers': self.headers}
+
+    def get_response_body_dict(self) -> dict:
+        return {'body': self.__response.text}

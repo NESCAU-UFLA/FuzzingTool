@@ -34,7 +34,7 @@ class DataScanner(BaseScanner):
 
     def cli_callback(self, result: Result) -> str:
         payload, rtt, length = get_formated_result(
-            result.payload, result.rtt, result.length
+            result.payload, result.rtt, result.body_length
         )
         words = '{:>6}'.format(result.words)
         lines = '{:>5}'.format(result.lines)

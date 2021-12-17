@@ -624,7 +624,7 @@ class CliController:
         result_to_comparator = Result(response, rtt)
         self.co.print_result(result_to_comparator, False)
         length = None
-        default_length = int(result_to_comparator.length)+300
+        default_length = int(result_to_comparator.body_length)+300
         if self.co.ask_yes_no('info',
                               ("Do you want to exclude responses "
                                "based on custom length?")):

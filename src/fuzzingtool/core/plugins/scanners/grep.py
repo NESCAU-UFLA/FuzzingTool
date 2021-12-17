@@ -93,7 +93,7 @@ class Grep(BaseScanner, Plugin):
             quantity_found = '{:>4}'.format(str(quantity_found))
             found = f"{found_color}{quantity_found}"
         payload, rtt, length = get_formated_result(
-            result.payload, result.rtt, result.length
+            result.payload, result.rtt, result.body_length
         )
         return (
             f"{payload} {Colors.GRAY}["
