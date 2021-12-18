@@ -18,13 +18,27 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from typing import Dict, Type
+from typing import Dict, Tuple, Type
 from datetime import datetime
 
 from . import reports
 from .base_report import BaseReport
 from ..utils.utils import stringfy_list
 from ..exceptions.main_exceptions import InvalidArgument
+
+
+def get_report_name_and_type(name: str) -> Tuple[str, str]:
+    """Get the report name and type from a full report name
+
+    @returns Tuple[str, str]: The tuple with report name and type
+    """
+    if '.' in name:
+        report_name, report_type = name.rsplit('.', 1)
+    else:
+        report_name = datetime.now().strftime("%Y-%m-%d_%H:%M")
+        report_type = name
+    report_type = report_type.lower()
+    return (report_name, report_type)
 
 
 class Report:
@@ -47,12 +61,7 @@ class Report:
         @param name: The name of the report file
         @returns BaseReport: The report object
         """
-        if '.' in name:
-            report_name, report_type = name.rsplit('.', 1)
-        else:
-            report_name = datetime.now().strftime("%Y-%m-%d_%H:%M")
-            report_type = name
-        report_type = report_type.lower()
+        report_name, report_type = get_report_name_and_type(name)
         available_reports = Report.get_available_reports()
         try:
             return available_reports[report_type](report_name)
