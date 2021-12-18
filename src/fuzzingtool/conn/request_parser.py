@@ -20,7 +20,7 @@
 
 from typing import Dict
 from ..objects.fuzz_word import FuzzWord
-from ..utils.consts import FUZZING_MARK, FUZZING_MARK_LEN
+from ..utils.consts import FUZZING_MARK
 
 
 def check_is_subdomain_fuzzing(url: str) -> bool:
