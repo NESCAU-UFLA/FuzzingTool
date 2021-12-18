@@ -368,19 +368,19 @@ class CliOutput:
         self.print_config("Verbosity mode", verbose)
         self.print_config("Target", get_host(get_pure_url(target['url'])))
         self.print_config("Methods",
-                            stringfy_list(target['methods']),
-                            spaces)
+                          stringfy_list(target['methods']),
+                          spaces)
         self.print_config("HTTP headers",
-                            'custom' if target['header'] else 'default',
-                            spaces)
+                          'custom' if target['header'] else 'default',
+                          spaces)
         if target['body']:
             self.print_config("Body data", target['body'], spaces)
         self.print_config("Fuzzing type", target['type_fuzzing'], spaces)
         dict_size = dictionary['len']
         if 'removed' in dictionary.keys() and dictionary['removed']:
             dict_size = (f"{dictionary['len']} "
-                            f"(removed {dictionary['removed']} "
-                            f"duplicated payloads)")
+                         f"(removed {dictionary['removed']} "
+                         f"duplicated payloads)")
         self.print_config("Dictionary size", dict_size)
         self.print_config("Wordlists",
                           stringfy_list(dictionary['wordlists']))

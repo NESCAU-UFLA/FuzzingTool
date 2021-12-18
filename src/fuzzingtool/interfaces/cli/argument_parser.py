@@ -23,7 +23,6 @@ import argparse
 
 from .cli_output import CliOutput as CO
 from ... import version
-from ...utils.consts import FUZZING_MARK
 from ...utils.utils import stringfy_list
 from ...factories.plugin_factory import PluginFactory
 from ...reports.report import Report

@@ -75,7 +75,7 @@ class Payload:
         self.config['suffix'] = suffix
         self.final += suffix
         return self
-    
+
     def with_case(self, case_callback: Callable, case_method: str) -> object:
         """Build the payload with case (upper, lower, cap)
 

@@ -230,7 +230,7 @@ class CliController:
            Each target is fuzzed based on their own methods list
         """
         self.co.info_box("Start fuzzing on "
-                            + get_host(get_pure_url(self.requester.get_url())))
+                         + get_host(get_pure_url(self.requester.get_url())))
         Result.reset_index()
         try:
             self.prepare_target()
@@ -450,7 +450,7 @@ class CliController:
             follow_redirects=arguments.follow_redirects,
             proxy=arguments.proxy,
             proxies=(read_file(arguments.proxies)
-                        if arguments.proxies else []),
+                     if arguments.proxies else []),
             timeout=arguments.timeout,
             cookie=arguments.cookie,
         )
