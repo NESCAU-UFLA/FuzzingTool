@@ -72,7 +72,7 @@ class Find(BaseScanner, Plugin):
             else:
                 found = f"{Colors.LIGHT_RED}{Colors.BOLD}NO "
         payload, rtt, length = get_formated_result(
-            result.payload, result.rtt, result.length
+            result.payload, result.rtt, result.body_length
         )
         return (
             f"{payload} {Colors.GRAY}["

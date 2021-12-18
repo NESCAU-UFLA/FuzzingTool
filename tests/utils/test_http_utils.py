@@ -1,6 +1,9 @@
 import unittest
 from unittest.mock import Mock, patch
 
+from requests import Response
+from urllib3.response import HTTPResponse
+
 from fuzzingtool.utils.http_utils import *
 
 
@@ -69,3 +72,32 @@ class TestHttpUtils(unittest.TestCase):
         mock_get_url_without_scheme.assert_called_once_with(test_url)
         self.assertIsInstance(returned_data, str)
         self.assertEqual(returned_data, return_expected)
+
+    def test_build_raw_response_header(self):
+        return_expected = (
+            "HTTP/1.1 200 OK\r\n"
+            "Server: nginx/1.19.0\r\n"
+            "Date: Fri, 17 Dec 2021 17:42:14 GMT\r\n"
+            "Content-Type: text/html; charset=UTF-8\r\n"
+            "Transfer-Encoding: chunked\r\n"
+            "Connection: keep-alive\r\n"
+            "X-Powered-By: PHP/5.6.40-38+ubuntu20.04.1+deb.sury.org+1\r\n"
+            "\r\n"
+        )
+        mock_raw = Mock(spec=HTTPResponse)
+        mock_raw.version = 11
+        mock_response = Mock(spec=Response)
+        mock_response.raw = mock_raw
+        mock_response.status_code = 200
+        mock_response.reason = "OK"
+        mock_response.headers = {
+            'Server': "nginx/1.19.0",
+            'Date': "Fri, 17 Dec 2021 17:42:14 GMT",
+            'Content-Type': "text/html; charset=UTF-8",
+            'Transfer-Encoding': "chunked",
+            'Connection': "keep-alive",
+            'X-Powered-By': "PHP/5.6.40-38+ubuntu20.04.1+deb.sury.org+1"
+        }
+        returned_headers = build_raw_response_header(mock_response)
+        self.assertIsInstance(returned_headers, str)
+        self.assertEqual(returned_headers, return_expected)

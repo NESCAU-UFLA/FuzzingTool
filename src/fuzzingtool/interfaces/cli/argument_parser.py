@@ -137,6 +137,7 @@ class ArgumentParser(argparse.ArgumentParser):
         self.__build_dictionary_opts()
         self.__build_match_opts()
         self.__build_display_opts()
+        self.__build_report_opts()
         self.__build_more_opts()
 
     def __build_target_opts(self) -> None:
@@ -153,7 +154,7 @@ class ArgumentParser(argparse.ArgumentParser):
             '-r',
             action='store',
             dest='raw_http',
-            help="Define the file with the raw HTTP request of the target (scheme not specified)",
+            help="Define the file with the target raw HTTP request (scheme not specified)",
             metavar='FILE',
         )
 
@@ -355,6 +356,39 @@ class ArgumentParser(argparse.ArgumentParser):
             default=False,
         )
 
+    def __build_report_opts(self) -> None:
+        report_opts = self.add_argument_group('Report options')
+        report_opts.add_argument(
+            '-o',
+            action='store',
+            dest='report_name',
+            help=("Define the report name and/or format. Available reports: "
+                  + stringfy_list(list(Report.get_available_reports().keys()))),
+            metavar='REPORT',
+            default='txt'
+        )
+        report_opts.add_argument(
+            '--save-payload-conf',
+            action='store_true',
+            dest='save_payload_conf',
+            help="Save the payload configuration",
+            default=False,
+        )
+        report_opts.add_argument(
+            '--save-headers',
+            action='store_true',
+            dest='save_headers',
+            help="Save the response HTTP headers",
+            default=False,
+        )
+        report_opts.add_argument(
+            '--save-body',
+            action='store_true',
+            dest='save_body',
+            help="Save the response body",
+            default=False,
+        )
+
     def __build_more_opts(self) -> None:
         """Builds the arguments for non categorized options"""
         more_opts = self.add_argument_group('More options')
@@ -375,15 +409,6 @@ class ArgumentParser(argparse.ArgumentParser):
             metavar='DELAY',
             type=float,
             default=0,
-        )
-        more_opts.add_argument(
-            '-o',
-            action='store',
-            dest='report_name',
-            help=("Define the report name and/or format. Available reports: "
-                  + stringfy_list(list(Report.get_available_reports().keys()))),
-            metavar='REPORT',
-            default='txt'
         )
         more_opts.add_argument(
             '--blacklist-status',

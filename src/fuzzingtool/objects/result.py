@@ -24,6 +24,7 @@ from requests import Response
 
 from .base_objects import BaseItem
 from .payload import Payload
+from ..utils.http_utils import build_raw_response_header
 
 
 class Result(BaseItem):
@@ -37,13 +38,19 @@ class Result(BaseItem):
         request_time: The elapsed time only for the request
         response_time: The elapsed time only for the response
         status: The response HTTP status code
-        length: The length of the response body content
+        headers: The response raw HTTP headers
+        headers_length: The length of the raw HTTP headers
+        body_length: The length of the response body content
         words: The quantitty of words in the response body
         lines: The quantity of lines in the response body
         custom: A dictionary to store custom data from the scanners
         _payload: The Payload object
         response: The Response object from python requests
     """
+    save_payload_configs = False
+    save_headers = False
+    save_body = False
+
     def __init__(self,
                  response: Response,
                  rtt: float = 0.0,
@@ -54,8 +61,6 @@ class Result(BaseItem):
         @param response: The response given in the request
         @type rtt: float
         @param rtt: The elapsed time on both request and response
-        @type request_index: int
-        @param request_index: The index of the request
         @type payload: Payload
         @param payload: The payload used in the request
         """
@@ -69,7 +74,9 @@ class Result(BaseItem):
         self.response_time = response_time
         self.status = response.status_code
         content = response.content
-        self.length = len(content)
+        self.headers = build_raw_response_header(response)
+        self.headers_length = len(self.headers)
+        self.body_length = len(content)
         self.words = len(content.split())
         self.lines = content.count(b'\n')
         self.custom = {}
@@ -84,15 +91,21 @@ class Result(BaseItem):
         yield 'request_time', self.request_time
         yield 'response_time', self.response_time
         yield 'status', self.status
-        yield 'length', self.length
+        yield 'headers_length', self.headers_length
+        yield 'body_length', self.body_length
         yield 'words', self.words
         yield 'lines', self.lines
         for key, value in self.custom.items():
             yield key, value
         yield 'payload', self.payload
-        yield 'payload_raw', self._payload.raw
-        for key, value in self._payload.config.items():
-            yield f"payload_{key}", value
+        if Result.save_payload_configs:
+            yield 'payload_raw', self._payload.raw
+            for key, value in self._payload.config.items():
+                yield f"payload_{key}", value
+        if Result.save_headers:
+            yield 'headers', self.headers
+        if Result.save_body:
+            yield 'body', self.__response.text
 
     def get_response(self) -> Response:
         """The response getter

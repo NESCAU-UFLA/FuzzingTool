@@ -58,7 +58,7 @@ class PathScanner(BaseScanner):
         if redirected:
             redirected = f" {Colors.LIGHT_YELLOW}Redirected to {redirected}{Colors.RESET}"
         path, rtt, length = get_formated_result(
-            get_path(result.url), result.rtt, result.length
+            get_path(result.url), result.rtt, result.body_length
         )
         return (
             f"{path} {Colors.GRAY}["
