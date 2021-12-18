@@ -33,9 +33,6 @@ class BaseReport(ABC):
         filename: The report filename
         file: The file object
     """
-    save_payload_configs = False
-    
-
     def __init__(self, filename: str = ''):
         """Class constructor
 

@@ -47,6 +47,10 @@ class Result(BaseItem):
         _payload: The Payload object
         response: The Response object from python requests
     """
+    save_payload_configs = False
+    save_headers = False
+    save_body = False
+
     def __init__(self,
                  response: Response,
                  rtt: float = 0.0,
@@ -94,6 +98,14 @@ class Result(BaseItem):
         for key, value in self.custom.items():
             yield key, value
         yield 'payload', self.payload
+        if Result.save_payload_configs:
+            yield 'payload_raw', self._payload.raw
+            for key, value in self._payload.config.items():
+                yield f"payload_{key}", value
+        if Result.save_headers:
+            yield 'headers', self.headers
+        if Result.save_body:
+            yield 'body', self.__response.text
 
     def get_response(self) -> Response:
         """The response getter
@@ -101,26 +113,3 @@ class Result(BaseItem):
         @returns Response: The response of the request
         """
         return self.__response
-
-    def get_payload_config(self) -> dict:
-        """Get the payload config as a dict
-
-        @returns dict: The payload raw and configs
-        """
-        payload_config = {'payload_raw': self._payload.raw}
-        payload_config.update({f"payload_{key}": value for key, value in self._payload.config.items()})
-        return payload_config
-
-    def get_response_headers_dict(self) -> dict:
-        """Get the raw response headers, as a dict
-        
-        @returns dict: The raw HTTP header from the response
-        """
-        return {'headers': self.headers}
-
-    def get_response_body_dict(self) -> dict:
-        """Get the response body, as a dict
-        
-        @returns dict: The response body
-        """
-        return {'body': self.__response.text}

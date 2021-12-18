@@ -56,8 +56,12 @@ class TestResult(unittest.TestCase):
 
     @patch("fuzzingtool.objects.result.build_raw_response_header")
     def test_result_iter(self, mock_build_raw_response_header: Mock):
-        payload: Payload = Payload("test-payload")
+        test_prefix = "test-prefix|"
+        payload: Payload = Payload("test-payload").with_prefix(test_prefix)
         mock_build_raw_response_header.return_value = self.test_headers
+        Result.save_payload_configs = True
+        Result.save_headers = True
+        Result.save_body = True
         result = Result(
             response=prepare_response_mock(),
             rtt=3.0,
@@ -78,43 +82,9 @@ class TestResult(unittest.TestCase):
             'lines': 2,
             'test-key': "test-value",
             'payload': payload.final,
-        }
-        self.assertDictEqual(dict(result), expected_result_dict)
-
-    @patch("fuzzingtool.objects.result.build_raw_response_header")
-    def test_get_payload_config(self, mock_build_raw_response_header: Mock):
-        test_prefix = "test-prefix|"
-        payload: Payload = Payload("test-payload").with_prefix(test_prefix)
-        mock_build_raw_response_header.return_value = self.test_headers
-        payload_configs = Result(
-            response=prepare_response_mock(),
-            rtt=3.0,
-            payload=payload
-        ).get_payload_config()
-        expected_result_dict = {
             'payload_raw': payload.raw,
-            'payload_prefix': test_prefix
-        }
-        self.assertDictEqual(payload_configs, expected_result_dict)
-
-    @patch("fuzzingtool.objects.result.build_raw_response_header")
-    def test_get_response_headers(self, mock_build_raw_response_header: Mock):
-        mock_build_raw_response_header.return_value = self.test_headers
-        returned_headers = Result(
-            response=prepare_response_mock()
-        ).get_response_headers_dict()
-        expected_headers_dict = {
-            'headers': self.test_headers
-        }
-        self.assertDictEqual(returned_headers, expected_headers_dict)
-
-    @patch("fuzzingtool.objects.result.build_raw_response_header")
-    def test_get_response_body(self, mock_build_raw_response_header: Mock):
-        mock_build_raw_response_header.return_value = self.test_headers
-        returned_headers = Result(
-            response=prepare_response_mock()
-        ).get_response_body_dict()
-        expected_body_dict = {
+            'payload_prefix': test_prefix,
+            'headers': self.test_headers,
             'body': "My Body Text\nFooter Text\n"
         }
-        self.assertDictEqual(returned_headers, expected_body_dict)
+        self.assertDictEqual(dict(result), expected_result_dict)

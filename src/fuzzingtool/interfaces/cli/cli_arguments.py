@@ -46,11 +46,12 @@ class CliArguments:
             parser = ArgumentParser()
             self.options = parser.get_options()
         except BadArgumentFormat as e:
-            exit(f"FuzzingTool bad argument format - {str(e)}")
+            exit(str(e).capitalize())
         self.set_request_arguments()
         self.set_dictionary_arguments()
         self.set_match_arguments()
         self.set_display_arguments()
+        self.set_report_arguments()
         self.set_general_arguments()
 
     def set_request_arguments(self) -> None:
@@ -115,12 +116,18 @@ class CliArguments:
             self.verbose = [False, False]
         self.disable_colors = self.options.disable_colors
 
+    def set_report_arguments(self) -> None:
+        """Set the report arguments"""
+        self.report = self.options.report_name
+        self.save_payload_conf = self.options.save_payload_conf
+        self.save_headers = self.options.save_headers
+        self.save_body = self.options.save_body
+
     def set_general_arguments(self) -> None:
         """Set the general arguments"""
         self.delay = self.options.delay
         self.number_of_threads = self.options.number_of_threads
         self.set_blacklisted_status()
-        self.report = self.options.report_name
 
     def set_blacklisted_status(self) -> None:
         """Sets blacklisted status codes, action and action param"""

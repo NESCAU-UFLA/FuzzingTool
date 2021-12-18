@@ -158,7 +158,7 @@ class CliController:
             )
         self.delay = arguments.delay
         self.number_of_threads = arguments.number_of_threads
-        self.report = Report.build(arguments.report)
+        self.__init_report(arguments)
         self.__init_dictionary(arguments)
 
     def print_configs(self, arguments: CliArguments) -> None:
@@ -421,7 +421,7 @@ class CliController:
             return "Couldn't determine the fuzzing type"
 
     def __init_requesters(self, arguments: CliArguments) -> None:
-        """Initialize the requesters
+        """Initialize the requester
 
         @type arguments: CliArguments
         @param arguments: The command line interface arguments object
@@ -455,6 +455,17 @@ class CliController:
             cookie=arguments.cookie,
         )
         self.target['type_fuzzing'] = self.__get_target_fuzzing_type(self.requester)
+
+    def __init_report(self, arguments: CliArguments) -> None:
+        """Initialize the report
+
+        @type arguments: CliArguments
+        @param arguments: The command line interface arguments object
+        """
+        self.report = Report.build(arguments.report)
+        Result.save_payload_configs = arguments.save_payload_conf
+        Result.save_headers = arguments.save_headers
+        Result.save_body = arguments.save_body
 
     def __build_encoders(self, arguments: CliArguments) -> Union[
         Tuple[List[BaseEncoder], List[List[BaseEncoder]]], None
