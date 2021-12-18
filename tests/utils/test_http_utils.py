@@ -1,10 +1,8 @@
 import unittest
 from unittest.mock import Mock, patch
 
-from requests import Response
-from urllib3.response import HTTPResponse
-
 from fuzzingtool.utils.http_utils import *
+from ..mock_objs.response_mock import ResponseMock
 
 
 class TestHttpUtils(unittest.TestCase):
@@ -84,20 +82,6 @@ class TestHttpUtils(unittest.TestCase):
             "X-Powered-By: PHP/5.6.40-38+ubuntu20.04.1+deb.sury.org+1\r\n"
             "\r\n"
         )
-        mock_raw = Mock(spec=HTTPResponse)
-        mock_raw.version = 11
-        mock_response = Mock(spec=Response)
-        mock_response.raw = mock_raw
-        mock_response.status_code = 200
-        mock_response.reason = "OK"
-        mock_response.headers = {
-            'Server': "nginx/1.19.0",
-            'Date': "Fri, 17 Dec 2021 17:42:14 GMT",
-            'Content-Type': "text/html; charset=UTF-8",
-            'Transfer-Encoding': "chunked",
-            'Connection': "keep-alive",
-            'X-Powered-By': "PHP/5.6.40-38+ubuntu20.04.1+deb.sury.org+1"
-        }
-        returned_headers = build_raw_response_header(mock_response)
+        returned_headers = build_raw_response_header(ResponseMock())
         self.assertIsInstance(returned_headers, str)
         self.assertEqual(returned_headers, return_expected)

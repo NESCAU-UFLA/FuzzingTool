@@ -2,23 +2,9 @@ import unittest
 from unittest.mock import Mock, patch
 import datetime
 
-from requests import PreparedRequest, Response
-
 from fuzzingtool.objects import Payload, Result
 from fuzzingtool.objects.base_objects import BaseItem
-
-
-def prepare_response_mock():
-    mock_request = Mock(spec=PreparedRequest)
-    mock_request.method = "GET"
-    mock_response = Mock(spec=Response)
-    mock_response.url = "https://test-url.com/"
-    mock_response.request = mock_request
-    mock_response.elapsed = datetime.timedelta(seconds=2.0)
-    mock_response.status_code = 200
-    mock_response.content = b"My Body Text\nFooter Text\n"
-    mock_response.text = "My Body Text\nFooter Text\n"
-    return mock_response
+from ..mock_objs.response_mock import ResponseMock
 
 
 class TestResult(unittest.TestCase):
@@ -40,7 +26,7 @@ class TestResult(unittest.TestCase):
 
     @patch("fuzzingtool.objects.result.build_raw_response_header")
     def test_result(self, mock_build_raw_response_header: Mock):
-        test_response = prepare_response_mock()
+        test_response = ResponseMock()
         mock_build_raw_response_header.return_value = self.test_headers
         result = Result(
             response=test_response,
@@ -63,7 +49,7 @@ class TestResult(unittest.TestCase):
         Result.save_headers = True
         Result.save_body = True
         result = Result(
-            response=prepare_response_mock(),
+            response=ResponseMock(),
             rtt=3.0,
             payload=payload
         )
