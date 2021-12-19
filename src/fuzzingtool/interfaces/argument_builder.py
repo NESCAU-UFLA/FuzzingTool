@@ -19,10 +19,11 @@
 # SOFTWARE.
 
 from collections import deque
-from typing import List, Union, Dict
+from typing import List, Tuple, Union, Dict
+from argparse import Namespace
 
 from ..utils.consts import FUZZING_MARK
-from ..utils.utils import split_str_to_list
+from ..utils.utils import split_str_to_list, parse_option_with_args
 from ..utils.file_utils import read_file
 from ..exceptions.main_exceptions import BadArgumentFormat
 
@@ -111,3 +112,75 @@ class ArgumentBuilder:
             'body': body,
             'header': headers,
         }
+
+    @staticmethod
+    def build_wordlist(wordlists: str) -> List[Tuple[str, str]]:
+        """Build the wordlists
+
+        @type wordlists: str
+        @param wordlists: The wordlists from command line
+        @returns List[Tuple[str, str]]: The builded wordlists
+        """
+        return [
+            parse_option_with_args(wordlist)
+            for wordlist in split_str_to_list(wordlists, separator=';')
+        ]
+
+    @staticmethod
+    def build_encoder(encoders: str) -> List[List[Tuple[str, str]]]:
+        """Build the encoders
+
+        @type encoders: str
+        @param encoders: The encoders from command line
+        @returns List[List[Tuple[str, str]]]: The builded encoders
+        """
+        return [[
+            parse_option_with_args(e)
+            for e in split_str_to_list(encoder, separator='@')]
+            for encoder in split_str_to_list(encoders)
+        ]
+
+    @staticmethod
+    def build_scanner(scanner: str) -> Tuple[str, str]:
+        """Build the scanner
+
+        @type scanner: str
+        @param scanner: The scanner from command line
+        @returns Tuple[str, str]: The builded scanner
+        """
+        return parse_option_with_args(scanner)
+
+    @staticmethod
+    def build_verbose_mode(arguments: Namespace) -> List[bool]:
+        """Build the verbose mode
+
+        @type arguments: str
+        @param arguments: The arguments from command line
+        @returns List[bool]: The builded verbose mode
+        """
+        verbose = [False, False]
+        if arguments.common_verbose:
+            verbose = [True, False]
+        elif arguments.detailed_verbose:
+            verbose = [True, True]
+        return verbose
+
+    @staticmethod
+    def build_blacklist_status(blacklist_status: str) -> Tuple[str, str, str]:
+        """Build the blacklist_status
+
+        @type blacklist_status: str
+        @param blacklist_status: The blacklist status from command line
+        @returns Tuple[str, str, str]: The builded blacklist status
+        """
+        blacklisted_status = blacklist_status
+        blacklist_action = ''
+        blacklist_action_param = ''
+        if ':' in blacklisted_status:
+            blacklisted_status, blacklist_action = blacklisted_status.split(':', 1)
+            blacklist_action = blacklist_action.lower()
+            if '=' in blacklist_action:
+                blacklist_action, blacklist_action_param = blacklist_action.split('=')
+        else:
+            blacklist_action = 'stop'
+        return (blacklisted_status, blacklist_action, blacklist_action_param)

@@ -322,7 +322,7 @@ class CliOutput:
                       encode_only: str,
                       match: dict,
                       scanner: str,
-                      blacklist_status: dict,
+                      blacklist_status: str,
                       delay: float,
                       threads: int,
                       report: str) -> None:
@@ -352,7 +352,7 @@ class CliOutput:
         @type scanner: str
         @param scanner: The scanner string that caontains
                         the scanner name and parameters
-        @type blacklist_status: dict
+        @type blacklist_status: str
         @param blacklist_status: The blacklist status arguments
                                  (codes and action taken)
         @type delay: float
@@ -402,8 +402,7 @@ class CliOutput:
             self.print_config("Scanner", scanner)
         if blacklist_status:
             self.print_config("Blacklisted status",
-                              (f"{blacklist_status['status']} "
-                               f"with action {blacklist_status['action']}"))
+                              blacklist_status)
         if delay:
             self.print_config("Delay", f"{delay} seconds")
         self.print_config("Threads", threads)

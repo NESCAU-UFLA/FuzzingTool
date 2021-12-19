@@ -21,8 +21,10 @@
 import time
 import threading
 from typing import Tuple, List, Union
+from argparse import Namespace
 
-from .cli_arguments import CliArguments
+from fuzzingtool.utils.utils import split_str_to_list
+
 from .cli_output import CliOutput, Colors
 from ..argument_builder import ArgumentBuilder as AB
 from ... import version
@@ -88,15 +90,15 @@ class CliController:
         """
         return self.verbose[0]
 
-    def main(self, arguments: CliArguments) -> None:
+    def main(self, arguments: Namespace) -> None:
         """The main function.
            Prepares the application environment and starts the fuzzing
 
-        @type arguments: CliArguments
-        @param arguments: The command line interface arguments object
+        @type arguments: Namespace
+        @param arguments: The command line interface arguments
         """
         self.co = CliOutput()  # Abbreviation to cli output
-        self.verbose = arguments.verbose
+        self.verbose = AB.build_verbose_mode(arguments)
         if arguments.simple_output:
             self.co.set_simple_output_mode()
         else:
@@ -123,34 +125,34 @@ class CliController:
             self.show_footer()
             self.co.info_box("Test completed")
 
-    def init(self, arguments: CliArguments) -> None:
+    def init(self, arguments: Namespace) -> None:
         """The initialization function.
            Set the application variables including plugins requires
 
-        @type arguments: CliArguments
-        @param arguments: The command line interface arguments object
+        @type arguments: Namespace
+        @param arguments: The command line interface arguments
         """
         self.__init_requesters(arguments)
         scanner = None
         if arguments.scanner:
-            scanner, param = arguments.scanner
+            scanner, param = AB.build_scanner(arguments.scanner)
             scanner: BaseScanner = PluginFactory.object_creator(
                 scanner, 'scanners', param
             )
         self.scanner = scanner
-        match_status = arguments.match_status
         self.matcher = Matcher(
-            match_status,
+            arguments.match_status,
             arguments.match_length,
             arguments.match_time
         )
-        if arguments.blacklisted_status:
-            blacklisted_status = arguments.blacklisted_status
-            action = arguments.blacklist_action
+        if arguments.blacklist_status:
+            blacklisted_status, action, action_param = AB.build_blacklist_status(
+                arguments.blacklist_status
+            )
             self.blacklist_status = BlacklistStatus(
                 status=blacklisted_status,
                 action=action,
-                action_param=arguments.blacklist_action_param,
+                action_param=action_param,
                 action_callbacks={
                     'stop': self._stop_callback,
                     'wait': self._wait_callback,
@@ -161,11 +163,11 @@ class CliController:
         self.__init_report(arguments)
         self.__init_dictionary(arguments)
 
-    def print_configs(self, arguments: CliArguments) -> None:
+    def print_configs(self, arguments: Namespace) -> None:
         """Print the program configuration
 
-        @type arguments: CliArguments
-        @param arguments: The command line interface arguments object
+        @type arguments: Namespace
+        @param arguments: The command line interface arguments
         """
         if self.verbose[1]:
             verbose = 'detailed'
@@ -173,9 +175,9 @@ class CliController:
             verbose = 'common'
         else:
             verbose = 'quiet'
-        if arguments.lowercase:
+        if arguments.lower:
             case = 'lowercase'
-        elif arguments.uppercase:
+        elif arguments.upper:
             case = 'uppercase'
         elif arguments.capitalize:
             case = 'capitalize'
@@ -191,21 +193,18 @@ class CliController:
             prefix=arguments.prefix,
             suffix=arguments.suffix,
             case=case,
-            encoder=arguments.str_encoder,
+            encoder=arguments.encoder,
             encode_only=arguments.encode_only,
             match={
                 'status': arguments.match_status,
                 'length': arguments.match_length,
                 'time': arguments.match_time,
                 },
-            scanner=arguments.str_scanner,
-            blacklist_status={
-                'status': arguments.blacklisted_status,
-                'action': arguments.blacklist_action,
-                } if arguments.blacklisted_status else {},
+            blacklist_status=arguments.blacklist_status,
+            scanner=arguments.scanner,
             delay=self.delay,
             threads=self.number_of_threads,
-            report=arguments.report,
+            report=arguments.report_name,
         )
 
     def check_connection(self) -> None:
@@ -420,20 +419,20 @@ class CliController:
         else:
             return "Couldn't determine the fuzzing type"
 
-    def __init_requesters(self, arguments: CliArguments) -> None:
+    def __init_requesters(self, arguments: Namespace) -> None:
         """Initialize the requester
 
-        @type arguments: CliArguments
-        @param arguments: The command line interface arguments object
+        @type arguments: Namespace
+        @param arguments: The command line interface arguments
         """
         self.target = None
-        if arguments.target_from_url:
+        if arguments.url:
             self.target = AB.build_target_from_args(
-                arguments.target_from_url, arguments.method, arguments.data
+                arguments.url, arguments.method, arguments.data
             )
-        if arguments.target_from_raw_http:
+        if arguments.raw_http:
             self.target = AB.build_target_from_raw_http(
-                arguments.target_from_raw_http, arguments.scheme
+                arguments.raw_http, arguments.scheme
             )
         if not self.target:
             raise ControllerException("A target is needed to make the fuzzing")
@@ -456,33 +455,34 @@ class CliController:
         )
         self.target['type_fuzzing'] = self.__get_target_fuzzing_type(self.requester)
 
-    def __init_report(self, arguments: CliArguments) -> None:
+    def __init_report(self, arguments: Namespace) -> None:
         """Initialize the report
 
-        @type arguments: CliArguments
-        @param arguments: The command line interface arguments object
+        @type arguments: Namespace
+        @param arguments: The command line interface arguments
         """
-        self.report = Report.build(arguments.report)
+        self.report = Report.build(arguments.report_name)
         Result.save_payload_configs = arguments.save_payload_conf
         Result.save_headers = arguments.save_headers
         Result.save_body = arguments.save_body
 
-    def __build_encoders(self, arguments: CliArguments) -> Union[
+    def __build_encoders(self, arguments: Namespace) -> Union[
         Tuple[List[BaseEncoder], List[List[BaseEncoder]]], None
     ]:
         """Build the encoders
 
-        @type arguments: CliArguments
-        @param arguments: The command line interface arguments object
+        @type arguments: Namespace
+        @param arguments: The command line interface arguments
         @returns Tuple | None: The encoders used in the program
         """
         if not arguments.encoder:
             return None
+        encoders_list = AB.build_encoder(arguments.encoder)
         if arguments.encode_only:
             Payloader.encoder.set_regex(arguments.encode_only)
         encoders_default = []
         encoders_chain = []
-        for encoders in arguments.encoder:
+        for encoders in encoders_list:
             if len(encoders) > 1:
                 append_to = []
                 is_chain = True
@@ -499,17 +499,17 @@ class CliController:
                 encoders_chain.append(append_to)
         return (encoders_default, encoders_chain)
 
-    def __configure_payloader(self, arguments: CliArguments) -> None:
+    def __configure_payloader(self, arguments: Namespace) -> None:
         """Configure the Payloader options
 
-        @type arguments: CliArguments
-        @param arguments: The command line interface arguments object
+        @type arguments: Namespace
+        @param arguments: The command line interface arguments
         """
-        Payloader.set_prefix(arguments.prefix)
-        Payloader.set_suffix(arguments.suffix)
-        if arguments.lowercase:
+        Payloader.set_prefix(split_str_to_list(arguments.prefix))
+        Payloader.set_suffix(split_str_to_list(arguments.suffix))
+        if arguments.lower:
             Payloader.set_lowercase()
-        elif arguments.uppercase:
+        elif arguments.upper:
             Payloader.set_uppercase()
         elif arguments.capitalize:
             Payloader.set_capitalize()
@@ -583,17 +583,19 @@ class CliController:
         self.dict_metadata['len'] = atual_length
         return dictionary
 
-    def __init_dictionary(self, arguments: CliArguments) -> None:
+    def __init_dictionary(self, arguments: Namespace) -> None:
         """Initialize the dictionary
 
-        @type arguments: CliArguments
-        @param arguments: The command line interface arguments object
+        @type arguments: Namespace
+        @param arguments: The command line interface arguments
         """
         self.__configure_payloader(arguments)
         self.dictionary = []
         self.dict_metadata = []
         self.dictionary = self.__build_dictionary(
-            arguments.wordlist, arguments.unique, self.requester
+            AB.build_wordlist(arguments.wordlist),
+            arguments.unique,
+            self.requester
         )
 
     def __prepare_matcher(self) -> None:
