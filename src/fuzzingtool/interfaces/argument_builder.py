@@ -165,6 +165,7 @@ class ArgumentBuilder:
             verbose = [True, True]
         return verbose
 
+    @staticmethod
     def build_blacklist_status(blacklist_status: str) -> Tuple[str, str, str]:
         """Build the blacklist_status
 
