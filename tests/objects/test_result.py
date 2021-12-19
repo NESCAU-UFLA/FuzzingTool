@@ -4,7 +4,7 @@ import datetime
 
 from fuzzingtool.objects import Payload, Result
 from fuzzingtool.objects.base_objects import BaseItem
-from ..mock_objs.response_mock import ResponseMock
+from ..mock_utils.response_mock import ResponseMock
 
 
 class TestResult(unittest.TestCase):

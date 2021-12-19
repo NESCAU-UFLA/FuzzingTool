@@ -2,7 +2,7 @@ import unittest
 from unittest.mock import Mock, patch
 
 from fuzzingtool.utils.http_utils import *
-from ..mock_objs.response_mock import ResponseMock
+from ..mock_utils.response_mock import ResponseMock
 
 
 class TestHttpUtils(unittest.TestCase):

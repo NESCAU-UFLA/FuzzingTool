@@ -151,17 +151,19 @@ class ArgumentBuilder:
         return parse_option_with_args(scanner)
 
     @staticmethod
-    def build_verbose_mode(arguments: Namespace) -> List[bool]:
+    def build_verbose_mode(is_common: bool, is_detailed: bool) -> List[bool]:
         """Build the verbose mode
 
-        @type arguments: str
-        @param arguments: The arguments from command line
+        @type is_common: bool
+        @param is_common: A flag to say if is common verbose mode
+        @type is_detailed: bool
+        @param is_detailed: A flag to say if is detailed verbose mode
         @returns List[bool]: The builded verbose mode
         """
         verbose = [False, False]
-        if arguments.common_verbose:
+        if is_common:
             verbose = [True, False]
-        elif arguments.detailed_verbose:
+        elif is_detailed:
             verbose = [True, True]
         return verbose
 

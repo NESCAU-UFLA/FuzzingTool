@@ -98,7 +98,8 @@ class CliController:
         @param arguments: The command line interface arguments
         """
         self.co = CliOutput()  # Abbreviation to cli output
-        self.verbose = AB.build_verbose_mode(arguments)
+        self.verbose = AB.build_verbose_mode(arguments.common_verbose,
+                                             arguments.detailed_verbose)
         if arguments.simple_output:
             self.co.set_simple_output_mode()
         else:
