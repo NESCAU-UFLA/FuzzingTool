@@ -1,9 +1,106 @@
 import unittest
+from unittest.mock import patch, Mock
 
 from fuzzingtool.interfaces.argument_builder import ArgumentBuilder as AB
+from fuzzingtool.exceptions.main_exceptions import BadArgumentFormat
 
 
 class TestArgumentBuilder(unittest.TestCase):
+    def test_build_target_from_args(self):
+        test_url = "http://test-url.com/"
+        test_method = "GET,POST"
+        test_body = "user=test&pass=test"
+        return_expected = {
+            'url': test_url,
+            'methods': ["GET", "POST"],
+            'body': test_body,
+            'header': {},
+        }
+        returned_target = AB.build_target_from_args(test_url, test_method, test_body)
+        self.assertIsInstance(returned_target, dict)
+        self.assertDictEqual(returned_target, return_expected)
+
+    def test_build_target_from_args_without_method_and_without_body(self):
+        test_url = "http://test-url.com/"
+        test_method = ''
+        test_body = ''
+        return_expected = {
+            'url': test_url,
+            'methods': ["GET"],
+            'body': test_body,
+            'header': {},
+        }
+        returned_target = AB.build_target_from_args(test_url, test_method, test_body)
+        self.assertIsInstance(returned_target, dict)
+        self.assertDictEqual(returned_target, return_expected)
+
+    def test_build_target_from_args_without_method_and_with_body(self):
+        test_url = "http://test-url.com/"
+        test_method = ''
+        test_body = "user=test&pass=test"
+        return_expected = {
+            'url': test_url,
+            'methods': ["POST"],
+            'body': test_body,
+            'header': {},
+        }
+        returned_target = AB.build_target_from_args(test_url, test_method, test_body)
+        self.assertIsInstance(returned_target, dict)
+        self.assertDictEqual(returned_target, return_expected)
+
+    @patch("fuzzingtool.interfaces.argument_builder.read_file")
+    def test_build_target_from_raw_http(self, mock_read_file: Mock):
+        expected_header = {
+            'Host': "test-url.com",
+            'User-Agent': "Test User Agent",
+            'Cookie': "TESTSESSID=testcookie"
+        }
+        test_scheme = "https"
+        return_expected = {
+            'url': f"{test_scheme}://test-url.com/",
+            'methods': ["GET"],
+            'body': '',
+            'header': expected_header,
+        }
+        test_filename = "test-raw-http.txt"
+        mock_read_file.return_value = [
+            "GET / HTTP/1.1",
+            "Host: test-url.com",
+            "User-Agent: Test User Agent",
+            "Cookie: TESTSESSID=testcookie"
+        ]
+        returned_target = AB.build_target_from_raw_http(test_filename, test_scheme)
+        self.assertIsInstance(returned_target, dict)
+        self.assertDictEqual(returned_target, return_expected)
+
+    @patch("fuzzingtool.interfaces.argument_builder.read_file")
+    def test_build_target_from_raw_http_with_body(self, mock_read_file: Mock):
+        expected_header = {
+            'Host': "test-url.com",
+            'User-Agent': "Test User Agent",
+            'Cookie': "TESTSESSID=testcookie"
+        }
+        test_scheme = "https"
+        test_body = "user=test&pass=test"
+        return_expected = {
+            'url': f"{test_scheme}://test-url.com/",
+            'methods': ["POST"],
+            'body': test_body,
+            'header': expected_header,
+        }
+        test_filename = "test-raw-http.txt"
+        mock_read_file.return_value = [
+            "POST / HTTP/1.1",
+            "Host: test-url.com",
+            "User-Agent: Test User Agent",
+            "Cookie: TESTSESSID=testcookie",
+            '',
+            test_body
+        ]
+        returned_target = AB.build_target_from_raw_http(test_filename, test_scheme)
+        self.assertIsInstance(returned_target, dict)
+        self.assertDictEqual(returned_target, return_expected)
+
     def test_build_wordlist(self):
         return_expected = [('DnsZone', ''), ('Robots', 'http://test-url.com/')]
         returned_wordlist = AB.build_wordlist('DnsZone;Robots=http://test-url.com/')

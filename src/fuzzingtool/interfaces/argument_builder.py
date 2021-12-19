@@ -32,23 +32,20 @@ class ArgumentBuilder:
     @staticmethod
     def build_target_from_args(
         url: str,
-        method: Union[str, List[str]],
+        method: str,
         body: str
     ) -> dict:
         """Build the targets from arguments
 
         @type urls: List[str]
         @param urls: The target URLs
-        @type method: str | List[str]
+        @type method: str
         @param method: The request methods
         @type body: str
         @param body: The raw request body data
         @returns dict: The targets data builded into a dictionary
         """
-        if not type(method) is list:
-            methods = split_str_to_list(method)
-        else:
-            methods = method
+        methods = split_str_to_list(method)
         if not methods:
             if body and not ('?' in url or FUZZING_MARK in url):
                 methods = ['POST']
@@ -92,6 +89,9 @@ class ArgumentBuilder:
                 headers[key] = value
                 this_header = header_list.popleft()
                 i += 1
+            if this_header:
+                key, value = this_header.split(': ', 1)
+                headers[key] = value
             return headers
 
         try:
