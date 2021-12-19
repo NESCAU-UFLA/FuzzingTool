@@ -180,8 +180,6 @@ class ArgumentBuilder:
             blacklist_action = blacklist_action.lower()
             if '=' in blacklist_action:
                 blacklist_action, blacklist_action_param = blacklist_action.split('=')
-            else:
-                blacklist_action = blacklist_action
         else:
             blacklist_action = 'stop'
         return (blacklisted_status, blacklist_action, blacklist_action_param)
