@@ -18,131 +18,403 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from typing import Tuple
+from sys import argv
+import argparse
 
-from .argument_parser import ArgumentParser
-from ...utils.utils import split_str_to_list
+from .cli_output import CliOutput as CO
+from ... import version
+from ...utils.utils import stringfy_list
+from ...factories.plugin_factory import PluginFactory
+from ...reports.report import Report
 from ...exceptions.main_exceptions import BadArgumentFormat
 
 
-def parse_option_with_args(plugin: str) -> Tuple[str, str]:
-    """Parse the plugin name into name and parameter
-
-    @type plugin: str
-    @param plugin: The plugin argument
-    @returns tuple[str, str]: The plugin name and parameter
+class CliArguments(argparse.ArgumentParser):
+    """Class to handle with the arguments parsing
+       Overrides the error method from argparse.ArgumentParser,
+       raising an exception instead of exiting
     """
-    if '=' in plugin:
-        plugin, param = plugin.split('=', 1)
-    else:
-        param = ''
-    return (plugin, param)
-
-
-class CliArguments:
-    """Class that handle with the FuzzingTool arguments"""
     def __init__(self):
-        try:
-            parser = ArgumentParser()
-            self.options = parser.get_options()
-        except BadArgumentFormat as e:
-            exit(str(e).capitalize())
-        self.set_request_arguments()
-        self.set_dictionary_arguments()
-        self.set_match_arguments()
-        self.set_display_arguments()
-        self.set_report_arguments()
-        self.set_general_arguments()
-
-    def set_request_arguments(self) -> None:
-        """Set the request arguments"""
-        self.set_targets_from_args()
-        self.set_targets_from_raw_http()
-        self.cookie = self.options.cookie
-        self.proxy = self.options.proxy
-        self.proxies = self.options.proxies
-        self.timeout = self.options.timeout
-        self.follow_redirects = self.options.follow_redirects
-
-    def set_targets_from_args(self) -> None:
-        """Set the targets from url"""
-        self.target_from_url = self.options.url
-        self.method = self.options.method
-        self.data = self.options.data
-
-    def set_targets_from_raw_http(self) -> None:
-        """Set the targets from raw http"""
-        self.target_from_raw_http = self.options.raw_http
-        self.scheme = self.options.scheme
-
-    def set_dictionary_arguments(self) -> None:
-        """Set the dictionary arguments"""
-        self.wordlist = [
-            parse_option_with_args(wordlist)
-            for wordlist in split_str_to_list(self.options.wordlist, separator=';')
-        ]
-        self.unique = self.options.unique
-        self.prefix = split_str_to_list(self.options.prefix)
-        self.suffix = split_str_to_list(self.options.suffix)
-        self.uppercase = self.options.upper
-        self.lowercase = self.options.lower
-        self.capitalize = self.options.capitalize
-        self.str_encoder = self.options.encoder
-        self.encoder = [[
-            parse_option_with_args(e)
-            for e in split_str_to_list(encoder, separator='@')]
-            for encoder in split_str_to_list(self.options.encoder)
-        ]
-        self.encode_only = self.options.encode_only
-
-    def set_match_arguments(self) -> None:
-        """Set the match arguments"""
-        self.match_status = self.options.match_status
-        self.match_length = self.options.match_length
-        self.match_time = self.options.match_time
-        self.str_scanner = self.options.scanner
-        self.scanner = (None
-                        if not self.options.scanner
-                        else parse_option_with_args(self.options.scanner))
-
-    def set_display_arguments(self) -> None:
-        """Set the display arguments"""
-        self.simple_output = self.options.simple_output
-        if self.options.common_verbose:
-            self.verbose = [True, False]
-        elif self.options.detailed_verbose:
-            self.verbose = [True, True]
-        else:
-            self.verbose = [False, False]
-        self.disable_colors = self.options.disable_colors
-
-    def set_report_arguments(self) -> None:
-        """Set the report arguments"""
-        self.report = self.options.report_name
-        self.save_payload_conf = self.options.save_payload_conf
-        self.save_headers = self.options.save_headers
-        self.save_body = self.options.save_body
-
-    def set_general_arguments(self) -> None:
-        """Set the general arguments"""
-        self.delay = self.options.delay
-        self.number_of_threads = self.options.number_of_threads
-        self.set_blacklisted_status()
-
-    def set_blacklisted_status(self) -> None:
-        """Sets blacklisted status codes, action and action param"""
-        self.blacklisted_status = ''
-        self.blacklist_action = ''
-        self.blacklist_action_param = ''
-        if self.options.blacklist_status:
-            status = self.options.blacklist_status
-            if ':' in status:
-                status, blacklist_action = status.split(':', 1)
-                blacklist_action = blacklist_action.lower()
-                if '=' in blacklist_action:
-                    self.blacklist_action, self.blacklist_action_param = blacklist_action.split('=')
-                else:
-                    self.blacklist_action = blacklist_action
+        usage = "Usage: FuzzingTool [-u|-r TARGET]+ [-w WORDLIST]+ [options]*"
+        examples = ("For usage examples, see: "
+                    "https://github.com/NESCAU-UFLA/FuzzingTool/wiki/Usage-Examples")
+        if len(argv) < 2:
+            self.error("Invalid format! Use -h on 2nd parameter "
+                       f"to show the help menu.\n\n{usage}\n\n{examples}")
+        if len(argv) == 2 and ('-h=' in argv[1] or '--help=' in argv[1]):
+            asked_help = argv[1].split('=')[1]
+            if 'wordlists' == asked_help:
+                self._show_wordlists_help()
+            elif 'encoders' == asked_help:
+                self._show_encoders_help()
+            elif 'scanners' == asked_help:
+                self._show_scanners_help()
             else:
-                self.blacklist_action = 'stop'
-            self.blacklisted_status = status
+                self.error(f"Help argument '{asked_help}' not available")
+        super().__init__(
+            usage=argparse.SUPPRESS,
+            description=usage,
+            epilog=examples,
+            formatter_class=lambda prog: argparse.HelpFormatter(
+                prog, indent_increment=4, max_help_position=30, width=100
+            )
+        )
+        self.__build_options()
+
+    def error(self, message: str) -> None:
+        raise BadArgumentFormat(message)
+
+    def get_arguments(self) -> argparse.Namespace:
+        """Get the FuzzingTool arguments
+
+        @returns argparse.Namespace: The Namespace with the arguments
+        """
+        return self.parse_args()
+
+    def _show_wordlists_help(self) -> None:
+        """Show the help menu for wordlists and exit"""
+        CO.help_title(0, "Wordlist options: (-w)")
+        CO.print("     You can set just one global wordlist, multiple wordlists and wordlists per target!")
+        CO.help_title(2, "Default: The default wordlists are selected by default if no one from plugins was choiced\n")
+        CO.help_content(5, "FILEPATH", "Set the path of the wordlist file")
+        CO.help_content(5, "[PAYLOAD1,PAYLOAD2,]", "Set the payloads list to be used as wordlist")
+        CO.help_title(2, "Plugins:\n")
+        self.__show_plugins_help_from_category('wordlists')
+        exit(0)
+
+    def _show_encoders_help(self) -> None:
+        """Show the help menu for encoders and exit"""
+        CO.help_title(0, "Encoder options: (-e)")
+        CO.help_title(2, "Set the encoder used on the payloads\n")
+        self.__show_plugins_help_from_category('encoders')
+        exit(0)
+
+    def _show_scanners_help(self) -> None:
+        """Show the help menu for scanners and exit"""
+        CO.help_title(0, "Scanner options:")
+        CO.help_title(2, "Default: The default scanners are selected automatically "
+                         "if no one from plugins was choiced\n")
+        CO.help_content(5, "DataScanner", "Scanner for the data fuzzing")
+        CO.help_content(5, "PathScanner", "Scanner for the path fuzzing")
+        CO.help_content(5, "SubdomainScanner", "Scanner for the subdomain fuzzing")
+        CO.help_title(2, "Plugins (--scaner SCANNER):\n")
+        self.__show_plugins_help_from_category('scanners')
+        exit(0)
+
+    def __show_plugins_help_from_category(self, category: str) -> None:
+        """Show the help menu for the plugins
+
+        @type category: str
+        @param category: The package category to search for his plugins
+        """
+        for plugin_cls in PluginFactory.get_plugins_from_category(category):
+            if not plugin_cls.__type__:
+                type_fuzzing = ''
+            else:
+                type_fuzzing = f" (Used for {plugin_cls.__type__})"
+            if not plugin_cls.__params__:
+                params = ''
+            else:
+                if plugin_cls.__params__['type'] is list:
+                    metavar = plugin_cls.__params__['metavar']
+                    separator = plugin_cls.__params__['cli_list_separator']
+                    params = f"={metavar}[{separator}{metavar}]*"
+                else:
+                    params = f"={plugin_cls.__params__['metavar']}"
+            CO.help_content(5, f"{plugin_cls.__name__}{params}",
+                            f"{plugin_cls.__desc__}{type_fuzzing}\n")
+
+    def __build_options(self) -> None:
+        """Builds the FuzzingTool options"""
+        self.add_argument(
+            '-v', '--version',
+            action='version',
+            version=f"FuzzingTool v{version()}"
+        )
+        self.__build_target_opts()
+        self.__build_request_opts()
+        self.__build_dictionary_opts()
+        self.__build_match_opts()
+        self.__build_display_opts()
+        self.__build_report_opts()
+        self.__build_more_opts()
+
+    def __build_target_opts(self) -> None:
+        target_opts = self.add_argument_group('Target options')
+        target_opts = target_opts.add_mutually_exclusive_group()
+        target_opts.add_argument(
+            '-u',
+            action='store',
+            dest='url',
+            help="Define the target URL",
+            metavar='URL',
+        )
+        target_opts.add_argument(
+            '-r',
+            action='store',
+            dest='raw_http',
+            help="Define the file with the target raw HTTP request (scheme not specified)",
+            metavar='FILE',
+        )
+
+    def __build_request_opts(self) -> None:
+        """Builds the arguments for request options"""
+        request_opts = self.add_argument_group('Request options')
+        request_opts.add_argument(
+            '--scheme',
+            action='store',
+            dest='scheme',
+            help="Define the scheme used in the URL (default http)",
+            metavar='SCHEME',
+            default="http",
+        )
+        request_opts.add_argument(
+            '-X',
+            action='store',
+            dest='method',
+            help="Define the request http verbs (method)",
+            metavar='METHOD',
+        )
+        request_opts.add_argument(
+            '-d',
+            action='store',
+            dest='data',
+            help="Define the request body data",
+            metavar='DATA',
+        )
+        request_opts.add_argument(
+            '--proxy',
+            action='store',
+            dest='proxy',
+            help="Define the proxy",
+            metavar='IP:PORT',
+        )
+        request_opts.add_argument(
+            '--proxies',
+            action='store',
+            dest='proxies',
+            help="Define the file with a list of proxies",
+            metavar='FILE',
+        )
+        request_opts.add_argument(
+            '--cookie',
+            action='store',
+            dest='cookie',
+            help="Define the HTTP Cookie header value",
+            metavar='COOKIE',
+        )
+        request_opts.add_argument(
+            '--timeout',
+            action='store',
+            dest='timeout',
+            help="Define the request timeout (in seconds)",
+            metavar='TIMEOUT',
+            type=int,
+            default=0,
+        )
+        request_opts.add_argument(
+            '--follow-redirects',
+            action='store_true',
+            dest='follow_redirects',
+            help="Force to follow redirects",
+            default=False,
+        )
+
+    def __build_dictionary_opts(self) -> None:
+        """Builds the arguments for dictionary options"""
+        dictionary_opts = self.add_argument_group('Dictionary options')
+        dictionary_opts.add_argument(
+            '-w',
+            action='store',
+            dest='wordlist',
+            help=("Define the wordlists with the payloads, separating with ';' "
+                  "(--help=wordlists for more info)"),
+            metavar='WORDLIST',
+            required=True,
+        )
+        dictionary_opts.add_argument(
+            '--unique',
+            action='store_true',
+            dest='unique',
+            help="Removes duplicated payloads from the final wordlist",
+            default=False,
+        )
+        dictionary_opts.add_argument(
+            '-e',
+            action='store',
+            dest='encoder',
+            help="Define the encoder used on payloads (--help=encoders for more info)",
+            metavar='ENCODER',
+            default='',
+        )
+        dictionary_opts.add_argument(
+            '--encode-only',
+            action='store',
+            dest='encode_only',
+            help="Define the regex pattern to use in the encoder",
+            metavar='REGEX',
+            default='',
+        )
+        dictionary_opts.add_argument(
+            '--prefix',
+            action='store',
+            dest='prefix',
+            help="Define the prefix(es) used with the payload",
+            metavar='PREFIX',
+        )
+        dictionary_opts.add_argument(
+            '--suffix',
+            action='store',
+            dest='suffix',
+            help="Define the suffix(es) used with the payload",
+            metavar='SUFFIX',
+        )
+        dictionary_opts.add_argument(
+            '--upper',
+            action='store_true',
+            dest='upper',
+            help="Set the uppercase case for the payloads",
+            default=False,
+        )
+        dictionary_opts.add_argument(
+            '--lower',
+            action='store_true',
+            dest='lower',
+            help="Set the lowercase case for the payloads",
+            default=False,
+        )
+        dictionary_opts.add_argument(
+            '--capitalize',
+            action='store_true',
+            dest='capitalize',
+            help="Set the capitalize case for the payloads",
+            default=False,
+        )
+
+    def __build_match_opts(self) -> None:
+        """Builds the arguments for match options"""
+        match_opts = self.add_argument_group('Match options')
+        match_opts.add_argument(
+            '-Mc',
+            action='store',
+            dest='match_status',
+            help="Match responses based on their status codes",
+            metavar='STATUS',
+        )
+        match_opts.add_argument(
+            '-Ms',
+            action='store',
+            dest='match_length',
+            help="Match responses based on their length (in bytes)",
+            metavar='SIZE',
+        )
+        match_opts.add_argument(
+            '-Mt',
+            action='store',
+            dest='match_time',
+            help="Match responses based on their elapsed time (in seconds)",
+            metavar='TIME',
+        )
+        match_opts.add_argument(
+            '--scanner',
+            action='store',
+            dest='scanner',
+            help="Define the custom scanner (--help=scanners for more info)",
+            metavar='SCANNER',
+        )
+
+    def __build_display_opts(self) -> None:
+        """Builds the arguments for cli display options"""
+        display_opts = self.add_argument_group('Display options')
+        display_opts.add_argument(
+            '-S, --simple-output',
+            action='store_true',
+            dest="simple_output",
+            help="Set the simple display output mode (affects labels)",
+            default=False,
+        )
+        display_opts.add_argument(
+            '-V', '-V1',
+            action='store_true',
+            dest='common_verbose',
+            help="Set the common verbose output mode",
+            default=False,
+        )
+        display_opts.add_argument(
+            '-V2',
+            action='store_true',
+            dest='detailed_verbose',
+            help="Set the detailed verbose output mode",
+            default=False,
+        )
+        display_opts.add_argument(
+            '--no-colors',
+            action='store_true',
+            dest='disable_colors',
+            help="Disable the colors of the program",
+            default=False,
+        )
+
+    def __build_report_opts(self) -> None:
+        report_opts = self.add_argument_group('Report options')
+        report_opts.add_argument(
+            '-o',
+            action='store',
+            dest='report_name',
+            help=("Define the report name and/or format. Available reports: "
+                  + stringfy_list(list(Report.get_available_reports().keys()))),
+            metavar='REPORT',
+            default='txt'
+        )
+        report_opts.add_argument(
+            '--save-payload-conf',
+            action='store_true',
+            dest='save_payload_conf',
+            help="Save the payload configuration",
+            default=False,
+        )
+        report_opts.add_argument(
+            '--save-headers',
+            action='store_true',
+            dest='save_headers',
+            help="Save the response HTTP headers",
+            default=False,
+        )
+        report_opts.add_argument(
+            '--save-body',
+            action='store_true',
+            dest='save_body',
+            help="Save the response body",
+            default=False,
+        )
+
+    def __build_more_opts(self) -> None:
+        """Builds the arguments for non categorized options"""
+        more_opts = self.add_argument_group('More options')
+        more_opts.add_argument(
+            '-t',
+            action='store',
+            dest='number_of_threads',
+            help="Define the number of threads used in the tests",
+            metavar='NUMBEROFTHREADS',
+            type=int,
+            default=1,
+        )
+        more_opts.add_argument(
+            '--delay',
+            action='store',
+            dest='delay',
+            help="Define delay between each request",
+            metavar='DELAY',
+            type=float,
+            default=0,
+        )
+        more_opts.add_argument(
+            '--blacklist-status',
+            action='store',
+            dest='blacklist_status',
+            help=("Blacklist status codes from response, and take an action when one is detected. "
+                  "Available actions: stop (to stop the app), "
+                  "wait=SECONDS (to pause the app for some seconds)"),
+            metavar='STATUS:ACTION',
+        )

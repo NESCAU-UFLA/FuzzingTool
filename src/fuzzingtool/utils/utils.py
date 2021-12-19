@@ -81,6 +81,19 @@ def stringfy_list(one_list: list) -> str:
     return output
 
 
+def parse_option_with_args(plugin: str) -> Tuple[str, str]:
+    """Parse the plugin name into name and parameter
+    @type plugin: str
+    @param plugin: The plugin argument
+    @returns tuple[str, str]: The plugin name and parameter
+    """
+    if '=' in plugin:
+        plugin, param = plugin.split('=', 1)
+    else:
+        param = ''
+    return (plugin, param)
+
+
 def get_human_length(length: int) -> Tuple[Union[int, float], str]:
     """Get the human readable length from the result
 
