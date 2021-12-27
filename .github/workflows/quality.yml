@@ -22,6 +22,8 @@ jobs:
         run: |
           python3 -m venv env
           . env/bin/activate
+          ls -la
+          python -c "import sys; print(sys.version)"
 
       - name: "Build"
         run: |
