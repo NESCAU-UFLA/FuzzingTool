@@ -22,7 +22,7 @@ jobs:
         run: |
           python3 -m venv env
           . env/bin/activate
-          ls -la env/lib/python3.8/site-packages/fuzzingtool/
+          ls -la env/lib/python3.8/site-packages/
 
       - name: "Build"
         run: |
