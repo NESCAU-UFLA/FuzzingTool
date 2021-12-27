@@ -18,7 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from sys import argv
+import sys
 import argparse
 
 from .cli_output import CliOutput as CO
@@ -38,11 +38,11 @@ class CliArguments(argparse.ArgumentParser):
         usage = "Usage: FuzzingTool [-u|-r TARGET]+ [-w WORDLIST]+ [options]*"
         examples = ("For usage examples, see: "
                     "https://github.com/NESCAU-UFLA/FuzzingTool/wiki/Usage-Examples")
-        if len(argv) < 2:
+        if len(sys.argv) < 2:
             self.error("Invalid format! Use -h on 2nd parameter "
                        f"to show the help menu.\n\n{usage}\n\n{examples}")
-        if len(argv) == 2 and ('-h=' in argv[1] or '--help=' in argv[1]):
-            asked_help = argv[1].split('=')[1]
+        if len(sys.argv) == 2 and ('-h=' in sys.argv[1] or '--help=' in sys.argv[1]):
+            asked_help = sys.argv[1].split('=')[1]
             if 'wordlists' == asked_help:
                 self._show_wordlists_help()
             elif 'encoders' == asked_help:

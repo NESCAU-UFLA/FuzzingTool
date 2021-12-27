@@ -23,11 +23,10 @@ import threading
 from typing import Tuple, List, Union
 from argparse import Namespace
 
-from fuzzingtool.utils.utils import split_str_to_list
-
 from .cli_output import CliOutput, Colors
 from ..argument_builder import ArgumentBuilder as AB
 from ... import version
+from ...utils.utils import split_str_to_list
 from ...utils.http_utils import get_host, get_pure_url
 from ...utils.file_utils import read_file
 from ...utils.logger import Logger
@@ -69,7 +68,6 @@ class CliController:
         requesters: The requesters list
         started_time: The time when start the fuzzing test
         fuzzer: The fuzzer object to handle with the fuzzing test
-        all_results: The results dictionary for each host
         lock: A thread locker to prevent overwrites on logfiles
         blacklist_status: The blacklist status object
         logger: The object to handle with the program log
@@ -78,7 +76,6 @@ class CliController:
         self.requester = None
         self.started_time = 0
         self.fuzzer = None
-        self.all_results = {}
         self.lock = threading.Lock()
         self.blacklist_status = None
         self.logger = Logger()
@@ -98,7 +95,8 @@ class CliController:
         @param arguments: The command line interface arguments
         """
         self.co = CliOutput()  # Abbreviation to cli output
-        self.verbose = AB.build_verbose_mode(arguments)
+        self.verbose = AB.build_verbose_mode(arguments.common_verbose,
+                                             arguments.detailed_verbose)
         if arguments.simple_output:
             self.co.set_simple_output_mode()
         else:

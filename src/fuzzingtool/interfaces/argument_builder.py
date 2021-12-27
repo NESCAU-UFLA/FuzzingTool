@@ -32,23 +32,20 @@ class ArgumentBuilder:
     @staticmethod
     def build_target_from_args(
         url: str,
-        method: Union[str, List[str]],
+        method: str,
         body: str
     ) -> dict:
         """Build the targets from arguments
 
         @type urls: List[str]
         @param urls: The target URLs
-        @type method: str | List[str]
+        @type method: str
         @param method: The request methods
         @type body: str
         @param body: The raw request body data
         @returns dict: The targets data builded into a dictionary
         """
-        if not type(method) is list:
-            methods = split_str_to_list(method)
-        else:
-            methods = method
+        methods = split_str_to_list(method)
         if not methods:
             if body and not ('?' in url or FUZZING_MARK in url):
                 methods = ['POST']
@@ -92,6 +89,9 @@ class ArgumentBuilder:
                 headers[key] = value
                 this_header = header_list.popleft()
                 i += 1
+            if this_header:
+                key, value = this_header.split(': ', 1)
+                headers[key] = value
             return headers
 
         try:
@@ -151,17 +151,19 @@ class ArgumentBuilder:
         return parse_option_with_args(scanner)
 
     @staticmethod
-    def build_verbose_mode(arguments: Namespace) -> List[bool]:
+    def build_verbose_mode(is_common: bool, is_detailed: bool) -> List[bool]:
         """Build the verbose mode
 
-        @type arguments: str
-        @param arguments: The arguments from command line
+        @type is_common: bool
+        @param is_common: A flag to say if is common verbose mode
+        @type is_detailed: bool
+        @param is_detailed: A flag to say if is detailed verbose mode
         @returns List[bool]: The builded verbose mode
         """
         verbose = [False, False]
-        if arguments.common_verbose:
+        if is_common:
             verbose = [True, False]
-        elif arguments.detailed_verbose:
+        elif is_detailed:
             verbose = [True, True]
         return verbose
 
