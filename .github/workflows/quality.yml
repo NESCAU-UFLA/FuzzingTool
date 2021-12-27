@@ -35,8 +35,8 @@ jobs:
         with:
           projectBaseDir: src/fuzzingtool
           args: >
-            -Dsonar.verbose=true
             -Dsonar.organization=nescau-ufla
             -Dsonar.projectKey=NESCAU-UFLA_FuzzingTool
             -Dsonar.python.version=3
-            -Dsonar.python.coverage.reportPaths=./coverage.xml
+            -Dsonar.python.coverage.reportPaths=coverage.xml
+            -Dsonar.tests=tests/
