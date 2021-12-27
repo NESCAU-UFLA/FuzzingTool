@@ -16,7 +16,12 @@ jobs:
           # Disabling shallow clone is recommended for improving relevancy of reporting
           fetch-depth: 0
       - name: "Installing dependencies"
-        run: pip install setuptools pytest pytest-cov
+        run: pip install setuptools virtualenv pytest pytest-cov
+
+      - name: "Create virtualenv"
+        run: |
+          python3 -m venv env
+          . env/bin/activate
 
       - name: "Build"
         run: |
@@ -38,5 +43,5 @@ jobs:
             -Dsonar.projectKey=NESCAU-UFLA_FuzzingTool
             -Dsonar.python.version=3
             -Dsonar.python.coverage.reportPaths=coverage.xml
-            -Dsonar.sources=src/fuzzingtool/
+            -Dsonar.sources=env/lib/python3.8/site-packages/fuzzingtool/
             -Dsonar.tests=tests/
