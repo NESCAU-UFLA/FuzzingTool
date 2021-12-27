@@ -28,7 +28,7 @@ jobs:
           python3 setup.py sdist
           cd dist
           pip3 install *
-          ls -la env/lib/python3.8/site-packages/
+          ls -la env/lib/python3.8/
 
       - name: "Generate Coverage"
         run: python3 -m pytest --cov=fuzzingtool --cov-report=xml
