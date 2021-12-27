@@ -22,7 +22,7 @@ jobs:
         run: |
           python3 -m venv env
           . env/bin/activate
-          ls -la env/
+          ls -la env/lib/
 
       - name: "Build"
         run: |
