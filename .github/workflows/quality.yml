@@ -38,5 +38,4 @@ jobs:
             -Dsonar.projectKey=NESCAU-UFLA_FuzzingTool
             -Dsonar.python.version=3
             -Dsonar.python.coverage.reportPaths=coverage.xml
-            -Dsonar.sources=src/fuzzingtool/
             -Dsonar.tests=tests/
