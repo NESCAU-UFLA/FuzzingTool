@@ -1,7 +1,7 @@
 import unittest
 
-from fuzzingtool.decorators.plugin_meta import plugin_meta
-from fuzzingtool.exceptions.main_exceptions import MetadataException
+from src.fuzzingtool.decorators.plugin_meta import plugin_meta
+from src.fuzzingtool.exceptions.main_exceptions import MetadataException
 
 
 class TestPluginMeta(unittest.TestCase):

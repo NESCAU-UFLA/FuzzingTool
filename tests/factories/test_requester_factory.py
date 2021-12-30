@@ -1,13 +1,13 @@
 import unittest
 from unittest.mock import Mock, patch
 
-from fuzzingtool.factories.requester_factory import RequesterFactory
-from fuzzingtool.conn.requesters import requester, Requester
+from src.fuzzingtool.factories.requester_factory import RequesterFactory
+from src.fuzzingtool.conn.requesters import requester, Requester
 
 
 class TestRequesterFactory(unittest.TestCase):
-    @patch("fuzzingtool.factories.requester_factory.getattr")
-    @patch("fuzzingtool.factories.requester_factory.import_module")
+    @patch("src.fuzzingtool.factories.requester_factory.getattr")
+    @patch("src.fuzzingtool.factories.requester_factory.import_module")
     def test_creator(self,
                      mock_import_module: Mock,
                      mock_getattr: Mock):

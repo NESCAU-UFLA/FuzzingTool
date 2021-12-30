@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import Mock, patch
 
-from fuzzingtool.utils.http_utils import *
+from src.fuzzingtool.utils.http_utils import *
 from ..mock_utils.response_mock import ResponseMock
 
 
@@ -41,7 +41,7 @@ class TestHttpUtils(unittest.TestCase):
         self.assertIsInstance(returned_data, str)
         self.assertEqual(returned_data, return_expected)
 
-    @patch("fuzzingtool.utils.http_utils.get_url_without_scheme")
+    @patch("src.fuzzingtool.utils.http_utils.get_url_without_scheme")
     def test_get_path(self, mock_get_url_without_scheme: Mock):
         return_expected = "/"
         test_url = "https://test-url.com/"
@@ -51,7 +51,7 @@ class TestHttpUtils(unittest.TestCase):
         self.assertIsInstance(returned_data, str)
         self.assertEqual(returned_data, return_expected)
 
-    @patch("fuzzingtool.utils.http_utils.get_url_without_scheme")
+    @patch("src.fuzzingtool.utils.http_utils.get_url_without_scheme")
     def test_get_host_without_root_directory(self, mock_get_url_without_scheme: Mock):
         return_expected = "test-url.com"
         test_url = "https://test-url.com"
@@ -61,7 +61,7 @@ class TestHttpUtils(unittest.TestCase):
         self.assertIsInstance(returned_data, str)
         self.assertEqual(returned_data, return_expected)
  
-    @patch("fuzzingtool.utils.http_utils.get_url_without_scheme")
+    @patch("src.fuzzingtool.utils.http_utils.get_url_without_scheme")
     def test_get_host_with_root_directory(self, mock_get_url_without_scheme: Mock):
         return_expected = "test-url.com"
         test_url = "https://test-url.com/"

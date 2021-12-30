@@ -1,9 +1,9 @@
 import unittest
 from unittest.mock import Mock, patch
 
-from fuzzingtool.utils.utils import *
-from fuzzingtool.utils.utils import _get_letter_range, _get_number_range
-from fuzzingtool.utils.consts import FUZZING_MARK
+from src.fuzzingtool.utils.utils import *
+from src.fuzzingtool.utils.utils import _get_letter_range, _get_number_range
+from src.fuzzingtool.utils.consts import FUZZING_MARK
 
 
 class TestUtils(unittest.TestCase):
@@ -171,7 +171,7 @@ class TestUtils(unittest.TestCase):
         self.assertIsInstance(returned_data, list)
         self.assertEqual(returned_data, return_expected)
 
-    @patch("fuzzingtool.utils.utils._get_letter_range")
+    @patch("src.fuzzingtool.utils.utils._get_letter_range")
     def test_check_range_list_with_letter_range(self, mock_get_letter_range: Mock):
         return_expected = ['a', 'b', 'c', 'd']
         test_content = "a-d"
@@ -181,7 +181,7 @@ class TestUtils(unittest.TestCase):
         self.assertIsInstance(returned_data, list)
         self.assertEqual(returned_data, return_expected)
 
-    @patch("fuzzingtool.utils.utils._get_letter_range")
+    @patch("src.fuzzingtool.utils.utils._get_letter_range")
     def test_check_range_list_with_letter_range_inside_text(self,
                                                             mock_get_letter_range: Mock):
         return_expected = ["payAload", "payBload", "payCload", "payDload"]
@@ -192,7 +192,7 @@ class TestUtils(unittest.TestCase):
         self.assertIsInstance(returned_data, list)
         self.assertEqual(returned_data, return_expected)
 
-    @patch("fuzzingtool.utils.utils._get_number_range")
+    @patch("src.fuzzingtool.utils.utils._get_number_range")
     def test_check_range_list_with_number_range(self, mock_get_number_range: Mock):
         return_expected = ['0', '1', '2', '3', '4', '5']
         test_content = "0-5"
@@ -202,7 +202,7 @@ class TestUtils(unittest.TestCase):
         self.assertIsInstance(returned_data, list)
         self.assertEqual(returned_data, return_expected)
 
-    @patch("fuzzingtool.utils.utils._get_number_range")
+    @patch("src.fuzzingtool.utils.utils._get_number_range")
     def test_check_range_list_with_number_range_inside_text(self,
                                                             mock_get_number_range: Mock):
         return_expected = [

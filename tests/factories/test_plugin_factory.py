@@ -1,9 +1,9 @@
 import unittest
 from unittest.mock import Mock, patch
 
-from fuzzingtool.factories.plugin_factory import PluginFactory
-from fuzzingtool.core.plugins import scanners, Grep, Reflected
-from fuzzingtool.exceptions.plugin_exceptions import InvalidPlugin, InvalidPluginCategory, PluginCreationError
+from src.fuzzingtool.factories.plugin_factory import PluginFactory
+from src.fuzzingtool.core.plugins import scanners, Grep, Reflected
+from src.fuzzingtool.exceptions.plugin_exceptions import InvalidPlugin, InvalidPluginCategory, PluginCreationError
 
 
 class TestPluginFactory(unittest.TestCase):
@@ -20,8 +20,8 @@ class TestPluginFactory(unittest.TestCase):
         with self.assertRaises(InvalidPluginCategory):
             PluginFactory.get_plugins_from_category(test_category)
 
-    @patch("fuzzingtool.factories.plugin_factory.getattr")
-    @patch("fuzzingtool.factories.plugin_factory.import_module")
+    @patch("src.fuzzingtool.factories.plugin_factory.getattr")
+    @patch("src.fuzzingtool.factories.plugin_factory.import_module")
     def test_class_creator(self,
                            mock_import_module: Mock,
                            mock_getattr: Mock):
@@ -40,7 +40,7 @@ class TestPluginFactory(unittest.TestCase):
         self.assertIsInstance(returned_data, type(return_expected))
         self.assertEqual(returned_data, return_expected)
 
-    @patch("fuzzingtool.factories.plugin_factory.import_module")
+    @patch("src.fuzzingtool.factories.plugin_factory.import_module")
     def test_class_creator_with_invalid_plugin(self, mock_import_module: Mock):
         test_plugin = "InvalidPluginTest"
         test_category = "scanners"
@@ -48,7 +48,7 @@ class TestPluginFactory(unittest.TestCase):
         with self.assertRaises(InvalidPlugin):
             PluginFactory.class_creator(test_plugin, test_category)
 
-    @patch("fuzzingtool.factories.plugin_factory.PluginFactory.class_creator")
+    @patch("src.fuzzingtool.factories.plugin_factory.PluginFactory.class_creator")
     def test_object_creator_with_invalid_plugin(self, mock_class_creator: Mock):
         test_plugin = "InvalidPluginTest"
         test_category = "scanners"
@@ -57,7 +57,7 @@ class TestPluginFactory(unittest.TestCase):
         with self.assertRaises(PluginCreationError):
             PluginFactory.object_creator(test_plugin, test_category, test_params)
 
-    @patch("fuzzingtool.factories.plugin_factory.PluginFactory.class_creator")
+    @patch("src.fuzzingtool.factories.plugin_factory.PluginFactory.class_creator")
     def test_object_creator_with_params(self, mock_class_creator: Mock):
         test_name = "Grep"
         test_category = "scanners"
@@ -66,7 +66,7 @@ class TestPluginFactory(unittest.TestCase):
         returned_data = PluginFactory.object_creator(test_name, test_category, test_params)
         self.assertIsInstance(returned_data, Grep)
 
-    @patch("fuzzingtool.factories.plugin_factory.PluginFactory.class_creator")
+    @patch("src.fuzzingtool.factories.plugin_factory.PluginFactory.class_creator")
     def test_object_creator_without_params(self, mock_class_creator: Mock):
         test_name = "Reflected"
         test_category = "scanners"
@@ -75,7 +75,7 @@ class TestPluginFactory(unittest.TestCase):
         returned_data = PluginFactory.object_creator(test_name, test_category, test_params)
         self.assertIsInstance(returned_data, Reflected)
 
-    @patch("fuzzingtool.factories.plugin_factory.PluginFactory.class_creator")
+    @patch("src.fuzzingtool.factories.plugin_factory.PluginFactory.class_creator")
     def test_object_creator_with_blank_params(self, mock_class_creator: Mock):
         test_name = "Grep"
         test_category = "scanners"
@@ -84,7 +84,7 @@ class TestPluginFactory(unittest.TestCase):
         with self.assertRaises(PluginCreationError):
             PluginFactory.object_creator(test_name, test_category, test_params)
 
-    @patch("fuzzingtool.factories.plugin_factory.PluginFactory.class_creator")
+    @patch("src.fuzzingtool.factories.plugin_factory.PluginFactory.class_creator")
     def test_object_creator_with_invalid_params(self, mock_class_creator: Mock):
         test_name = "Grep"
         test_category = "scanners"

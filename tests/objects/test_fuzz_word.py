@@ -1,7 +1,7 @@
 import unittest
 
-from fuzzingtool.objects.fuzz_word import FuzzWord
-from fuzzingtool.utils.consts import FUZZING_MARK
+from src.fuzzingtool.objects.fuzz_word import FuzzWord
+from src.fuzzingtool.utils.consts import FUZZING_MARK
 
 
 class TestPayload(unittest.TestCase):
