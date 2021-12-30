@@ -28,6 +28,10 @@ jobs:
         run: |
           pytest --cov=src/fuzzingtool --cov-report=xml
 
+      - name: fix code coverage paths
+        run: |
+          sed -i 's/\/home\/runner\/work\/FuzzingTool\/FuzzingTool\//\/github\/workspace\//g' coverage.xml
+
       - name: SonarCloud Scan
         uses: sonarsource/sonarcloud-github-action@master
         env:
@@ -38,6 +42,6 @@ jobs:
             -Dsonar.organization=nescau-ufla
             -Dsonar.projectKey=NESCAU-UFLA_FuzzingTool
             -Dsonar.python.version=3
-            -Dsonar.python.coverage.reportPaths=./coverage.xml
-            -Dsonar.sources=./src/fuzzingtool/
+            -Dsonar.python.coverage.reportPaths=coverage.xml
+            -Dsonar.sources=src/fuzzingtool/
             -Dsonar.tests=tests/
