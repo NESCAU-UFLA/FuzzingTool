@@ -1,8 +1,8 @@
 import unittest
 
-from fuzzingtool.exceptions.request_exceptions import RequestException
-from fuzzingtool.objects import Error, Payload
-from fuzzingtool.objects.base_objects import BaseItem
+from src.fuzzingtool.exceptions.request_exceptions import RequestException
+from src.fuzzingtool.objects import Error, Payload
+from src.fuzzingtool.objects.base_objects import BaseItem
 
 
 class TestError(unittest.TestCase):

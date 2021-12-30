@@ -2,8 +2,8 @@ import unittest
 from unittest.mock import Mock, patch
 import datetime
 
-from fuzzingtool.objects import Payload, Result
-from fuzzingtool.objects.base_objects import BaseItem
+from src.fuzzingtool.objects import Payload, Result
+from src.fuzzingtool.objects.base_objects import BaseItem
 from ..mock_utils.response_mock import ResponseMock
 
 
@@ -24,7 +24,7 @@ class TestResult(unittest.TestCase):
     def tearDown(self):
         BaseItem.reset_index()
 
-    @patch("fuzzingtool.objects.result.build_raw_response_header")
+    @patch("src.fuzzingtool.objects.result.build_raw_response_header")
     def test_result(self, mock_build_raw_response_header: Mock):
         test_response = ResponseMock()
         mock_build_raw_response_header.return_value = self.test_headers
@@ -40,7 +40,7 @@ class TestResult(unittest.TestCase):
         self.assertEqual(result.lines, 2)
         self.assertEqual(result.get_response(), test_response)
 
-    @patch("fuzzingtool.objects.result.build_raw_response_header")
+    @patch("src.fuzzingtool.objects.result.build_raw_response_header")
     def test_result_iter(self, mock_build_raw_response_header: Mock):
         test_prefix = "test-prefix|"
         payload: Payload = Payload("test-payload").with_prefix(test_prefix)

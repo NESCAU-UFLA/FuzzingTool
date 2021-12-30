@@ -4,13 +4,13 @@ from unittest.mock import Mock, patch
 import socket
 from requests.models import Response
 
-from fuzzingtool.conn.requesters.subdomain_requester import SubdomainRequester
-from fuzzingtool.utils.consts import SUBDOMAIN_FUZZING
-from fuzzingtool.exceptions.request_exceptions import InvalidHostname
+from src.fuzzingtool.conn.requesters.subdomain_requester import SubdomainRequester
+from src.fuzzingtool.utils.consts import SUBDOMAIN_FUZZING
+from src.fuzzingtool.exceptions.request_exceptions import InvalidHostname
 
 
 class TestRequester(unittest.TestCase):
-    @patch("fuzzingtool.conn.requesters.subdomain_requester.socket.gethostbyname")
+    @patch("src.fuzzingtool.conn.requesters.subdomain_requester.socket.gethostbyname")
     def test_resolve_hostname(self, mock_gethostbyname: Mock):
         test_hostname = "test-host.com"
         return_expected = "127.0.0.1"
@@ -19,15 +19,15 @@ class TestRequester(unittest.TestCase):
         self.assertIsInstance(returned_data, str)
         self.assertEqual(returned_data, return_expected)
 
-    @patch("fuzzingtool.conn.requesters.subdomain_requester.socket.gethostbyname")
+    @patch("src.fuzzingtool.conn.requesters.subdomain_requester.socket.gethostbyname")
     def test_resolve_hostname_with_raise_exception(self, mock_gethostbyname: Mock):
         test_hostname = "test-host.com"
         mock_gethostbyname.side_effect = socket.gaierror
         with self.assertRaises(InvalidHostname):
             SubdomainRequester.resolve_hostname(SubdomainRequester, test_hostname)
 
-    @patch("fuzzingtool.conn.requesters.subdomain_requester.Requester.request")
-    @patch("fuzzingtool.conn.requesters.subdomain_requester.SubdomainRequester.resolve_hostname")
+    @patch("src.fuzzingtool.conn.requesters.subdomain_requester.Requester.request")
+    @patch("src.fuzzingtool.conn.requesters.subdomain_requester.SubdomainRequester.resolve_hostname")
     def test_request(self,
                      mock_resolve_hostname: Mock,
                      mock_request: Mock):

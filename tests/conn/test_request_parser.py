@@ -1,8 +1,8 @@
 import unittest
 
-from fuzzingtool.conn.request_parser import *
-from fuzzingtool.objects.fuzz_word import FuzzWord
-from fuzzingtool.utils.consts import FUZZING_MARK
+from src.fuzzingtool.conn.request_parser import *
+from src.fuzzingtool.objects.fuzz_word import FuzzWord
+from src.fuzzingtool.utils.consts import FUZZING_MARK
 
 
 class TestRequestParser(unittest.TestCase):

@@ -1,8 +1,8 @@
 import unittest
 from unittest.mock import patch, Mock
 
-from fuzzingtool.interfaces.argument_builder import ArgumentBuilder as AB
-from fuzzingtool.exceptions.main_exceptions import BadArgumentFormat
+from src.fuzzingtool.interfaces.argument_builder import ArgumentBuilder as AB
+from src.fuzzingtool.exceptions.main_exceptions import BadArgumentFormat
 
 
 class TestArgumentBuilder(unittest.TestCase):
@@ -48,7 +48,7 @@ class TestArgumentBuilder(unittest.TestCase):
         self.assertIsInstance(returned_target, dict)
         self.assertDictEqual(returned_target, return_expected)
 
-    @patch("fuzzingtool.interfaces.argument_builder.read_file")
+    @patch("src.fuzzingtool.interfaces.argument_builder.read_file")
     def test_build_target_from_raw_http(self, mock_read_file: Mock):
         expected_header = {
             'Host': "test-url.com",
@@ -73,7 +73,7 @@ class TestArgumentBuilder(unittest.TestCase):
         self.assertIsInstance(returned_target, dict)
         self.assertDictEqual(returned_target, return_expected)
 
-    @patch("fuzzingtool.interfaces.argument_builder.read_file")
+    @patch("src.fuzzingtool.interfaces.argument_builder.read_file")
     def test_build_target_from_raw_http_with_body(self, mock_read_file: Mock):
         expected_header = {
             'Host': "test-url.com",

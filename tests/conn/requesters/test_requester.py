@@ -3,11 +3,11 @@ from unittest.mock import Mock, patch
 
 import requests
 
-from fuzzingtool.conn.requesters.requester import Requester
-from fuzzingtool.objects.fuzz_word import FuzzWord
-from fuzzingtool.utils.consts import (FUZZING_MARK, UNKNOWN_FUZZING, HTTP_METHOD_FUZZING,
+from src.fuzzingtool.conn.requesters.requester import Requester
+from src.fuzzingtool.objects.fuzz_word import FuzzWord
+from src.fuzzingtool.utils.consts import (FUZZING_MARK, UNKNOWN_FUZZING, HTTP_METHOD_FUZZING,
                                       PATH_FUZZING, DATA_FUZZING)
-from fuzzingtool.exceptions.request_exceptions import RequestException
+from src.fuzzingtool.exceptions.request_exceptions import RequestException
 
 
 class TestRequester(unittest.TestCase):
@@ -37,7 +37,7 @@ class TestRequester(unittest.TestCase):
         returned_data = requester._Requester__body
         self.assertDictEqual(returned_data, return_expected)
 
-    @patch("fuzzingtool.conn.requesters.requester.requests.get")
+    @patch("src.fuzzingtool.conn.requesters.requester.requests.get")
     def test_test_connection_with_raise_exception(self, mock_get: Mock):
         requester = Requester("https://test-url.com/")
         mock_get.side_effect = requests.exceptions.ProxyError

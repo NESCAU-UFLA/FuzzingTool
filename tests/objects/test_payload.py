@@ -1,6 +1,6 @@
 import unittest
 
-from fuzzingtool.objects.payload import Payload
+from src.fuzzingtool.objects.payload import Payload
 
 
 class TestPayload(unittest.TestCase):

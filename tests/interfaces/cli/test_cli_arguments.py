@@ -1,8 +1,8 @@
 import unittest
 from argparse import Namespace
 
-from fuzzingtool.interfaces.cli.cli_arguments import CliArguments
-from fuzzingtool.exceptions.main_exceptions import BadArgumentFormat
+from src.fuzzingtool.interfaces.cli.cli_arguments import CliArguments
+from src.fuzzingtool.exceptions.main_exceptions import BadArgumentFormat
 from ...mock_utils.args_decorator import mock_sys_args
 
 
