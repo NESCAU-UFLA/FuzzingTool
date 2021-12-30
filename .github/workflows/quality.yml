@@ -28,6 +28,7 @@ jobs:
         run: |
           pytest --cov=src/fuzzingtool --cov-report=xml
           ls -la
+          pwd
 
       - name: SonarCloud Scan
         uses: sonarsource/sonarcloud-github-action@master
