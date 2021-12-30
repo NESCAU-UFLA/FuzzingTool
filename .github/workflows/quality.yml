@@ -18,6 +18,12 @@ jobs:
       - name: "Installing dependencies"
         run: pip install setuptools pytest pytest-cov
 
+      - name: "Build"
+        run: |
+          python3 setup.py sdist
+          cd dist
+          pip3 install *
+
       - name: "Generate Coverage"
         run: pytest --cov=src/fuzzingtool --cov-report=xml
 
