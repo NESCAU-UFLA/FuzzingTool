@@ -26,6 +26,7 @@ from argparse import Namespace
 from .cli_output import CliOutput, Colors
 from ..argument_builder import ArgumentBuilder as AB
 from ... import version
+from ...api.fuzz_controller import FuzzController
 from ...utils.utils import split_str_to_list
 from ...utils.http_utils import get_host, get_pure_url
 from ...utils.file_utils import read_file
@@ -40,7 +41,7 @@ from ...factories import PluginFactory, RequesterFactory, WordlistFactory
 from ...reports.report import Report
 from ...objects import Error, Result
 from ...exceptions.base_exceptions import FuzzingToolException
-from ...exceptions.main_exceptions import (ControllerException, StopActionInterrupt,
+from ...exceptions.main_exceptions import (FuzzControllerException, StopActionInterrupt,
                                            WordlistCreationError, BuildWordlistFails)
 from ...exceptions.request_exceptions import RequestException
 
@@ -61,7 +62,7 @@ def banner() -> str:
     return banner
 
 
-class CliController:
+class CliController(FuzzController):
     """Class that handle with the entire application
 
     Attributes:
@@ -72,7 +73,8 @@ class CliController:
         blacklist_status: The blacklist status object
         logger: The object to handle with the program log
     """
-    def __init__(self):
+    def __init__(self, arguments: Namespace):
+        super().__init__(vars(arguments))
         self.lock = threading.Lock()
         self.logger = Logger()
 
@@ -83,25 +85,22 @@ class CliController:
         """
         return self.verbose[0]
 
-    def main(self, arguments: Namespace) -> None:
+    def main(self) -> None:
         """The main function.
            Prepares the application environment and starts the fuzzing
-
-        @type arguments: Namespace
-        @param arguments: The command line interface arguments
         """
         self.co = CliOutput()  # Abbreviation to cli output
-        self.verbose = AB.build_verbose_mode(arguments.common_verbose,
-                                             arguments.detailed_verbose)
-        if arguments.simple_output:
+        self.verbose = AB.build_verbose_mode(self.args["common_verbose"],
+                                             self.args["detailed_verbose"])
+        if self.args["simple_output"]:
             self.co.set_simple_output_mode()
         else:
             CliOutput.print(banner())
         try:
             self.co.info_box("Setting up arguments ...")
-            self.init(arguments)
-            if not arguments.simple_output:
-                self.print_configs(arguments)
+            self.init()
+            if not self.args["simple_output"]:
+                self.print_configs()
         except FuzzingToolException as e:
             self.co.error_box(str(e))
         self.co.set_verbosity_mode(self.is_verbose_mode())
@@ -119,14 +118,12 @@ class CliController:
             self.show_footer()
             self.co.info_box("Test completed")
 
-    def init(self, arguments: Namespace) -> None:
+    def init(self) -> None:
         """The initialization function.
            Set the application variables including plugins requires
-
-        @type arguments: Namespace
-        @param arguments: The command line interface arguments
         """
-        self.__init_report(arguments)
+        self.__init_report()
+        super().init()
 
     def print_configs(self, arguments: Namespace) -> None:
         """Print the program configuration
@@ -184,7 +181,7 @@ class CliController:
         except RequestException as e:
             if not self.co.ask_yes_no('warning',
                                       f"{str(e)}. Continue anyway?"):
-                raise ControllerException("No target left for fuzzing")
+                raise FuzzControllerException("No target left for fuzzing")
         else:
             if self.is_verbose_mode():
                 self.co.info_box("Connection status: OK")
@@ -330,61 +327,6 @@ class CliController:
                 error.index, self.total_requests, error.payload
             )
 
-    def __get_target_fuzzing_type(self, requester: Requester) -> str:
-        """Get the target fuzzing type, as a string format
-
-        @type requester: Requester
-        @param requester: The actual iterated requester
-        @return str: The fuzzing type, as a string
-        """
-        if requester.is_method_fuzzing():
-            return "MethodFuzzing"
-        elif requester.is_data_fuzzing():
-            return "DataFuzzing"
-        elif requester.is_url_discovery():
-            if requester.is_path_fuzzing():
-                return "PathFuzzing"
-            else:
-                return "SubdomainFuzzing"
-        else:
-            return "Couldn't determine the fuzzing type"
-
-    def __init_requesters(self, arguments: Namespace) -> None:
-        """Initialize the requester
-
-        @type arguments: Namespace
-        @param arguments: The command line interface arguments
-        """
-        self.target = None
-        if arguments.url:
-            self.target = AB.build_target_from_args(
-                arguments.url, arguments.method, arguments.data
-            )
-        if arguments.raw_http:
-            self.target = AB.build_target_from_raw_http(
-                arguments.raw_http, arguments.scheme
-            )
-        if not self.target:
-            raise ControllerException("A target is needed to make the fuzzing")
-        if check_is_subdomain_fuzzing(self.target['url']):
-            requester_type = 'SubdomainRequester'
-        else:
-            requester_type = 'Requester'
-        self.requester = RequesterFactory.creator(
-            requester_type,
-            url=self.target['url'],
-            methods=self.target['methods'],
-            body=self.target['body'],
-            headers=self.target['header'],
-            follow_redirects=arguments.follow_redirects,
-            proxy=arguments.proxy,
-            proxies=(read_file(arguments.proxies)
-                     if arguments.proxies else []),
-            timeout=arguments.timeout,
-            cookie=arguments.cookie,
-        )
-        self.target['type_fuzzing'] = self.__get_target_fuzzing_type(self.requester)
-
     def __init_report(self, arguments: Namespace) -> None:
         """Initialize the report
 
@@ -395,92 +337,6 @@ class CliController:
         Result.save_payload_configs = arguments.save_payload_conf
         Result.save_headers = arguments.save_headers
         Result.save_body = arguments.save_body
-
-    def __build_encoders(self, arguments: Namespace) -> Union[
-        Tuple[List[BaseEncoder], List[List[BaseEncoder]]], None
-    ]:
-        """Build the encoders
-
-        @type arguments: Namespace
-        @param arguments: The command line interface arguments
-        @returns Tuple | None: The encoders used in the program
-        """
-        if not arguments.encoder:
-            return None
-        encoders_list = AB.build_encoder(arguments.encoder)
-        if arguments.encode_only:
-            Payloader.encoder.set_regex(arguments.encode_only)
-        encoders_default = []
-        encoders_chain = []
-        for encoders in encoders_list:
-            if len(encoders) > 1:
-                append_to = []
-                is_chain = True
-            else:
-                append_to = encoders_default
-                is_chain = False
-            for encoder in encoders:
-                name, param = encoder
-                encoder = PluginFactory.object_creator(
-                    name, 'encoders', param
-                )
-                append_to.append(encoder)
-            if is_chain:
-                encoders_chain.append(append_to)
-        return (encoders_default, encoders_chain)
-
-    def __configure_payloader(self, arguments: Namespace) -> None:
-        """Configure the Payloader options
-
-        @type arguments: Namespace
-        @param arguments: The command line interface arguments
-        """
-        Payloader.set_prefix(split_str_to_list(arguments.prefix))
-        Payloader.set_suffix(split_str_to_list(arguments.suffix))
-        if arguments.lower:
-            Payloader.set_lowercase()
-        elif arguments.upper:
-            Payloader.set_uppercase()
-        elif arguments.capitalize:
-            Payloader.set_capitalize()
-        encoders = self.__build_encoders(arguments)
-        if encoders:
-            Payloader.encoder.set_encoders(encoders)
-
-    def __build_wordlist(
-        self,
-        wordlists: List[Tuple[str, str]],
-        requester: Requester = None
-    ) -> list:
-        """Build the wordlist
-
-        @type wordlists: List[Tuple[str, str]]
-        @param wordlists: The wordlists used in the dictionary
-        @type requester: Requester
-        @param requester: The requester for the given dictionary
-        @returns List: The builded wordlist list
-        """
-        builded_wordlist = []
-        for wordlist in wordlists:
-            name, params = wordlist
-            if self.verbose[1]:
-                self.co.info_box(f"Building wordlist from {name} ...")
-            self.dict_metadata['wordlists'].append(
-                f"{name}={params}" if params else name
-            )
-            try:
-                wordlist_obj = WordlistFactory.creator(name, params, requester)
-                wordlist_obj.build()
-            except (WordlistCreationError, BuildWordlistFails) as e:
-                if self.is_verbose_mode():
-                    self.co.warning_box(str(e))
-            else:
-                builded_wordlist.extend(wordlist_obj.get())
-                if self.verbose[1]:
-                    self.co.info_box(f"Wordlist {name} builded")
-        if not builded_wordlist:
-            raise ControllerException("The wordlist is empty")
-        return builded_wordlist
 
     def __build_dictionary(
         self,

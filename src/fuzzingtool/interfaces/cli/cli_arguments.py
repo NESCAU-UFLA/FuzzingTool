@@ -210,7 +210,6 @@ class CliArguments(argparse.ArgumentParser):
             help="Define the request timeout (in seconds)",
             metavar='TIMEOUT',
             type=int,
-            default=0,
         )
         request_opts.add_argument(
             '--follow-redirects',
@@ -245,7 +244,6 @@ class CliArguments(argparse.ArgumentParser):
             dest='encoder',
             help="Define the encoder used on payloads (--help=encoders for more info)",
             metavar='ENCODER',
-            default='',
         )
         dictionary_opts.add_argument(
             '--encode-only',
@@ -253,7 +251,6 @@ class CliArguments(argparse.ArgumentParser):
             dest='encode_only',
             help="Define the regex pattern to use in the encoder",
             metavar='REGEX',
-            default='',
         )
         dictionary_opts.add_argument(
             '--prefix',

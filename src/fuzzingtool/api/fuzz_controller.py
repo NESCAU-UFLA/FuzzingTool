@@ -36,14 +36,15 @@ from ..factories import PluginFactory, RequesterFactory, WordlistFactory
 from ..reports.report import Report
 from ..objects import Error, Result
 from ..exceptions.base_exceptions import FuzzingToolException
-from ..exceptions.main_exceptions import (ControllerException, StopActionInterrupt,
+from ..exceptions.main_exceptions import (FuzzControllerException, StopActionInterrupt,
                                            WordlistCreationError, BuildWordlistFails)
 from ..exceptions.request_exceptions import RequestException
 
 
 class FuzzController:
     def __init__(self, arguments: dict):
-        self.args = arguments
+        self.args = self.__get_default_args()
+        self.args.update(arguments)
         self.requester = None
         self.started_time = 0
         self.fuzzer = None
@@ -83,8 +84,7 @@ class FuzzController:
             )
         self.delay = self.args["delay"]
         self.number_of_threads = self.args["number_of_threads"]
-        self.__init_report(self.args)
-        self._init_dictionary(self.args)
+        self._init_dictionary()
 
     def prepare_fuzzer(self) -> None:
         """Prepare the fuzzer for the fuzzing tests.
@@ -122,6 +122,45 @@ class FuzzController:
     def _wait_callback(self, status: int) -> None:
         pass
 
+    def __get_default_args(self) -> dict:
+        """Gets the default arguments for the program
+
+        @returns dict: The arguments dictionary
+        """
+        return dict(
+            # Target options
+            url=None,
+            raw_http=None,
+            # Request options
+            scheme=None,
+            method=None,
+            data=None,
+            proxy=None,
+            proxies=None,
+            cookie=None,
+            timeout=None,
+            follow_redirects=False,
+            # Dictionary options
+            wordlist=None,
+            unique=False,
+            encoder=None,
+            encode_only=None,
+            prefix=None,
+            suffix=None,
+            upper=False,
+            lower=False,
+            capitalize=False,
+            # Match and Scanner options
+            match_status=None,
+            match_length=None,
+            match_time=None,
+            scanner=None,
+            # Other options
+            number_of_threads=1,
+            delay=0,
+            blacklist_status=None,
+        )
+
     def _init_dictionary(self) -> None:
         """Initialize the dictionary"""
         self.__configure_payloader()
@@ -138,24 +177,20 @@ class FuzzController:
         self.dict_metadata['len'] = atual_length
         self.dictionary = Dictionary(final_wordlist)
 
-    def __get_target_fuzzing_type(self, requester: Requester) -> str:
+    def __get_target_fuzzing_type(self) -> str:
         """Get the target fuzzing type, as a string format
 
-        @type requester: Requester
-        @param requester: The actual iterated requester
         @return str: The fuzzing type, as a string
         """
-        if requester.is_method_fuzzing():
+        if self.requester.is_method_fuzzing():
             return "MethodFuzzing"
-        elif requester.is_data_fuzzing():
+        if self.requester.is_data_fuzzing():
             return "DataFuzzing"
-        elif requester.is_url_discovery():
-            if requester.is_path_fuzzing():
+        if self.requester.is_url_discovery():
+            if self.requester.is_path_fuzzing():
                 return "PathFuzzing"
-            else:
-                return "SubdomainFuzzing"
-        else:
-            return "Couldn't determine the fuzzing type"
+            return "SubdomainFuzzing"
+        return "Couldn't determine the fuzzing type"
 
     def __init_requester(self) -> None:
         """Initialize the requester"""
@@ -169,7 +204,7 @@ class FuzzController:
                 self.args["raw_http"], self.args["scheme"]
             )
         if not self.target:
-            raise ControllerException("A target is needed to make the fuzzing")
+            raise FuzzControllerException("A target is needed to make the fuzzing")
         if check_is_subdomain_fuzzing(self.target['url']):
             requester_type = 'SubdomainRequester'
         else:
@@ -187,14 +222,7 @@ class FuzzController:
             timeout=self.args["timeout"],
             cookie=self.args["cookie"],
         )
-        self.target['type_fuzzing'] = self.__get_target_fuzzing_type(self.requester)
-
-    def __init_report(self) -> None:
-        """Initialize the report"""
-        self.report = Report.build(self.args["report_name"])
-        Result.save_payload_configs = self.args["save_payload_conf"]
-        Result.save_headers = self.args["save_headers"]
-        Result.save_body = self.args["save_body"]
+        self.target['type_fuzzing'] = self.__get_target_fuzzing_type()
 
     def __build_encoders(self) -> Union[
         Tuple[List[BaseEncoder], List[List[BaseEncoder]]], None
@@ -229,8 +257,10 @@ class FuzzController:
 
     def __configure_payloader(self) -> None:
         """Configure the Payloader options"""
-        Payloader.set_prefix(split_str_to_list(self.args["prefix"]))
-        Payloader.set_suffix(split_str_to_list(self.args["suffix"]))
+        if self.args["prefix"]:
+            Payloader.set_prefix(split_str_to_list(self.args["prefix"]))
+        if self.args["suffix"]:
+            Payloader.set_suffix(split_str_to_list(self.args["suffix"]))
         if self.args["lower"]:
             Payloader.set_lowercase()
         elif self.args["upper"]:
@@ -274,10 +304,6 @@ class FuzzController:
         """
         if self.requester.is_url_discovery():
             if self.requester.is_path_fuzzing():
-                scanner = PathScanner()
-            else:
-                scanner = SubdomainScanner()
-        else:
-            scanner = DataScanner()
-        self.co.set_message_callback(scanner.cli_callback)
-        return scanner
+                return PathScanner()
+            return SubdomainScanner()
+        return DataScanner()
