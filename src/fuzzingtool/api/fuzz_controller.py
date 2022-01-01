@@ -1,0 +1,283 @@
+# Copyright (c) 2020 - present Vitor Oriel <https://github.com/VitorOriel>
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+from typing import Tuple, List, Union
+
+from .. import version
+from ..interfaces.argument_builder import ArgumentBuilder as AB
+from ..utils.utils import split_str_to_list
+from ..utils.http_utils import get_host, get_pure_url
+from ..utils.file_utils import read_file
+from ..utils.logger import Logger
+from ..core import BlacklistStatus, Dictionary, Fuzzer, Matcher, Payloader
+from ..core.defaults.scanners import (DataScanner,
+                                       PathScanner, SubdomainScanner)
+from ..core.bases import BaseScanner, BaseEncoder
+from ..conn.request_parser import check_is_subdomain_fuzzing
+from ..conn.requesters import Requester
+from ..factories import PluginFactory, RequesterFactory, WordlistFactory
+from ..reports.report import Report
+from ..objects import Error, Result
+from ..exceptions.base_exceptions import FuzzingToolException
+from ..exceptions.main_exceptions import (ControllerException, StopActionInterrupt,
+                                           WordlistCreationError, BuildWordlistFails)
+from ..exceptions.request_exceptions import RequestException
+
+
+class FuzzController:
+    def __init__(self, arguments: dict):
+        self.args = arguments
+        self.requester = None
+        self.started_time = 0
+        self.fuzzer = None
+        self.blacklist_status = None
+        self.results = []
+        self.stop_action = None
+
+    def init(self) -> None:
+        """The initialization function.
+           Set the application variables including plugins requires
+        """
+        self.__init_requester()
+        scanner = None
+        if self.args["scanner"]:
+            scanner, param = AB.build_scanner(self.args["scanner"])
+            scanner: BaseScanner = PluginFactory.object_creator(
+                scanner, 'scanners', param
+            )
+        self.scanner = scanner
+        self.matcher = Matcher(
+            self.args["match_status"],
+            self.args["match_length"],
+            self.args["match_time"]
+        )
+        if self.args["blacklist_status"]:
+            blacklisted_status, action, action_param = AB.build_blacklist_status(
+                self.args["blacklist_status"]
+            )
+            self.blacklist_status = BlacklistStatus(
+                status=blacklisted_status,
+                action=action,
+                action_param=action_param,
+                action_callbacks={
+                    'stop': self._stop_callback,
+                    'wait': self._wait_callback,
+                },
+            )
+        self.delay = self.args["delay"]
+        self.number_of_threads = self.args["number_of_threads"]
+        self.__init_report(self.args)
+        self._init_dictionary(self.args)
+
+    def prepare_fuzzer(self) -> None:
+        """Prepare the fuzzer for the fuzzing tests.
+           Refill the dictionary with the wordlist
+           content if a global dictionary was given
+        """
+        self.dictionary.reload()
+        self.fuzzer = Fuzzer(
+            requester=self.requester,
+            dictionary=self.dictionary,
+            matcher=self.matcher,
+            scanner=self.scanner,
+            delay=self.delay,
+            number_of_threads=self.number_of_threads,
+            blacklist_status=self.blacklist_status,
+            result_callback=self._result_callback,
+            exception_callbacks=[
+                self._invalid_hostname_callback,
+                self._request_exception_callback
+            ],
+        )
+        self.fuzzer.start()
+        while self.fuzzer.join():
+            if self.stop_action:
+                raise StopActionInterrupt(self.stop_action)
+
+    def _stop_callback(self, status: int) -> None:
+        """The skip target callback for the blacklist_action
+
+        @type status: int
+        @param status: The identified status code into the blacklist
+        """
+        self.stop_action = f"Status code {str(status)} detected"
+
+    def _wait_callback(self, status: int) -> None:
+        pass
+
+    def _init_dictionary(self) -> None:
+        """Initialize the dictionary"""
+        self.__configure_payloader()
+        self.dict_metadata = {}
+        final_wordlist = self.__build_wordlist(
+            AB.build_wordlist(self.args["wordlist"])
+        )
+        atual_length = len(final_wordlist)
+        if self.args["unique"]:
+            previous_length = atual_length
+            final_wordlist = set(final_wordlist)
+            atual_length = len(final_wordlist)
+            self.dict_metadata['removed'] = previous_length-atual_length
+        self.dict_metadata['len'] = atual_length
+        self.dictionary = Dictionary(final_wordlist)
+
+    def __get_target_fuzzing_type(self, requester: Requester) -> str:
+        """Get the target fuzzing type, as a string format
+
+        @type requester: Requester
+        @param requester: The actual iterated requester
+        @return str: The fuzzing type, as a string
+        """
+        if requester.is_method_fuzzing():
+            return "MethodFuzzing"
+        elif requester.is_data_fuzzing():
+            return "DataFuzzing"
+        elif requester.is_url_discovery():
+            if requester.is_path_fuzzing():
+                return "PathFuzzing"
+            else:
+                return "SubdomainFuzzing"
+        else:
+            return "Couldn't determine the fuzzing type"
+
+    def __init_requester(self) -> None:
+        """Initialize the requester"""
+        self.target = None
+        if self.args["url"]:
+            self.target = AB.build_target_from_args(
+                self.args["url"], self.args["method"], self.args["data"]
+            )
+        if self.args["raw_http"]:
+            self.target = AB.build_target_from_raw_http(
+                self.args["raw_http"], self.args["scheme"]
+            )
+        if not self.target:
+            raise ControllerException("A target is needed to make the fuzzing")
+        if check_is_subdomain_fuzzing(self.target['url']):
+            requester_type = 'SubdomainRequester'
+        else:
+            requester_type = 'Requester'
+        self.requester = RequesterFactory.creator(
+            requester_type,
+            url=self.target['url'],
+            methods=self.target['methods'],
+            body=self.target['body'],
+            headers=self.target['header'],
+            follow_redirects=self.args["follow_redirects"],
+            proxy=self.args["proxy"],
+            proxies=(read_file(self.args["proxies"])
+                     if self.args["proxies"] else []),
+            timeout=self.args["timeout"],
+            cookie=self.args["cookie"],
+        )
+        self.target['type_fuzzing'] = self.__get_target_fuzzing_type(self.requester)
+
+    def __init_report(self) -> None:
+        """Initialize the report"""
+        self.report = Report.build(self.args["report_name"])
+        Result.save_payload_configs = self.args["save_payload_conf"]
+        Result.save_headers = self.args["save_headers"]
+        Result.save_body = self.args["save_body"]
+
+    def __build_encoders(self) -> Union[
+        Tuple[List[BaseEncoder], List[List[BaseEncoder]]], None
+    ]:
+        """Build the encoders
+
+        @returns Tuple | None: The encoders used in the program
+        """
+        if not self.args["encoder"]:
+            return None
+        encoders_list = AB.build_encoder(self.args["encoder"])
+        if self.args["encode_only"]:
+            Payloader.encoder.set_regex(self.args["encode_only"])
+        encoders_default = []
+        encoders_chain = []
+        for encoders in encoders_list:
+            if len(encoders) > 1:
+                append_to = []
+                is_chain = True
+            else:
+                append_to = encoders_default
+                is_chain = False
+            for encoder in encoders:
+                name, param = encoder
+                encoder = PluginFactory.object_creator(
+                    name, 'encoders', param
+                )
+                append_to.append(encoder)
+            if is_chain:
+                encoders_chain.append(append_to)
+        return (encoders_default, encoders_chain)
+
+    def __configure_payloader(self) -> None:
+        """Configure the Payloader options"""
+        Payloader.set_prefix(split_str_to_list(self.args["prefix"]))
+        Payloader.set_suffix(split_str_to_list(self.args["suffix"]))
+        if self.args["lower"]:
+            Payloader.set_lowercase()
+        elif self.args["upper"]:
+            Payloader.set_uppercase()
+        elif self.args["capitalize"]:
+            Payloader.set_capitalize()
+        encoders = self.__build_encoders()
+        if encoders:
+            Payloader.encoder.set_encoders(encoders)
+
+    def __build_wordlist(self,
+                          wordlists: List[Tuple[str, str]]) -> Dictionary:
+        """Build the dictionary
+
+        @type wordlists: List[Tuple[str, str]]
+        @param wordlists: The wordlists used in the dictionary
+        @returns Dictionary: The dictionary object
+        """
+        final_wordlist = []
+        self.wordlist_errors: List[Union[WordlistCreationError, BuildWordlistFails]] = []
+        for wordlist in wordlists:
+            try:
+                wordlist_obj = WordlistFactory.creator(*wordlist, self.requester)
+                wordlist_obj.build()
+            except (WordlistCreationError, BuildWordlistFails) as e:
+                self.wordlist_errors.append(e)
+            else:
+                final_wordlist.extend(wordlist_obj.get())
+        return final_wordlist
+
+    def __prepare_matcher(self) -> None:
+        """Prepares the local matcher"""
+        if (self.requester.is_url_discovery() and
+                self.matcher.allowed_status_is_default()):
+            self.matcher.set_allowed_status("200-399,401,403")
+
+    def __get_default_scanner(self) -> BaseScanner:
+        """Check what's the scanners that will be used
+
+        @returns BaseScanner: The scanner used in the fuzzing tests
+        """
+        if self.requester.is_url_discovery():
+            if self.requester.is_path_fuzzing():
+                scanner = PathScanner()
+            else:
+                scanner = SubdomainScanner()
+        else:
+            scanner = DataScanner()
+        self.co.set_message_callback(scanner.cli_callback)
+        return scanner

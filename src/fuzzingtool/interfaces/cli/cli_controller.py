@@ -73,11 +73,7 @@ class CliController:
         logger: The object to handle with the program log
     """
     def __init__(self):
-        self.requester = None
-        self.started_time = 0
-        self.fuzzer = None
         self.lock = threading.Lock()
-        self.blacklist_status = None
         self.logger = Logger()
 
     def is_verbose_mode(self) -> bool:
@@ -130,36 +126,7 @@ class CliController:
         @type arguments: Namespace
         @param arguments: The command line interface arguments
         """
-        self.__init_requesters(arguments)
-        scanner = None
-        if arguments.scanner:
-            scanner, param = AB.build_scanner(arguments.scanner)
-            scanner: BaseScanner = PluginFactory.object_creator(
-                scanner, 'scanners', param
-            )
-        self.scanner = scanner
-        self.matcher = Matcher(
-            arguments.match_status,
-            arguments.match_length,
-            arguments.match_time
-        )
-        if arguments.blacklist_status:
-            blacklisted_status, action, action_param = AB.build_blacklist_status(
-                arguments.blacklist_status
-            )
-            self.blacklist_status = BlacklistStatus(
-                status=blacklisted_status,
-                action=action,
-                action_param=action_param,
-                action_callbacks={
-                    'stop': self._stop_callback,
-                    'wait': self._wait_callback,
-                },
-            )
-        self.delay = arguments.delay
-        self.number_of_threads = arguments.number_of_threads
         self.__init_report(arguments)
-        self.__init_dictionary(arguments)
 
     def print_configs(self, arguments: Namespace) -> None:
         """Print the program configuration
@@ -251,37 +218,10 @@ class CliController:
         if self.is_verbose_mode():
             self.co.info_box(f"Preparing target {self.target_host} ...")
         self.check_ignore_errors(self.target_host)
-        self.results = []
-        self.stop_action = None
         self.__prepare_matcher()
         self.__prepare_scanner()
         self.total_requests = (len(self.dictionary)
                                * len(self.requester.methods))
-
-    def prepare_fuzzer(self) -> None:
-        """Prepare the fuzzer for the fuzzing tests.
-           Refill the dictionary with the wordlist
-           content if a global dictionary was given
-        """
-        self.dictionary.reload()
-        self.fuzzer = Fuzzer(
-            requester=self.requester,
-            dictionary=self.dictionary,
-            matcher=self.matcher,
-            scanner=self.scanner,
-            delay=self.delay,
-            number_of_threads=self.number_of_threads,
-            blacklist_status=self.blacklist_status,
-            result_callback=self._result_callback,
-            exception_callbacks=[
-                self._invalid_hostname_callback,
-                self._request_exception_callback
-            ],
-        )
-        self.fuzzer.start()
-        while self.fuzzer.join():
-            if self.stop_action:
-                raise StopActionInterrupt(self.stop_action)
 
     def check_ignore_errors(self, host: str) -> None:
         """Check if the user wants to ignore the errors during the tests.
@@ -315,14 +255,6 @@ class CliController:
                 self.co.info_box(
                     f"No matched results was found for {self.target_host}"
                 )
-
-    def _stop_callback(self, status: int) -> None:
-        """The skip target callback for the blacklist_action
-
-        @type status: int
-        @param status: The identified status code into the blacklist
-        """
-        self.stop_action = f"Status code {str(status)} detected"
 
     def _wait_callback(self, status: int) -> None:
         """The wait (pause) callback for the blacklist_action
