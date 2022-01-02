@@ -382,8 +382,6 @@ class CliOutput:
                          f"(removed {dictionary['removed']} "
                          f"duplicated payloads)")
         self.print_config("Dictionary size", dict_size)
-        self.print_config("Wordlists",
-                          stringfy_list(dictionary['wordlists']))
         if prefix:
             self.print_config("Prefix", stringfy_list(prefix))
         if suffix:

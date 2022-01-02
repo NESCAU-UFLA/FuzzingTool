@@ -19,38 +19,45 @@
 # SOFTWARE.
 
 from typing import Tuple, List, Union
+import time
 
-from .. import version
 from ..interfaces.argument_builder import ArgumentBuilder as AB
 from ..utils.utils import split_str_to_list
-from ..utils.http_utils import get_host, get_pure_url
 from ..utils.file_utils import read_file
-from ..utils.logger import Logger
 from ..core import BlacklistStatus, Dictionary, Fuzzer, Matcher, Payloader
 from ..core.defaults.scanners import (DataScanner,
-                                       PathScanner, SubdomainScanner)
+                                      PathScanner, SubdomainScanner)
 from ..core.bases import BaseScanner, BaseEncoder
 from ..conn.request_parser import check_is_subdomain_fuzzing
-from ..conn.requesters import Requester
 from ..factories import PluginFactory, RequesterFactory, WordlistFactory
-from ..reports.report import Report
 from ..objects import Error, Result
-from ..exceptions.base_exceptions import FuzzingToolException
 from ..exceptions.main_exceptions import (FuzzControllerException, StopActionInterrupt,
-                                           WordlistCreationError, BuildWordlistFails)
-from ..exceptions.request_exceptions import RequestException
+                                          WordlistCreationError, BuildWordlistFails)
 
 
 class FuzzController:
-    def __init__(self, arguments: dict):
+    def __init__(self, **kwargs):
         self.args = self.__get_default_args()
-        self.args.update(arguments)
+        self.args.update(kwargs)
         self.requester = None
         self.started_time = 0
         self.fuzzer = None
         self.blacklist_status = None
         self.results = []
         self.stop_action = None
+        if self.args["res_callback"]:
+            self._result_callback = self.args["res_callback"]
+        if self.args["req_ex_callback"]:
+            self._request_exception_callback = self.args["req_ex_callback"]
+        if self.args["invalid_host_calalback"]:
+            self._invalid_hostname_callback = self.args["invalid_host_calalback"]
+
+    def main(self) -> None:
+        """The main function.
+           Prepares the application environment and starts the fuzzing
+        """
+        self.init()
+        self.start()
 
     def init(self) -> None:
         """The initialization function.
@@ -86,12 +93,35 @@ class FuzzController:
         self.number_of_threads = self.args["number_of_threads"]
         self._init_dictionary()
 
-    def prepare_fuzzer(self) -> None:
-        """Prepare the fuzzer for the fuzzing tests.
-           Refill the dictionary with the wordlist
-           content if a global dictionary was given
+    def start(self) -> None:
+        """Starts the fuzzing application.
+           The target is fuzzed based on his own methods list
         """
-        self.dictionary.reload()
+        self.prepare()
+        try:
+            for method in self.requester.methods:
+                self.requester.set_method(method)
+                self.dictionary.reload()
+                self.fuzz()
+        except StopActionInterrupt as e:
+            if self.fuzzer and self.fuzzer.is_running():
+                self.fuzzer.stop()
+            raise e
+
+    def prepare(self) -> None:
+        """Prepare the matcher and scanner for the fuzzing tests.
+           Also calculate the total requests that will be made.
+        """
+        Result.reset_index()
+        self._prepare_matcher()
+        self._prepare_scanner()
+        self.total_requests = (len(self.dictionary)
+                               * len(self.requester.methods))
+        self.started_time = time.time()
+
+    def fuzz(self) -> None:
+        """Prepare the fuzzer for the fuzzing tests.
+        """
         self.fuzzer = Fuzzer(
             requester=self.requester,
             dictionary=self.dictionary,
@@ -120,7 +150,69 @@ class FuzzController:
         self.stop_action = f"Status code {str(status)} detected"
 
     def _wait_callback(self, status: int) -> None:
+        """The wait (pause) callback for the blacklist_action
+
+        @type status: int
+        @param status: The identified status code into the blacklist
+        """
+        if not self.fuzzer.is_paused():
+            self.fuzzer.pause()
+            self.fuzzer.wait_until_pause()
+            time.sleep(self.blacklist_status.action_param)
+            self.fuzzer.resume()
+
+    def _result_callback(self, result: Result, validate: bool) -> None:
+        """Callback function for the results output
+
+        @type result: Result
+        @param result: The FuzzingTool result
+        @type validate: bool
+        @param validate: A validator flag for the result, gived by the scanner
+        """
         pass
+
+    def _request_exception_callback(self, error: Error) -> None:
+        """Callback that handle with the request exceptions
+
+        @type error: Error
+        @param error: The error gived by the exception
+        """
+        pass
+
+    def _invalid_hostname_callback(self, error: Error) -> None:
+        """Callback that handle with the subdomain hostname resolver exceptions
+
+        @type error: Error
+        @param error: The error gived by the exception
+        """
+        pass
+
+    def _init_dictionary(self) -> None:
+        """Initialize the dictionary"""
+        self.__configure_payloader()
+        self.dict_metadata = {}
+        final_wordlist = self.__build_wordlist(
+            AB.build_wordlist(self.args["wordlist"])
+        )
+        atual_length = len(final_wordlist)
+        if self.args["unique"]:
+            previous_length = atual_length
+            final_wordlist = set(final_wordlist)
+            atual_length = len(final_wordlist)
+            self.dict_metadata['removed'] = previous_length-atual_length
+        self.dict_metadata['len'] = atual_length
+        self.dictionary = Dictionary(final_wordlist)
+
+    def _prepare_matcher(self) -> None:
+        """Prepares the matcher"""
+        if (self.requester.is_url_discovery() and
+                self.matcher.allowed_status_is_default()):
+            self.matcher.set_allowed_status("200-399,401,403")
+
+    def _prepare_scanner(self) -> None:
+        """Prepares the scanner"""
+        if not self.scanner:
+            self.scanner = self.__get_default_scanner()
 
     def __get_default_args(self) -> dict:
         """Gets the default arguments for the program
@@ -159,23 +251,11 @@ class FuzzController:
             number_of_threads=1,
             delay=0,
             blacklist_status=None,
+            # Callbacks
+            res_callback=None,
+            req_ex_callback=None,
+            invalid_host_calalback=None,
         )
-
-    def _init_dictionary(self) -> None:
-        """Initialize the dictionary"""
-        self.__configure_payloader()
-        self.dict_metadata = {}
-        final_wordlist = self.__build_wordlist(
-            AB.build_wordlist(self.args["wordlist"])
-        )
-        atual_length = len(final_wordlist)
-        if self.args["unique"]:
-            previous_length = atual_length
-            final_wordlist = set(final_wordlist)
-            atual_length = len(final_wordlist)
-            self.dict_metadata['removed'] = previous_length-atual_length
-        self.dict_metadata['len'] = atual_length
-        self.dictionary = Dictionary(final_wordlist)
 
     def __get_target_fuzzing_type(self) -> str:
         """Get the target fuzzing type, as a string format
@@ -272,12 +352,12 @@ class FuzzController:
             Payloader.encoder.set_encoders(encoders)
 
     def __build_wordlist(self,
-                          wordlists: List[Tuple[str, str]]) -> Dictionary:
+                          wordlists: List[Tuple[str, str]]) -> List[str]:
         """Build the dictionary
 
         @type wordlists: List[Tuple[str, str]]
         @param wordlists: The wordlists used in the dictionary
-        @returns Dictionary: The dictionary object
+        @returns List[str]: The builded payload wordlist
         """
         final_wordlist = []
         self.wordlist_errors: List[Union[WordlistCreationError, BuildWordlistFails]] = []
@@ -290,12 +370,6 @@ class FuzzController:
             else:
                 final_wordlist.extend(wordlist_obj.get())
         return final_wordlist
-
-    def __prepare_matcher(self) -> None:
-        """Prepares the local matcher"""
-        if (self.requester.is_url_discovery() and
-                self.matcher.allowed_status_is_default()):
-            self.matcher.set_allowed_status("200-399,401,403")
 
     def __get_default_scanner(self) -> BaseScanner:
         """Check what's the scanners that will be used
