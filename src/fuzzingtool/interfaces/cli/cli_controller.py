@@ -68,10 +68,6 @@ class CliController(FuzzController):
         self.lock = threading.Lock()
         self.logger = Logger()
         self.cli_output = CliOutput()
-        self.verbose = AB.build_verbose_mode(
-            self.args["common_verbose"],
-            self.args["detailed_verbose"]
-        )
 
     def is_verbose_mode(self) -> bool:
         """The verboseMode getter
@@ -112,6 +108,10 @@ class CliController(FuzzController):
         """The initialization function.
            Set the application variables including plugins requires
         """
+        self.verbose = AB.build_verbose_mode(
+            self.args["common_verbose"],
+            self.args["detailed_verbose"]
+        )
         self.__init_report()
         super().init()
 
