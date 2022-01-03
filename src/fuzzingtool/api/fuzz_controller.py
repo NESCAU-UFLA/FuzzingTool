@@ -40,7 +40,7 @@ class FuzzController:
         self.args = self.__get_default_args()
         self.args.update(kwargs)
         self.requester = None
-        self.started_time = 0
+        self.elapsed_time = None
         self.fuzzer = None
         self.blacklist_status = None
         self.results = []
@@ -63,19 +63,9 @@ class FuzzController:
         """The initialization function.
            Set the application variables including plugins requires
         """
-        self.__init_requester()
-        scanner = None
-        if self.args["scanner"]:
-            scanner, param = AB.build_scanner(self.args["scanner"])
-            scanner: BaseScanner = PluginFactory.object_creator(
-                scanner, 'scanners', param
-            )
-        self.scanner = scanner
-        self.matcher = Matcher(
-            self.args["match_status"],
-            self.args["match_length"],
-            self.args["match_time"]
-        )
+        self._init_requester()
+        self._init_matcher()
+        self._init_scanner()
         if self.args["blacklist_status"]:
             blacklisted_status, action, action_param = AB.build_blacklist_status(
                 self.args["blacklist_status"]
@@ -92,12 +82,15 @@ class FuzzController:
         self.delay = self.args["delay"]
         self.number_of_threads = self.args["number_of_threads"]
         self._init_dictionary()
+        self.total_requests = (len(self.dictionary)
+                               * len(self.requester.methods))
 
     def start(self) -> None:
         """Starts the fuzzing application.
            The target is fuzzed based on his own methods list
         """
-        self.prepare()
+        Result.reset_index()
+        started_time = time.time()
         try:
             for method in self.requester.methods:
                 self.requester.set_method(method)
@@ -107,17 +100,8 @@ class FuzzController:
             if self.fuzzer and self.fuzzer.is_running():
                 self.fuzzer.stop()
             raise e
-
-    def prepare(self) -> None:
-        """Prepare the matcher and scanner for the fuzzing tests.
-           Also calculate the total requests that will be made.
-        """
-        Result.reset_index()
-        self._prepare_matcher()
-        self._prepare_scanner()
-        self.total_requests = (len(self.dictionary)
-                               * len(self.requester.methods))
-        self.started_time = time.time()
+        finally:
+            self.elapsed_time = time.time() - started_time
 
     def fuzz(self) -> None:
         """Prepare the fuzzer for the fuzzing tests.
@@ -187,14 +171,66 @@ class FuzzController:
         """
         pass
 
+    def _init_requester(self) -> None:
+        """Initialize the requester"""
+        target = None
+        if self.args["url"]:
+            target = AB.build_target_from_args(
+                self.args["url"], self.args["method"], self.args["data"]
+            )
+        if self.args["raw_http"]:
+            target = AB.build_target_from_raw_http(
+                self.args["raw_http"], self.args["scheme"]
+            )
+        if not target:
+            raise FuzzControllerException("A target is needed to make the fuzzing")
+        if check_is_subdomain_fuzzing(target['url']):
+            requester_type = 'SubdomainRequester'
+        else:
+            requester_type = 'Requester'
+        self.requester = RequesterFactory.creator(
+            requester_type,
+            url=target['url'],
+            methods=target['methods'],
+            body=target['body'],
+            headers=target['header'],
+            follow_redirects=self.args["follow_redirects"],
+            proxy=self.args["proxy"],
+            proxies=(read_file(self.args["proxies"])
+                     if self.args["proxies"] else []),
+            timeout=self.args["timeout"],
+            cookie=self.args["cookie"],
+        )
+
+    def _init_matcher(self) -> None:
+        """Initialize the matcher"""
+        self.matcher = Matcher(
+            self.args["match_status"],
+            self.args["match_length"],
+            self.args["match_time"]
+        )
+        if (self.requester.is_url_discovery() and
+                self.matcher.allowed_status_is_default()):
+            self.matcher.set_allowed_status("200-399,401,403")
+
+    def _init_scanner(self) -> None:
+        """Initialize the scanner"""
+        if self.args["scanner"]:
+            scanner, param = AB.build_scanner(self.args["scanner"])
+            self.scanner: BaseScanner = PluginFactory.object_creator(
+                scanner, 'scanners', param
+            )
+        else:
+            self.scanner = self.__get_default_scanner()
+
     def _init_dictionary(self) -> None:
         """Initialize the dictionary"""
         self.__configure_payloader()
-        self.dict_metadata = {}
         final_wordlist = self.__build_wordlist(
             AB.build_wordlist(self.args["wordlist"])
         )
         atual_length = len(final_wordlist)
+        self.dict_metadata = {}
         if self.args["unique"]:
             previous_length = atual_length
             final_wordlist = set(final_wordlist)
@@ -202,17 +238,6 @@ class FuzzController:
             self.dict_metadata['removed'] = previous_length-atual_length
         self.dict_metadata['len'] = atual_length
         self.dictionary = Dictionary(final_wordlist)
-
-    def _prepare_matcher(self) -> None:
-        """Prepares the matcher"""
-        if (self.requester.is_url_discovery() and
-                self.matcher.allowed_status_is_default()):
-            self.matcher.set_allowed_status("200-399,401,403")
-
-    def _prepare_scanner(self) -> None:
-        """Prepares the scanner"""
-        if not self.scanner:
-            self.scanner = self.__get_default_scanner()
 
     def __get_default_args(self) -> dict:
         """Gets the default arguments for the program
@@ -256,53 +281,6 @@ class FuzzController:
             req_ex_callback=None,
             invalid_host_calalback=None,
         )
-
-    def __get_target_fuzzing_type(self) -> str:
-        """Get the target fuzzing type, as a string format
-
-        @return str: The fuzzing type, as a string
-        """
-        if self.requester.is_method_fuzzing():
-            return "MethodFuzzing"
-        if self.requester.is_data_fuzzing():
-            return "DataFuzzing"
-        if self.requester.is_url_discovery():
-            if self.requester.is_path_fuzzing():
-                return "PathFuzzing"
-            return "SubdomainFuzzing"
-        return "Couldn't determine the fuzzing type"
-
-    def __init_requester(self) -> None:
-        """Initialize the requester"""
-        self.target = None
-        if self.args["url"]:
-            self.target = AB.build_target_from_args(
-                self.args["url"], self.args["method"], self.args["data"]
-            )
-        if self.args["raw_http"]:
-            self.target = AB.build_target_from_raw_http(
-                self.args["raw_http"], self.args["scheme"]
-            )
-        if not self.target:
-            raise FuzzControllerException("A target is needed to make the fuzzing")
-        if check_is_subdomain_fuzzing(self.target['url']):
-            requester_type = 'SubdomainRequester'
-        else:
-            requester_type = 'Requester'
-        self.requester = RequesterFactory.creator(
-            requester_type,
-            url=self.target['url'],
-            methods=self.target['methods'],
-            body=self.target['body'],
-            headers=self.target['header'],
-            follow_redirects=self.args["follow_redirects"],
-            proxy=self.args["proxy"],
-            proxies=(read_file(self.args["proxies"])
-                     if self.args["proxies"] else []),
-            timeout=self.args["timeout"],
-            cookie=self.args["cookie"],
-        )
-        self.target['type_fuzzing'] = self.__get_target_fuzzing_type()
 
     def __build_encoders(self) -> Union[
         Tuple[List[BaseEncoder], List[List[BaseEncoder]]], None

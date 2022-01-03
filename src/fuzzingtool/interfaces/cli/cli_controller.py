@@ -68,8 +68,10 @@ class CliController(FuzzController):
         self.lock = threading.Lock()
         self.logger = Logger()
         self.cli_output = CliOutput()
-        self.verbose = AB.build_verbose_mode(self.args["common_verbose"],
-                                             self.args["detailed_verbose"])
+        self.verbose = AB.build_verbose_mode(
+            self.args["common_verbose"],
+            self.args["detailed_verbose"]
+        )
 
     def is_verbose_mode(self) -> bool:
         """The verboseMode getter
@@ -83,16 +85,17 @@ class CliController(FuzzController):
             self.cli_output.set_simple_output_mode()
         else:
             CliOutput.print(banner())
+        self.cli_output.info_box("Setting up arguments ...")
         try:
-            self.cli_output.info_box("Setting up arguments ...")
             self.init()
-            if not self.args["simple_output"]:
-                self.print_configs()
         except FuzzingToolException as e:
             self.cli_output.error_box(str(e))
+        if not self.args["simple_output"]:
+            self.print_configs()
         self.cli_output.set_verbosity_mode(self.is_verbose_mode())
         try:
             self.check_connection()
+            self.prepare()
             self.start()
         except KeyboardInterrupt:
             if self.fuzzer and self.fuzzer.is_running():
@@ -133,7 +136,13 @@ class CliController(FuzzController):
                    if not self.args["simple_output"]
                    else 'simple',
             verbose=verbose,
-            target=self.target,
+            target={
+                'url': self.requester.get_url(),
+                'methods': [method for method in self.requester.methods],
+                'header': 'custom' if self.args["raw_http"] else 'default',
+                'body': self.args["data"],
+                'type_fuzzing': self.__get_target_fuzzing_type(),
+                },
             dictionary=self.dict_metadata,
             prefix=self.args["prefix"],
             suffix=self.args["suffix"],
@@ -184,11 +193,17 @@ class CliController(FuzzController):
                 CliOutput.print("")
 
     def prepare(self) -> None:
+        """Prepare the application before the fuzzing"""
         self.target_host = get_host(get_pure_url(self.requester.get_url()))
         if self.is_verbose_mode():
             self.cli_output.info_box(f"Preparing target {self.target_host} ...")
         self.check_ignore_errors()
-        super().prepare()
+        self.cli_output.set_message_callback(self.scanner.cli_callback)
+        if not isinstance(self.scanner, Plugin):
+            if (self.requester.is_data_fuzzing() and
+                    not self.matcher.comparator_is_set()):
+                self.cli_output.info_box("DataFuzzing detected, checking for a data comparator ...")
+                self.matcher.set_comparator(*self.__get_data_comparator())
 
     def check_ignore_errors(self) -> None:
         """Check if the user wants to ignore the errors during the tests.
@@ -209,9 +224,9 @@ class CliController(FuzzController):
            The results are shown for each target
         """
         if self.fuzzer:
-            if self.started_time:
+            if self.elapsed_time:
                 self.cli_output.info_box(
-                    f"Time taken: {float('%.2f'%(time.time() - self.started_time))} seconds"
+                    f"Time taken: {float('%.2f'%(self.elapsed_time))} seconds"
                 )
             if self.results:
                 self.__handle_valid_results(self.target_host, self.results)
@@ -250,11 +265,6 @@ class CliController(FuzzController):
             )
 
     def _request_exception_callback(self, error: Error) -> None:
-        """Callback that handle with the request exceptions
-
-        @type error: Error
-        @param error: The error gived by the exception
-        """
         if self.ignore_errors:
             if not self.verbose[0]:
                 self.cli_output.progress_status(
@@ -269,11 +279,6 @@ class CliController(FuzzController):
             self.stop_action = str(error)
 
     def _invalid_hostname_callback(self, error: Error) -> None:
-        """Callback that handle with the subdomain hostname resolver exceptions
-
-        @type error: Error
-        @param error: The error gived by the exception
-        """
         if self.verbose[0]:
             if self.verbose[1]:
                 self.cli_output.not_worked_box(str(error))
@@ -282,15 +287,13 @@ class CliController(FuzzController):
                 error.index, self.total_requests, error.payload
             )
 
-    def _prepare_scanner(self) -> None:
-        """Prepares the scanner"""
-        super()._prepare_scanner()
-        self.cli_output.set_message_callback(self.scanner.cli_callback)
-        if not isinstance(self.scanner, Plugin):
-            if (self.requester.is_data_fuzzing() and
-                    not self.matcher.comparator_is_set()):
-                self.cli_output.info_box("DataFuzzing detected, checking for a data comparator ...")
-                self.matcher.set_comparator(*self.__get_data_comparator())
+    def _init_dictionary(self) -> None:
+        super()._init_dictionary()
+        if self.is_verbose_mode():
+            for e in self.wordlist_errors:
+                self.cli_output.warning_box(str(e))
+        if not len(self.dictionary):
+            self.cli_output.error_box("The wordlist is empty")
 
     def __init_report(self) -> None:
         """Initialize the report"""
@@ -299,13 +302,20 @@ class CliController(FuzzController):
         Result.save_headers = self.args["save_headers"]
         Result.save_body = self.args["save_body"]
 
-    def _init_dictionary(self) -> None:
-        super()._init_dictionary()
-        if self.is_verbose_mode():
-            for e in self.wordlist_errors:
-                self.cli_output.warning_box(str(e))
-        if not len(self.dictionary):
-            self.cli_output.error_box("The wordlist is empty")
+    def __get_target_fuzzing_type(self) -> str:
+        """Get the target fuzzing type, as a string format
+
+        @return str: The fuzzing type, as a string
+        """
+        if self.requester.is_method_fuzzing():
+            return "MethodFuzzing"
+        if self.requester.is_data_fuzzing():
+            return "DataFuzzing"
+        if self.requester.is_url_discovery():
+            if self.requester.is_path_fuzzing():
+                return "PathFuzzing"
+            return "SubdomainFuzzing"
+        return "Couldn't determine the fuzzing type"
 
     def __get_data_comparator(self) -> tuple:
         """Check if the user wants to insert

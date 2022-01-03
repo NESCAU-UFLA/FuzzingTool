@@ -108,7 +108,7 @@ class Requester:
             self.__request = self.__session_request
         else:
             self.__request = self.__common_request
-        self.methods = methods if methods else []
+        self.methods = methods if methods else [self.__method.word]
         if cookie:
             self.__header['Cookie'] = FuzzWord(cookie)
         self._lock = Lock()

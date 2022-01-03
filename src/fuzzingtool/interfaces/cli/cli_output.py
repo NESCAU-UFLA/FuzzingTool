@@ -370,9 +370,7 @@ class CliOutput:
         self.print_config("Methods",
                           stringfy_list(target['methods']),
                           spaces)
-        self.print_config("HTTP headers",
-                          'custom' if target['header'] else 'default',
-                          spaces)
+        self.print_config("HTTP headers", target['header'], spaces)
         if target['body']:
             self.print_config("Body data", target['body'], spaces)
         self.print_config("Fuzzing type", target['type_fuzzing'], spaces)
