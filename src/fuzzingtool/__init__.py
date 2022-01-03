@@ -31,6 +31,3 @@ def version():
                + "." + str(APP_VERSION['MINOR_VERSION'])
                + "." + str(APP_VERSION['PATCH']))
     return version
-
-
-from .api.api import fuzz, fuzz_cli
