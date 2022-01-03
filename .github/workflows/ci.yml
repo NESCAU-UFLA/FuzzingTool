@@ -11,7 +11,7 @@ jobs:
         run: pip install flake8 setuptools pytest
 
       - name: Running linter (1st round)
-        run: flake8 src/fuzzingtool --max-line-length=100 --extend-ignore=E731 --per-file-ignores="__init__.py:F401,W292"
+        run: flake8 src/fuzzingtool --max-line-length=100 --extend-ignore=E731 --per-file-ignores="__init__.py:F401,F403,W292"
         continue-on-error: true
 
       - name: Running linter (2nd round)
