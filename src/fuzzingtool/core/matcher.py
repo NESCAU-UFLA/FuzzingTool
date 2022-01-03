@@ -125,7 +125,7 @@ class Matcher:
         self._comparator = self.__build_comparator(length, time)
 
     def match(self, result: Result) -> bool:
-        """Check if the request content has some predefined characteristics 
+        """Check if the request content has some predefined characteristics
            based on a payload, it'll be considered as vulnerable
 
         @type result: Result

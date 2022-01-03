@@ -19,8 +19,7 @@
 # SOFTWARE.
 
 from collections import deque
-from typing import List, Tuple, Union, Dict
-from argparse import Namespace
+from typing import List, Tuple, Dict
 
 from ..utils.consts import FUZZING_MARK
 from ..utils.utils import split_str_to_list, parse_option_with_args
