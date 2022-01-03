@@ -7,21 +7,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: "Installing dependencies"
+      - name: Installing dependencies
         run: pip install flake8 setuptools pytest
 
-      - name: Running linter (1st round)
-        run: flake8 src/fuzzingtool --max-line-length=100 --extend-ignore=E731 --per-file-ignores="__init__.py:F401,F403,W292"
-        continue-on-error: true
+      - name: Linter
+        run: flake8 src/fuzzingtool --extend-ignore=E501,E731 --per-file-ignores="__init__.py:F401,F403,W292" --show-source --statistics --count
 
-      - name: Running linter (2nd round)
-        run: flake8 src/fuzzingtool --max-line-length=100 --count --select=E101,E131,E304,E9,F541,F63,F7,F82 --show-source --statistics
-
-      - name: "Build"
+      - name: Build
         run: |
           python3 setup.py sdist
           cd dist
           pip3 install *
 
-      - name: "Test"
+      - name: Test
         run: python3 -m pytest
