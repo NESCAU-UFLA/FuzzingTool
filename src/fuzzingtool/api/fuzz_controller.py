@@ -330,7 +330,7 @@ class FuzzController:
             Payloader.encoder.set_encoders(encoders)
 
     def __build_wordlist(self,
-                          wordlists: List[Tuple[str, str]]) -> List[str]:
+                         wordlists: List[Tuple[str, str]]) -> List[str]:
         """Build the dictionary
 
         @type wordlists: List[Tuple[str, str]]

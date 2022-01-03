@@ -172,7 +172,7 @@ class CliController(FuzzController):
             self.requester.test_connection()
         except RequestException as e:
             if not self.cli_output.ask_yes_no('warning',
-                                      f"{str(e)}. Continue anyway?"):
+                                              f"{str(e)}. Continue anyway?"):
                 raise FuzzControllerException("No target left for fuzzing")
         else:
             if self.is_verbose_mode():
@@ -211,8 +211,8 @@ class CliController(FuzzController):
         """
         if (self.requester.is_url_discovery() or
                 self.cli_output.ask_yes_no('info',
-                                   ("Do you want to ignore errors on this "
-                                    "target, and save them into a log file?"))):
+                                           ("Do you want to ignore errors on this "
+                                            "target, and save them into a log file?"))):
             self.ignore_errors = True
             log_path = self.logger.setup(self.target_host)
             self.cli_output.info_box(f'The logs will be saved on \'{log_path}\'')
@@ -337,8 +337,8 @@ class CliController(FuzzController):
         length = None
         default_length = int(result_to_comparator.body_length)+300
         if self.cli_output.ask_yes_no('info',
-                              ("Do you want to exclude responses "
-                               "based on custom length?")):
+                                      ("Do you want to exclude responses "
+                                       "based on custom length?")):
             length = self.cli_output.ask_data(
                 f"Insert the length (in bytes, default >{default_length})"
             )
@@ -347,8 +347,8 @@ class CliController(FuzzController):
         time = None
         default_time = result_to_comparator.rtt+5.0
         if self.cli_output.ask_yes_no('info',
-                              ("Do you want to exclude responses "
-                               "based on custom time?")):
+                                      ("Do you want to exclude responses "
+                                       "based on custom time?")):
             time = self.cli_output.ask_data(
                 f"Insert the time (in seconds, default >{default_time} seconds)"
             )
