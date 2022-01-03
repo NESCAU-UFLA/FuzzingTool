@@ -199,11 +199,11 @@ class CliController(FuzzController):
             self.cli_output.info_box(f"Preparing target {self.target_host} ...")
         self.check_ignore_errors()
         self.cli_output.set_message_callback(self.scanner.cli_callback)
-        if not isinstance(self.scanner, Plugin):
-            if (self.requester.is_data_fuzzing() and
-                    not self.matcher.comparator_is_set()):
-                self.cli_output.info_box("DataFuzzing detected, checking for a data comparator ...")
-                self.matcher.set_comparator(*self.__get_data_comparator())
+        if (not isinstance(self.scanner, Plugin) and
+                (self.requester.is_data_fuzzing() and
+                 not self.matcher.comparator_is_set())):
+            self.cli_output.info_box("DataFuzzing detected, checking for a data comparator ...")
+            self.matcher.set_comparator(*self.__get_data_comparator())
 
     def check_ignore_errors(self) -> None:
         """Check if the user wants to ignore the errors during the tests.
