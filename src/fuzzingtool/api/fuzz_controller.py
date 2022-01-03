@@ -80,7 +80,7 @@ class FuzzController:
                 },
             )
         self.delay = self.args["delay"]
-        self.number_of_threads = self.args["number_of_threads"]
+        self.number_of_threads = self.args["threads"]
         self._init_dictionary()
         self.total_requests = (len(self.dictionary)
                                * len(self.requester.methods))
@@ -273,7 +273,7 @@ class FuzzController:
             match_time=None,
             scanner=None,
             # Other options
-            number_of_threads=1,
+            threads=1,
             delay=0,
             blacklist_status=None,
             # Callbacks

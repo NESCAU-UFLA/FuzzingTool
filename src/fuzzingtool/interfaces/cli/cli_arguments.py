@@ -34,7 +34,9 @@ class CliArguments(argparse.ArgumentParser):
        Overrides the error method from argparse.ArgumentParser,
        raising an exception instead of exiting
     """
-    def __init__(self):
+    def __init__(self, args: list = None):
+        if args:
+            sys.argv = args
         usage = "Usage: FuzzingTool [-u|-r TARGET]+ [-w WORDLIST]+ [options]*"
         examples = ("For usage examples, see: "
                     "https://github.com/NESCAU-UFLA/FuzzingTool/wiki/Usage-Examples")
@@ -391,7 +393,7 @@ class CliArguments(argparse.ArgumentParser):
         more_opts.add_argument(
             '-t',
             action='store',
-            dest='number_of_threads',
+            dest='threads',
             help="Define the number of threads used in the tests",
             metavar='NUMBEROFTHREADS',
             type=int,

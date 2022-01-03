@@ -18,19 +18,16 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-APP_VERSION = {
-    'MAJOR_VERSION': 3,
-    "MINOR_VERSION": 12,
-    "PATCH": 1
-}
+from .fuzz_controller import FuzzController
+from ..interfaces.cli.cli_arguments import CliArguments
 
 
-def version():
-    global APP_VERSION
-    version = (str(APP_VERSION['MAJOR_VERSION'])
-               + "." + str(APP_VERSION['MINOR_VERSION'])
-               + "." + str(APP_VERSION['PATCH']))
-    return version
+def fuzz(**kwargs) -> None:
+    FuzzController(**kwargs).main()
 
 
-from .api.api import fuzz, fuzz_cli
+def fuzz_cli(args: str, **kwargs) -> None:
+    args = ['FuzzingTool'] + args.split(' ')
+    args = vars(CliArguments(args).get_arguments())
+    args.update(kwargs)
+    FuzzController(**args).main()
