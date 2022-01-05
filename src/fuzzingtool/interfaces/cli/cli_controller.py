@@ -288,12 +288,14 @@ class CliController(FuzzController):
             )
 
     def _init_dictionary(self) -> None:
-        super()._init_dictionary()
-        if self.is_verbose_mode():
-            for e in self.wordlist_errors:
-                self.cli_output.warning_box(str(e))
-        if not len(self.dictionary):
-            self.cli_output.error_box("The wordlist is empty")
+        try:
+            super()._init_dictionary()
+        except FuzzControllerException as e:
+            raise e
+        finally:
+            if self.is_verbose_mode():
+                for e in self.wordlist_errors:
+                    self.cli_output.warning_box(str(e))
 
     def __init_report(self) -> None:
         """Initialize the report"""

@@ -347,6 +347,8 @@ class FuzzController:
                 self.wordlist_errors.append(e)
             else:
                 final_wordlist.extend(wordlist_obj.get())
+        if not final_wordlist:
+            raise FuzzControllerException("The wordlist is empty")
         return final_wordlist
 
     def __get_default_scanner(self) -> BaseScanner:
