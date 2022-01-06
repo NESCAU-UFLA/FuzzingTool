@@ -290,8 +290,6 @@ class CliController(FuzzController):
     def _init_dictionary(self) -> None:
         try:
             super()._init_dictionary()
-        except FuzzControllerException as e:
-            raise e
         finally:
             if self.is_verbose_mode():
                 for e in self.wordlist_errors:
