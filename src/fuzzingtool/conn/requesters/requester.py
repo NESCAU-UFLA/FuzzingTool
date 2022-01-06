@@ -294,17 +294,16 @@ class Requester:
         @param header: The HTTP header dictionary
         @returns dict: The HTTP header dictionary
         """
+        request_header = {}
         if not header:
-            header = {
-                'User-Agent': FuzzWord('FuzzingTool Requester Agent')
-            }
+            request_header['User-Agent'] = FuzzWord('FuzzingTool Requester Agent')
         else:
             for key, value in header.items():
-                header[key] = FuzzWord(value)
-            if 'Content-Length' in header.keys():
-                del header['Content-Length']
-        header['Accept-Encoding'] = FuzzWord('gzip, deflate')
-        return header
+                request_header[key] = FuzzWord(value)
+            if 'Content-Length' in request_header.keys():
+                del request_header['Content-Length']
+        request_header['Accept-Encoding'] = FuzzWord('gzip, deflate')
+        return request_header
 
     def __setup_proxy(self, proxy: str) -> Dict[str, str]:
         """Setup the proxy
