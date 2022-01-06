@@ -185,7 +185,10 @@ class CliOutput:
 
     def set_simple_output_mode(self) -> None:
         """Set the display to simple output mode, change labels"""
-        self.__get_time = lambda: ''
+        def get_blank_time() -> str:
+            return ''
+
+        self.__get_time = get_blank_time
         self.__info = f'{Colors.GRAY}[{Colors.BLUE_GRAY}*{Colors.GRAY}]{Colors.RESET} '
         self.__warning = f'{Colors.GRAY}[{Colors.YELLOW}!{Colors.GRAY}]{Colors.RESET} '
         self.__error = f'{Colors.GRAY}[{Colors.RED}!!{Colors.GRAY}]{Colors.RESET} '
