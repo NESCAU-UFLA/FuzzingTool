@@ -2,7 +2,6 @@ import unittest
 from unittest.mock import patch, Mock
 
 from src.fuzzingtool.interfaces.argument_builder import ArgumentBuilder as AB
-from src.fuzzingtool.exceptions.main_exceptions import BadArgumentFormat
 
 
 class TestArgumentBuilder(unittest.TestCase):
