@@ -24,7 +24,7 @@ from argparse import Namespace
 
 from .cli_output import CliOutput, Colors
 from ..argument_builder import ArgumentBuilder as AB
-from ... import version
+from ... import __version__
 from ...api.fuzz_controller import FuzzController
 from ...core.bases.base_plugin import Plugin
 from ...utils.http_utils import get_host, get_pure_url
@@ -42,7 +42,7 @@ def banner() -> str:
     @returns str: The program banner
     """
     banner = (f"{Colors.BLUE_GRAY}   ____                        _____       _\n" +
-              f"{Colors.BLUE_GRAY}  |  __|_ _ ___ ___ _ ___ ___ |_   _|_ ___| |{Colors.RESET} Version {version()}\n" +
+              f"{Colors.BLUE_GRAY}  |  __|_ _ ___ ___ _ ___ ___ |_   _|_ ___| |{Colors.RESET} Version {__version__}\n" +
               f"{Colors.BLUE_GRAY}  |  __| | |- _|- _|'|   | . |  | | . | . | |\n" +
               f"{Colors.BLUE_GRAY}  |_|  |___|___|___|_|_|_|_  |  |_|___|___|_|\n" +
               f"{Colors.BLUE_GRAY}                         |___|{Colors.RESET}\n\n" +

@@ -23,7 +23,7 @@ import argparse
 from typing import List
 
 from .cli_output import CliOutput as CO
-from ... import version
+from ... import __version__
 from ...utils.utils import stringfy_list
 from ...factories.plugin_factory import PluginFactory
 from ...reports.report import Report
@@ -137,7 +137,7 @@ class CliArguments(argparse.ArgumentParser):
         self.add_argument(
             '-v', '--version',
             action='version',
-            version=f"FuzzingTool v{version()}"
+            version=f"FuzzingTool v{__version__}"
         )
         self.__build_target_opts()
         self.__build_request_opts()
