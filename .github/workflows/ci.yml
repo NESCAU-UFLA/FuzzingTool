@@ -11,7 +11,7 @@ jobs:
         run: pip install flake8 setuptools pytest
 
       - name: Linter
-        run: flake8 src/fuzzingtool --extend-ignore=E501,E731 --per-file-ignores="__init__.py:E402,F401,F403,W292" --statistics
+        run: flake8 src/fuzzingtool --extend-ignore=E501,E731 --per-file-ignores="__init__.py:F401,F403,W292" --statistics
 
       - name: Build
         run: |

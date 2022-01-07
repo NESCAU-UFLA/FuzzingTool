@@ -38,6 +38,3 @@ __version__ = version()
 __author__ = "Vitor Oriel C N Borges"
 __license__ = "MIT"
 __copyright__ = "Copyright 2020 - present Vitor Oriel"
-
-from .api.api import fuzz, fuzz_cli
-from .api.fuzz_controller import FuzzController
