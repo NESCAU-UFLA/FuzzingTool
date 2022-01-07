@@ -4,6 +4,7 @@ from unittest.mock import Mock, patch
 from src.fuzzingtool.api.fuzz_controller import FuzzController
 from src.fuzzingtool.conn.requesters import Requester, SubdomainRequester
 from src.fuzzingtool.utils.consts import FUZZING_MARK
+from src.fuzzingtool.exceptions.main_exceptions import FuzzControllerException
 
 
 class TestFuzzController(unittest.TestCase):
@@ -81,3 +82,8 @@ class TestFuzzController(unittest.TestCase):
             cookie=None,
         )
         self.assertIsInstance(test_fuzz_controller.requester, Requester)
+
+    def test_init_requester_with_raise_exception(self):
+        with self.assertRaises(FuzzControllerException) as e:
+            FuzzController(wordlist="test")._init_requester()
+        self.assertEqual(str(e.exception), "A target is needed to make the fuzzing")
