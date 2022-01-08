@@ -5,6 +5,8 @@ from src.fuzzingtool.api.fuzz_controller import FuzzController
 from src.fuzzingtool.conn.requesters import Requester, SubdomainRequester
 from src.fuzzingtool.utils.consts import FUZZING_MARK
 from src.fuzzingtool.exceptions.main_exceptions import FuzzControllerException
+from src.fuzzingtool.core.defaults.scanners import DataScanner, PathScanner, SubdomainScanner
+from src.fuzzingtool.core.plugins.scanners import Reflected
 
 
 class TestFuzzController(unittest.TestCase):
@@ -94,3 +96,33 @@ class TestFuzzController(unittest.TestCase):
         test_fuzz_controller._init_requester()
         test_fuzz_controller._init_matcher()
         mock_set_allowed_status.assert_called_once_with("200-399,401,403")
+
+    def test_get_default_scanner_with_path_scanner(self):
+        test_fuzz_controller = FuzzController(url=f"http://test-url.com/{FUZZING_MARK}")
+        test_fuzz_controller._init_requester()
+        returned_scanner = test_fuzz_controller._FuzzController__get_default_scanner()
+        self.assertIsInstance(returned_scanner, PathScanner)
+
+    def test_get_default_scanner_with_subdomain_scanner(self):
+        test_fuzz_controller = FuzzController(url=f"http://{FUZZING_MARK}.test-url.com/")
+        test_fuzz_controller._init_requester()
+        returned_scanner = test_fuzz_controller._FuzzController__get_default_scanner()
+        self.assertIsInstance(returned_scanner, SubdomainScanner)
+
+    def test_get_default_scanner_with_path_scanner(self):
+        test_fuzz_controller = FuzzController(url=f"http://test-url.com/", data=f"a={FUZZING_MARK}")
+        test_fuzz_controller._init_requester()
+        returned_scanner = test_fuzz_controller._FuzzController__get_default_scanner()
+        self.assertIsInstance(returned_scanner, DataScanner)
+
+    @patch("src.fuzzingtool.api.fuzz_controller.PluginFactory.object_creator")
+    def test_init_scanner_with_plugin_scanner(self, mock_object_creator: Mock):
+        mock_object_creator.return_value = Reflected()
+        test_fuzz_controller = FuzzController(scanner="Reflected")
+        test_fuzz_controller._init_scanner()
+        mock_object_creator.assert_called_once_with("Reflected", "scanners", '')
+
+    @patch("src.fuzzingtool.api.fuzz_controller.FuzzController._FuzzController__get_default_scanner")
+    def test_init_scanner_with_default_scanner(self, mock_get_default_scanner: Mock):
+        FuzzController(url=f"http://test-url.com/{FUZZING_MARK}")._init_scanner()
+        mock_get_default_scanner.assert_called_once()
