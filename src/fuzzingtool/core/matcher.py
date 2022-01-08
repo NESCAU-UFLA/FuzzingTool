@@ -77,20 +77,6 @@ class Matcher:
         self._allowed_status = self.__build_allowed_status(allowed_status)
         self._comparator = self.__build_comparator(length, time)
 
-    def get_allowed_status(self) -> dict:
-        """The allowed status getter
-
-        @returns dict: The allowed status dict
-        """
-        return self._allowed_status
-
-    def get_comparator(self) -> dict:
-        """The data comparator getter
-
-        @returns dict: The data comparator dict
-        """
-        return self._comparator
-
     def allowed_status_is_default(self) -> bool:
         """Check if the allowed status is set as default config
 

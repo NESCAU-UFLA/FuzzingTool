@@ -87,3 +87,10 @@ class TestFuzzController(unittest.TestCase):
         with self.assertRaises(FuzzControllerException) as e:
             FuzzController(wordlist="test")._init_requester()
         self.assertEqual(str(e.exception), "A target is needed to make the fuzzing")
+
+    @patch("src.fuzzingtool.api.fuzz_controller.Matcher.set_allowed_status")
+    def test_init_matcher(self, mock_set_allowed_status: Mock):
+        test_fuzz_controller = FuzzController(url=f"http://test-url.com/{FUZZING_MARK}")
+        test_fuzz_controller._init_requester()
+        test_fuzz_controller._init_matcher()
+        mock_set_allowed_status.assert_called_once_with("200-399,401,403")
