@@ -7,6 +7,7 @@ from src.fuzzingtool.utils.consts import FUZZING_MARK
 from src.fuzzingtool.exceptions.main_exceptions import FuzzControllerException
 from src.fuzzingtool.core.defaults.scanners import DataScanner, PathScanner, SubdomainScanner
 from src.fuzzingtool.core.plugins.scanners import Reflected
+from src.fuzzingtool.core.plugins.encoders import Html
 
 
 class TestFuzzController(unittest.TestCase):
@@ -126,3 +127,71 @@ class TestFuzzController(unittest.TestCase):
     def test_init_scanner_with_default_scanner(self, mock_get_default_scanner: Mock):
         FuzzController(url=f"http://test-url.com/{FUZZING_MARK}")._init_scanner()
         mock_get_default_scanner.assert_called_once()
+
+    def test_build_encoders_with_no_encoder(self):
+        return_expected = None
+        returned_encoder = FuzzController()._FuzzController__build_encoders()
+        self.assertEqual(returned_encoder, return_expected)
+
+    @patch("src.fuzzingtool.api.fuzz_controller.PluginFactory.object_creator")
+    def test_build_encoders_with_encoders(self, mock_object_creator: Mock):
+        expected_encoder = Html()
+        return_expected = ([expected_encoder], [])
+        mock_object_creator.return_value = expected_encoder
+        returned_encoders = FuzzController(encoder="Html")._FuzzController__build_encoders()
+        mock_object_creator.assert_called_once_with("Html", "encoders", '')
+        self.assertEqual(returned_encoders, return_expected)
+
+    @patch("src.fuzzingtool.api.fuzz_controller.PluginFactory.object_creator")
+    def test_build_encoders_with_chain_encoders(self, mock_object_creator: Mock):
+        expected_encoder = Html()
+        return_expected = ([], [[expected_encoder, expected_encoder]])
+        mock_object_creator.return_value = expected_encoder
+        returned_encoders = FuzzController(encoder="Html@Html")._FuzzController__build_encoders()
+        mock_object_creator.assert_called_with("Html", "encoders", '')
+        self.assertEqual(returned_encoders, return_expected)
+
+    @patch("src.fuzzingtool.api.fuzz_controller.Payloader.encoder.set_regex")
+    @patch("src.fuzzingtool.api.fuzz_controller.PluginFactory.object_creator")
+    def test_build_encoders_with_encode_only(self,
+                                             mock_object_creator: Mock,
+                                             mock_set_regex: Mock):
+        test_encode_only = "<|>|;"
+        mock_object_creator.return_value = Html()
+        FuzzController(encoder="Html", encode_only=test_encode_only)._FuzzController__build_encoders()
+        mock_set_regex.assert_called_once_with(test_encode_only)
+
+    @patch("src.fuzzingtool.api.fuzz_controller.Payloader.set_prefix")
+    def test_configure_payloader_with_prefix(self, mock_set_prefix: Mock):
+        FuzzController(prefix="test,test2")._FuzzController__configure_payloader()
+        mock_set_prefix.assert_called_once_with(["test", "test2"])
+
+    @patch("src.fuzzingtool.api.fuzz_controller.Payloader.set_suffix")
+    def test_configure_payloader_with_suffix(self, mock_set_suffix: Mock):
+        FuzzController(suffix="test,test2")._FuzzController__configure_payloader()
+        mock_set_suffix.assert_called_once_with(["test", "test2"])
+
+    @patch("src.fuzzingtool.api.fuzz_controller.Payloader.set_lowercase")
+    def test_configure_payloader_with_lowercase(self, mock_set_lowercase: Mock):
+        FuzzController(lower=True)._FuzzController__configure_payloader()
+        mock_set_lowercase.assert_called_once()
+
+    @patch("src.fuzzingtool.api.fuzz_controller.Payloader.set_uppercase")
+    def test_configure_payloader_with_uppercase(self, mock_set_uppercase: Mock):
+        FuzzController(upper=True)._FuzzController__configure_payloader()
+        mock_set_uppercase.assert_called_once()
+
+    @patch("src.fuzzingtool.api.fuzz_controller.Payloader.set_capitalize")
+    def test_configure_payloader_with_capitalize(self, mock_set_capitalize: Mock):
+        FuzzController(capitalize=True)._FuzzController__configure_payloader()
+        mock_set_capitalize.assert_called_once()
+
+    @patch("src.fuzzingtool.api.fuzz_controller.FuzzController._FuzzController__build_encoders")
+    @patch("src.fuzzingtool.api.fuzz_controller.Payloader.encoder.set_encoders")
+    def test_configure_payloader_with_encoders(self,
+                                               mock_set_encoders: Mock,
+                                               mock_build_encoders: Mock):
+        build_encoders_return = ([Html()], [])
+        mock_build_encoders.return_value = build_encoders_return
+        FuzzController(encoder="Html")._FuzzController__configure_payloader()
+        mock_set_encoders.assert_called_once_with(build_encoders_return)
