@@ -31,4 +31,4 @@ def main_cli() -> None:
         exit(str(e).capitalize())
     if arguments.disable_colors:
         Colors.disable()
-    CliController().main(arguments)
+    CliController(arguments).main()

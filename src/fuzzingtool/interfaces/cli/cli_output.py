@@ -185,7 +185,10 @@ class CliOutput:
 
     def set_simple_output_mode(self) -> None:
         """Set the display to simple output mode, change labels"""
-        self.__get_time = lambda: ''
+        def get_blank_time() -> str:
+            return ''
+
+        self.__get_time = get_blank_time
         self.__info = f'{Colors.GRAY}[{Colors.BLUE_GRAY}*{Colors.GRAY}]{Colors.RESET} '
         self.__warning = f'{Colors.GRAY}[{Colors.YELLOW}!{Colors.GRAY}]{Colors.RESET} '
         self.__error = f'{Colors.GRAY}[{Colors.RED}!!{Colors.GRAY}]{Colors.RESET} '
@@ -370,9 +373,7 @@ class CliOutput:
         self.print_config("Methods",
                           stringfy_list(target['methods']),
                           spaces)
-        self.print_config("HTTP headers",
-                          'custom' if target['header'] else 'default',
-                          spaces)
+        self.print_config("HTTP headers", target['header'], spaces)
         if target['body']:
             self.print_config("Body data", target['body'], spaces)
         self.print_config("Fuzzing type", target['type_fuzzing'], spaces)
@@ -382,8 +383,6 @@ class CliOutput:
                          f"(removed {dictionary['removed']} "
                          f"duplicated payloads)")
         self.print_config("Dictionary size", dict_size)
-        self.print_config("Wordlists",
-                          stringfy_list(dictionary['wordlists']))
         if prefix:
             self.print_config("Prefix", stringfy_list(prefix))
         if suffix:

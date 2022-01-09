@@ -1,6 +1,5 @@
 import unittest
 from unittest.mock import Mock, patch
-import datetime
 
 from src.fuzzingtool.objects import Payload, Result
 from src.fuzzingtool.objects.base_objects import BaseItem

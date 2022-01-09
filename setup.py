@@ -1,7 +1,7 @@
 import os
 from setuptools import setup, find_packages
 
-from src.fuzzingtool import version
+from src.fuzzingtool import __version__
 
 
 def read(fname):
@@ -20,7 +20,7 @@ dev_requires = [
 
 setup(
     name="FuzzingTool",
-    version=version(),
+    version=__version__,
     author="Vitor Oriel C N Borges",
     author_email="vitorwixmix@gmail.com",
     description=("Software for fuzzing, used on web application pentestings."),

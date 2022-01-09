@@ -18,40 +18,16 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from .base_exceptions import FuzzingToolException
+from .fuzz_controller import FuzzController
+from ..interfaces.cli.cli_arguments import CliArguments
 
 
-class FuzzControllerException(FuzzingToolException):
-    pass
+def fuzz(**kwargs) -> None:
+    FuzzController(**kwargs).main()
 
 
-class StopActionInterrupt(FuzzingToolException):
-    pass
-
-
-class MissingParameter(FuzzingToolException):
-    pass
-
-
-class BadArgumentFormat(FuzzingToolException):
-    pass
-
-
-class BadArgumentType(FuzzingToolException):
-    pass
-
-
-class InvalidArgument(FuzzingToolException):
-    pass
-
-
-class BuildWordlistFails(FuzzingToolException):
-    pass
-
-
-class WordlistCreationError(FuzzingToolException):
-    pass
-
-
-class MetadataException(FuzzingToolException):
-    pass
+def fuzz_cli(args: str, **kwargs) -> None:
+    args = ['FuzzingTool'] + args.split(' ')
+    args = vars(CliArguments(args).get_arguments())
+    args.update(kwargs)
+    FuzzController(**args).main()

@@ -20,9 +20,10 @@
 
 import sys
 import argparse
+from typing import List
 
 from .cli_output import CliOutput as CO
-from ... import version
+from ... import __version__
 from ...utils.utils import stringfy_list
 from ...factories.plugin_factory import PluginFactory
 from ...reports.report import Report
@@ -33,16 +34,23 @@ class CliArguments(argparse.ArgumentParser):
     """Class to handle with the arguments parsing
        Overrides the error method from argparse.ArgumentParser,
        raising an exception instead of exiting
+
+    @type args: List[str]
+    @param args: The arguments list
     """
-    def __init__(self):
+    def __init__(self, args: List[str] = None):
+        if args:
+            self.args = args
+        else:
+            self.args = sys.argv
         usage = "Usage: FuzzingTool [-u|-r TARGET]+ [-w WORDLIST]+ [options]*"
         examples = ("For usage examples, see: "
                     "https://github.com/NESCAU-UFLA/FuzzingTool/wiki/Usage-Examples")
-        if len(sys.argv) < 2:
+        if len(self.args) < 2:
             self.error("Invalid format! Use -h on 2nd parameter "
                        f"to show the help menu.\n\n{usage}\n\n{examples}")
-        if len(sys.argv) == 2 and ('-h=' in sys.argv[1] or '--help=' in sys.argv[1]):
-            asked_help = sys.argv[1].split('=')[1]
+        if len(self.args) == 2 and ('-h=' in self.args[1] or '--help=' in self.args[1]):
+            asked_help = self.args[1].split('=')[1]
             if 'wordlists' == asked_help:
                 self._show_wordlists_help()
             elif 'encoders' == asked_help:
@@ -69,7 +77,7 @@ class CliArguments(argparse.ArgumentParser):
 
         @returns argparse.Namespace: The Namespace with the arguments
         """
-        return self.parse_args()
+        return self.parse_args(self.args[1:])
 
     def _show_wordlists_help(self) -> None:
         """Show the help menu for wordlists and exit"""
@@ -129,7 +137,7 @@ class CliArguments(argparse.ArgumentParser):
         self.add_argument(
             '-v', '--version',
             action='version',
-            version=f"FuzzingTool v{version()}"
+            version=f"FuzzingTool v{__version__}"
         )
         self.__build_target_opts()
         self.__build_request_opts()
@@ -210,7 +218,6 @@ class CliArguments(argparse.ArgumentParser):
             help="Define the request timeout (in seconds)",
             metavar='TIMEOUT',
             type=int,
-            default=0,
         )
         request_opts.add_argument(
             '--follow-redirects',
@@ -245,7 +252,6 @@ class CliArguments(argparse.ArgumentParser):
             dest='encoder',
             help="Define the encoder used on payloads (--help=encoders for more info)",
             metavar='ENCODER',
-            default='',
         )
         dictionary_opts.add_argument(
             '--encode-only',
@@ -253,7 +259,6 @@ class CliArguments(argparse.ArgumentParser):
             dest='encode_only',
             help="Define the regex pattern to use in the encoder",
             metavar='REGEX',
-            default='',
         )
         dictionary_opts.add_argument(
             '--prefix',
@@ -394,7 +399,7 @@ class CliArguments(argparse.ArgumentParser):
         more_opts.add_argument(
             '-t',
             action='store',
-            dest='number_of_threads',
+            dest='threads',
             help="Define the number of threads used in the tests",
             metavar='NUMBEROFTHREADS',
             type=int,
