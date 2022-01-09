@@ -18,9 +18,10 @@ def assert_payload_list_is_equal(payloads: List[Payload], other_payloads: List[P
 
 class TestEncodeManager(unittest.TestCase):
     def test_set_regex_with_invalid_regex(self):
+        test_regex = r"?([A-Z][a-z]"
         with self.assertRaises(BadArgumentFormat) as e:
-            EncodeManager().set_regex(r"?([A-Z][a-z]")
-        self.assertEqual(str(e.exception), f"Invalid regex format ?([A-Z][a-z]")
+            EncodeManager().set_regex(test_regex)
+        self.assertEqual(str(e.exception), f"Invalid regex format {test_regex}")
 
     def test_encode_without_regex(self):
         return_expected = "746573745f7061796c6f6164"
