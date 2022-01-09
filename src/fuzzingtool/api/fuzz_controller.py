@@ -104,8 +104,7 @@ class FuzzController:
             self.elapsed_time = time.time() - started_time
 
     def fuzz(self) -> None:
-        """Prepare the fuzzer for the fuzzing tests.
-        """
+        """Prepare the fuzzer for the fuzzing tests"""
         self.fuzzer = Fuzzer(
             requester=self.requester,
             dictionary=self.dictionary,
