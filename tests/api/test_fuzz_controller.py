@@ -4,10 +4,11 @@ from unittest.mock import Mock, patch
 from src.fuzzingtool.api.fuzz_controller import FuzzController
 from src.fuzzingtool.conn.requesters import Requester, SubdomainRequester
 from src.fuzzingtool.utils.consts import FUZZING_MARK
-from src.fuzzingtool.exceptions.main_exceptions import FuzzControllerException
+from src.fuzzingtool.exceptions.main_exceptions import FuzzControllerException, WordlistCreationError
 from src.fuzzingtool.core.defaults.scanners import DataScanner, PathScanner, SubdomainScanner
 from src.fuzzingtool.core.plugins.scanners import Reflected
 from src.fuzzingtool.core.plugins.encoders import Html
+from ..mock_utils.wordlist_mock import WordlistMock
 
 
 class TestFuzzController(unittest.TestCase):
@@ -110,7 +111,7 @@ class TestFuzzController(unittest.TestCase):
         returned_scanner = test_fuzz_controller._FuzzController__get_default_scanner()
         self.assertIsInstance(returned_scanner, SubdomainScanner)
 
-    def test_get_default_scanner_with_path_scanner(self):
+    def test_get_default_scanner_with_data_scanner(self):
         test_fuzz_controller = FuzzController(url=f"http://test-url.com/", data=f"a={FUZZING_MARK}")
         test_fuzz_controller._init_requester()
         returned_scanner = test_fuzz_controller._FuzzController__get_default_scanner()
@@ -195,3 +196,30 @@ class TestFuzzController(unittest.TestCase):
         mock_build_encoders.return_value = build_encoders_return
         FuzzController(encoder="Html")._FuzzController__configure_payloader()
         mock_set_encoders.assert_called_once_with(build_encoders_return)
+
+    @patch("src.fuzzingtool.api.fuzz_controller.WordlistFactory.creator")
+    def test_build_wordlist(self, mock_creator: Mock):
+        test_wordlist = WordlistMock('1')
+        mock_creator.return_value = test_wordlist
+        returned_wordlist = FuzzController(
+            url="http://test-url.com/", wordlist="test=1"
+        )._FuzzController__build_wordlist([("test", '1')])
+        mock_creator.assert_called_once_with("test", '1', None)
+        self.assertIsInstance(returned_wordlist, list)
+        self.assertEqual(returned_wordlist, test_wordlist._build())
+
+    @patch("src.fuzzingtool.api.fuzz_controller.WordlistFactory.creator")
+    def test_build_wordlist_with_blank_wordlist(self, mock_creator: Mock):
+        mock_creator.side_effect = WordlistCreationError()
+        test_fuzz_controller = FuzzController(url="http://test-url.com/", wordlist="test")
+        with self.assertRaises(FuzzControllerException) as e:
+            test_fuzz_controller._FuzzController__build_wordlist([("test", '')])
+        self.assertEqual(str(e.exception), "The wordlist is empty")
+
+    @patch("src.fuzzingtool.api.fuzz_controller.FuzzController._FuzzController__build_wordlist")
+    def test_init_dictionary(self, mock_build_wordlist: Mock):
+        mock_build_wordlist.return_value = ["test", "test", "test2"]
+        test_fuzz_controller = FuzzController(wordlist="test", unique=True)
+        test_fuzz_controller._init_dictionary()
+        self.assertEqual(test_fuzz_controller.dict_metadata["removed"], 1)
+        self.assertEqual(test_fuzz_controller.dict_metadata["len"], 2)
