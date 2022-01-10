@@ -49,9 +49,18 @@ class BlacklistStatus:
         @param action_callbacks: The action callbacks
         """
         self.codes = self.build_status_list(status)
-        self.action_callback = self.set_action_callback(
-            action, action_param, action_callbacks
-        )
+        if action:
+            self.do_action, self.action_param = self.set_action_callback(
+                action, action_param, action_callbacks
+            )
+
+    def do_action(self, status: int) -> None:
+        """Do an ction when a status code is detected
+        
+        @type status: int
+        @param status: The status code of the response
+        """
+        pass
 
     def build_status_list(self, status: str) -> List[int]:
         """Build the blacklisted status codes
@@ -79,16 +88,14 @@ class BlacklistStatus:
         @param action_callbacks: The action callbacks
         @returns Callable[[int], None]: A callback function for the blacklisted status code
         """
-        if not action:
-            return lambda _: None
         if action == 'stop':
-            return action_callbacks['stop']
+            return (action_callbacks['stop'], None)
         if action == 'wait':
             if not action_param:
-                raise MissingParameter("Must set a time to wait")
+                raise MissingParameter("Must set a time to wait, in seconds")
             try:
-                self.action_param = float(action_param)
+                action_param = float(action_param)
             except ValueError:
                 raise BadArgumentType("Time to wait must be a number")
-            return action_callbacks['wait']
+            return (action_callbacks['wait'], action_param)
         raise InvalidArgument(f"Invalid type of blacklist action: {action}")

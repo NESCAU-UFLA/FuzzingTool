@@ -199,7 +199,7 @@ class Fuzzer:
         """
         if (self.__blacklist_status and
                 response.status_code in self.__blacklist_status.codes):
-            self.__blacklist_status.action_callback(response.status_code)
+            self.__blacklist_status.do_action(response.status_code)
         result = Result(response, rtt, payload)
         self.__scanner.inspect_result(result, *args)
         self.result_callback(
