@@ -56,7 +56,7 @@ class BlacklistStatus:
 
     def do_action(self, status: int) -> None:
         """Do an ction when a status code is detected
-        
+
         @type status: int
         @param status: The status code of the response
         """
