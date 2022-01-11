@@ -20,8 +20,6 @@
 
 from ...bases.base_scanner import BaseScanner
 from ....objects.result import Result
-from ....utils.http_utils import get_path
-from ....interfaces.cli.cli_output import Colors, get_formated_result
 
 
 class PathScanner(BaseScanner):
@@ -35,35 +33,3 @@ class PathScanner(BaseScanner):
 
     def scan(self, result: Result) -> bool:
         return True
-
-    def cli_callback(self, result: Result) -> str:
-        status = result.status
-        status_color = Colors.BOLD
-        if status == 404:
-            status_color = ''
-        elif status >= 200 and status < 300:
-            status_color += Colors.GREEN
-        elif status >= 300 and status < 400:
-            status_color += Colors.LIGHT_YELLOW
-        elif status >= 400 and status < 500:
-            if status == 401 or status == 403:
-                status_color += Colors.CYAN
-            else:
-                status_color += Colors.BLUE
-        elif status >= 500 and status < 600:
-            status_color += Colors.RED
-        else:
-            status_color = ''
-        redirected = result.custom['redirected']
-        if redirected:
-            redirected = f" {Colors.LIGHT_YELLOW}Redirected to {redirected}{Colors.RESET}"
-        path, rtt, length = get_formated_result(
-            get_path(result.url), result.rtt, result.body_length
-        )
-        return (
-            f"{path} {Colors.GRAY}["
-            f"{Colors.LIGHT_GRAY}Code{Colors.RESET} {status_color}{status}{Colors.RESET} | "
-            f"{Colors.LIGHT_GRAY}RTT{Colors.RESET} {rtt} | "
-            f"{Colors.LIGHT_GRAY}Size{Colors.RESET} {length}{Colors.GRAY}]{Colors.RESET}"
-            f"{redirected}"
-        )

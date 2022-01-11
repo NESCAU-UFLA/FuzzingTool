@@ -43,13 +43,3 @@ class BaseScanner(ABC):
         @reeturns bool: A match flag
         """
         pass
-
-    @abstractmethod
-    def cli_callback(self, result: Result) -> str:
-        """Get the formated message to be used on output
-
-        @type result: Result
-        @param result: The result object
-        @returns str: The message
-        """
-        pass
