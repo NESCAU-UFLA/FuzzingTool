@@ -24,7 +24,9 @@ from requests import Response
 
 from .base_objects import BaseItem
 from .payload import Payload
+from ..utils.consts import UNKNOWN_FUZZING
 from ..utils.http_utils import build_raw_response_header
+from ..utils.result_utils import ResultUtils
 
 
 class Result(BaseItem):
@@ -54,7 +56,8 @@ class Result(BaseItem):
     def __init__(self,
                  response: Response,
                  rtt: float = 0.0,
-                 payload: Payload = Payload()):
+                 payload: Payload = Payload(),
+                 fuzz_type: int = UNKNOWN_FUZZING):
         """Class constructor
 
         @type response: Response
@@ -79,6 +82,7 @@ class Result(BaseItem):
         self.body_length = len(content)
         self.words = len(content.split())
         self.lines = content.count(b'\n')
+        self.fuzz_type = fuzz_type
         self.custom = {}
         self._payload = payload
         self.__response = response
@@ -96,7 +100,7 @@ class Result(BaseItem):
         yield 'words', self.words
         yield 'lines', self.lines
         for key, value in self.custom.items():
-            yield key, value
+            yield key, ResultUtils.format_custom_field(value, force_detailed=True)
         yield 'payload', self.payload
         if Result.save_payload_configs:
             yield 'payload_raw', self._payload.raw

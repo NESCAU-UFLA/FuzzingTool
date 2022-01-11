@@ -24,6 +24,7 @@ import time
 from ..interfaces.argument_builder import ArgumentBuilder as AB
 from ..utils.utils import split_str_to_list
 from ..utils.file_utils import read_file
+from ..utils.result_utils import ResultUtils
 from ..core import BlacklistStatus, Dictionary, Fuzzer, Matcher, Payloader
 from ..core.defaults.scanners import (DataScanner,
                                       PathScanner, SubdomainScanner)
@@ -51,6 +52,7 @@ class FuzzController:
             self._request_exception_callback = self.args["req_ex_callback"]
         if self.args["invalid_host_calalback"]:
             self._invalid_hostname_callback = self.args["invalid_host_calalback"]
+        ResultUtils.detailed_results = not self.args["simple_output"]
 
     def main(self) -> None:
         """The main function.
@@ -271,6 +273,8 @@ class FuzzController:
             match_length=None,
             match_time=None,
             scanner=None,
+            # Display options
+            simple_output=False,
             # Other options
             threads=1,
             delay=0,

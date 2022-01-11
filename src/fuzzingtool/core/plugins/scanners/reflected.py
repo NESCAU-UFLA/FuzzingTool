@@ -21,7 +21,6 @@
 from ...bases.base_plugin import Plugin
 from ...bases.base_scanner import BaseScanner
 from ....objects.result import Result
-from ....interfaces.cli.cli_output import Colors, get_formated_result
 from ....decorators.plugin_meta import plugin_meta
 from ....decorators.append_args import append_args
 
@@ -42,22 +41,3 @@ class Reflected(BaseScanner, Plugin):
         reflected = result.payload in result.get_response().text
         result.custom['reflected'] = reflected
         return reflected
-
-    def cli_callback(self, result: Result) -> str:
-        reflected = f"{Colors.LIGHT_YELLOW}{Colors.BOLD}IDK"
-        was_reflected = result.custom['reflected']
-        if was_reflected is not None:
-            if was_reflected:
-                reflected = f"{Colors.GREEN}{Colors.BOLD}YES"
-            else:
-                reflected = f"{Colors.LIGHT_RED}{Colors.BOLD}NO "
-        payload, rtt, length = get_formated_result(
-            result.payload, result.rtt, result.body_length
-        )
-        return (
-            f"{payload} {Colors.GRAY}["
-            f"{Colors.LIGHT_GRAY}Reflected{Colors.RESET} {reflected}{Colors.RESET} | "
-            f"{Colors.LIGHT_GRAY}Code{Colors.RESET} {result.status} | "
-            f"{Colors.LIGHT_GRAY}RTT{Colors.RESET} {rtt} | "
-            f"{Colors.LIGHT_GRAY}Size{Colors.RESET} {length}{Colors.GRAY}]{Colors.RESET}"
-        )
