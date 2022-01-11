@@ -21,7 +21,6 @@
 from datetime import datetime
 import threading
 import sys
-from typing import Callable
 
 from ...objects.result import Result
 from ...utils.consts import MAX_PAYLOAD_LENGTH_TO_OUTPUT, PATH_FUZZING, SUBDOMAIN_FUZZING
