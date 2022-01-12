@@ -469,7 +469,7 @@ class CliOutput:
 
     def __get_formated_payload(self, result: Result) -> str:
         """Formats the payload to output
-        
+
         @type result: Result
         @param result: The result of the request
         @returns str: The formated payload to output
@@ -486,7 +486,7 @@ class CliOutput:
 
     def __get_formated_result_items(self, result: Result) -> str:
         """Format the result items to the output
-        
+
         @type result: Result
         @param result: The result of the request
         @returns Tuple[str, str, str, str, str, str]: The tuple with the formated result items
@@ -515,7 +515,7 @@ class CliOutput:
 
     def __get_formated_result(self, result: Result) -> str:
         """Format the entire result message
-        
+
         @type result: Result
         @param result: The result of the request
         @returns str: The formated result message to output
