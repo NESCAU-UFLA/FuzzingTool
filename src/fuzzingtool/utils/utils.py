@@ -18,7 +18,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-import re
 from typing import List, Tuple, Union
 
 from .consts import FUZZING_MARK, MAX_PAYLOAD_LENGTH_TO_OUTPUT
