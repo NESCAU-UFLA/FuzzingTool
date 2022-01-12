@@ -18,6 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+import re
 from typing import List, Tuple, Union
 
 from .consts import FUZZING_MARK, MAX_PAYLOAD_LENGTH_TO_OUTPUT
@@ -34,7 +35,7 @@ def get_indexes_to_parse(content: str,
                        on the given content
     @returns List[int]: The positions indexes of the searched substring
     """
-    return [i for i, char in enumerate(content) if char == search_for]
+    return [i for i in range(len(content)) if content.startswith(search_for, i)]
 
 
 def split_str_to_list(string: str,

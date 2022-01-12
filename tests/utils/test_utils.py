@@ -3,7 +3,7 @@ from unittest.mock import Mock, patch
 
 from src.fuzzingtool.utils.utils import *
 from src.fuzzingtool.utils.utils import _get_letter_range, _get_number_range
-from src.fuzzingtool.utils.consts import FUZZING_MARK
+from src.fuzzingtool.utils.consts import FUZZING_MARK, FUZZING_MARK_LEN, MAX_PAYLOAD_LENGTH_TO_OUTPUT
 
 
 class TestUtils(unittest.TestCase):
@@ -22,7 +22,7 @@ class TestUtils(unittest.TestCase):
         self.assertEqual(returned_data, return_expected)
 
     def test_get_indexes_to_parse_with_two_marks(self):
-        return_expected = [2, 8]
+        return_expected = [2, (8 + (FUZZING_MARK_LEN - 1))]
         test_content = f"pa{FUZZING_MARK}yload{FUZZING_MARK}"
         returned_data = get_indexes_to_parse(test_content)
         self.assertIsInstance(returned_data, list)
@@ -104,6 +104,18 @@ class TestUtils(unittest.TestCase):
         returned_data = get_human_length(test_length)
         self.assertIsInstance(returned_data, tuple)
         self.assertEqual(returned_data, return_expected)
+
+    def test_fix_payload_to_output_with_tab(self):
+        return_expected = "tes t"
+        returned_payload = fix_payload_to_output("tes	t")
+        self.assertIsInstance(returned_payload, str)
+        self.assertEqual(returned_payload, return_expected)
+
+    def test_fix_payload_to_output_with_large_payload(self):
+        return_expected = 'a' * (MAX_PAYLOAD_LENGTH_TO_OUTPUT-3) + '...'
+        returned_payload = fix_payload_to_output(('a' * MAX_PAYLOAD_LENGTH_TO_OUTPUT + '!'))
+        self.assertIsInstance(returned_payload, str)
+        self.assertEqual(returned_payload, return_expected)
 
     def test_get_letter_range(self):
         return_expected = ['a', 'b', 'c', 'd']
