@@ -55,6 +55,12 @@ class ResultUtils:
 
     @staticmethod
     def format_custom_field(custom_field, force_detailed: bool = False) -> str:
+        """Format the value from key: value pair of the custom field in the result
+        
+        @type custom_field: Any
+        @param custom_field: The value from key: value pair of the custom field in the result
+        @returns str: The formated value, to string
+        """
         if force_detailed or ResultUtils.detailed_results:
             if isinstance(custom_field, list):
                 return ", ".join(custom_field)

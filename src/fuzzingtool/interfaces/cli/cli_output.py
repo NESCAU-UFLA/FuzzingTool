@@ -379,56 +379,6 @@ class CliOutput:
             print(f"\r{self.__get_time()}{status}"
                   f"{Colors.GRAY} :: {Colors.LIGHT_GRAY}{payload}", end='')
 
-    def __get_formated_payload(self, result: Result) -> str:
-        if result.fuzz_type == PATH_FUZZING:
-            return get_path(result.url)
-        if result.fuzz_type == SUBDOMAIN_FUZZING:
-            return get_host(result.url)
-        return result.payload
-
-    def __get_formated_result_items(self, result: Result) -> str:
-        status_color = Colors.BOLD
-        status = result.status
-        if status == 404:
-            status_color = ''
-        elif status >= 200 and status < 300:
-            status_color += Colors.GREEN
-        elif status >= 300 and status < 400:
-            status_color += Colors.LIGHT_YELLOW
-        elif status >= 400 and status < 500:
-            if status == 401 or status == 403:
-                status_color += Colors.CYAN
-            else:
-                status_color += Colors.BLUE
-        elif status >= 500 and status < 600:
-            status_color += Colors.RED
-        status = f"{status_color}{status}{Colors.RESET}"
-        payload, rtt, length, words, lines = ResultUtils.get_formated_result(
-            self.__get_formated_payload(result), result.rtt,
-            result.body_length, result.words, result.lines
-        )
-        return (payload, status, rtt, length, words, lines)
-
-    def __get_formated_result(self, result: Result) -> str:
-        formated_items = self.__get_formated_result_items(result)
-        payload, status_code, rtt, length, words, lines = formated_items
-        formated_result_str = (
-            f"{payload} {Colors.GRAY}["
-            f"{Colors.LIGHT_GRAY}Code{Colors.RESET} {status_code} | "
-            f"{Colors.LIGHT_GRAY}RTT{Colors.RESET} {rtt} | "
-            f"{Colors.LIGHT_GRAY}Size{Colors.RESET} {length} | "
-            f"{Colors.LIGHT_GRAY}Words{Colors.RESET} {words} | "
-            f"{Colors.LIGHT_GRAY}Lines{Colors.RESET} {lines}{Colors.GRAY}]{Colors.RESET}"
-        )
-        if result.custom:
-            custom_str = ''
-            for key, value in result.custom.items():
-                if (value is not None and isinstance(value, bool)) or value:
-                    custom_str += (f"\n{Colors.LIGHT_YELLOW}|_ {key}: "
-                                   f"{ResultUtils.format_custom_field(value)}{Colors.RESET}")
-            formated_result_str += custom_str
-        return formated_result_str
-
     def print_result(self, result: Result, vuln_validator: bool) -> None:
         """Custom output print for box mode
 
@@ -516,3 +466,75 @@ class CliOutput:
         sys.stdout.write("\033[1K")
         sys.stdout.write("\033[0G")
         sys.stdout.flush()
+
+    def __get_formated_payload(self, result: Result) -> str:
+        """Formats the payload to output
+        
+        @type result: Result
+        @param result: The result of the request
+        @returns str: The formated payload to output
+        """
+        if result.fuzz_type == PATH_FUZZING:
+            try:
+                formated_payload = get_path(result.url)
+            except ValueError:
+                formated_payload = result.url
+            return formated_payload
+        if result.fuzz_type == SUBDOMAIN_FUZZING:
+            return get_host(result.url)
+        return result.payload
+
+    def __get_formated_result_items(self, result: Result) -> str:
+        """Format the result items to the output
+        
+        @type result: Result
+        @param result: The result of the request
+        @returns Tuple[str, str, str, str, str, str]: The tuple with the formated result items
+        """
+        status_color = Colors.BOLD
+        status = result.status
+        if status == 404:
+            status_color = ''
+        elif status >= 200 and status < 300:
+            status_color += Colors.GREEN
+        elif status >= 300 and status < 400:
+            status_color += Colors.LIGHT_YELLOW
+        elif status >= 400 and status < 500:
+            if status == 401 or status == 403:
+                status_color += Colors.CYAN
+            else:
+                status_color += Colors.BLUE
+        elif status >= 500 and status < 600:
+            status_color += Colors.RED
+        status = f"{status_color}{status}{Colors.RESET}"
+        payload, rtt, length, words, lines = ResultUtils.get_formated_result(
+            self.__get_formated_payload(result), result.rtt,
+            result.body_length, result.words, result.lines
+        )
+        return (payload, status, rtt, length, words, lines)
+
+    def __get_formated_result(self, result: Result) -> str:
+        """Format the entire result message
+        
+        @type result: Result
+        @param result: The result of the request
+        @returns str: The formated result message to output
+        """
+        formated_items = self.__get_formated_result_items(result)
+        payload, status_code, rtt, length, words, lines = formated_items
+        formated_result_str = (
+            f"{payload} {Colors.GRAY}["
+            f"{Colors.LIGHT_GRAY}Code{Colors.RESET} {status_code} | "
+            f"{Colors.LIGHT_GRAY}RTT{Colors.RESET} {rtt} | "
+            f"{Colors.LIGHT_GRAY}Size{Colors.RESET} {length} | "
+            f"{Colors.LIGHT_GRAY}Words{Colors.RESET} {words} | "
+            f"{Colors.LIGHT_GRAY}Lines{Colors.RESET} {lines}{Colors.GRAY}]{Colors.RESET}"
+        )
+        if result.custom:
+            custom_str = ''
+            for key, value in result.custom.items():
+                if (value is not None and isinstance(value, bool)) or value:
+                    custom_str += (f"\n{Colors.LIGHT_YELLOW}|_ {key}: "
+                                   f"{ResultUtils.format_custom_field(value)}{Colors.RESET}")
+            formated_result_str += custom_str
+        return formated_result_str
