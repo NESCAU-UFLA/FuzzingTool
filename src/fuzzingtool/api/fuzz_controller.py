@@ -29,8 +29,9 @@ from ..core import BlacklistStatus, Dictionary, Fuzzer, Matcher, Payloader
 from ..core.defaults.scanners import (DataScanner,
                                       PathScanner, SubdomainScanner)
 from ..core.bases import BaseScanner, BaseEncoder
+from ..conn.requesters import Requester, SubdomainRequester
 from ..conn.request_parser import check_is_subdomain_fuzzing
-from ..factories import PluginFactory, RequesterFactory, WordlistFactory
+from ..factories import PluginFactory, WordlistFactory
 from ..objects import Error, Result
 from ..exceptions.main_exceptions import (FuzzControllerException, StopActionInterrupt,
                                           WordlistCreationError, BuildWordlistFails)
@@ -186,11 +187,10 @@ class FuzzController:
         if not target:
             raise FuzzControllerException("A target is needed to make the fuzzing")
         if check_is_subdomain_fuzzing(target['url']):
-            requester_type = 'SubdomainRequester'
+            requester_cls = SubdomainRequester
         else:
-            requester_type = 'Requester'
-        self.requester = RequesterFactory.creator(
-            requester_type,
+            requester_cls = Requester
+        self.requester = requester_cls(
             url=target['url'],
             methods=target['methods'],
             body=target['body'],
