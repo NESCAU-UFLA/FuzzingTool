@@ -239,7 +239,7 @@ class CliOutput:
         @param msg: The message
         @returns mixed: The data asked
         """
-        print(self.__get_time()+self.__get_info(msg)+': ', end='')
+        print(self.__get_time()+self.__get_info(msg), end=': ')
         return input()
 
     def print_config(self, key: str, value: str = '', spaces: int = 0) -> None:
