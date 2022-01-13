@@ -307,18 +307,32 @@ class CliArguments(argparse.ArgumentParser):
             metavar='STATUS',
         )
         match_opts.add_argument(
-            '-Ms',
-            action='store',
-            dest='match_length',
-            help="Match responses based on their length (in bytes)",
-            metavar='SIZE',
-        )
-        match_opts.add_argument(
             '-Mt',
             action='store',
             dest='match_time',
             help="Match responses based on their elapsed time (in seconds)",
             metavar='TIME',
+        )
+        match_opts.add_argument(
+            '-Ms',
+            action='store',
+            dest='match_size',
+            help="Match responses based on their body length (in bytes)",
+            metavar='SIZE',
+        )
+        match_opts.add_argument(
+            '-Mw',
+            action='store',
+            dest='match_words',
+            help="Match responses based on their quantity of words on body",
+            metavar='QTY_WORDS',
+        )
+        match_opts.add_argument(
+            '-Ml',
+            action='store',
+            dest='match_lines',
+            help="Match responses based on their quantity of lines on body",
+            metavar='QTY_LINES',
         )
         match_opts.add_argument(
             '--scanner',

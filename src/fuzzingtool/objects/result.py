@@ -42,7 +42,7 @@ class Result(BaseItem):
         status: The response HTTP status code
         headers: The response raw HTTP headers
         headers_length: The length of the raw HTTP headers
-        body_length: The length of the response body content
+        body_size: The length of the response body content
         words: The quantitty of words in the response body
         lines: The quantity of lines in the response body
         custom: A dictionary to store custom data from the scanners
@@ -79,7 +79,7 @@ class Result(BaseItem):
         content = response.content
         self.headers = build_raw_response_header(response)
         self.headers_length = len(self.headers)
-        self.body_length = len(content)
+        self.body_size = len(content)
         self.words = len(content.split())
         self.lines = content.count(b'\n')
         self.fuzz_type = fuzz_type
@@ -89,7 +89,7 @@ class Result(BaseItem):
 
     def __str__(self) -> str:
         payload, rtt, length, words, lines = ResultUtils.get_formated_result(
-            self.payload, self.rtt, self.body_length,
+            self.payload, self.rtt, self.body_size,
             self.words, self.lines
         )
         returned_str = (
@@ -115,7 +115,7 @@ class Result(BaseItem):
         yield 'response_time', self.response_time
         yield 'status', self.status
         yield 'headers_length', self.headers_length
-        yield 'body_length', self.body_length
+        yield 'body_size', self.body_size
         yield 'words', self.words
         yield 'lines', self.lines
         for key, value in self.custom.items():

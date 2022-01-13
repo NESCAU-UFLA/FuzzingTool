@@ -35,7 +35,7 @@ class TestResult(unittest.TestCase):
         )
         self.assertEqual(result.request_time, 1.0)
         self.assertEqual(result.headers_length, 228)
-        self.assertEqual(result.body_length, 25)
+        self.assertEqual(result.body_size, 25)
         self.assertEqual(result.words, 5)
         self.assertEqual(result.lines, 2)
         self.assertEqual(result.get_response(), test_response)
@@ -52,7 +52,7 @@ class TestResult(unittest.TestCase):
         result.custom['test_0'] = None
         result.custom['test_1'] = "test_value"
         payload, rtt, length, words, lines = ResultUtils.get_formated_result(
-            result.payload, result.rtt, result.body_length,
+            result.payload, result.rtt, result.body_size,
             result.words, result.lines
         )
         return_expected = (
@@ -89,7 +89,7 @@ class TestResult(unittest.TestCase):
             'response_time': 2.0,
             'status': 200,
             'headers_length': 228,
-            'body_length': 25,
+            'body_size': 25,
             'words': 5,
             'lines': 2,
             'test-key': "test-value",

@@ -18,9 +18,11 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+from typing import Union
 import time
 import threading
 from argparse import Namespace
+from unicodedata import name
 
 from .cli_output import CliOutput, Colors
 from ..argument_builder import ArgumentBuilder as AB
@@ -151,8 +153,10 @@ class CliController(FuzzController):
             encode_only=self.args["encode_only"],
             match={
                 'status': self.args["match_status"],
-                'length': self.args["match_length"],
                 'time': self.args["match_time"],
+                'length': self.args["match_size"],
+                'words': self.args["match_words"],
+                'lines': self.args["match_lines"],
                 },
             blacklist_status=self.args["blacklist_status"],
             scanner=self.args["scanner"],
@@ -316,13 +320,33 @@ class CliController(FuzzController):
             return "SubdomainFuzzing"
         return "Couldn't determine the fuzzing type"
 
+    def __get_comparator_value(self,
+                               name_value: str,
+                               ask_message: str) -> str:
+        """Instance the value of a comparator
+        
+        @type name_value: str
+        @param name_value: The name of the comparator
+        @type ask_message: str
+        @param ask_message: The message to ask the comparator value
+        @returns str: The comparator value
+        """
+        value = None
+        if self.cli_output.ask_yes_no('info',
+                                      ("Do you want to match results "
+                                       f"based on custom {name_value}?")):
+            value = self.cli_output.ask_data(ask_message)
+            if not value:
+                value = None
+        return value
+
     def __get_data_comparator(self) -> tuple:
         """Check if the user wants to insert
            custom data comparator to validate the responses
 
         @returns tuple: The data comparator tuple for the Matcher object
         """
-        payload = ' '  # Set an arbitraty payload
+        payload = self.cli_output.ask_data("Define an arbitraty payload")
         self.cli_output.info_box(
             f"Making first request with '{payload}' as payload ..."
         )
@@ -333,27 +357,23 @@ class CliController(FuzzController):
             raise StopActionInterrupt(str(e))
         result_to_comparator = Result(response, rtt)
         self.cli_output.print_result(result_to_comparator, False)
-        length = None
-        default_length = int(result_to_comparator.body_length)+300
-        if self.cli_output.ask_yes_no('info',
-                                      ("Do you want to exclude responses "
-                                       "based on custom length?")):
-            length = self.cli_output.ask_data(
-                f"Insert the length (in bytes, default >{default_length})"
-            )
-            if not length:
-                length = default_length
-        time = None
-        default_time = result_to_comparator.rtt+5.0
-        if self.cli_output.ask_yes_no('info',
-                                      ("Do you want to exclude responses "
-                                       "based on custom time?")):
-            time = self.cli_output.ask_data(
-                f"Insert the time (in seconds, default >{default_time} seconds)"
-            )
-            if not time:
-                time = default_time
-        return (length, time)
+        time = self.__get_comparator_value(
+            name_value="RTT",
+            ask_message="Insert the time (in seconds)"
+        )
+        length = self.__get_comparator_value(
+            name_value="body size",
+            ask_message="Insert the body size (in bytes)"
+        )
+        words = self.__get_comparator_value(
+            name_value="quantity of words on body",
+            ask_message="Insert the quantity of words"
+        )
+        lines = self.__get_comparator_value(
+            name_value="quantity of lines on body",
+            ask_message="Insert the quantity of lines"
+        )
+        return (time, length, words, lines)
 
     def __handle_valid_results(self,
                                host: str,

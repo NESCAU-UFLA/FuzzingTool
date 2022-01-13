@@ -509,7 +509,7 @@ class CliOutput:
         status = f"{status_color}{status}{Colors.RESET}"
         payload, rtt, length, words, lines = ResultUtils.get_formated_result(
             self.__get_formated_payload(result), result.rtt,
-            result.body_length, result.words, result.lines
+            result.body_size, result.words, result.lines
         )
         return (payload, status, rtt, length, words, lines)
 

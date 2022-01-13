@@ -206,9 +206,11 @@ class FuzzController:
     def _init_matcher(self) -> None:
         """Initialize the matcher"""
         self.matcher = Matcher(
-            self.args["match_status"],
-            self.args["match_length"],
-            self.args["match_time"]
+            self.args['match_status'],
+            self.args['match_time'],
+            self.args['match_size'],
+            self.args['match_words'],
+            self.args['match_lines'],
         )
         if (self.requester.is_url_discovery() and
                 self.matcher.allowed_status_is_default()):
@@ -270,8 +272,10 @@ class FuzzController:
             capitalize=False,
             # Match and Scanner options
             match_status=None,
-            match_length=None,
             match_time=None,
+            match_size=None,
+            match_words=None,
+            match_lines=None,
             scanner=None,
             # Display options
             simple_output=False,
