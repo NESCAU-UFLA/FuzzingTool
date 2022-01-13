@@ -89,21 +89,49 @@ class TestUtils(unittest.TestCase):
         test_length = 0
         returned_data = get_human_length(test_length)
         self.assertIsInstance(returned_data, tuple)
-        self.assertEqual(returned_data, return_expected)
+        self.assertTupleEqual(returned_data, return_expected)
 
     def test_get_human_length_with_float_return(self):
         return_expected = (1.0009765625, "KB")
         test_length = 1025
         returned_data = get_human_length(test_length)
         self.assertIsInstance(returned_data, tuple)
-        self.assertEqual(returned_data, return_expected)
+        self.assertTupleEqual(returned_data, return_expected)
 
     def test_get_human_length_with_one_tb(self):
         return_expected = (1, "TB")
         test_length = 1099511627776  # Equals to 1 TB
         returned_data = get_human_length(test_length)
         self.assertIsInstance(returned_data, tuple)
-        self.assertEqual(returned_data, return_expected)
+        self.assertTupleEqual(returned_data, return_expected)
+
+    def test_get_formated_rtt_with_milliseconds(self):
+        return_expected = (525, "ms")
+        test_rtt = 0.525428
+        returned_data = get_formatted_rtt(test_rtt)
+        self.assertIsInstance(returned_data, tuple)
+        self.assertTupleEqual(returned_data, return_expected)
+
+    def test_get_formated_rtt_with_seconds(self):
+        return_expected = (5.25428, "s ")
+        test_rtt = 5.254280
+        returned_data = get_formatted_rtt(test_rtt)
+        self.assertIsInstance(returned_data, tuple)
+        self.assertTupleEqual(returned_data, return_expected)
+
+    def test_get_formated_rtt_with_minutes(self):
+        return_expected = (2, "m ")
+        test_rtt = 120.000000
+        returned_data = get_formatted_rtt(test_rtt)
+        self.assertIsInstance(returned_data, tuple)
+        self.assertTupleEqual(returned_data, return_expected)
+
+    def test_get_formated_rtt_with_hour(self):
+        return_expected = (1, "h ")
+        test_rtt = 3600.000000
+        returned_data = get_formatted_rtt(test_rtt)
+        self.assertIsInstance(returned_data, tuple)
+        self.assertTupleEqual(returned_data, return_expected)
 
     def test_fix_payload_to_output_with_tab(self):
         return_expected = "tes t"

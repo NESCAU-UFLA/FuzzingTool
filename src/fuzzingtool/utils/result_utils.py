@@ -20,7 +20,7 @@
 
 from typing import Tuple
 
-from ..utils.utils import get_human_length, fix_payload_to_output
+from ..utils.utils import get_human_length, get_formatted_rtt, fix_payload_to_output
 
 
 class ResultUtils:
@@ -42,13 +42,16 @@ class ResultUtils:
         @param length: The response body length in bytes
         @returns tuple[str, str, str]: The result formated with strings
         """
-        length, order = get_human_length(int(length))
+        length, length_order = get_human_length(int(length))
         if isinstance(length, float):
             length = "%.2f" % length
+        rtt, time_order = get_formatted_rtt(rtt)
+        if isinstance(rtt, float):
+            rtt = "%.2f" % rtt
         return (
             f"{fix_payload_to_output(payload):<30}",
-            '{:>10}'.format(rtt),
-            f"{length:>7} {order}",
+            f"{rtt:>5} {time_order}",
+            f"{length:>7} {length_order}",
             '{:>6}'.format(words),
             '{:>5}'.format(lines)
         )
@@ -61,10 +64,8 @@ class ResultUtils:
         @param custom_field: The value from key: value pair of the custom field in the result
         @returns str: The formated value, to string
         """
-        if force_detailed or ResultUtils.detailed_results:
-            if isinstance(custom_field, list):
+        if isinstance(custom_field, list):
+            if force_detailed or ResultUtils.detailed_results:
                 return ", ".join(custom_field)
-        else:
-            if isinstance(custom_field, list):
-                return f"found {len(custom_field)} match(s)"
+            return f"found {len(custom_field)} match(s)"
         return str(custom_field)

@@ -87,6 +87,25 @@ class Result(BaseItem):
         self._payload = payload
         self.__response = response
 
+    def __str__(self) -> str:
+        payload, rtt, length, words, lines = ResultUtils.get_formated_result(
+            self.payload, self.rtt, self.body_length,
+            self.words, self.lines
+        )
+        returned_str = (
+            f"{payload} ["
+            f"Code {self.status} | "
+            f"RTT {rtt} | "
+            f"Size {length} | "
+            f"Words {words} | "
+            f"Lines {lines}]"
+        )
+        for key, value in self.custom.items():
+            if value is not None:
+                returned_str += (f"\n|_ {key}: "
+                                 f"{ResultUtils.format_custom_field(value)}")
+        return returned_str
+
     def __iter__(self) -> Iterator[Tuple]:
         yield 'index', self.index
         yield 'url', self.url
