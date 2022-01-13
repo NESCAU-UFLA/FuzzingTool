@@ -229,8 +229,7 @@ class CliOutput:
         action = input()
         if action == 'y' or action == 'Y':
             return True
-        else:
-            return False
+        return False
 
     def ask_data(self, msg: str) -> str:
         """Ask data for the user
