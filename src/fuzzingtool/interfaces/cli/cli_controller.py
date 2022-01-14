@@ -22,6 +22,8 @@ import time
 import threading
 from argparse import Namespace
 
+from fuzzingtool.objects.payload import Payload
+
 from .cli_output import CliOutput, Colors
 from ..argument_builder import ArgumentBuilder as AB
 from ... import __version__
@@ -367,7 +369,7 @@ class CliController(FuzzController):
             response, rtt = self.requester.request(payload)
         except RequestException as e:
             raise StopActionInterrupt(str(e))
-        result_to_comparator = Result(response, rtt)
+        result_to_comparator = Result(response, rtt, Payload(payload))
         self.cli_output.print_result(result_to_comparator, False)
         time = self.__get_comparator_value(
             name_value="RTT",
