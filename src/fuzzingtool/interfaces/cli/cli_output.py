@@ -21,6 +21,7 @@
 from datetime import datetime
 import threading
 import sys
+from typing import Tuple
 
 from ...objects.result import Result
 from ...utils.consts import MAX_PAYLOAD_LENGTH_TO_OUTPUT, PATH_FUZZING, SUBDOMAIN_FUZZING
@@ -483,7 +484,9 @@ class CliOutput:
             return get_host(result.url)
         return result.payload
 
-    def __get_formated_result_items(self, result: Result) -> str:
+    def __get_formated_result_items(self, result: Result) -> Tuple[
+        str, str, str, str, str, str
+    ]:
         """Format the result items to the output
 
         @type result: Result
