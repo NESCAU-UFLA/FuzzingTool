@@ -18,11 +18,9 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from typing import Union
 import time
 import threading
 from argparse import Namespace
-from unicodedata import name
 
 from .cli_output import CliOutput, Colors
 from ..argument_builder import ArgumentBuilder as AB
@@ -324,7 +322,7 @@ class CliController(FuzzController):
                                name_value: str,
                                ask_message: str) -> str:
         """Instance the value of a comparator
-        
+
         @type name_value: str
         @param name_value: The name of the comparator
         @type ask_message: str
