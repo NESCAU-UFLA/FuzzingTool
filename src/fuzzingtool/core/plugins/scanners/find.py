@@ -23,7 +23,6 @@ import re
 from ...bases.base_plugin import Plugin
 from ...bases.base_scanner import BaseScanner
 from ....objects.result import Result
-from ....interfaces.cli.cli_output import Colors, get_formated_result
 from ....decorators.plugin_meta import plugin_meta
 from ....decorators.append_args import append_args
 from ....exceptions.main_exceptions import MissingParameter, BadArgumentFormat
@@ -62,22 +61,3 @@ class Find(BaseScanner, Plugin):
                  else False)
         result.custom['found'] = found
         return found
-
-    def cli_callback(self, result: Result) -> str:
-        found = f"{Colors.LIGHT_YELLOW}{Colors.BOLD}IDK"
-        was_found = result.custom['found']
-        if was_found is not None:
-            if was_found:
-                found = f"{Colors.GREEN}{Colors.BOLD}YES"
-            else:
-                found = f"{Colors.LIGHT_RED}{Colors.BOLD}NO "
-        payload, rtt, length = get_formated_result(
-            result.payload, result.rtt, result.body_length
-        )
-        return (
-            f"{payload} {Colors.GRAY}["
-            f"{Colors.LIGHT_GRAY}Regex found{Colors.RESET} {found}{Colors.RESET} | "
-            f"{Colors.LIGHT_GRAY}Code{Colors.RESET} {result.status} | "
-            f"{Colors.LIGHT_GRAY}RTT{Colors.RESET} {rtt} | "
-            f"{Colors.LIGHT_GRAY}Size{Colors.RESET} {length}{Colors.GRAY}]{Colors.RESET}"
-        )

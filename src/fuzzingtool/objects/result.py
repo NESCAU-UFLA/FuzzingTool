@@ -24,7 +24,9 @@ from requests import Response
 
 from .base_objects import BaseItem
 from .payload import Payload
+from ..utils.consts import UNKNOWN_FUZZING
 from ..utils.http_utils import build_raw_response_header
+from ..utils.result_utils import ResultUtils
 
 
 class Result(BaseItem):
@@ -40,7 +42,7 @@ class Result(BaseItem):
         status: The response HTTP status code
         headers: The response raw HTTP headers
         headers_length: The length of the raw HTTP headers
-        body_length: The length of the response body content
+        body_size: The length of the response body content
         words: The quantitty of words in the response body
         lines: The quantity of lines in the response body
         custom: A dictionary to store custom data from the scanners
@@ -54,7 +56,8 @@ class Result(BaseItem):
     def __init__(self,
                  response: Response,
                  rtt: float = 0.0,
-                 payload: Payload = Payload()):
+                 payload: Payload = Payload(),
+                 fuzz_type: int = UNKNOWN_FUZZING):
         """Class constructor
 
         @type response: Response
@@ -76,12 +79,32 @@ class Result(BaseItem):
         content = response.content
         self.headers = build_raw_response_header(response)
         self.headers_length = len(self.headers)
-        self.body_length = len(content)
+        self.body_size = len(content)
         self.words = len(content.split())
         self.lines = content.count(b'\n')
+        self.fuzz_type = fuzz_type
         self.custom = {}
         self._payload = payload
         self.__response = response
+
+    def __str__(self) -> str:
+        payload, rtt, length, words, lines = ResultUtils.get_formated_result(
+            self.payload, self.rtt, self.body_size,
+            self.words, self.lines
+        )
+        returned_str = (
+            f"{payload} ["
+            f"Code {self.status} | "
+            f"RTT {rtt} | "
+            f"Size {length} | "
+            f"Words {words} | "
+            f"Lines {lines}]"
+        )
+        for key, value in self.custom.items():
+            if value is not None:
+                returned_str += (f"\n|_ {key}: "
+                                 f"{ResultUtils.format_custom_field(value)}")
+        return returned_str
 
     def __iter__(self) -> Iterator[Tuple]:
         yield 'index', self.index
@@ -92,11 +115,11 @@ class Result(BaseItem):
         yield 'response_time', self.response_time
         yield 'status', self.status
         yield 'headers_length', self.headers_length
-        yield 'body_length', self.body_length
+        yield 'body_size', self.body_size
         yield 'words', self.words
         yield 'lines', self.lines
         for key, value in self.custom.items():
-            yield key, value
+            yield key, ResultUtils.format_custom_field(value, force_detailed=True)
         yield 'payload', self.payload
         if Result.save_payload_configs:
             yield 'payload_raw', self._payload.raw

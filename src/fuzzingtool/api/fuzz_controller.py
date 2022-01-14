@@ -24,12 +24,14 @@ import time
 from ..interfaces.argument_builder import ArgumentBuilder as AB
 from ..utils.utils import split_str_to_list
 from ..utils.file_utils import read_file
+from ..utils.result_utils import ResultUtils
 from ..core import BlacklistStatus, Dictionary, Fuzzer, Matcher, Payloader
 from ..core.defaults.scanners import (DataScanner,
                                       PathScanner, SubdomainScanner)
 from ..core.bases import BaseScanner, BaseEncoder
+from ..conn.requesters import Requester, SubdomainRequester
 from ..conn.request_parser import check_is_subdomain_fuzzing
-from ..factories import PluginFactory, RequesterFactory, WordlistFactory
+from ..factories import PluginFactory, WordlistFactory
 from ..objects import Error, Result
 from ..exceptions.main_exceptions import (FuzzControllerException, StopActionInterrupt,
                                           WordlistCreationError, BuildWordlistFails)
@@ -51,6 +53,7 @@ class FuzzController:
             self._request_exception_callback = self.args["req_ex_callback"]
         if self.args["invalid_host_calalback"]:
             self._invalid_hostname_callback = self.args["invalid_host_calalback"]
+        ResultUtils.detailed_results = not self.args["simple_output"]
 
     def main(self) -> None:
         """The main function.
@@ -184,11 +187,10 @@ class FuzzController:
         if not target:
             raise FuzzControllerException("A target is needed to make the fuzzing")
         if check_is_subdomain_fuzzing(target['url']):
-            requester_type = 'SubdomainRequester'
+            requester_cls = SubdomainRequester
         else:
-            requester_type = 'Requester'
-        self.requester = RequesterFactory.creator(
-            requester_type,
+            requester_cls = Requester
+        self.requester = requester_cls(
             url=target['url'],
             methods=target['methods'],
             body=target['body'],
@@ -204,9 +206,11 @@ class FuzzController:
     def _init_matcher(self) -> None:
         """Initialize the matcher"""
         self.matcher = Matcher(
-            self.args["match_status"],
-            self.args["match_length"],
-            self.args["match_time"]
+            self.args['match_status'],
+            self.args['match_time'],
+            self.args['match_size'],
+            self.args['match_words'],
+            self.args['match_lines'],
         )
         if (self.requester.is_url_discovery() and
                 self.matcher.allowed_status_is_default()):
@@ -268,9 +272,13 @@ class FuzzController:
             capitalize=False,
             # Match and Scanner options
             match_status=None,
-            match_length=None,
             match_time=None,
+            match_size=None,
+            match_words=None,
+            match_lines=None,
             scanner=None,
+            # Display options
+            simple_output=False,
             # Other options
             threads=1,
             delay=0,

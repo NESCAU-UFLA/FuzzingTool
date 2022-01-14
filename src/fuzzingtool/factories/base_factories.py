@@ -21,21 +21,6 @@
 from abc import ABC, abstractmethod
 
 
-class BaseRequestFactory(ABC):
-    @staticmethod
-    @abstractmethod
-    def creator(request_type: str, url: str, **kwargs):
-        """Build the requests based on their types
-
-        @type request_type: str
-        @param request_type: The request type
-        @type url: str
-        @param url: The target URL
-        @returns Requester: A request object
-        """
-        pass
-
-
 class BasePluginFactory(ABC):
     @staticmethod
     @abstractmethod

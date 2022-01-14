@@ -20,7 +20,7 @@
 
 from typing import List, Tuple, Union
 
-from .consts import FUZZING_MARK
+from .consts import FUZZING_MARK, MAX_PAYLOAD_LENGTH_TO_OUTPUT
 
 
 def get_indexes_to_parse(content: str,
@@ -34,7 +34,7 @@ def get_indexes_to_parse(content: str,
                        on the given content
     @returns List[int]: The positions indexes of the searched substring
     """
-    return [i for i, char in enumerate(content) if char == search_for]
+    return [i for i in range(len(content)) if content.startswith(search_for, i)]
 
 
 def split_str_to_list(string: str,
@@ -81,17 +81,18 @@ def stringfy_list(one_list: list) -> str:
     return output
 
 
-def parse_option_with_args(plugin: str) -> Tuple[str, str]:
-    """Parse the plugin name into name and parameter
-    @type plugin: str
-    @param plugin: The plugin argument
-    @returns tuple[str, str]: The plugin name and parameter
+def parse_option_with_args(option: str) -> Tuple[str, str]:
+    """Parse the option name into name and parameter
+
+    @type option: str
+    @param option: The option argument
+    @returns tuple[str, str]: The option name and parameter
     """
-    if '=' in plugin:
-        plugin, param = plugin.split('=', 1)
+    if '=' in option:
+        option, param = option.split('=', 1)
     else:
         param = ''
-    return (plugin, param)
+    return (option, param)
 
 
 def get_human_length(length: int) -> Tuple[Union[int, float], str]:
@@ -107,6 +108,36 @@ def get_human_length(length: int) -> Tuple[Union[int, float], str]:
             return (length, order)
         length /= 1024
     return (length, "TB")
+
+
+def get_formatted_rtt(rtt: float) -> Tuple[Union[int, float], str]:
+    """Formats the rtt from the result to output
+
+    @type rtt: float
+    @param rtt: The elapsed time of a request
+    @returns Tuple[int|float, str]: The tuple with the formated rtt
+    """
+    if rtt < 1:
+        return (int(rtt*1000), "ms")
+    for order in ["s ", "m "]:
+        if rtt < 60:
+            return (rtt, order)
+        rtt /= 60
+    return (rtt, 'h ')
+
+
+def fix_payload_to_output(payload: str) -> str:
+    """Fix the payload's size
+
+    @type payload: str
+    @param payload: The payload used in the request
+    @returns str: The fixed payload to output
+    """
+    if '	' in payload:
+        payload = payload.replace('	', ' ')
+    if len(payload) > MAX_PAYLOAD_LENGTH_TO_OUTPUT:
+        return f'{payload[:(MAX_PAYLOAD_LENGTH_TO_OUTPUT-3)]}...'
+    return payload
 
 
 def check_range_list(content: str) -> List[Union[int, str]]:

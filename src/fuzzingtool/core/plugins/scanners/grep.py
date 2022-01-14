@@ -24,7 +24,6 @@ from ...bases.base_plugin import Plugin
 from ...bases.base_scanner import BaseScanner
 from ....objects.result import Result
 from ....utils.utils import stringfy_list
-from ....interfaces.cli.cli_output import Colors, get_formated_result
 from ....decorators.plugin_meta import plugin_meta
 from ....decorators.append_args import append_args
 from ....exceptions.main_exceptions import MissingParameter, BadArgumentFormat
@@ -69,36 +68,16 @@ class Grep(BaseScanner, Plugin):
     @append_args
     def inspect_result(self, result: Result) -> None:
         result.custom['found'] = None
-        result.custom['greped'] = {i: [] for i in range(len(self.__regexers))}
+        for i in range(len(self.__regexers)):
+            result.custom[f'greped_regex_{i}'] = []
 
     def scan(self, result: Result) -> bool:
         total_greped = 0
         for i, regexer in enumerate(self.__regexers):
-            this_greped = set([
+            this_greped = list(set([
                 r.group() for r in regexer.finditer(result.get_response().text)
-            ])
+            ]))
             total_greped += len(this_greped)
-            result.custom['greped'][i] = this_greped
+            result.custom[f'greped_regex_{i}'] = this_greped
         result.custom['found'] = total_greped
         return True if total_greped else False
-
-    def cli_callback(self, result: Result) -> str:
-        found = f"{Colors.LIGHT_YELLOW}{Colors.BOLD} IDK"
-        quantity_found = result.custom['found']
-        if quantity_found is not None:
-            if quantity_found > 0:
-                found_color = f"{Colors.GREEN}{Colors.BOLD}"
-            else:
-                found_color = f"{Colors.LIGHT_RED}{Colors.BOLD}"
-            quantity_found = '{:>4}'.format(str(quantity_found))
-            found = f"{found_color}{quantity_found}"
-        payload, rtt, length = get_formated_result(
-            result.payload, result.rtt, result.body_length
-        )
-        return (
-            f"{payload} {Colors.GRAY}["
-            f"{Colors.LIGHT_GRAY}Found{Colors.RESET} {found}{Colors.RESET} | "
-            f"{Colors.LIGHT_GRAY}Code{Colors.RESET} {result.status} | "
-            f"{Colors.LIGHT_GRAY}RTT{Colors.RESET} {rtt} | "
-            f"{Colors.LIGHT_GRAY}Size{Colors.RESET} {length}{Colors.GRAY}]{Colors.RESET}"
-        )
