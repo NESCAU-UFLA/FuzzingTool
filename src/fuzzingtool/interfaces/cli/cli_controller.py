@@ -98,27 +98,10 @@ class CliController(FuzzController):
             self.cli_output.abort_box("Test aborted by the user")
         except FuzzingToolException as e:
             self.cli_output.error_box(str(e))
-        self.start()
-        self.show_footer()
-        self.cli_output.info_box("Test completed")
-
-    def fuzzer_join(self):
-        while self.fuzzer.is_running():
-            try:
-                super().fuzzer_join()
-            except KeyboardInterrupt:
-                self.handle_pause()
-
-    def handle_pause(self):
-        self.fuzzer.pause()
-        self.fuzzer.wait_until_pause()
-        if not self.is_verbose_mode():
-            CliOutput.print("")
-        test = self.cli_output.ask_data("[c]ontinue | [q]uit")
-        if test == "q":
-            self.fuzzer.stop()
-        if test == "c":
-            self.fuzzer.resume()
+        else:
+            self.start()
+            self.show_footer()
+            self.cli_output.info_box("Test completed")
 
     def init(self) -> None:
         """The initialization function.
@@ -210,6 +193,39 @@ class CliController(FuzzController):
             if not self.is_verbose_mode():
                 CliOutput.print("")
 
+    def fuzzer_join(self):
+        while self.fuzzer.is_running():
+            try:
+                super().fuzzer_join()
+            except KeyboardInterrupt:
+                self.cli_output.warning_box("Ctrl+C detected, pausing threads ...")
+                self.handle_pause()
+
+    def handle_pause(self):
+        """Handle with the Ctrl+C pause"""
+        self.fuzzer.pause()
+        self.fuzzer.wait_until_pause()
+        if not self.is_verbose_mode():
+            CliOutput.print("")
+        str_percentage = self.cli_output.get_percentage(self.last_index, self.total_requests)
+        self.cli_output.info_box(
+            f"Progress: {Colors.LIGHT_YELLOW}{str_percentage}{Colors.RESET} completed"
+        )
+        answer = ''
+        while answer not in ['q', 'c']:
+            try:
+                answer = self.cli_output.ask_data("[c]ontinue | [q]uit")
+            except KeyboardInterrupt:
+                self.fuzzer.stop()
+                self.cli_output.abort_box("Test aborted by the user")
+                answer = 'q'
+            else:
+                if answer == "q":
+                    self.fuzzer.stop()
+                    self.cli_output.abort_box("Test aborted by the user")
+                elif answer == "c":
+                    self.fuzzer.resume()
+
     def prepare(self) -> None:
         """Prepare the application before the fuzzing"""
         self.target_host = get_host(get_pure_url(self.requester.get_url()))
@@ -280,6 +296,7 @@ class CliController(FuzzController):
             self.cli_output.progress_status(
                 result.index, self.total_requests, result.payload
             )
+        self.last_index = result.index
 
     def _request_exception_callback(self, error: Error) -> None:
         if self.ignore_errors:
@@ -294,6 +311,7 @@ class CliController(FuzzController):
                 self.logger.write(str(error), error.payload)
         else:
             self.stop_action = str(error)
+        self.last_index = error.index
 
     def _invalid_hostname_callback(self, error: Error) -> None:
         if self.verbose[0]:
@@ -303,6 +321,7 @@ class CliController(FuzzController):
             self.cli_output.progress_status(
                 error.index, self.total_requests, error.payload
             )
+        self.last_index = error.index
 
     def _init_dictionary(self) -> None:
         try:

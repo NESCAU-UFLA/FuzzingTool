@@ -126,6 +126,7 @@ class FuzzController:
         self.fuzzer_join()
 
     def fuzzer_join(self):
+        """Join the fuzzer"""
         while self.fuzzer.join():
             if self.stop_action:
                 raise StopActionInterrupt(self.stop_action)

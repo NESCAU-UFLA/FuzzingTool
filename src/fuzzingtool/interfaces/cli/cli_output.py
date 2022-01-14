@@ -351,23 +351,34 @@ class CliOutput:
             self.print_config("Report", report)
         print("")
 
+    def get_percentage(self, item_index: int, total_requests: int) -> str:
+        """Get the percentage from item_index / total_requests
+
+        @type item_index: int
+        @param item_index: The actual request index
+        @type total_requests: int
+        @param total_requests: The total of requests quantity
+        @returns str: The percentage str
+        """
+        return f"{str(int((int(item_index)/total_requests)*100))}%"
+
     def progress_status(self,
-                        request_index: int,
+                        item_index: int,
                         total_requests: int,
                         payload: str) -> None:
         """Output the progress status of the fuzzing
 
-        @type request_index: int
-        @param request_index: The actual request index
+        @type item_index: int
+        @param item_index: The actual request index
         @type total_requests: int
         @param total_requests: The total of requests quantity
         @type payload: str
         @param payload: The payload used in the request
         """
-        status = (f"{Colors.GRAY}[{Colors.LIGHT_GRAY}{request_index}"
-                  f"{Colors.GRAY}/{Colors.LIGHT_GRAY}{total_requests}"
-                  f"{Colors.GRAY}]{Colors.RESET} {Colors.LIGHT_YELLOW}"
-                  f"{str(int((int(request_index)/total_requests)*100))}%"
+        status = (f"{Colors.GRAY}[{Colors.LIGHT_GRAY}{item_index}"+
+                  f"{Colors.GRAY}/{Colors.LIGHT_GRAY}{total_requests}"+
+                  f"{Colors.GRAY}]{Colors.RESET} {Colors.LIGHT_YELLOW}"+
+                  self.get_percentage(item_index, total_requests)+
                   f"{Colors.RESET}")
         payload = fix_payload_to_output(payload)
         while len(payload) < MAX_PAYLOAD_LENGTH_TO_OUTPUT:
