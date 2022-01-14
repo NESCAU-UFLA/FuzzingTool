@@ -265,7 +265,7 @@ class Matcher:
         value: str
     ) -> Tuple[Union[int, float], Callable[[Union[int, float]], bool]]:
         """Instance the comparator value and callback
-        
+
         @type cast_type: Union[Type[int], Type[float]]
         @param cast_type: The expected type of the value
         @type key: str
