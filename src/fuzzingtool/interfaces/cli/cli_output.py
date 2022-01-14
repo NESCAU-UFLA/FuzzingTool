@@ -375,11 +375,11 @@ class CliOutput:
         @type payload: str
         @param payload: The payload used in the request
         """
-        status = (f"{Colors.GRAY}[{Colors.LIGHT_GRAY}{item_index}"+
-                  f"{Colors.GRAY}/{Colors.LIGHT_GRAY}{total_requests}"+
-                  f"{Colors.GRAY}]{Colors.RESET} {Colors.LIGHT_YELLOW}"+
-                  self.get_percentage(item_index, total_requests)+
-                  f"{Colors.RESET}")
+        status = (f"{Colors.GRAY}[{Colors.LIGHT_GRAY}{item_index}"
+                  + f"{Colors.GRAY}/{Colors.LIGHT_GRAY}{total_requests}"
+                  + f"{Colors.GRAY}]{Colors.RESET} {Colors.LIGHT_YELLOW}"
+                  + self.get_percentage(item_index, total_requests)
+                  + f"{Colors.RESET}")
         payload = fix_payload_to_output(payload)
         while len(payload) < MAX_PAYLOAD_LENGTH_TO_OUTPUT:
             payload += ' '
