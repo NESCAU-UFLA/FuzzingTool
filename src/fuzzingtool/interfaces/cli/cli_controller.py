@@ -92,17 +92,31 @@ class CliController(FuzzController):
         try:
             self.check_connection()
             self.prepare()
-            self.start()
         except KeyboardInterrupt:
-            if self.fuzzer and self.fuzzer.is_running():
-                self.cli_output.abort_box("Test aborted, stopping threads ...")
-                self.fuzzer.stop()
             self.cli_output.abort_box("Test aborted by the user")
         except FuzzingToolException as e:
             self.cli_output.error_box(str(e))
-        finally:
-            self.show_footer()
-            self.cli_output.info_box("Test completed")
+        self.start()
+        self.show_footer()
+        self.cli_output.info_box("Test completed")
+
+    def fuzzer_join(self):
+        while self.fuzzer.is_running():
+            try:
+                super().fuzzer_join()
+            except KeyboardInterrupt:
+                self.handle_pause()
+
+    def handle_pause(self):
+        self.fuzzer.pause()
+        self.fuzzer.wait_until_pause()
+        if not self.is_verbose_mode():
+            CliOutput.print("")
+        test = self.cli_output.ask_data("[c]ontinue | [q]uit")
+        if test == "q":
+            self.fuzzer.stop()
+        if test == "c":
+            self.fuzzer.resume()
 
     def init(self) -> None:
         """The initialization function.

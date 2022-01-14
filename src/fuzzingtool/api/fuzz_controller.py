@@ -123,9 +123,13 @@ class FuzzController:
             ],
         )
         self.fuzzer.start()
+        self.fuzzer_join()
+
+    def fuzzer_join(self):
         while self.fuzzer.join():
             if self.stop_action:
                 raise StopActionInterrupt(self.stop_action)
+        self.fuzzer.stop()
 
     def _stop_callback(self, status: int) -> None:
         """The skip target callback for the blacklist_action
