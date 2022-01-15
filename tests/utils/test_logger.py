@@ -24,7 +24,7 @@ class TestLogger(unittest.TestCase):
         mock_file.assert_called_once_with(self.test_output, 'w+')
         mock_file().write.assert_called_once_with(text_to_write)
         self.assertIsInstance(returned_data, str)
-        self.assertEqual(returned_data, self.test_output)
+        self.assertEqual(returned_data, str(self.test_output))
 
     @patch("src.fuzzingtool.utils.logger.datetime")
     def test_setup_with_path_mkdir(self, mock_date: Mock):
