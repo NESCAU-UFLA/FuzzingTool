@@ -25,7 +25,12 @@ jobs:
           pip3 install *
 
       - name: "Generate Coverage"
-        run: python3 -m pytest --cov=fuzzingtool --cov-report=xml
+        run: |
+          pytest --cov=src/fuzzingtool --cov-report=xml
+
+      - name: Fix Code Coverage Path
+        run: |
+          sed -i 's/\/home\/runner\/work\/FuzzingTool\/FuzzingTool\//\/github\/workspace\//g' coverage.xml
 
       - name: SonarCloud Scan
         uses: sonarsource/sonarcloud-github-action@master
@@ -33,9 +38,10 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.TOKEN_GITHUB }}
           SONAR_TOKEN: ${{ secrets.SONARCLOUD_TOKEN }}
         with:
-          projectBaseDir: src/fuzzingtool
           args: >
             -Dsonar.organization=nescau-ufla
             -Dsonar.projectKey=NESCAU-UFLA_FuzzingTool
             -Dsonar.python.version=3
-            -Dsonar.python.coverage.reportPaths=./coverage.xml
+            -Dsonar.python.coverage.reportPaths=coverage.xml
+            -Dsonar.sources=src/fuzzingtool/
+            -Dsonar.tests=tests/

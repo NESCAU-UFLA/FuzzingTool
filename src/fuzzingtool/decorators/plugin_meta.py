@@ -18,7 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from ..core.plugins.plugin import Plugin
+from ..core.bases.base_plugin import Plugin
 from ..exceptions.main_exceptions import MetadataException
 
 

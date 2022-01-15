@@ -18,17 +18,29 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from importlib import import_module
+from .base_objects import BaseItem
+from .payload import Payload
+from ..exceptions.base_exceptions import FuzzingToolException
 
-from .base_factories import BaseRequestFactory
-from ..conn.requesters import Requester
 
+class Error(BaseItem):
+    """Class that handles the program errors
 
-class RequesterFactory(BaseRequestFactory):
-    @staticmethod
-    def creator(request_type, url, **kwargs) -> Requester:
-        requester_cls = import_module(
-            "fuzzingtool.conn.requesters",
-            package=request_type
-        )
-        return getattr(requester_cls, request_type)(url, **kwargs)
+    Attributes:
+        exception: The raised exception by the requester
+        payload: The payload used in the request
+    """
+    def __init__(self, e: FuzzingToolException, payload: Payload):
+        """Class constructor
+
+        @type e: FuzzingToolException
+        @param e: The raised exception by the requester
+        @type payload: Payload
+        @param payload: The payload object used in the request
+        """
+        super().__init__()
+        self.exception = str(e)
+        self.payload = payload.final
+
+    def __str__(self) -> str:
+        return self.exception

@@ -18,6 +18,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+from requests import Response
+
 from .consts import FUZZING_MARK
 
 
@@ -69,3 +71,18 @@ def get_url_without_scheme(url: str) -> str:
     if '://' in url:
         return url[(url.index('://')+3):]
     return url
+
+
+def build_raw_response_header(response: Response) -> str:
+    """Build the raw response header from requests lib Response object
+
+    @type response: Response
+    @param response: The python requests Response object
+    @returns str: The raw HTTP response object, as a string
+    """
+    version = response.raw.version/10
+    str_header = f"HTTP/{version} {response.status_code} {response.reason}\r\n"
+    for key, value in response.headers.items():
+        str_header += f"{key}: {value}\r\n"
+    str_header += "\r\n"
+    return str_header

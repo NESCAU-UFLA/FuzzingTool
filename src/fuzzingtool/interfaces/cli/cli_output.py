@@ -21,62 +21,13 @@
 from datetime import datetime
 import threading
 import sys
-from typing import Callable, Tuple
+from typing import Tuple
 
-from ...utils.utils import stringfy_list, get_human_length
-from ...utils.http_utils import get_host, get_pure_url
-
-
-def fix_payload_to_output(payload: str,
-                          max_length: int = 30,
-                          is_progress_status: bool = False) -> str:
-    """Fix the payload's size
-
-    @type payload: str
-    @param payload: The payload used in the request
-    @type max_length: int
-    @param max_length: The maximum length of the payload on output
-    @type is_progress_status: bool
-    @param is_progress_status: A flag to say if the function
-                               was called by the progress_status or not
-    @returns str: The fixed payload to output
-    """
-    if '	' in payload:
-        payload = payload.replace('	', ' ')
-    if len(payload) > max_length:
-        output = ""
-        for i in range(27):
-            output += payload[i]
-        output += '...'
-        return output
-    if is_progress_status:
-        while len(payload) < max_length:
-            payload += ' '
-    return payload
-
-
-def get_formated_result(payload: str,
-                        rtt: float,
-                        length: int) -> Tuple[str, str, str]:
-    """Format the result into a dict of strings
-
-    @type payload: str
-    @param payload: The payload used in the request
-    @type rtt: float
-    @param rtt: The request and response elapsed time
-    @type length: int
-    @param length: The response body length in bytes
-    @returns tuple[str, str, str]: The result formated with strings
-    """
-    length, order = get_human_length(int(length))
-    if type(length) is float:
-        length = "%.2f" % length
-    length = '{:>7}'.format(length)
-    return (
-        '{:<30}'.format(fix_payload_to_output(payload)),
-        '{:>10}'.format(rtt),
-        f"{length} {order}",
-    )
+from ...objects.result import Result
+from ...utils.consts import MAX_PAYLOAD_LENGTH_TO_OUTPUT, PATH_FUZZING, SUBDOMAIN_FUZZING
+from ...utils.utils import stringfy_list, fix_payload_to_output
+from ...utils.http_utils import get_path, get_host, get_pure_url
+from ...utils.result_utils import ResultUtils
 
 
 class Colors:
@@ -179,17 +130,20 @@ class CliOutput:
         self.__info = f'{Colors.GRAY}[{Colors.BLUE_GRAY}INFO{Colors.GRAY}]{Colors.RESET} '
         self.__warning = f'{Colors.GRAY}[{Colors.YELLOW}WARNING{Colors.GRAY}]{Colors.RESET} '
         self.__error = f'{Colors.GRAY}[{Colors.RED}ERROR{Colors.GRAY}]{Colors.RESET} '
-        self.__abord = f'{Colors.GRAY}[{Colors.RED}ABORT{Colors.GRAY}]{Colors.RESET} '
+        self.__abort = f'{Colors.GRAY}[{Colors.RED}ABORT{Colors.GRAY}]{Colors.RESET} '
         self.__worked = f'{Colors.GRAY}[{Colors.GREEN}+{Colors.GRAY}]{Colors.RESET} '
         self.__not_worked = f'{Colors.GRAY}[{Colors.RED}-{Colors.GRAY}]{Colors.RESET} '
 
     def set_simple_output_mode(self) -> None:
         """Set the display to simple output mode, change labels"""
-        self.__get_time = lambda: ''
+        def get_blank_time() -> str:
+            return ''
+
+        self.__get_time = get_blank_time
         self.__info = f'{Colors.GRAY}[{Colors.BLUE_GRAY}*{Colors.GRAY}]{Colors.RESET} '
         self.__warning = f'{Colors.GRAY}[{Colors.YELLOW}!{Colors.GRAY}]{Colors.RESET} '
         self.__error = f'{Colors.GRAY}[{Colors.RED}!!{Colors.GRAY}]{Colors.RESET} '
-        self.__abord = f'{Colors.GRAY}[{Colors.RED}AB{Colors.GRAY}]{Colors.RESET} '
+        self.__abort = f'{Colors.GRAY}[{Colors.RED}AB{Colors.GRAY}]{Colors.RESET} '
         self.__worked = f'{Colors.GRAY}[{Colors.GREEN}+{Colors.GRAY}]{Colors.RESET} '
         self.__not_worked = f'{Colors.GRAY}[{Colors.RED}-{Colors.GRAY}]{Colors.RESET} '
 
@@ -203,14 +157,6 @@ class CliOutput:
             self.__break_line = ''
         else:
             self.__break_line = '\n'
-
-    def set_message_callback(self, get_message_callback: Callable) -> None:
-        """Set the print content mode for the results
-
-        @type get_message_callback: Callable
-        @param get_message_callback: The get message callback for the results
-        """
-        self.__get_message = get_message_callback
 
     def info_box(self, msg: str) -> None:
         """Print the message with a info label
@@ -284,8 +230,7 @@ class CliOutput:
         action = input()
         if action == 'y' or action == 'Y':
             return True
-        else:
-            return False
+        return False
 
     def ask_data(self, msg: str) -> str:
         """Ask data for the user
@@ -294,7 +239,7 @@ class CliOutput:
         @param msg: The message
         @returns mixed: The data asked
         """
-        print(self.__get_time()+self.__get_info(msg)+': ', end='')
+        print(self.__get_time()+self.__get_info(msg), end=': ')
         return input()
 
     def print_config(self, key: str, value: str = '', spaces: int = 0) -> None:
@@ -311,169 +256,89 @@ class CliOutput:
               f"{Colors.LIGHT_YELLOW}{value}{Colors.RESET}")
 
     def print_configs(self,
-                      output: str,
-                      verbose: str,
-                      targets: list,
-                      dictionaries: list,
-                      prefix: list,
-                      suffix: list,
-                      case: str,
-                      encoder: str,
-                      encode_only: str,
-                      match: dict,
-                      scanner: str,
-                      blacklist_status: dict,
-                      delay: float,
-                      threads: int,
-                      report: str) -> None:
+                      target: dict,
+                      dictionary: dict) -> None:
         """Prints the program configuration
 
-        @type output: str
-        @param output: The display output mode
-        @type verbose: str
-        @param verbose: The verbosity mode
-        @type targets: list
-        @param tagets: The targets list
-        @type dictionaries: list
-        @param dictionaries: The dictionaries used in the tests
-        @type prefix: list
-        @param prefix: The prefixes used with the payload
-        @type suffix: list
-        @param suffix: The suffixes used with the payload
-        @type case: str
-        @param case: The payload case
-        @type encoder: str
-        @param encoder: The encoders string that caontains
-                        the encoder name and parameters
-        @type encode_only: str
-        @param encode_only: The encode only regex
-        @type match: dict
-        @param match: The matcher options on a dictionary
-        @type scanner: str
-        @param scanner: The scanner string that caontains
-                        the scanner name and parameters
-        @type blacklist_status: dict
-        @param blacklist_status: The blacklist status arguments
-                                 (codes and action taken)
-        @type delay: float
-        @param delay: The delay between each request
-        @type threads: int
-        @param threads: The number of threads used in the tests
-        @type report: str
-        @param report: The report name and/or format
+        @type target: dict
+        @param taget: The target
+        @type dictionary: dict
+        @param dictionary: The dictionary used in the tests
         """
         print("")
-        global_dict = False
-        if len(dictionaries) != len(targets):
-            global_dict = True
-            this_dict = dictionaries[0]
         spaces = 3
-        self.print_config("Output mode", output)
-        self.print_config("Verbosity mode", verbose)
-        for i, target in enumerate(targets):
-            self.print_config("Target", get_host(get_pure_url(target['url'])))
-            self.print_config("Methods",
-                              stringfy_list(target['methods']),
-                              spaces)
-            self.print_config("HTTP headers",
-                              'custom' if target['header'] else 'default',
-                              spaces)
-            if target['body']:
-                self.print_config("Body data", target['body'], spaces)
-            self.print_config("Fuzzing type", target['type_fuzzing'], spaces)
-            if not global_dict:
-                this_dict = dictionaries[i]
-                dict_size = this_dict['len']
-                if 'removed' in this_dict.keys() and this_dict['removed']:
-                    dict_size = (f"{this_dict['len']} "
-                                 f"(removed {this_dict['removed']} "
-                                 f"duplicated payloads)")
-                self.print_config("Dictionary size", dict_size, spaces)
-                self.print_config("Wordlists",
-                                  stringfy_list(this_dict['wordlists']),
-                                  spaces)
-        if global_dict:
-            dict_size = this_dict['len']
-            if 'removed' in this_dict.keys() and this_dict['removed']:
-                dict_size = (f"{this_dict['len']} "
-                             f"(removed {this_dict['removed']} "
-                             f"duplicated payloads)")
-            self.print_config("Dictionary size", dict_size)
-            self.print_config("Wordlists",
-                              stringfy_list(this_dict['wordlists']))
-        if prefix:
-            self.print_config("Prefix", stringfy_list(prefix))
-        if suffix:
-            self.print_config("Suffix", stringfy_list(suffix))
-        if case:
-            self.print_config("Payload case", case)
-        if encoder:
-            encode_msg = encoder
-            if encode_only:
-                encode_msg = f"{encoder} (encode with regex {encode_only})"
-            self.print_config("Encoder", encode_msg)
-        for key, value in match.items():
-            if value:
-                self.print_config(f"Match {key}", value)
-        if scanner:
-            self.print_config("Scanner", scanner)
-        if blacklist_status:
-            self.print_config("Blacklisted status",
-                              (f"{blacklist_status['status']} "
-                               f"with action {blacklist_status['action']}"))
-        if delay:
-            self.print_config("Delay", f"{delay} seconds")
-        self.print_config("Threads", threads)
-        if report:
-            self.print_config("Report", report)
+        self.print_config("Target", get_host(get_pure_url(target['url'])))
+        self.print_config("Methods",
+                          stringfy_list(target['methods']),
+                          spaces)
+        self.print_config("HTTP headers", target['header'], spaces)
+        if target['body']:
+            self.print_config("Body data", target['body'], spaces)
+        self.print_config("Fuzzing type", target['type_fuzzing'], spaces)
+        dict_size = dictionary['len']
+        if 'removed' in dictionary.keys() and dictionary['removed']:
+            dict_size = (f"{dictionary['len']} "
+                         f"(removed {dictionary['removed']} "
+                         f"duplicated payloads)")
+        self.print_config("Dictionary size", dict_size)
         print("")
 
+    def get_percentage(self, item_index: int, total_requests: int) -> str:
+        """Get the percentage from item_index / total_requests
+
+        @type item_index: int
+        @param item_index: The actual request index
+        @type total_requests: int
+        @param total_requests: The total of requests quantity
+        @returns str: The percentage str
+        """
+        return f"{str(int((int(item_index)/total_requests)*100))}%"
+
     def progress_status(self,
-                        request_index: int,
+                        item_index: int,
                         total_requests: int,
                         payload: str) -> None:
         """Output the progress status of the fuzzing
 
-        @type request_index: int
-        @param request_index: The actual request index
+        @type item_index: int
+        @param item_index: The actual request index
         @type total_requests: int
         @param total_requests: The total of requests quantity
         @type payload: str
         @param payload: The payload used in the request
         """
-        status = (f"{Colors.GRAY}[{Colors.LIGHT_GRAY}{request_index}"
-                  f"{Colors.GRAY}/{Colors.LIGHT_GRAY}{total_requests}"
-                  f"{Colors.GRAY}]{Colors.RESET} {Colors.LIGHT_YELLOW}"
-                  f"{str(int((int(request_index)/total_requests)*100))}%"
-                  f"{Colors.RESET}")
-        payload = Colors.LIGHT_GRAY + fix_payload_to_output(
-            payload=payload,
-            is_progress_status=True
-        )
+        status = (f"{Colors.GRAY}[{Colors.LIGHT_GRAY}{item_index}"
+                  + f"{Colors.GRAY}/{Colors.LIGHT_GRAY}{total_requests}"
+                  + f"{Colors.GRAY}]{Colors.RESET} {Colors.LIGHT_YELLOW}"
+                  + self.get_percentage(item_index, total_requests)
+                  + f"{Colors.RESET}")
+        payload = fix_payload_to_output(payload)
+        while len(payload) < MAX_PAYLOAD_LENGTH_TO_OUTPUT:
+            payload += ' '
         with self.__lock:
             if not self.__last_inline:
                 self.__last_inline = True
                 self.__erase_line()
             print(f"\r{self.__get_time()}{status}"
-                  f"{Colors.GRAY} :: {payload}", end='')
+                  f"{Colors.GRAY} :: {Colors.LIGHT_GRAY}{payload}", end='')
 
-    def print_result(self, result: dict, vuln_validator: bool) -> None:
+    def print_result(self, result: Result, vuln_validator: bool) -> None:
         """Custom output print for box mode
 
-        @type result: dict
-        @param result: The result dictionary
+        @type result: Result
+        @param result: The result object
         @type vuln_validator: bool
         @param vuln_validator: Case the output is marked as vulnerable
         """
-        msg = self.__get_message(result)
+        formatted_result_str = self.__get_formatted_result(result)
         if not vuln_validator:
-            self.not_worked_box(msg)
+            self.not_worked_box(formatted_result_str)
         else:
             with self.__lock:
                 if self.__last_inline:
                     self.__last_inline = False
                     self.__erase_line()
-                self.worked_box(msg)
+                self.worked_box(formatted_result_str)
 
     def __get_time(self) -> str:
         """Get a time label
@@ -518,7 +383,7 @@ class CliOutput:
         @param msg: The custom message
         @returns str: The message with abort label
         """
-        return f'{self.__abord}{msg}'
+        return f'{self.__abort}{msg}'
 
     def __get_worked(self, msg: str) -> str:
         """The worked getter, with a custom message
@@ -544,3 +409,84 @@ class CliOutput:
         sys.stdout.write("\033[1K")
         sys.stdout.write("\033[0G")
         sys.stdout.flush()
+
+    def __get_formatted_payload(self, result: Result) -> str:
+        """Formats the payload to output
+
+        @type result: Result
+        @param result: The result of the request
+        @returns str: The formatted payload to output
+        """
+        if result.fuzz_type == PATH_FUZZING:
+            try:
+                formatted_payload = get_path(result.url)
+            except ValueError:
+                formatted_payload = result.url
+            return formatted_payload
+        if result.fuzz_type == SUBDOMAIN_FUZZING:
+            return get_host(result.url)
+        return result.payload
+
+    def __get_formatted_status(self, status: int) -> str:
+        """Formats the status code to output
+
+        @type status: int
+        @param status: The status code of the response
+        @returns str: The formatted status code to output
+        """
+        status_color = Colors.BOLD
+        if status == 404:
+            status_color = ''
+        elif status >= 200 and status < 300:
+            status_color += Colors.GREEN
+        elif status >= 300 and status < 400:
+            status_color += Colors.LIGHT_YELLOW
+        elif status >= 400 and status < 500:
+            if status == 401 or status == 403:
+                status_color += Colors.CYAN
+            else:
+                status_color += Colors.BLUE
+        elif status >= 500 and status < 600:
+            status_color += Colors.RED
+        return f"{status_color}{status}{Colors.RESET}"
+
+    def __get_formatted_result_items(self, result: Result) -> Tuple[
+        str, str, str, str, str, str
+    ]:
+        """Format the result items to the output
+
+        @type result: Result
+        @param result: The result of the request
+        @returns Tuple[str, str, str, str, str, str]: The tuple with the formatted result items
+        """
+        payload, rtt, length, words, lines = ResultUtils.get_formatted_result(
+            self.__get_formatted_payload(result), result.rtt,
+            result.body_size, result.words, result.lines
+        )
+        return (payload, self.__get_formatted_status(result.status), rtt, length, words, lines)
+
+    def __get_formatted_result(self, result: Result) -> str:
+        """Format the entire result message
+
+        @type result: Result
+        @param result: The result of the request
+        @returns str: The formatted result message to output
+        """
+        formatted_items = self.__get_formatted_result_items(result)
+        payload, status_code, rtt, length, words, lines = formatted_items
+        formatted_result_str = (
+            f"{payload} {Colors.GRAY}["
+            f"{Colors.LIGHT_GRAY}Code{Colors.RESET} {status_code} | "
+            f"{Colors.LIGHT_GRAY}RTT{Colors.RESET} {rtt} | "
+            f"{Colors.LIGHT_GRAY}Size{Colors.RESET} {length} | "
+            f"{Colors.LIGHT_GRAY}Words{Colors.RESET} {words} | "
+            f"{Colors.LIGHT_GRAY}Lines{Colors.RESET} {lines}{Colors.GRAY}]{Colors.RESET}"
+        )
+        if result.custom:
+            custom_str = ''
+            for key, value in result.custom.items():
+                if (value is not None and isinstance(value, bool)) or value:
+                    custom_str += (f"\n{Colors.LIGHT_YELLOW}|_ {key}: "
+                                   f"{ResultUtils.format_custom_field(value)}{Colors.RESET}")
+            formatted_result_str += custom_str
+        return formatted_result_str

@@ -23,7 +23,7 @@ from typing import List
 
 from bs4 import BeautifulSoup as bs
 
-from ..plugin import Plugin
+from ...bases.base_plugin import Plugin
 from ...bases.base_wordlist import BaseWordlist
 from ....conn.requesters.requester import Requester
 from ....exceptions.request_exceptions import RequestException

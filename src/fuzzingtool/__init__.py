@@ -20,8 +20,8 @@
 
 APP_VERSION = {
     'MAJOR_VERSION': 3,
-    "MINOR_VERSION": 12,
-    "PATCH": 1
+    "MINOR_VERSION": 13,
+    "PATCH": 0
 }
 
 
@@ -31,3 +31,10 @@ def version():
                + "." + str(APP_VERSION['MINOR_VERSION'])
                + "." + str(APP_VERSION['PATCH']))
     return version
+
+
+__name__ = "FuzzingTool"
+__version__ = version()
+__author__ = "Vitor Oriel C N Borges"
+__license__ = "MIT"
+__copyright__ = "Copyright 2020 - present Vitor Oriel"

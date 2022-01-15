@@ -36,6 +36,10 @@ class ChainEncoder(BaseEncoder):
         @param encoders: The encoders list to be chained
         """
         self.__encoders = encoders
+        self.__str_repr = '@'.join(str(encoder) for encoder in encoders)
+
+    def __str__(self) -> str:
+        return self.__str_repr
 
     def getEncoders(self) -> List[BaseEncoder]:
         """The encoders list getter

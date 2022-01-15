@@ -20,10 +20,9 @@
 
 from .bases import *
 from .defaults import *
-from .plugins import *
 from .blacklist_status import BlacklistStatus
 from .dictionary import Dictionary
 from .fuzzer import Fuzzer
 from .matcher import Matcher
 from .payloader import Payloader
-from .result import Result
+from .summary import Summary

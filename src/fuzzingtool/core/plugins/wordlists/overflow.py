@@ -20,7 +20,7 @@
 
 from typing import List
 
-from ..plugin import Plugin
+from ...bases.base_plugin import Plugin
 from ...bases.base_wordlist import BaseWordlist
 from ....decorators.plugin_meta import plugin_meta
 from ....exceptions.main_exceptions import (MissingParameter, BadArgumentFormat,

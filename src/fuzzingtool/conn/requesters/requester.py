@@ -26,13 +26,12 @@ from typing import List, Dict, Tuple
 import requests
 import urllib3.exceptions
 
-from ..request_parser import (check_is_method_fuzzing, check_is_url_discovery,
+from ..request_parser import (check_is_url_discovery,
                               check_is_data_fuzzing, request_parser)
-from ...utils.consts import (FUZZING_MARK, FUZZING_MARK_LEN,
-                             UNKNOWN_FUZZING, HTTP_METHOD_FUZZING,
+from ...utils.consts import (UNKNOWN_FUZZING, HTTP_METHOD_FUZZING,
                              PATH_FUZZING, SUBDOMAIN_FUZZING, DATA_FUZZING)
 from ...utils.http_utils import get_pure_url, get_host, get_url_without_scheme
-from ...utils.utils import get_indexes_to_parse
+from ...objects.fuzz_word import FuzzWord
 from ...exceptions.request_exceptions import RequestException
 
 
@@ -88,9 +87,10 @@ class Requester:
         @type is_session: bool
         @param is_session: The flag to say if the requests will be made as session request
         """
-        self._url = self.__setup_url(url)
-        self.__method = self.__setup_method(method)
-        self.__data = self.__setup_data(body)
+        self._url, url_params = self.__setup_url(url)
+        self.__url_params = self.__build_data_dict(url_params)
+        self.__method = FuzzWord(method)
+        self.__body = self.__build_data_dict(body)
         self.__header = self.__setup_header(headers)
         self.__proxy = self.__setup_proxy(proxy) if proxy else {}
         self.__proxies = ([self.__setup_proxy(proxy) for proxy in proxies]
@@ -105,12 +105,10 @@ class Requester:
         self.__timeout = timeout
         if is_session or self.is_path_fuzzing():
             self.__session = requests.Session()
-            self.__request = self.__session_request
-        else:
-            self.__request = self.__common_request
-        self.methods = methods if methods else []
+            self._request = self.__session_request
+        self.methods = methods if methods else [self.__method.word]
         if cookie:
-            self.set_header_content('Cookie', cookie)
+            self.__header['Cookie'] = FuzzWord(cookie)
         self._lock = Lock()
 
     def get_url(self) -> str:
@@ -118,7 +116,7 @@ class Requester:
 
         @returns str: The target URL
         """
-        return self._url['content']
+        return self._url.word
 
     def is_method_fuzzing(self) -> bool:
         """The method fuzzing flag getter
@@ -161,7 +159,7 @@ class Requester:
         @type method: str
         @param method: The request method
         """
-        self.__method = self.__setup_method(method)
+        self.__method = FuzzWord(method)
 
     def set_body(self, body: str) -> None:
         """The body data setter
@@ -169,33 +167,12 @@ class Requester:
         @type body: str
         @param body: The body data of the request
         """
-        self.__build_data_dict(self.__data, 'BODY', body)
-
-    def set_header_content(self,
-                           key: str,
-                           value: str,
-                           header: dict = {}) -> None:
-        """The header content setter
-
-        @type key: str
-        @param key: The HTTP header key
-        @type value: str
-        @param value: The HTTP header value
-        @type header: dict
-        @param header: The header to set the content
-        """
-        if not header:
-            header = self.__header
-        if FUZZING_MARK in value:
-            header['payloadKeys'].append(key)
-            header['content'][key] = self.__parse_header_value(value)
-        else:
-            header['content'][key] = value
+        self.__body = self.__build_data_dict(body)
 
     def test_connection(self) -> None:
         """Test the connection with the target, and raise an exception if couldn't connect"""
         try:
-            url = get_pure_url(self._url['content'])
+            url = get_pure_url(self._url.word)
             requests.get(
                 url,
                 proxies=self.__proxy,
@@ -220,29 +197,19 @@ class Requester:
         ):
             raise RequestException(f"Failed to establish a connection to {url}")
 
-    def has_redirection(self) -> bool:
-        """Test if the connection will have a redirection
-
-        @returns bool: The flag to say if occur a redirection or not
-        """
-        response, *_ = self.request(' ')
-        if '302' in str(response.history):
-            return True
-        return False
-
     def request(self, payload: str = '') -> Tuple[requests.Response, float]:
         """Make a request and get the response
 
         @type payload: str
         @param payload: The payload used in the request
-        @returns Response: The response object of the request
+        @returns Tuple[Response, float]: The response object of the request
         """
         if self.__proxies:
             self.__proxy = random.choice(self.__proxies)
-        method, url, headers, data = self.__get_request_parameters(payload)
+        method, url, body, url_params, headers = self.__get_request_parameters(payload)
         try:
             before = time.time()
-            response = self.__request(method, url, headers, data)
+            response = self._request(method, url, body, url_params, headers)
             rtt = (time.time() - before)
         except requests.exceptions.ProxyError:
             raise RequestException("Can't connect to the proxy")
@@ -255,7 +222,7 @@ class Requester:
         except requests.exceptions.InvalidHeader as e:
             e = str(e)
             invalid_header = e[e.rindex(': ')+2:]
-            raise RequestException(f"Invalid header {invalid_header}: {headers[invalid_header].decode('utf-8')}")
+            raise RequestException(f"Invalid header {invalid_header}: {headers[invalid_header]}")
         except (
             requests.exceptions.ConnectionError,
             requests.exceptions.RequestException
@@ -271,23 +238,54 @@ class Requester:
         else:
             return (response, rtt)
 
+    def _request(self,
+                 method: str,
+                 url: str,
+                 body: dict,
+                 url_params: dict,
+                 headers: dict) -> requests.Response:
+        """Performs a request to the target
+
+        @type method: str
+        @param method: The request method
+        @type url: str
+        @param url: The target URL
+        @type headers: dict
+        @param headers: The http header of the request
+        @type body: dict
+        @param body: The body data to be send with the request
+        @type url_params: dict
+        @param url_params: The URL params to be send with the request
+        @returns Response: The response object of the request
+        """
+        return requests.request(
+            method,
+            url,
+            data=body,
+            params=url_params,
+            headers=headers,
+            proxies=self.__proxy,
+            timeout=self.__timeout,
+            allow_redirects=self.__follow_redirects,
+        )
+
     def _set_fuzzing_type(self) -> int:
         """Sets the fuzzing type
 
         @returns int: The fuzzing type int value
         """
-        if check_is_method_fuzzing(self.__method):
+        if self.__method.has_fuzzing:
             return HTTP_METHOD_FUZZING
         if check_is_url_discovery(self._url):
             return PATH_FUZZING
-        if check_is_data_fuzzing(self.__data, self.__header):
+        if check_is_data_fuzzing(self.__url_params, self.__body, self.__header):
             return DATA_FUZZING
         return UNKNOWN_FUZZING
 
-    def __setup_url(self, url: str) -> dict:
+    def __setup_url(self, url: str) -> Tuple[FuzzWord, str]:
         """The URL setup
 
-        @returns dict: The target URL dictionary
+        @returns Tuple[FuzzWord, str]: The target URL dictionary and URL params
         """
         if '://' not in url:
             # No schema was defined, default protocol http
@@ -296,23 +294,27 @@ class Requester:
             # Insert a base path if wasn't specified
             url += '/'
         if '?' in url:
-            url, self.__param = url.split('?', 1)
+            url, params = url.split('?', 1)
         else:
-            self.__param = ''
-        return {
-            'content': url,
-            'fuzzingIndexes': get_indexes_to_parse(url)
-        }
+            params = ''
+        return (FuzzWord(url), params)
 
-    def __setup_method(self, method: str) -> dict:
-        """The method setup
+    def __build_data_dict(self, data: str) -> Dict[FuzzWord, FuzzWord]:
+        """Build the data string into a data dict
 
-        @returns dict: The target method dictionary
+        @type datat: str
+        @param datat: The data to be used in the request
+        @returns Dict[FuzzWord, FuzzWord]: The data dictionary
         """
-        return {
-            'content': method,
-            'fuzzingIndexes': get_indexes_to_parse(method)
-        }
+        data_dict = {}
+        if data:
+            for variable in data.split('&'):
+                if '=' in variable:
+                    key, value = variable.split('=')
+                    data_dict[FuzzWord(key)] = FuzzWord(value)
+                else:
+                    data_dict[FuzzWord(variable)] = FuzzWord()
+        return data_dict
 
     def __setup_header(self, header: dict) -> dict:
         """Setup the HTTP Header
@@ -321,86 +323,16 @@ class Requester:
         @param header: The HTTP header dictionary
         @returns dict: The HTTP header dictionary
         """
-        header = header if header else {}
-        header = {
-            'content': {**header},
-            'payloadKeys': [],
-        }
-        for key, value in header['content'].items():
-            self.set_header_content(key, value, header)
-        if not header['content']:
-            header['content']['User-Agent'] = 'FuzzingTool Requester Agent'
+        request_header = {}
+        if not header:
+            request_header['User-Agent'] = FuzzWord('FuzzingTool Requester Agent')
         else:
-            if 'Content-Length' in header['content'].keys():
-                del header['content']['Content-Length']
-        header['content']['Accept-Encoding'] = 'gzip, deflate'
-        return header
-
-    def __parse_header_value(self, value: str) -> List[str]:
-        """Parse the header value into a list
-
-        @type value: str
-        @param value: The HTTP Header value
-        @returns List[str]: The list with the HTTP Header value content
-        """
-        header_value = []
-        last_index = 0
-        for i in get_indexes_to_parse(value):
-            header_value.append(value[last_index:i])
-            last_index = i+FUZZING_MARK_LEN
-        if last_index == len(value):
-            header_value.append('')
-        else:
-            header_value.append(value[last_index:len(value)])
-        return header_value
-
-    def __setup_data(self, body: str) -> dict:
-        """Split all the request parameters into a list of arguments used in the request
-
-        @type body: str
-        @param body: The body data of the request
-        @returns dict: The entries data of the request
-        """
-        data_dict = {
-            'PARAM': {},
-            'BODY': {},
-        }
-        if self.__param:
-            self.__build_data_dict(data_dict, 'PARAM', self.__param)
-        del self.__param
-        if body:
-            self.__build_data_dict(data_dict, 'BODY', body)
-        return data_dict
-
-    def __build_data_dict(self, data_dict: dict, where: str, content: str) -> None:
-        """Build the content into the data dict
-
-        @type data_dict: dict
-        @param data_dict: The final data dict
-        @type where: str
-        @param where: Is on POST or GET?
-        @type content: str
-        @param content: The content of the data
-        """
-        def build_content(data_dict: dict, content: str) -> None:
-            """Build the inner content (for each splited &) into the data dict
-
-            @type data_dict: dict
-            @param data_dict: The final data dict
-            @type content: str
-            @param content: The content of the data
-            """
-            if '=' in content:
-                key, value = content.split('=')
-                if FUZZING_MARK not in value:
-                    data_dict[key] = value
-                else:
-                    data_dict[key] = ''
-            else:
-                data_dict[content] = ''
-
-        for content in content.split('&'):
-            build_content(data_dict[where], content)
+            for key, value in header.items():
+                request_header[key] = FuzzWord(value)
+            if 'Content-Length' in request_header.keys():
+                del request_header['Content-Length']
+        request_header['Accept-Encoding'] = FuzzWord('gzip, deflate')
+        return request_header
 
     def __setup_proxy(self, proxy: str) -> Dict[str, str]:
         """Setup the proxy
@@ -415,28 +347,30 @@ class Requester:
         }
 
     def __get_request_parameters(self, payload: str) -> Tuple[
-        str, str, dict, dict
+        str, str, dict, dict, dict
     ]:
         """Get the request parameters using in the request fields
 
         @type payload: str
         @param payload: The payload used in the request
-        @returns tuple(str, str, dict, dict): The parameters of the request
+        @returns tuple(str, str, dict, dict, dict): The parameters of the request
         """
         with self._lock:
             request_parser.set_payload(payload)
             return (
                 request_parser.get_method(self.__method),
                 request_parser.get_url(self._url),
+                request_parser.get_data(self.__body),
+                request_parser.get_data(self.__url_params),
                 request_parser.get_header(self.__header),
-                request_parser.get_data(self.__data),
             )
 
     def __session_request(self,
                           method: str,
                           url: str,
-                          headers: dict,
-                          data: dict) -> requests.Response:
+                          body: dict,
+                          url_params: dict,
+                          headers: dict) -> requests.Response:
         """Performs a request to the target using Session object
 
         @type method: str
@@ -445,46 +379,20 @@ class Requester:
         @param url: The target URL
         @type headers: dict
         @param headers: The http header of the request
-        @type data: dict
-        @param data: The data to be send with the request
+        @type body: dict
+        @param body: The body data to be send with the request
+        @type url_params: dict
+        @param url_params: The URL params to be send with the request
         @returns Response: The response object of the request
         """
         return self.__session.send(
             self.__session.prepare_request(requests.Request(
                 method,
                 url,
-                data=data['BODY'],
-                params=data['PARAM'],
+                data=body,
+                params=url_params,
                 headers=headers,
             )),
-            proxies=self.__proxy,
-            timeout=self.__timeout,
-            allow_redirects=self.__follow_redirects,
-        )
-
-    def __common_request(self,
-                         method: str,
-                         url: str,
-                         headers: dict,
-                         data: dict) -> requests.Response:
-        """Performs a request to the target
-
-        @type method: str
-        @param method: The request method
-        @type url: str
-        @param url: The target URL
-        @type headers: dict
-        @param headers: The http header of the request
-        @type data: dict
-        @param data: The data to be send with the request
-        @returns Response: The response object of the request
-        """
-        return requests.request(
-            method,
-            url,
-            data=data['BODY'],
-            params=data['PARAM'],
-            headers=headers,
             proxies=self.__proxy,
             timeout=self.__timeout,
             allow_redirects=self.__follow_redirects,

@@ -23,6 +23,7 @@ from typing import List, Tuple
 
 from .bases.base_encoder import BaseEncoder
 from .defaults.encoders import ChainEncoder
+from ..objects.payload import Payload
 from ..exceptions.main_exceptions import BadArgumentFormat
 
 
@@ -35,11 +36,19 @@ class EncodeManager:
     """
     def __init__(self):
         self.encoders = []
-        self.encode = lambda ajusted_payload: ajusted_payload
         self.regexer = None
 
     def __len__(self) -> int:
         return len(self.encoders)
+
+    def encode(self, ajusted_payloads: List[Payload]) -> List[Payload]:
+        """The encode callback for the payloads
+
+        @type ajusted_payloads: List[Payload]
+        @param ajusted_payloads: The payload list ajusted previously
+        @returns List[Payload]: The encoded payloads list
+        """
+        return ajusted_payloads
 
     def set_regex(self, regex: str = '') -> None:
         """The regexer setter
@@ -61,18 +70,12 @@ class EncodeManager:
         @type encoders: Tuple[list, list]
         @param encoders: The encoders used in the payloads
         """
-        def encode(ajusted_payload: List[str]) -> List[str]:
-            """The encode callback for the payloads
-
-            @type ajusted_payload: List[str]
-            @param ajusted_payload: The payload list ajusted previously
-            @returns List[str]: The encoded payloads list
-            """
-            encoded_list = []
-            for payload in ajusted_payload:
-                for encoder in self.encoders:
-                    encoded_list.append(self._encode(encoder, payload))
-            return encoded_list
+        def encode(ajusted_payloads: List[Payload]) -> List[Payload]:
+            return [
+                Payload().update(payload).with_encoder(self._encode(encoder, payload.final), str(encoder))
+                for encoder in self.encoders
+                for payload in ajusted_payloads
+            ]
 
         encoders_default, encoders_chain = encoders
         self.encoders = encoders_default+[ChainEncoder(encoders)
@@ -139,7 +142,16 @@ class Payloader:
     prefix = []
     suffix = []
     encoder = EncodeManager()
-    _case = lambda ajusted_payload: ajusted_payload
+
+    @staticmethod
+    def case(ajusted_payloads: List[Payload]) -> List[Payload]:
+        """Update the case letter
+
+        @type ajusted_payloads: List[Payload]
+        @param ajusted_payloads: The payload list ajusted previously
+        @returns List[Payload]: The new payloads list
+        """
+        return ajusted_payloads
 
     @staticmethod
     def set_prefix(prefix: List[str]) -> None:
@@ -162,39 +174,51 @@ class Payloader:
     @staticmethod
     def set_uppercase() -> None:
         """The uppercase setter"""
-        Payloader._case = lambda ajusted_payload: [
-            payload.upper() for payload in ajusted_payload
-        ]
+        def case(ajusted_payloads: List[Payload]) -> List[Payload]:
+            return [
+                payload.with_case(str.upper, "Upper")
+                for payload in ajusted_payloads
+            ]
+
+        Payloader.case = case
 
     @staticmethod
     def set_lowercase() -> None:
         """The lowercase setter"""
-        Payloader._case = lambda ajusted_payload: [
-            payload.lower() for payload in ajusted_payload
-        ]
+        def case(ajusted_payloads: List[Payload]) -> List[Payload]:
+            return [
+                payload.with_case(str.lower, "Lower")
+                for payload in ajusted_payloads
+            ]
+
+        Payloader.case = case
 
     @staticmethod
     def set_capitalize() -> None:
         """The capitalize setter"""
-        Payloader._case = lambda ajusted_payload: [
-            payload.capitalize() for payload in ajusted_payload
-        ]
+        def case(ajusted_payloads: List[Payload]) -> List[Payload]:
+            return [
+                payload.with_case(str.capitalize, "Capitalize")
+                for payload in ajusted_payloads
+            ]
+
+        Payloader.case = case
 
     @staticmethod
-    def get_customized_payload(payload: str) -> List[str]:
+    def get_customized_payload(payload: str) -> List[Payload]:
         """Gets the payload list ajusted with the console options
 
         @type payload: str
         @param payload: The string payload gived by the payloads queue
-        @returns List[str]: The payloads used in the request
+        @returns List[Payload]: The payloads used in the request
         """
-        ajusted_payload = [payload]
+        ajusted_payloads = [Payload(payload)]
         if Payloader.prefix:
-            ajusted_payload = [(prefix+payload)
-                               for prefix in Payloader.prefix
-                               for payload in ajusted_payload]
+            ajusted_payloads = [Payload().update(payload).with_prefix(prefix)
+                                for prefix in Payloader.prefix
+                                for payload in ajusted_payloads]
         if Payloader.suffix:
-            ajusted_payload = [(payload+suffix)
-                               for suffix in Payloader.suffix
-                               for payload in ajusted_payload]
-        return Payloader._case(Payloader.encoder.encode(ajusted_payload))
+            ajusted_payloads = [Payload().update(payload).with_suffix(suffix)
+                                for suffix in Payloader.suffix
+                                for payload in ajusted_payloads]
+        return Payloader.case(Payloader.encoder.encode(ajusted_payloads))

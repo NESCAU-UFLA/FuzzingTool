@@ -20,7 +20,9 @@
 
 from typing import List
 
-from ..plugin import Plugin
+from requests.exceptions import HTTPError
+
+from ...bases.base_plugin import Plugin
 from ...bases.base_wordlist import BaseWordlist
 from ....utils.http_utils import get_path
 from ....conn.requesters.requester import Requester
@@ -63,7 +65,8 @@ class Robots(BaseWordlist, Plugin):
         )
         try:
             response, *_ = requester.request()
-        except RequestException as e:
+            response.raise_for_status()
+        except (RequestException, HTTPError) as e:
             raise BuildWordlistFails(str(e))
         paths = []
         for line in response.text.split('\n'):

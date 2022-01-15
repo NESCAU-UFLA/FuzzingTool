@@ -1,7 +1,8 @@
 import unittest
 from unittest.mock import Mock, patch
 
-from fuzzingtool.utils.http_utils import *
+from src.fuzzingtool.utils.http_utils import *
+from ..mock_utils.response_mock import ResponseMock
 
 
 class TestHttpUtils(unittest.TestCase):
@@ -40,7 +41,7 @@ class TestHttpUtils(unittest.TestCase):
         self.assertIsInstance(returned_data, str)
         self.assertEqual(returned_data, return_expected)
 
-    @patch("fuzzingtool.utils.http_utils.get_url_without_scheme")
+    @patch("src.fuzzingtool.utils.http_utils.get_url_without_scheme")
     def test_get_path(self, mock_get_url_without_scheme: Mock):
         return_expected = "/"
         test_url = "https://test-url.com/"
@@ -50,7 +51,7 @@ class TestHttpUtils(unittest.TestCase):
         self.assertIsInstance(returned_data, str)
         self.assertEqual(returned_data, return_expected)
 
-    @patch("fuzzingtool.utils.http_utils.get_url_without_scheme")
+    @patch("src.fuzzingtool.utils.http_utils.get_url_without_scheme")
     def test_get_host_without_root_directory(self, mock_get_url_without_scheme: Mock):
         return_expected = "test-url.com"
         test_url = "https://test-url.com"
@@ -60,7 +61,7 @@ class TestHttpUtils(unittest.TestCase):
         self.assertIsInstance(returned_data, str)
         self.assertEqual(returned_data, return_expected)
  
-    @patch("fuzzingtool.utils.http_utils.get_url_without_scheme")
+    @patch("src.fuzzingtool.utils.http_utils.get_url_without_scheme")
     def test_get_host_with_root_directory(self, mock_get_url_without_scheme: Mock):
         return_expected = "test-url.com"
         test_url = "https://test-url.com/"
@@ -69,3 +70,18 @@ class TestHttpUtils(unittest.TestCase):
         mock_get_url_without_scheme.assert_called_once_with(test_url)
         self.assertIsInstance(returned_data, str)
         self.assertEqual(returned_data, return_expected)
+
+    def test_build_raw_response_header(self):
+        return_expected = (
+            "HTTP/1.1 200 OK\r\n"
+            "Server: nginx/1.19.0\r\n"
+            "Date: Fri, 17 Dec 2021 17:42:14 GMT\r\n"
+            "Content-Type: text/html; charset=UTF-8\r\n"
+            "Transfer-Encoding: chunked\r\n"
+            "Connection: keep-alive\r\n"
+            "X-Powered-By: PHP/5.6.40-38+ubuntu20.04.1+deb.sury.org+1\r\n"
+            "\r\n"
+        )
+        returned_headers = build_raw_response_header(ResponseMock())
+        self.assertIsInstance(returned_headers, str)
+        self.assertEqual(returned_headers, return_expected)

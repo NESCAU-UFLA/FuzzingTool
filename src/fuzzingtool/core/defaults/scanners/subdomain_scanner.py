@@ -19,9 +19,8 @@
 # SOFTWARE.
 
 from ...bases.base_scanner import BaseScanner
-from ...result import Result
+from ....objects.result import Result
 from ....decorators.append_args import append_args
-from ....interfaces.cli.cli_output import Colors, get_formated_result
 
 
 class SubdomainScanner(BaseScanner):
@@ -34,16 +33,3 @@ class SubdomainScanner(BaseScanner):
 
     def scan(self, result: Result) -> bool:
         return True
-
-    def cli_callback(self, result: Result) -> str:
-        url, rtt, length = get_formated_result(
-            result.url, result.rtt, result.length
-        )
-        ip = '{:>15}'.format(result.custom['ip'])
-        return (
-            f"{url} {Colors.GRAY}["
-            f'{Colors.LIGHT_GRAY}IP{Colors.RESET} {ip}'" | "
-            f"{Colors.LIGHT_GRAY}Code{Colors.RESET} {result.status} | "
-            f"{Colors.LIGHT_GRAY}RTT{Colors.RESET} {rtt} | "
-            f"{Colors.LIGHT_GRAY}Size{Colors.RESET} {length}{Colors.GRAY}]{Colors.RESET}"
-        )

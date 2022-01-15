@@ -20,7 +20,7 @@
 
 import base64
 
-from ..plugin import Plugin
+from ...bases.base_plugin import Plugin
 from ...bases.base_encoder import BaseEncoder
 from ....decorators.plugin_meta import plugin_meta
 

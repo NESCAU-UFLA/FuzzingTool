@@ -20,10 +20,9 @@
 
 from abc import ABC, abstractmethod
 from typing import List
-from datetime import datetime
 from pathlib import Path
 
-from ..core.result import Result
+from ..objects.result import Result
 from ..utils.consts import OUTPUT_DIRECTORY
 
 
@@ -53,16 +52,13 @@ class BaseReport(ABC):
         report_type = self.file_extension
         report_name = self.__filename
         report_dir = f"{OUTPUT_DIRECTORY}/{host}/reports"
-        if not report_name:
-            now = datetime.now()
-            report_name = now.strftime("%Y-%m-%d_%H:%M")
         report_full_path = Path(f'{report_dir}/{report_name}.{report_type}')
         try:
             self._file = open(report_full_path, 'w')
         except FileNotFoundError:
             Path(report_dir).mkdir(parents=True, exist_ok=True)
             self._file = open(report_full_path, 'w')
-        return report_full_path
+        return str(report_full_path)
 
     def write(self, results: List[Result]) -> None:
         """Write the results in the report file,

@@ -24,6 +24,9 @@ from abc import ABC, abstractmethod
 class BaseEncoder(ABC):
     charset = 'utf-8'
 
+    def __str__(self) -> str:
+        return type(self).__name__
+
     @abstractmethod
     def encode(self, payload: str) -> str:
         """Encode a payload into an specific encoding type

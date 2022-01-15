@@ -20,8 +20,8 @@
 
 from typing import Callable
 
-from ..core.result import Result
 from ..core.bases.base_scanner import BaseScanner
+from ..objects.result import Result
 
 
 def append_args(function: Callable) -> Callable:
