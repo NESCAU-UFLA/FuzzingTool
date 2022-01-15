@@ -20,8 +20,8 @@
 
 APP_VERSION = {
     'MAJOR_VERSION': 3,
-    "MINOR_VERSION": 12,
-    "PATCH": 1
+    "MINOR_VERSION": 13,
+    "PATCH": 0
 }
 
 
