@@ -22,6 +22,8 @@ import time
 import threading
 from argparse import Namespace
 
+from fuzzingtool.objects.payload import Payload
+
 from .cli_output import CliOutput, Colors
 from ..argument_builder import ArgumentBuilder as AB
 from ... import __version__
@@ -92,15 +94,12 @@ class CliController(FuzzController):
         try:
             self.check_connection()
             self.prepare()
-            self.start()
         except KeyboardInterrupt:
-            if self.fuzzer and self.fuzzer.is_running():
-                self.cli_output.abort_box("Test aborted, stopping threads ...")
-                self.fuzzer.stop()
             self.cli_output.abort_box("Test aborted by the user")
         except FuzzingToolException as e:
             self.cli_output.error_box(str(e))
-        finally:
+        else:
+            self.start()
             self.show_footer()
             self.cli_output.info_box("Test completed")
 
@@ -117,25 +116,7 @@ class CliController(FuzzController):
 
     def print_configs(self) -> None:
         """Print the program configuration"""
-        if self.verbose[1]:
-            verbose = 'detailed'
-        elif self.verbose[0]:
-            verbose = 'common'
-        else:
-            verbose = 'quiet'
-        if self.args["lower"]:
-            case = 'lowercase'
-        elif self.args["upper"]:
-            case = 'uppercase'
-        elif self.args["capitalize"]:
-            case = 'capitalize'
-        else:
-            case = None
         self.cli_output.print_configs(
-            output='normal'
-                   if not self.args["simple_output"]
-                   else 'simple',
-            verbose=verbose,
             target={
                 'url': self.requester.get_url(),
                 'methods': [method for method in self.requester.methods],
@@ -143,24 +124,7 @@ class CliController(FuzzController):
                 'body': self.args["data"],
                 'type_fuzzing': self.__get_target_fuzzing_type(),
                 },
-            dictionary=self.dict_metadata,
-            prefix=self.args["prefix"],
-            suffix=self.args["suffix"],
-            case=case,
-            encoder=self.args["encoder"],
-            encode_only=self.args["encode_only"],
-            match={
-                'status': self.args["match_status"],
-                'time': self.args["match_time"],
-                'length': self.args["match_size"],
-                'words': self.args["match_words"],
-                'lines': self.args["match_lines"],
-                },
-            blacklist_status=self.args["blacklist_status"],
-            scanner=self.args["scanner"],
-            delay=self.delay,
-            threads=self.number_of_threads,
-            report=self.args["report_name"],
+            dictionary=self.dict_metadata
         )
 
     def check_connection(self) -> None:
@@ -194,6 +158,42 @@ class CliController(FuzzController):
             if not self.is_verbose_mode():
                 CliOutput.print("")
 
+    def fuzzer_join(self):
+        while self.fuzzer.is_running():
+            try:
+                super().fuzzer_join()
+            except KeyboardInterrupt:
+                self.cli_output.warning_box("Ctrl+C detected, pausing threads ...")
+                self.handle_pause()
+
+    def handle_pause(self):
+        """Handle with the Ctrl+C pause"""
+        self.fuzzer.pause()
+        self.fuzzer.wait_until_pause()
+        self.summary.pause_timer()
+        if not self.is_verbose_mode():
+            CliOutput.print("")
+        answer = ''
+        while answer not in ['q', 'c']:
+            try:
+                answer = self.cli_output.ask_data("[c]ontinue | [s]tatus | [q]uit")
+            except KeyboardInterrupt:
+                answer = 'q'
+            if answer == "q":
+                self.fuzzer.stop()
+                self.cli_output.abort_box("Test aborted by the user")
+            elif answer == 's':
+                str_percentage = self.cli_output.get_percentage(
+                    self.last_index,
+                    self.total_requests
+                )
+                self.cli_output.info_box(
+                    f"Progress: {Colors.LIGHT_YELLOW}{str_percentage}{Colors.RESET} completed"
+                )
+            elif answer == "c":
+                self.summary.resume_timer()
+                self.fuzzer.resume()
+
     def prepare(self) -> None:
         """Prepare the application before the fuzzing"""
         self.target_host = get_host(get_pure_url(self.requester.get_url()))
@@ -225,12 +225,12 @@ class CliController(FuzzController):
            The results are shown for each target
         """
         if self.fuzzer:
-            if self.elapsed_time:
+            if self.summary.elapsed_time:
                 self.cli_output.info_box(
-                    f"Time taken: {float('%.2f'%(self.elapsed_time))} seconds"
+                    f"Time taken: {float('%.2f'%(self.summary.elapsed_time))} seconds"
                 )
-            if self.results:
-                self.__handle_valid_results(self.target_host, self.results)
+            if self.summary.results:
+                self.__handle_valid_results(self.target_host, self.summary.results)
             else:
                 self.cli_output.info_box(
                     f"No matched results was found for {self.target_host}"
@@ -255,15 +255,16 @@ class CliController(FuzzController):
     def _result_callback(self, result: Result, validate: bool) -> None:
         if self.verbose[0]:
             if validate:
-                self.results.append(result)
+                self.summary.results.append(result)
             self.cli_output.print_result(result, validate)
         else:
             if validate:
-                self.results.append(result)
+                self.summary.results.append(result)
                 self.cli_output.print_result(result, validate)
             self.cli_output.progress_status(
                 result.index, self.total_requests, result.payload
             )
+        self.last_index = result.index
 
     def _request_exception_callback(self, error: Error) -> None:
         if self.ignore_errors:
@@ -278,6 +279,7 @@ class CliController(FuzzController):
                 self.logger.write(str(error), error.payload)
         else:
             self.stop_action = str(error)
+        self.last_index = error.index
 
     def _invalid_hostname_callback(self, error: Error) -> None:
         if self.verbose[0]:
@@ -287,6 +289,7 @@ class CliController(FuzzController):
             self.cli_output.progress_status(
                 error.index, self.total_requests, error.payload
             )
+        self.last_index = error.index
 
     def _init_dictionary(self) -> None:
         try:
@@ -353,7 +356,7 @@ class CliController(FuzzController):
             response, rtt = self.requester.request(payload)
         except RequestException as e:
             raise StopActionInterrupt(str(e))
-        result_to_comparator = Result(response, rtt)
+        result_to_comparator = Result(response, rtt, Payload(payload))
         self.cli_output.print_result(result_to_comparator, False)
         time = self.__get_comparator_value(
             name_value="RTT",

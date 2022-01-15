@@ -7,7 +7,7 @@ class TestResultUtils(unittest.TestCase):
     def tearDown(self):
         ResultUtils.detailed_results = False
 
-    def test_get_formated_result_with_only_int(self):
+    def test_get_formatted_result_with_only_int(self):
         test_payload = "test_payload"
         test_words = 40
         test_lines = 7
@@ -18,7 +18,7 @@ class TestResultUtils(unittest.TestCase):
             '{:>6}'.format(test_words),
             '{:>5}'.format(test_lines)
         )
-        returned_data = ResultUtils.get_formated_result(
+        returned_data = ResultUtils.get_formatted_result(
             payload=test_payload,
             rtt=0.276000,
             length=200,
@@ -28,7 +28,7 @@ class TestResultUtils(unittest.TestCase):
         self.assertIsInstance(returned_data, tuple)
         self.assertTupleEqual(returned_data, return_expected)
 
-    def test_get_formated_result_with_rtt_float(self):
+    def test_get_formatted_result_with_rtt_float(self):
         test_payload = "test_payload"
         test_words = 40
         test_lines = 7
@@ -39,7 +39,7 @@ class TestResultUtils(unittest.TestCase):
             '{:>6}'.format(test_words),
             '{:>5}'.format(test_lines)
         )
-        returned_data = ResultUtils.get_formated_result(
+        returned_data = ResultUtils.get_formatted_result(
             payload=test_payload,
             rtt=2.7640800,
             length=200,
@@ -49,7 +49,7 @@ class TestResultUtils(unittest.TestCase):
         self.assertIsInstance(returned_data, tuple)
         self.assertTupleEqual(returned_data, return_expected)
 
-    def test_get_formated_result_with_length_float(self):
+    def test_get_formatted_result_with_length_float(self):
         test_payload = "test_payload"
         test_words = 40
         test_lines = 7
@@ -60,7 +60,7 @@ class TestResultUtils(unittest.TestCase):
             '{:>6}'.format(test_words),
             '{:>5}'.format(test_lines)
         )
-        returned_data = ResultUtils.get_formated_result(
+        returned_data = ResultUtils.get_formatted_result(
             payload=test_payload,
             rtt=0.276000,
             length=1536,

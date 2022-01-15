@@ -115,7 +115,7 @@ def get_formatted_rtt(rtt: float) -> Tuple[Union[int, float], str]:
 
     @type rtt: float
     @param rtt: The elapsed time of a request
-    @returns Tuple[int|float, str]: The tuple with the formated rtt
+    @returns Tuple[int|float, str]: The tuple with the formatted rtt
     """
     if rtt < 1:
         return (int(rtt*1000), "ms")

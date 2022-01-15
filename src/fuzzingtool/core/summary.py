@@ -18,11 +18,37 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from .bases import *
-from .defaults import *
-from .blacklist_status import BlacklistStatus
-from .dictionary import Dictionary
-from .fuzzer import Fuzzer
-from .matcher import Matcher
-from .payloader import Payloader
-from .summary import Summary
+import time
+
+
+class Summary:
+    """Class to store the summary information of the controller
+
+    Attributes:
+        results: The list of the found results
+        elapsed_time: The elapsed time of the fuzzing test
+        time_before: A buffer to handle with the pause and resume timer
+    """
+    def __init__(self):
+        self.results = []
+        self.elapsed_time = 0
+        self.__time_before = 0
+
+    def start_timer(self) -> None:
+        """Starts the timer"""
+        self.elapsed_time = time.time()
+
+    def stop_timer(self) -> None:
+        """Stops the timer"""
+        if self.__time_before:
+            self.resume_timer()
+        self.elapsed_time = time.time() - self.elapsed_time
+
+    def pause_timer(self) -> None:
+        """Pauses the timer"""
+        self.__time_before = time.time()
+
+    def resume_timer(self) -> None:
+        """Resumes the timer"""
+        self.elapsed_time += (time.time() - self.__time_before)
+        self.__time_before = 0

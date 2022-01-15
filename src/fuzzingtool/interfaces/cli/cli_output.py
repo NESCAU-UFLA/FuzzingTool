@@ -130,7 +130,7 @@ class CliOutput:
         self.__info = f'{Colors.GRAY}[{Colors.BLUE_GRAY}INFO{Colors.GRAY}]{Colors.RESET} '
         self.__warning = f'{Colors.GRAY}[{Colors.YELLOW}WARNING{Colors.GRAY}]{Colors.RESET} '
         self.__error = f'{Colors.GRAY}[{Colors.RED}ERROR{Colors.GRAY}]{Colors.RESET} '
-        self.__abord = f'{Colors.GRAY}[{Colors.RED}ABORT{Colors.GRAY}]{Colors.RESET} '
+        self.__abort = f'{Colors.GRAY}[{Colors.RED}ABORT{Colors.GRAY}]{Colors.RESET} '
         self.__worked = f'{Colors.GRAY}[{Colors.GREEN}+{Colors.GRAY}]{Colors.RESET} '
         self.__not_worked = f'{Colors.GRAY}[{Colors.RED}-{Colors.GRAY}]{Colors.RESET} '
 
@@ -143,7 +143,7 @@ class CliOutput:
         self.__info = f'{Colors.GRAY}[{Colors.BLUE_GRAY}*{Colors.GRAY}]{Colors.RESET} '
         self.__warning = f'{Colors.GRAY}[{Colors.YELLOW}!{Colors.GRAY}]{Colors.RESET} '
         self.__error = f'{Colors.GRAY}[{Colors.RED}!!{Colors.GRAY}]{Colors.RESET} '
-        self.__abord = f'{Colors.GRAY}[{Colors.RED}AB{Colors.GRAY}]{Colors.RESET} '
+        self.__abort = f'{Colors.GRAY}[{Colors.RED}AB{Colors.GRAY}]{Colors.RESET} '
         self.__worked = f'{Colors.GRAY}[{Colors.GREEN}+{Colors.GRAY}]{Colors.RESET} '
         self.__not_worked = f'{Colors.GRAY}[{Colors.RED}-{Colors.GRAY}]{Colors.RESET} '
 
@@ -256,61 +256,17 @@ class CliOutput:
               f"{Colors.LIGHT_YELLOW}{value}{Colors.RESET}")
 
     def print_configs(self,
-                      output: str,
-                      verbose: str,
                       target: dict,
-                      dictionary: dict,
-                      prefix: list,
-                      suffix: list,
-                      case: str,
-                      encoder: str,
-                      encode_only: str,
-                      match: dict,
-                      scanner: str,
-                      blacklist_status: str,
-                      delay: float,
-                      threads: int,
-                      report: str) -> None:
+                      dictionary: dict) -> None:
         """Prints the program configuration
 
-        @type output: str
-        @param output: The display output mode
-        @type verbose: str
-        @param verbose: The verbosity mode
         @type target: dict
         @param taget: The target
         @type dictionary: dict
         @param dictionary: The dictionary used in the tests
-        @type prefix: list
-        @param prefix: The prefixes used with the payload
-        @type suffix: list
-        @param suffix: The suffixes used with the payload
-        @type case: str
-        @param case: The payload case
-        @type encoder: str
-        @param encoder: The encoders string that caontains
-                        the encoder name and parameters
-        @type encode_only: str
-        @param encode_only: The encode only regex
-        @type match: dict
-        @param match: The matcher options on a dictionary
-        @type scanner: str
-        @param scanner: The scanner string that caontains
-                        the scanner name and parameters
-        @type blacklist_status: str
-        @param blacklist_status: The blacklist status arguments
-                                 (codes and action taken)
-        @type delay: float
-        @param delay: The delay between each request
-        @type threads: int
-        @param threads: The number of threads used in the tests
-        @type report: str
-        @param report: The report name and/or format
         """
         print("")
         spaces = 3
-        self.print_config("Output mode", output)
-        self.print_config("Verbosity mode", verbose)
         self.print_config("Target", get_host(get_pure_url(target['url'])))
         self.print_config("Methods",
                           stringfy_list(target['methods']),
@@ -325,50 +281,37 @@ class CliOutput:
                          f"(removed {dictionary['removed']} "
                          f"duplicated payloads)")
         self.print_config("Dictionary size", dict_size)
-        if prefix:
-            self.print_config("Prefix", stringfy_list(prefix))
-        if suffix:
-            self.print_config("Suffix", stringfy_list(suffix))
-        if case:
-            self.print_config("Payload case", case)
-        if encoder:
-            encode_msg = encoder
-            if encode_only:
-                encode_msg = f"{encoder} (encode with regex {encode_only})"
-            self.print_config("Encoder", encode_msg)
-        for key, value in match.items():
-            if value:
-                self.print_config(f"Match {key}", value)
-        if scanner:
-            self.print_config("Scanner", scanner)
-        if blacklist_status:
-            self.print_config("Blacklisted status",
-                              blacklist_status)
-        if delay:
-            self.print_config("Delay", f"{delay} seconds")
-        self.print_config("Threads", threads)
-        if report:
-            self.print_config("Report", report)
         print("")
 
+    def get_percentage(self, item_index: int, total_requests: int) -> str:
+        """Get the percentage from item_index / total_requests
+
+        @type item_index: int
+        @param item_index: The actual request index
+        @type total_requests: int
+        @param total_requests: The total of requests quantity
+        @returns str: The percentage str
+        """
+        return f"{str(int((int(item_index)/total_requests)*100))}%"
+
     def progress_status(self,
-                        request_index: int,
+                        item_index: int,
                         total_requests: int,
                         payload: str) -> None:
         """Output the progress status of the fuzzing
 
-        @type request_index: int
-        @param request_index: The actual request index
+        @type item_index: int
+        @param item_index: The actual request index
         @type total_requests: int
         @param total_requests: The total of requests quantity
         @type payload: str
         @param payload: The payload used in the request
         """
-        status = (f"{Colors.GRAY}[{Colors.LIGHT_GRAY}{request_index}"
-                  f"{Colors.GRAY}/{Colors.LIGHT_GRAY}{total_requests}"
-                  f"{Colors.GRAY}]{Colors.RESET} {Colors.LIGHT_YELLOW}"
-                  f"{str(int((int(request_index)/total_requests)*100))}%"
-                  f"{Colors.RESET}")
+        status = (f"{Colors.GRAY}[{Colors.LIGHT_GRAY}{item_index}"
+                  + f"{Colors.GRAY}/{Colors.LIGHT_GRAY}{total_requests}"
+                  + f"{Colors.GRAY}]{Colors.RESET} {Colors.LIGHT_YELLOW}"
+                  + self.get_percentage(item_index, total_requests)
+                  + f"{Colors.RESET}")
         payload = fix_payload_to_output(payload)
         while len(payload) < MAX_PAYLOAD_LENGTH_TO_OUTPUT:
             payload += ' '
@@ -387,15 +330,15 @@ class CliOutput:
         @type vuln_validator: bool
         @param vuln_validator: Case the output is marked as vulnerable
         """
-        formated_result_str = self.__get_formated_result(result)
+        formatted_result_str = self.__get_formatted_result(result)
         if not vuln_validator:
-            self.not_worked_box(formated_result_str)
+            self.not_worked_box(formatted_result_str)
         else:
             with self.__lock:
                 if self.__last_inline:
                     self.__last_inline = False
                     self.__erase_line()
-                self.worked_box(formated_result_str)
+                self.worked_box(formatted_result_str)
 
     def __get_time(self) -> str:
         """Get a time label
@@ -440,7 +383,7 @@ class CliOutput:
         @param msg: The custom message
         @returns str: The message with abort label
         """
-        return f'{self.__abord}{msg}'
+        return f'{self.__abort}{msg}'
 
     def __get_worked(self, msg: str) -> str:
         """The worked getter, with a custom message
@@ -467,34 +410,31 @@ class CliOutput:
         sys.stdout.write("\033[0G")
         sys.stdout.flush()
 
-    def __get_formated_payload(self, result: Result) -> str:
+    def __get_formatted_payload(self, result: Result) -> str:
         """Formats the payload to output
 
         @type result: Result
         @param result: The result of the request
-        @returns str: The formated payload to output
+        @returns str: The formatted payload to output
         """
         if result.fuzz_type == PATH_FUZZING:
             try:
-                formated_payload = get_path(result.url)
+                formatted_payload = get_path(result.url)
             except ValueError:
-                formated_payload = result.url
-            return formated_payload
+                formatted_payload = result.url
+            return formatted_payload
         if result.fuzz_type == SUBDOMAIN_FUZZING:
             return get_host(result.url)
         return result.payload
 
-    def __get_formated_result_items(self, result: Result) -> Tuple[
-        str, str, str, str, str, str
-    ]:
-        """Format the result items to the output
+    def __get_formatted_status(self, status: int) -> str:
+        """Formats the status code to output
 
-        @type result: Result
-        @param result: The result of the request
-        @returns Tuple[str, str, str, str, str, str]: The tuple with the formated result items
+        @type status: int
+        @param status: The status code of the response
+        @returns str: The formatted status code to output
         """
         status_color = Colors.BOLD
-        status = result.status
         if status == 404:
             status_color = ''
         elif status >= 200 and status < 300:
@@ -508,23 +448,33 @@ class CliOutput:
                 status_color += Colors.BLUE
         elif status >= 500 and status < 600:
             status_color += Colors.RED
-        status = f"{status_color}{status}{Colors.RESET}"
-        payload, rtt, length, words, lines = ResultUtils.get_formated_result(
-            self.__get_formated_payload(result), result.rtt,
+        return f"{status_color}{status}{Colors.RESET}"
+
+    def __get_formatted_result_items(self, result: Result) -> Tuple[
+        str, str, str, str, str, str
+    ]:
+        """Format the result items to the output
+
+        @type result: Result
+        @param result: The result of the request
+        @returns Tuple[str, str, str, str, str, str]: The tuple with the formatted result items
+        """
+        payload, rtt, length, words, lines = ResultUtils.get_formatted_result(
+            self.__get_formatted_payload(result), result.rtt,
             result.body_size, result.words, result.lines
         )
-        return (payload, status, rtt, length, words, lines)
+        return (payload, self.__get_formatted_status(result.status), rtt, length, words, lines)
 
-    def __get_formated_result(self, result: Result) -> str:
+    def __get_formatted_result(self, result: Result) -> str:
         """Format the entire result message
 
         @type result: Result
         @param result: The result of the request
-        @returns str: The formated result message to output
+        @returns str: The formatted result message to output
         """
-        formated_items = self.__get_formated_result_items(result)
-        payload, status_code, rtt, length, words, lines = formated_items
-        formated_result_str = (
+        formatted_items = self.__get_formatted_result_items(result)
+        payload, status_code, rtt, length, words, lines = formatted_items
+        formatted_result_str = (
             f"{payload} {Colors.GRAY}["
             f"{Colors.LIGHT_GRAY}Code{Colors.RESET} {status_code} | "
             f"{Colors.LIGHT_GRAY}RTT{Colors.RESET} {rtt} | "
@@ -538,5 +488,5 @@ class CliOutput:
                 if (value is not None and isinstance(value, bool)) or value:
                     custom_str += (f"\n{Colors.LIGHT_YELLOW}|_ {key}: "
                                    f"{ResultUtils.format_custom_field(value)}{Colors.RESET}")
-            formated_result_str += custom_str
-        return formated_result_str
+            formatted_result_str += custom_str
+        return formatted_result_str

@@ -105,28 +105,28 @@ class TestUtils(unittest.TestCase):
         self.assertIsInstance(returned_data, tuple)
         self.assertTupleEqual(returned_data, return_expected)
 
-    def test_get_formated_rtt_with_milliseconds(self):
+    def test_get_formatted_rtt_with_milliseconds(self):
         return_expected = (525, "ms")
         test_rtt = 0.525428
         returned_data = get_formatted_rtt(test_rtt)
         self.assertIsInstance(returned_data, tuple)
         self.assertTupleEqual(returned_data, return_expected)
 
-    def test_get_formated_rtt_with_seconds(self):
+    def test_get_formatted_rtt_with_seconds(self):
         return_expected = (5.25428, "s ")
         test_rtt = 5.254280
         returned_data = get_formatted_rtt(test_rtt)
         self.assertIsInstance(returned_data, tuple)
         self.assertTupleEqual(returned_data, return_expected)
 
-    def test_get_formated_rtt_with_minutes(self):
+    def test_get_formatted_rtt_with_minutes(self):
         return_expected = (2, "m ")
         test_rtt = 120.000000
         returned_data = get_formatted_rtt(test_rtt)
         self.assertIsInstance(returned_data, tuple)
         self.assertTupleEqual(returned_data, return_expected)
 
-    def test_get_formated_rtt_with_hour(self):
+    def test_get_formatted_rtt_with_hour(self):
         return_expected = (1, "h ")
         test_rtt = 3600.000000
         returned_data = get_formatted_rtt(test_rtt)

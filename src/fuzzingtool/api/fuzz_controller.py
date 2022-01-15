@@ -25,7 +25,7 @@ from ..interfaces.argument_builder import ArgumentBuilder as AB
 from ..utils.utils import split_str_to_list
 from ..utils.file_utils import read_file
 from ..utils.result_utils import ResultUtils
-from ..core import BlacklistStatus, Dictionary, Fuzzer, Matcher, Payloader
+from ..core import BlacklistStatus, Dictionary, Fuzzer, Matcher, Payloader, Summary
 from ..core.defaults.scanners import (DataScanner,
                                       PathScanner, SubdomainScanner)
 from ..core.bases import BaseScanner, BaseEncoder
@@ -45,7 +45,7 @@ class FuzzController:
         self.elapsed_time = None
         self.fuzzer = None
         self.blacklist_status = None
-        self.results = []
+        self.summary = Summary()
         self.stop_action = None
         if self.args["res_callback"]:
             self._result_callback = self.args["res_callback"]
@@ -93,7 +93,7 @@ class FuzzController:
            The target is fuzzed based on his own methods list
         """
         Result.reset_index()
-        started_time = time.time()
+        self.summary.start_timer()
         try:
             for method in self.requester.methods:
                 self.requester.set_method(method)
@@ -104,7 +104,7 @@ class FuzzController:
                 self.fuzzer.stop()
             raise e
         finally:
-            self.elapsed_time = time.time() - started_time
+            self.summary.stop_timer()
 
     def fuzz(self) -> None:
         """Prepare the fuzzer for the fuzzing tests"""
@@ -123,9 +123,14 @@ class FuzzController:
             ],
         )
         self.fuzzer.start()
+        self.fuzzer_join()
+
+    def fuzzer_join(self):
+        """Join the fuzzer"""
         while self.fuzzer.join():
             if self.stop_action:
                 raise StopActionInterrupt(self.stop_action)
+        self.fuzzer.stop()
 
     def _stop_callback(self, status: int) -> None:
         """The skip target callback for the blacklist_action

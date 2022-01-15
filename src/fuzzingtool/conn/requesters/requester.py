@@ -105,9 +105,7 @@ class Requester:
         self.__timeout = timeout
         if is_session or self.is_path_fuzzing():
             self.__session = requests.Session()
-            self.__request = self.__session_request
-        else:
-            self.__request = self.__common_request
+            self._request = self.__session_request
         self.methods = methods if methods else [self.__method.word]
         if cookie:
             self.__header['Cookie'] = FuzzWord(cookie)
@@ -204,14 +202,14 @@ class Requester:
 
         @type payload: str
         @param payload: The payload used in the request
-        @returns Response: The response object of the request
+        @returns Tuple[Response, float]: The response object of the request
         """
         if self.__proxies:
             self.__proxy = random.choice(self.__proxies)
         method, url, body, url_params, headers = self.__get_request_parameters(payload)
         try:
             before = time.time()
-            response = self.__request(method, url, body, url_params, headers)
+            response = self._request(method, url, body, url_params, headers)
             rtt = (time.time() - before)
         except requests.exceptions.ProxyError:
             raise RequestException("Can't connect to the proxy")
@@ -239,6 +237,37 @@ class Requester:
             raise RequestException(str(e))
         else:
             return (response, rtt)
+
+    def _request(self,
+                 method: str,
+                 url: str,
+                 body: dict,
+                 url_params: dict,
+                 headers: dict) -> requests.Response:
+        """Performs a request to the target
+
+        @type method: str
+        @param method: The request method
+        @type url: str
+        @param url: The target URL
+        @type headers: dict
+        @param headers: The http header of the request
+        @type body: dict
+        @param body: The body data to be send with the request
+        @type url_params: dict
+        @param url_params: The URL params to be send with the request
+        @returns Response: The response object of the request
+        """
+        return requests.request(
+            method,
+            url,
+            data=body,
+            params=url_params,
+            headers=headers,
+            proxies=self.__proxy,
+            timeout=self.__timeout,
+            allow_redirects=self.__follow_redirects,
+        )
 
     def _set_fuzzing_type(self) -> int:
         """Sets the fuzzing type
@@ -364,37 +393,6 @@ class Requester:
                 params=url_params,
                 headers=headers,
             )),
-            proxies=self.__proxy,
-            timeout=self.__timeout,
-            allow_redirects=self.__follow_redirects,
-        )
-
-    def __common_request(self,
-                         method: str,
-                         url: str,
-                         body: dict,
-                         url_params: dict,
-                         headers: dict) -> requests.Response:
-        """Performs a request to the target
-
-        @type method: str
-        @param method: The request method
-        @type url: str
-        @param url: The target URL
-        @type headers: dict
-        @param headers: The http header of the request
-        @type body: dict
-        @param body: The body data to be send with the request
-        @type url_params: dict
-        @param url_params: The URL params to be send with the request
-        @returns Response: The response object of the request
-        """
-        return requests.request(
-            method,
-            url,
-            data=body,
-            params=url_params,
-            headers=headers,
             proxies=self.__proxy,
             timeout=self.__timeout,
             allow_redirects=self.__follow_redirects,
