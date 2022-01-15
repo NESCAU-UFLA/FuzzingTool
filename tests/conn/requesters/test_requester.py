@@ -8,6 +8,7 @@ from src.fuzzingtool.objects.fuzz_word import FuzzWord
 from src.fuzzingtool.utils.consts import (FUZZING_MARK, UNKNOWN_FUZZING, HTTP_METHOD_FUZZING,
                                           PATH_FUZZING, DATA_FUZZING)
 from src.fuzzingtool.exceptions.request_exceptions import RequestException
+from src.fuzzingtool.utils.http_utils import get_host
 from ...mock_utils.response_mock import ResponseMock
 
 
@@ -276,3 +277,45 @@ class TestRequester(unittest.TestCase):
         mock_request.assert_called_once_with(*test_parameters)
         self.assertIsInstance(returned_data, tuple)
         self.assertTupleEqual(returned_data, return_expected)
+
+    @patch("src.fuzzingtool.conn.requesters.requester.Requester._request")
+    def test_request_with_raise_exception(self, mock_request: Mock):
+        test_url = "https://test-url.com/"
+        test_header_key = "test_key"
+        test_header_value = "test_value"
+        requester = Requester(test_url, headers={test_header_key: test_header_value})
+        mock_request.side_effect = requests.exceptions.ProxyError
+        with self.assertRaises(RequestException) as e:
+            requester.request()
+        self.assertEqual(str(e.exception), "Can't connect to the proxy")
+        mock_request.side_effect = requests.exceptions.TooManyRedirects
+        with self.assertRaises(RequestException) as e:
+            requester.request()
+        self.assertEqual(str(e.exception), f"Too many redirects on {test_url}")
+        mock_request.side_effect = requests.exceptions.SSLError
+        with self.assertRaises(RequestException) as e:
+            requester.request()
+        self.assertEqual(str(e.exception), f"SSL couldn't be validated on {test_url}")
+        mock_request.side_effect = requests.exceptions.Timeout
+        with self.assertRaises(RequestException) as e:
+            requester.request()
+        self.assertEqual(str(e.exception), f"Connection to {test_url} timed out")
+        mock_request.side_effect = requests.exceptions.InvalidHeader(f"Invalid header key: {test_header_key}")
+        with self.assertRaises(RequestException) as e:
+            requester.request()
+        self.assertEqual(str(e.exception), f"Invalid header {test_header_key}: {test_header_value}")
+        mock_request.side_effect = requests.exceptions.ConnectionError
+        with self.assertRaises(RequestException) as e:
+            requester.request()
+        self.assertEqual(str(e.exception), f"Failed to establish a connection to {test_url}")
+        mock_request.side_effect = requests.exceptions.RequestException
+        with self.assertRaises(RequestException) as e:
+            requester.request()
+        self.assertEqual(str(e.exception), f"Failed to establish a connection to {test_url}")
+        mock_request.side_effect = UnicodeError
+        with self.assertRaises(RequestException) as e:
+            requester.request()
+        self.assertEqual(str(e.exception), f"Invalid hostname {get_host(test_url)} for HTTP request")
+        mock_request.side_effect = ValueError
+        with self.assertRaises(RequestException) as e:
+            requester.request()
