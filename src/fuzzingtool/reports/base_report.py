@@ -58,7 +58,7 @@ class BaseReport(ABC):
         except FileNotFoundError:
             Path(report_dir).mkdir(parents=True, exist_ok=True)
             self._file = open(report_full_path, 'w')
-        return report_full_path
+        return str(report_full_path)
 
     def write(self, results: List[Result]) -> None:
         """Write the results in the report file,

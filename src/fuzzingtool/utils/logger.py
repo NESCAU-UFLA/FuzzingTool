@@ -53,7 +53,7 @@ class Logger:
             f"Log for {host} on {date_now.strftime('%Y/%m/%d %H:%M')}\n\n"
         )
         log_file.close()
-        return self.__log_full_path
+        return str(self.__log_full_path)
 
     def write(self, exception: str, payload: str) -> None:
         """Write the exception on the log file
