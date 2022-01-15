@@ -203,6 +203,7 @@ class CliController(FuzzController):
 
     def handle_pause(self):
         """Handle with the Ctrl+C pause"""
+        self.summary.pause_timer()
         self.fuzzer.pause()
         self.fuzzer.wait_until_pause()
         if not self.is_verbose_mode():
@@ -224,6 +225,7 @@ class CliController(FuzzController):
                     self.fuzzer.stop()
                     self.cli_output.abort_box("Test aborted by the user")
                 elif answer == "c":
+                    self.summary.resume_timer()
                     self.fuzzer.resume()
 
     def prepare(self) -> None:
@@ -257,12 +259,12 @@ class CliController(FuzzController):
            The results are shown for each target
         """
         if self.fuzzer:
-            if self.elapsed_time:
+            if self.summary.elapsed_time:
                 self.cli_output.info_box(
-                    f"Time taken: {float('%.2f'%(self.elapsed_time))} seconds"
+                    f"Time taken: {float('%.2f'%(self.summary.elapsed_time))} seconds"
                 )
-            if self.results:
-                self.__handle_valid_results(self.target_host, self.results)
+            if self.summary.results:
+                self.__handle_valid_results(self.target_host, self.summary.results)
             else:
                 self.cli_output.info_box(
                     f"No matched results was found for {self.target_host}"
@@ -287,11 +289,11 @@ class CliController(FuzzController):
     def _result_callback(self, result: Result, validate: bool) -> None:
         if self.verbose[0]:
             if validate:
-                self.results.append(result)
+                self.summary.results.append(result)
             self.cli_output.print_result(result, validate)
         else:
             if validate:
-                self.results.append(result)
+                self.summary.results.append(result)
                 self.cli_output.print_result(result, validate)
             self.cli_output.progress_status(
                 result.index, self.total_requests, result.payload
