@@ -51,7 +51,7 @@ class TestResult(unittest.TestCase):
         )
         result.custom['test_0'] = None
         result.custom['test_1'] = "test_value"
-        payload, rtt, length, words, lines = ResultUtils.get_formated_result(
+        payload, rtt, length, words, lines = ResultUtils.get_formatted_result(
             result.payload, result.rtt, result.body_size,
             result.words, result.lines
         )

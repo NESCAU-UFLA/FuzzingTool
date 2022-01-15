@@ -27,7 +27,7 @@ class ResultUtils:
     detailed_results = False
 
     @staticmethod
-    def get_formated_result(payload: str,
+    def get_formatted_result(payload: str,
                             rtt: float,
                             length: int,
                             words: int,
@@ -40,7 +40,7 @@ class ResultUtils:
         @param rtt: The request and response elapsed time
         @type length: int
         @param length: The response body length in bytes
-        @returns tuple[str, str, str]: The result formated with strings
+        @returns tuple[str, str, str]: The result formatted with strings
         """
         length, length_order = get_human_length(int(length))
         if isinstance(length, float):
@@ -62,7 +62,7 @@ class ResultUtils:
 
         @type custom_field: Any
         @param custom_field: The value from key: value pair of the custom field in the result
-        @returns str: The formated value, to string
+        @returns str: The formatted value, to string
         """
         if isinstance(custom_field, list):
             if force_detailed or ResultUtils.detailed_results:

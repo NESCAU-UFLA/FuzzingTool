@@ -330,15 +330,15 @@ class CliOutput:
         @type vuln_validator: bool
         @param vuln_validator: Case the output is marked as vulnerable
         """
-        formated_result_str = self.__get_formated_result(result)
+        formatted_result_str = self.__get_formatted_result(result)
         if not vuln_validator:
-            self.not_worked_box(formated_result_str)
+            self.not_worked_box(formatted_result_str)
         else:
             with self.__lock:
                 if self.__last_inline:
                     self.__last_inline = False
                     self.__erase_line()
-                self.worked_box(formated_result_str)
+                self.worked_box(formatted_result_str)
 
     def __get_time(self) -> str:
         """Get a time label
@@ -410,34 +410,31 @@ class CliOutput:
         sys.stdout.write("\033[0G")
         sys.stdout.flush()
 
-    def __get_formated_payload(self, result: Result) -> str:
+    def __get_formatted_payload(self, result: Result) -> str:
         """Formats the payload to output
 
         @type result: Result
         @param result: The result of the request
-        @returns str: The formated payload to output
+        @returns str: The formatted payload to output
         """
         if result.fuzz_type == PATH_FUZZING:
             try:
-                formated_payload = get_path(result.url)
+                formatted_payload = get_path(result.url)
             except ValueError:
-                formated_payload = result.url
-            return formated_payload
+                formatted_payload = result.url
+            return formatted_payload
         if result.fuzz_type == SUBDOMAIN_FUZZING:
             return get_host(result.url)
         return result.payload
 
-    def __get_formated_result_items(self, result: Result) -> Tuple[
-        str, str, str, str, str, str
-    ]:
-        """Format the result items to the output
-
-        @type result: Result
-        @param result: The result of the request
-        @returns Tuple[str, str, str, str, str, str]: The tuple with the formated result items
+    def __get_formatted_status(self, status: int) -> str:
+        """Formats the status code to output
+        
+        @type status: int
+        @param status: The status code of the response
+        @returns str: The formatted status code to output
         """
         status_color = Colors.BOLD
-        status = result.status
         if status == 404:
             status_color = ''
         elif status >= 200 and status < 300:
@@ -451,23 +448,33 @@ class CliOutput:
                 status_color += Colors.BLUE
         elif status >= 500 and status < 600:
             status_color += Colors.RED
-        status = f"{status_color}{status}{Colors.RESET}"
-        payload, rtt, length, words, lines = ResultUtils.get_formated_result(
-            self.__get_formated_payload(result), result.rtt,
+        return f"{status_color}{status}{Colors.RESET}"
+
+    def __get_formatted_result_items(self, result: Result) -> Tuple[
+        str, str, str, str, str, str
+    ]:
+        """Format the result items to the output
+
+        @type result: Result
+        @param result: The result of the request
+        @returns Tuple[str, str, str, str, str, str]: The tuple with the formatted result items
+        """
+        payload, rtt, length, words, lines = ResultUtils.get_formatted_result(
+            self.__get_formatted_payload(result), result.rtt,
             result.body_size, result.words, result.lines
         )
-        return (payload, status, rtt, length, words, lines)
+        return (payload, self.__get_formatted_status(result.status), rtt, length, words, lines)
 
-    def __get_formated_result(self, result: Result) -> str:
+    def __get_formatted_result(self, result: Result) -> str:
         """Format the entire result message
 
         @type result: Result
         @param result: The result of the request
-        @returns str: The formated result message to output
+        @returns str: The formatted result message to output
         """
-        formated_items = self.__get_formated_result_items(result)
-        payload, status_code, rtt, length, words, lines = formated_items
-        formated_result_str = (
+        formatted_items = self.__get_formatted_result_items(result)
+        payload, status_code, rtt, length, words, lines = formatted_items
+        formatted_result_str = (
             f"{payload} {Colors.GRAY}["
             f"{Colors.LIGHT_GRAY}Code{Colors.RESET} {status_code} | "
             f"{Colors.LIGHT_GRAY}RTT{Colors.RESET} {rtt} | "
@@ -481,5 +488,5 @@ class CliOutput:
                 if (value is not None and isinstance(value, bool)) or value:
                     custom_str += (f"\n{Colors.LIGHT_YELLOW}|_ {key}: "
                                    f"{ResultUtils.format_custom_field(value)}{Colors.RESET}")
-            formated_result_str += custom_str
-        return formated_result_str
+            formatted_result_str += custom_str
+        return formatted_result_str

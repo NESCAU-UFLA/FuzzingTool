@@ -88,7 +88,7 @@ class Result(BaseItem):
         self.__response = response
 
     def __str__(self) -> str:
-        payload, rtt, length, words, lines = ResultUtils.get_formated_result(
+        payload, rtt, length, words, lines = ResultUtils.get_formatted_result(
             self.payload, self.rtt, self.body_size,
             self.words, self.lines
         )
