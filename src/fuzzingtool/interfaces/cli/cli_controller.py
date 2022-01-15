@@ -116,25 +116,7 @@ class CliController(FuzzController):
 
     def print_configs(self) -> None:
         """Print the program configuration"""
-        if self.verbose[1]:
-            verbose = 'detailed'
-        elif self.verbose[0]:
-            verbose = 'common'
-        else:
-            verbose = 'quiet'
-        if self.args["lower"]:
-            case = 'lowercase'
-        elif self.args["upper"]:
-            case = 'uppercase'
-        elif self.args["capitalize"]:
-            case = 'capitalize'
-        else:
-            case = None
         self.cli_output.print_configs(
-            output='normal'
-                   if not self.args["simple_output"]
-                   else 'simple',
-            verbose=verbose,
             target={
                 'url': self.requester.get_url(),
                 'methods': [method for method in self.requester.methods],
@@ -142,24 +124,7 @@ class CliController(FuzzController):
                 'body': self.args["data"],
                 'type_fuzzing': self.__get_target_fuzzing_type(),
                 },
-            dictionary=self.dict_metadata,
-            prefix=self.args["prefix"],
-            suffix=self.args["suffix"],
-            case=case,
-            encoder=self.args["encoder"],
-            encode_only=self.args["encode_only"],
-            match={
-                'status': self.args["match_status"],
-                'time': self.args["match_time"],
-                'length': self.args["match_size"],
-                'words': self.args["match_words"],
-                'lines': self.args["match_lines"],
-                },
-            blacklist_status=self.args["blacklist_status"],
-            scanner=self.args["scanner"],
-            delay=self.delay,
-            threads=self.number_of_threads,
-            report=self.args["report_name"],
+            dictionary=self.dict_metadata
         )
 
     def check_connection(self) -> None:
@@ -203,30 +168,31 @@ class CliController(FuzzController):
 
     def handle_pause(self):
         """Handle with the Ctrl+C pause"""
-        self.summary.pause_timer()
         self.fuzzer.pause()
         self.fuzzer.wait_until_pause()
+        self.summary.pause_timer()
         if not self.is_verbose_mode():
             CliOutput.print("")
-        str_percentage = self.cli_output.get_percentage(self.last_index, self.total_requests)
-        self.cli_output.info_box(
-            f"Progress: {Colors.LIGHT_YELLOW}{str_percentage}{Colors.RESET} completed"
-        )
         answer = ''
         while answer not in ['q', 'c']:
             try:
-                answer = self.cli_output.ask_data("[c]ontinue | [q]uit")
+                answer = self.cli_output.ask_data("[c]ontinue | [s]tatus | [q]uit")
             except KeyboardInterrupt:
+                answer = 'q'
+            if answer == "q":
                 self.fuzzer.stop()
                 self.cli_output.abort_box("Test aborted by the user")
-                answer = 'q'
-            else:
-                if answer == "q":
-                    self.fuzzer.stop()
-                    self.cli_output.abort_box("Test aborted by the user")
-                elif answer == "c":
-                    self.summary.resume_timer()
-                    self.fuzzer.resume()
+            elif answer == 's':
+                str_percentage = self.cli_output.get_percentage(
+                    self.last_index,
+                    self.total_requests
+                )
+                self.cli_output.info_box(
+                    f"Progress: {Colors.LIGHT_YELLOW}{str_percentage}{Colors.RESET} completed"
+                )
+            elif answer == "c":
+                self.summary.resume_timer()
+                self.fuzzer.resume()
 
     def prepare(self) -> None:
         """Prepare the application before the fuzzing"""

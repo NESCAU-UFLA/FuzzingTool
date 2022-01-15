@@ -256,61 +256,17 @@ class CliOutput:
               f"{Colors.LIGHT_YELLOW}{value}{Colors.RESET}")
 
     def print_configs(self,
-                      output: str,
-                      verbose: str,
                       target: dict,
-                      dictionary: dict,
-                      prefix: list,
-                      suffix: list,
-                      case: str,
-                      encoder: str,
-                      encode_only: str,
-                      match: dict,
-                      scanner: str,
-                      blacklist_status: str,
-                      delay: float,
-                      threads: int,
-                      report: str) -> None:
+                      dictionary: dict) -> None:
         """Prints the program configuration
 
-        @type output: str
-        @param output: The display output mode
-        @type verbose: str
-        @param verbose: The verbosity mode
         @type target: dict
         @param taget: The target
         @type dictionary: dict
         @param dictionary: The dictionary used in the tests
-        @type prefix: list
-        @param prefix: The prefixes used with the payload
-        @type suffix: list
-        @param suffix: The suffixes used with the payload
-        @type case: str
-        @param case: The payload case
-        @type encoder: str
-        @param encoder: The encoders string that caontains
-                        the encoder name and parameters
-        @type encode_only: str
-        @param encode_only: The encode only regex
-        @type match: dict
-        @param match: The matcher options on a dictionary
-        @type scanner: str
-        @param scanner: The scanner string that caontains
-                        the scanner name and parameters
-        @type blacklist_status: str
-        @param blacklist_status: The blacklist status arguments
-                                 (codes and action taken)
-        @type delay: float
-        @param delay: The delay between each request
-        @type threads: int
-        @param threads: The number of threads used in the tests
-        @type report: str
-        @param report: The report name and/or format
         """
         print("")
         spaces = 3
-        self.print_config("Output mode", output)
-        self.print_config("Verbosity mode", verbose)
         self.print_config("Target", get_host(get_pure_url(target['url'])))
         self.print_config("Methods",
                           stringfy_list(target['methods']),
@@ -325,30 +281,6 @@ class CliOutput:
                          f"(removed {dictionary['removed']} "
                          f"duplicated payloads)")
         self.print_config("Dictionary size", dict_size)
-        if prefix:
-            self.print_config("Prefix", stringfy_list(prefix))
-        if suffix:
-            self.print_config("Suffix", stringfy_list(suffix))
-        if case:
-            self.print_config("Payload case", case)
-        if encoder:
-            encode_msg = encoder
-            if encode_only:
-                encode_msg = f"{encoder} (encode with regex {encode_only})"
-            self.print_config("Encoder", encode_msg)
-        for key, value in match.items():
-            if value:
-                self.print_config(f"Match {key}", value)
-        if scanner:
-            self.print_config("Scanner", scanner)
-        if blacklist_status:
-            self.print_config("Blacklisted status",
-                              blacklist_status)
-        if delay:
-            self.print_config("Delay", f"{delay} seconds")
-        self.print_config("Threads", threads)
-        if report:
-            self.print_config("Report", report)
         print("")
 
     def get_percentage(self, item_index: int, total_requests: int) -> str:
