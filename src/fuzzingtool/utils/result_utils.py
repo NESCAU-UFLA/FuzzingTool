@@ -28,10 +28,10 @@ class ResultUtils:
 
     @staticmethod
     def get_formatted_result(payload: str,
-                            rtt: float,
-                            length: int,
-                            words: int,
-                            lines: int) -> Tuple[str, str, str]:
+                             rtt: float,
+                             length: int,
+                             words: int,
+                             lines: int) -> Tuple[str, str, str]:
         """Format the result into a dict of strings
 
         @type payload: str

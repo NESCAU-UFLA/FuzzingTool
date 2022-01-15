@@ -429,7 +429,7 @@ class CliOutput:
 
     def __get_formatted_status(self, status: int) -> str:
         """Formats the status code to output
-        
+
         @type status: int
         @param status: The status code of the response
         @returns str: The formatted status code to output
