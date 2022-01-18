@@ -20,7 +20,7 @@ FuzzingTool is a web penetration testing tool, that handles with fuzzing. After 
 We're not responsible for the misuse of this tool. This project was created for educational purposes and should not be used in environments without legal authorization.
 
 ## Screenshot
-![usage-example](https://user-images.githubusercontent.com/43549176/130678553-3620b58e-9153-4efd-b84c-00a3e171e2b4.png)
+![usage-screenshot](https://user-images.githubusercontent.com/43549176/149956432-7f3912df-59a1-416a-94a6-276df7357ec2.png)
 
 ## Getting Started
 Before we start the *penetration testings*, take a look at the **installing** and **prerequisites**.
