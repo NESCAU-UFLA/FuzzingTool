@@ -15,16 +15,16 @@ jobs:
         with:
           # Disabling shallow clone is recommended for improving relevancy of reporting
           fetch-depth: 0
-      - name: "Installing dependencies"
+      - name: Installing Dependencies
         run: pip install setuptools pytest pytest-cov
 
-      - name: "Build"
+      - name: Build
         run: |
           python3 setup.py sdist
           cd dist
           pip3 install *
 
-      - name: "Generate Coverage"
+      - name: Generate Coverage
         run: |
           pytest --cov=src/fuzzingtool --cov-report=xml
 
