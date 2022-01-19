@@ -1,6 +1,9 @@
 name: SonarCloud
 
-on: 
+on:
+  push:
+    branches:
+      - master
   pull_request:
     branches:
       - develop
@@ -41,8 +44,6 @@ jobs:
           args: >
             -Dsonar.organization=nescau-ufla
             -Dsonar.projectKey=NESCAU-UFLA_FuzzingTool
-            -Dsonar.pullrequest.provider=GitHub
-            -Dsonar.pullrequest.key=${{ github.event.pull_request.number }}
             -Dsonar.python.version=3
             -Dsonar.python.coverage.reportPaths=coverage.xml
             -Dsonar.sources=src/fuzzingtool/
