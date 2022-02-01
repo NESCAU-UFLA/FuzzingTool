@@ -39,20 +39,19 @@ class ArgumentBuilder:
         @type urls: List[str]
         @param urls: The target URLs
         @type method: str
-        @param method: The request methods
+        @param method: The request method
         @type body: str
         @param body: The raw request body data
         @returns dict: The targets data builded into a dictionary
         """
-        methods = split_str_to_list(method)
-        if not methods:
+        if not method:
             if body and not ('?' in url or FUZZING_MARK in url):
-                methods = ['POST']
+                method = 'POST'
             else:
-                methods = ['GET']
+                method = 'GET'
         return {
             'url': url,
-            'methods': methods,
+            'method': method,
             'body': body,
             'header': {},
         }
@@ -98,7 +97,6 @@ class ArgumentBuilder:
         except ValueError:
             raise BadArgumentFormat("Invalid header format. E.g. Key: value")
         method, path, _ = header_list.popleft().split(' ')
-        methods = split_str_to_list(method)
         headers = build_header_from_raw_http(header_list)
         url = f"{scheme}://{headers['Host']}{path}"
         if len(header_list) > 0:
@@ -107,7 +105,7 @@ class ArgumentBuilder:
             body = ''
         return {
             'url': url,
-            'methods': methods,
+            'method': method,
             'body': body,
             'header': headers,
         }

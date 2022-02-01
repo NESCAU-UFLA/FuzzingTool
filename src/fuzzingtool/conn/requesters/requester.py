@@ -53,7 +53,6 @@ class Requester:
     def __init__(self,
                  url: str,
                  method: str = 'GET',
-                 methods: List[str] = None,
                  body: str = '',
                  headers: Dict[str, str] = None,
                  follow_redirects: bool = True,
@@ -106,7 +105,6 @@ class Requester:
         if is_session or self.is_path_fuzzing():
             self.__session = requests.Session()
             self._request = self.__session_request
-        self.methods = methods if methods else [self.__method.word]
         if cookie:
             self.__header['Cookie'] = FuzzWord(cookie)
         self._lock = Lock()
@@ -117,6 +115,9 @@ class Requester:
         @returns str: The target URL
         """
         return self._url.word
+
+    def get_method(self) -> str:
+        return self.__method.word
 
     def is_method_fuzzing(self) -> bool:
         """The method fuzzing flag getter

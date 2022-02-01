@@ -119,7 +119,7 @@ class CliController(FuzzController):
         self.cli_output.print_configs(
             target={
                 'url': self.requester.get_url(),
-                'methods': [method for method in self.requester.methods],
+                'method': self.requester.get_method(),
                 'header': 'custom' if self.args["raw_http"] else 'default',
                 'body': self.args["data"],
                 'type_fuzzing': self.__get_target_fuzzing_type(),

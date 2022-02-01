@@ -268,9 +268,7 @@ class CliOutput:
         print("")
         spaces = 3
         self.print_config("Target", get_host(get_pure_url(target['url'])))
-        self.print_config("Methods",
-                          stringfy_list(target['methods']),
-                          spaces)
+        self.print_config("Method", target['method'], spaces)
         self.print_config("HTTP headers", target['header'], spaces)
         if target['body']:
             self.print_config("Body data", target['body'], spaces)

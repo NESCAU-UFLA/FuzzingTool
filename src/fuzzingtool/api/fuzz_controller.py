@@ -85,20 +85,17 @@ class FuzzController:
         self.delay = self.args["delay"]
         self.number_of_threads = self.args["threads"]
         self._init_dictionary()
-        self.total_requests = (len(self.dictionary)
-                               * len(self.requester.methods))
+        self.dictionary.reload()
+        self.total_requests = len(self.dictionary)
 
     def start(self) -> None:
         """Starts the fuzzing application.
-           The target is fuzzed based on his own methods list
+           The target is fuzzed based on his own method list
         """
         Result.reset_index()
         self.summary.start_timer()
         try:
-            for method in self.requester.methods:
-                self.requester.set_method(method)
-                self.dictionary.reload()
-                self.fuzz()
+            self.fuzz()
         except StopActionInterrupt as e:
             if self.fuzzer and self.fuzzer.is_running():
                 self.fuzzer.stop()
@@ -197,7 +194,7 @@ class FuzzController:
             requester_cls = Requester
         self.requester = requester_cls(
             url=target['url'],
-            methods=target['methods'],
+            method=target['method'],
             body=target['body'],
             headers=target['header'],
             follow_redirects=self.args["follow_redirects"],
