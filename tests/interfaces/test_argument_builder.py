@@ -7,11 +7,11 @@ from src.fuzzingtool.interfaces.argument_builder import ArgumentBuilder as AB
 class TestArgumentBuilder(unittest.TestCase):
     def test_build_target_from_args(self):
         test_url = "http://test-url.com/"
-        test_method = "GET,POST"
+        test_method = "HEAD"
         test_body = "user=test&pass=test"
         return_expected = {
             'url': test_url,
-            'methods': ["GET", "POST"],
+            'method': "HEAD",
             'body': test_body,
             'header': {},
         }
@@ -25,7 +25,7 @@ class TestArgumentBuilder(unittest.TestCase):
         test_body = ''
         return_expected = {
             'url': test_url,
-            'methods': ["GET"],
+            'method': "GET",
             'body': test_body,
             'header': {},
         }
@@ -39,7 +39,7 @@ class TestArgumentBuilder(unittest.TestCase):
         test_body = "user=test&pass=test"
         return_expected = {
             'url': test_url,
-            'methods': ["POST"],
+            'method': "POST",
             'body': test_body,
             'header': {},
         }
@@ -57,7 +57,7 @@ class TestArgumentBuilder(unittest.TestCase):
         test_scheme = "https"
         return_expected = {
             'url': f"{test_scheme}://test-url.com/",
-            'methods': ["GET"],
+            'method': "GET",
             'body': '',
             'header': expected_header,
         }
@@ -83,7 +83,7 @@ class TestArgumentBuilder(unittest.TestCase):
         test_body = "user=test&pass=test"
         return_expected = {
             'url': f"{test_scheme}://test-url.com/",
-            'methods': ["POST"],
+            'method': "POST",
             'body': test_body,
             'header': expected_header,
         }

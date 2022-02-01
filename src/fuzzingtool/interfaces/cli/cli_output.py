@@ -25,7 +25,7 @@ from typing import Tuple
 
 from ...objects.result import Result
 from ...utils.consts import MAX_PAYLOAD_LENGTH_TO_OUTPUT, PATH_FUZZING, SUBDOMAIN_FUZZING
-from ...utils.utils import stringfy_list, fix_payload_to_output
+from ...utils.utils import fix_payload_to_output
 from ...utils.http_utils import get_path, get_host, get_pure_url
 from ...utils.result_utils import ResultUtils
 
@@ -268,9 +268,7 @@ class CliOutput:
         print("")
         spaces = 3
         self.print_config("Target", get_host(get_pure_url(target['url'])))
-        self.print_config("Methods",
-                          stringfy_list(target['methods']),
-                          spaces)
+        self.print_config("Method", target['method'], spaces)
         self.print_config("HTTP headers", target['header'], spaces)
         if target['body']:
             self.print_config("Body data", target['body'], spaces)

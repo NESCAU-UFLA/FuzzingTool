@@ -31,7 +31,7 @@ class TestFuzzController(unittest.TestCase):
     ):
         return_target = {
             'url': "http://test-url.com/",
-            'methods': ['GET'],
+            'method': 'GET',
             'body': '',
             'header': {
                 'test-key': "test-value"
