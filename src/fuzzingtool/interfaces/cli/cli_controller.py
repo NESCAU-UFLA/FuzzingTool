@@ -22,8 +22,6 @@ import time
 import threading
 from argparse import Namespace
 
-from fuzzingtool.objects.payload import Payload
-
 from .cli_output import CliOutput, Colors
 from ..argument_builder import ArgumentBuilder as AB
 from ... import __version__
@@ -32,7 +30,7 @@ from ...core.bases.base_plugin import Plugin
 from ...utils.http_utils import get_host, get_pure_url
 from ...utils.logger import Logger
 from ...reports.report import Report
-from ...objects import Error, Result
+from ...objects import BaseItem, Error, Result, Payload
 from ...exceptions.base_exceptions import FuzzingToolException
 from ...exceptions.main_exceptions import FuzzControllerException, StopActionInterrupt
 from ...exceptions.request_exceptions import RequestException
@@ -184,7 +182,7 @@ class CliController(FuzzController):
                 self.cli_output.abort_box("Test aborted by the user")
             elif answer == 's':
                 str_percentage = self.cli_output.get_percentage(
-                    self.last_index,
+                    BaseItem.index,
                     self.total_requests
                 )
                 self.cli_output.info_box(
@@ -264,7 +262,6 @@ class CliController(FuzzController):
             self.cli_output.progress_status(
                 result.index, self.total_requests, result.payload
             )
-        self.last_index = result.index
 
     def _request_exception_callback(self, error: Error) -> None:
         if self.ignore_errors:
@@ -279,7 +276,6 @@ class CliController(FuzzController):
                 self.logger.write(str(error), error.payload)
         else:
             self.stop_action = str(error)
-        self.last_index = error.index
 
     def _invalid_hostname_callback(self, error: Error) -> None:
         if self.verbose[0]:
@@ -289,7 +285,6 @@ class CliController(FuzzController):
             self.cli_output.progress_status(
                 error.index, self.total_requests, error.payload
             )
-        self.last_index = error.index
 
     def _init_dictionary(self) -> None:
         try:
