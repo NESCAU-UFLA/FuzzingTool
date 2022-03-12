@@ -187,7 +187,7 @@ class Fuzzer:
                         response: Response,
                         rtt: float,
                         payload: Payload,
-                        *args):
+                        *args) -> None:
         """Threats the result
 
         @type response: Response
