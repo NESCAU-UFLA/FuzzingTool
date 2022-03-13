@@ -21,3 +21,4 @@
 from .error import Error
 from .payload import Payload
 from .result import Result
+from .scanner_result import ScannerResult

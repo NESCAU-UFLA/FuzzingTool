@@ -202,9 +202,10 @@ class Fuzzer:
             self.__blacklist_status.do_action(response.status_code)
         result = Result(response, rtt, payload, self.__requester.get_fuzzing_type())
         self.__scanner.inspect_result(result, *args)
-        self.result_callback(
-            result,
-            (self.__scanner.scan(result)
-             if self.__matcher.match(result)
-             else False)
-        )
+        if (self.__matcher.match(result)
+                and self.__scanner.scan(result)):
+            self.__scanner.process(result)
+            valid = True
+        else:
+            valid = False
+        self.result_callback(result, valid)

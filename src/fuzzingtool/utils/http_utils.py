@@ -47,6 +47,27 @@ def get_path(url: str) -> str:
     return url[url.index('/'):]
 
 
+def get_file(url: str) -> str:
+    url = get_url_without_scheme(url)
+    return url[url.rindex('/')+1:]
+
+
+def get_fname(url: str) -> str:
+    file = get_file(url)
+    if '/' in file:
+        file = file[file.rindex('/'):]
+    if '.' in file:
+        file = file[:file.rindex('.')]
+    return file
+
+
+def get_file_ext(url: str) -> str:
+    file = get_file(url)
+    if '.' in file:
+        return file[file.rindex('.'):]
+    return ''
+
+
 def get_pure_url(url: str) -> str:
     """Gets the URL without the FUZZING_MARK variable
 

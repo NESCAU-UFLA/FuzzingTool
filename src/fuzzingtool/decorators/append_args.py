@@ -41,7 +41,7 @@ def append_args(function: Callable) -> Callable:
         @param result: The result object
         """
         if args:
-            result.custom.update(args[0])
+            result.scanners_res.update(args[0])
         return function(cls, result)
 
     return wrapper

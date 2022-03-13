@@ -3,7 +3,7 @@ from unittest.mock import Mock, patch
 from datetime import datetime
 
 from src.fuzzingtool.interfaces.cli.cli_output import Colors, CliOutput
-from src.fuzzingtool.objects import Payload, Result
+from src.fuzzingtool.objects import Payload, Result, ScannerResult
 from src.fuzzingtool.utils.consts import PATH_FUZZING, SUBDOMAIN_FUZZING
 from src.fuzzingtool.utils.http_utils import get_host, get_path
 from src.fuzzingtool.utils.result_utils import ResultUtils
@@ -227,8 +227,10 @@ class TestCliOutput(unittest.TestCase):
             test_lines
         )
         test_result = Result(response=ResponseMock())
-        test_result.custom['test_0'] = None
-        test_result.custom['test_1'] = "test_custom"
+        test_scanner = "test-scanner"
+        test_result.scanners_res[test_scanner] = ScannerResult(test_scanner)
+        test_result.scanners_res[test_scanner].data['test_0'] = None
+        test_result.scanners_res[test_scanner].data['test_1'] = "test_custom"
         return_expected = (
             f"{test_payload} {Colors.GRAY}["
             f"{Colors.LIGHT_GRAY}Code{Colors.RESET} {test_status_code} | "
@@ -237,7 +239,7 @@ class TestCliOutput(unittest.TestCase):
             f"{Colors.LIGHT_GRAY}Words{Colors.RESET} {test_words} | "
             f"{Colors.LIGHT_GRAY}Lines{Colors.RESET} {test_lines}{Colors.GRAY}]{Colors.RESET}"
             f"\n{Colors.LIGHT_YELLOW}|_ test_1: "
-            f"{ResultUtils.format_custom_field(test_result.custom['test_1'])}{Colors.RESET}"
+            f"{ResultUtils.format_custom_field(test_result.scanners_res[test_scanner].data['test_1'])}{Colors.RESET}"
         )
         returned_data = CliOutput()._CliOutput__get_formatted_result(test_result)
         mock_format_items.assert_called_once_with(test_result)

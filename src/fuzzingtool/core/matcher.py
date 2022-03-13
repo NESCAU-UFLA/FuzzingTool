@@ -294,10 +294,14 @@ class Matcher:
                            lines: str) -> dict:
         """The comparator setter
 
-        @type size: str
-        @param size: The size to be compared with response body
         @type time: str
         @param time: The time to be compared with the RTT
+        @type size: str
+        @param size: The size to be compared with response body
+        @type words: str
+        @param words: The number of words to be compared with response body
+        @type lines: str
+        @param lines: The number of lines to be compared with responde body
         @returns dict: The data comparator
         """
         comparator = {

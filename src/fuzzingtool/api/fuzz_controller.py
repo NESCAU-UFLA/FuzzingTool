@@ -26,9 +26,9 @@ from ..utils.utils import split_str_to_list
 from ..utils.file_utils import read_file
 from ..utils.result_utils import ResultUtils
 from ..core import BlacklistStatus, Dictionary, Fuzzer, Matcher, Payloader, Summary
+from ..core.bases import BaseScanner, BaseEncoder
 from ..core.defaults.scanners import (DataScanner,
                                       PathScanner, SubdomainScanner)
-from ..core.bases import BaseScanner, BaseEncoder
 from ..conn.requesters import Requester, SubdomainRequester
 from ..conn.request_parser import check_is_subdomain_fuzzing
 from ..factories import PluginFactory, WordlistFactory
@@ -127,6 +127,9 @@ class FuzzController:
         while self.fuzzer.join():
             if self.stop_action:
                 raise StopActionInterrupt(self.stop_action)
+            if not self.scanner.payload_queue.empty():
+                self.dictionary.put(self.scanner.payload_queue.get())
+                self.total_requests = len(self.dictionary)
         self.fuzzer.stop()
 
     def _stop_callback(self, status: int) -> None:

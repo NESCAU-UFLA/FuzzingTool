@@ -83,7 +83,7 @@ class Result(BaseItem):
         self.words = len(content.split())
         self.lines = content.count(b'\n')
         self.fuzz_type = fuzz_type
-        self.custom = {}
+        self.scanners_res = {}
         self._payload = payload
         self.__response = response
 
@@ -100,10 +100,14 @@ class Result(BaseItem):
             f"Words {words} | "
             f"Lines {lines}]"
         )
-        for key, value in self.custom.items():
-            if value is not None:
-                returned_str += (f"\n|_ {key}: "
-                                 f"{ResultUtils.format_custom_field(value)}")
+        for scanner, s_res in self.scanners_res.items():
+            for key, value in s_res.data.items():
+                if value is not None:
+                    returned_str += (f"\n|_ {key}: "
+                                     f"{ResultUtils.format_custom_field(value)}")
+            if s_res.queued_payloads:
+                returned_str += (f"\n|_ Scanner {scanner} queued "
+                                 f"{s_res.queued_payloads} payloads")
         return returned_str
 
     def __iter__(self) -> Iterator[Tuple]:
@@ -118,8 +122,9 @@ class Result(BaseItem):
         yield 'body_size', self.body_size
         yield 'words', self.words
         yield 'lines', self.lines
-        for key, value in self.custom.items():
-            yield key, ResultUtils.format_custom_field(value, force_detailed=True)
+        for s_res in self.scanners_res.values():
+            for key, value in s_res.data.items():
+                yield key, ResultUtils.format_custom_field(value, force_detailed=True)
         yield 'payload', self.payload
         if Result.save_payload_configs:
             yield 'payload_raw', self._payload.raw

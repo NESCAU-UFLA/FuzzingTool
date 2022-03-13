@@ -18,19 +18,45 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+from ...bases.base_plugin import Plugin
 from ...bases.base_scanner import BaseScanner
 from ....objects.result import Result
+from ....decorators.plugin_meta import plugin_meta
+from ....utils.http_utils import get_file, get_fname, get_file_ext
+from ....utils.consts import PATH_FUZZING
+
+DEFAULT_EXTENSIONS = ".bak,.tgz,.zip,.tar.gz,~,.rar,.old,.swp"
 
 
-class DataScanner(BaseScanner):
+@plugin_meta
+class Backups(BaseScanner, Plugin):
     __author__ = ("Vitor Oriel",)
+    __params__ = {
+        'metavar': "EXTENSION",
+        'type': list,
+        'cli_list_separator': ',',
+    }
+    __desc__ = ("Look for backups extension on matched responses. "
+                f"Default extensions: {DEFAULT_EXTENSIONS}")
+    __type__ = PATH_FUZZING
+    __version__ = "0.1"
+
+    """
+    Attributes:
+        regexers: The regexes objects to grep the content into the response body
+    """
+    def __init__(self, extensions: list):
+        self.extensions = extensions if extensions else DEFAULT_EXTENSIONS.split(',')
+        BaseScanner.__init__(self)
 
     def inspect_result(self, result: Result) -> None:
-        super().inspect_result(result)
-        self._get_self_res(result).data['payload_length'] = len(result.payload)
+        BaseScanner.inspect_result(self, result)
 
     def scan(self, result: Result) -> bool:
-        return True
+        return get_file_ext(result.url) not in self.extensions
 
     def process(self, result: Result) -> None:
-        pass
+        for ext in self.extensions:
+            url = result.url
+            self._enqueue_payload(result, f"{get_fname(url)}{ext}")
+            self._enqueue_payload(result, f"{get_file(url)}{ext}")

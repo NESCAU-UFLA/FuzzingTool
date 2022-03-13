@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import Mock, patch
 
-from src.fuzzingtool.objects import Payload, Result
+from src.fuzzingtool.objects import Payload, Result, ScannerResult
 from src.fuzzingtool.objects.base_objects import BaseItem
 from src.fuzzingtool.utils.result_utils import ResultUtils
 from ..mock_utils.response_mock import ResponseMock
@@ -49,8 +49,10 @@ class TestResult(unittest.TestCase):
             rtt=3.0,
             payload=Payload('test-payload')
         )
-        result.custom['test_0'] = None
-        result.custom['test_1'] = "test_value"
+        test_scanner = "test-scanner"
+        result.scanners_res[test_scanner] = ScannerResult(test_scanner)
+        result.scanners_res[test_scanner].data['test_0'] = None
+        result.scanners_res[test_scanner].data['test_1'] = "test-value"
         payload, rtt, length, words, lines = ResultUtils.get_formatted_result(
             result.payload, result.rtt, result.body_size,
             result.words, result.lines
@@ -62,7 +64,7 @@ class TestResult(unittest.TestCase):
             f"Size {length} | "
             f"Words {words} | "
             f"Lines {lines}]"
-            f"\n|_ test_1: {result.custom['test_1']}"
+            f"\n|_ test_1: {result.scanners_res[test_scanner].data['test_1']}"
         )
         self.assertEqual(str(result), return_expected)
 
@@ -79,7 +81,9 @@ class TestResult(unittest.TestCase):
             rtt=3.0,
             payload=payload
         )
-        result.custom['test-key'] = "test-value"
+        test_scanner = "test-scanner"
+        result.scanners_res[test_scanner] = ScannerResult(test_scanner)
+        result.scanners_res[test_scanner].data['test-key'] = "test-value"
         expected_result_dict = {
             'index': 1,
             'url': "https://test-url.com/",

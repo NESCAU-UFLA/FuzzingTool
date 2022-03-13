@@ -480,11 +480,14 @@ class CliOutput:
             f"{Colors.LIGHT_GRAY}Words{Colors.RESET} {words} | "
             f"{Colors.LIGHT_GRAY}Lines{Colors.RESET} {lines}{Colors.GRAY}]{Colors.RESET}"
         )
-        if result.custom:
-            custom_str = ''
-            for key, value in result.custom.items():
+        custom_str = ''
+        for scanner, s_res in result.scanners_res.items():
+            for key, value in s_res.data.items():
                 if (value is not None and isinstance(value, bool)) or value:
                     custom_str += (f"\n{Colors.LIGHT_YELLOW}|_ {key}: "
                                    f"{ResultUtils.format_custom_field(value)}{Colors.RESET}")
-            formatted_result_str += custom_str
+            if s_res.queued_payloads:
+                custom_str += (f"\n{Colors.LIGHT_YELLOW}|_ Scanner {scanner} queued "
+                               f"{s_res.queued_payloads} payloads{Colors.RESET}")
+        formatted_result_str += custom_str
         return formatted_result_str

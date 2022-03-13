@@ -18,19 +18,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from ...bases.base_scanner import BaseScanner
-from ....objects.result import Result
-
-
-class DataScanner(BaseScanner):
-    __author__ = ("Vitor Oriel",)
-
-    def inspect_result(self, result: Result) -> None:
-        super().inspect_result(result)
-        self._get_self_res(result).data['payload_length'] = len(result.payload)
-
-    def scan(self, result: Result) -> bool:
-        return True
-
-    def process(self, result: Result) -> None:
-        pass
+class ScannerResult:
+    def __init__(self, scanner_name: str):
+        self.source = scanner_name
+        self.data = {}
+        self.queued_payloads = 0

@@ -24,7 +24,6 @@ from ...bases.base_plugin import Plugin
 from ...bases.base_scanner import BaseScanner
 from ....objects.result import Result
 from ....decorators.plugin_meta import plugin_meta
-from ....decorators.append_args import append_args
 from ....exceptions.main_exceptions import MissingParameter, BadArgumentFormat
 
 
@@ -51,13 +50,16 @@ class Find(BaseScanner, Plugin):
         except re.error:
             raise BadArgumentFormat("invalid regex")
 
-    @append_args
     def inspect_result(self, result: Result) -> None:
-        result.custom['found'] = None
+        BaseScanner.inspect_result(self, result)
+        self._get_self_res(result).data['found'] = None
 
     def scan(self, result: Result) -> bool:
         found = (True
                  if self.__regexer.search(result.get_response().text)
                  else False)
-        result.custom['found'] = found
+        self._get_self_res(result).data['found'] = found
         return found
+
+    def process(self, result: Result) -> None:
+        pass

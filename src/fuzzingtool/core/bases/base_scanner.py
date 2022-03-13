@@ -19,12 +19,19 @@
 # SOFTWARE.
 
 from abc import ABC, abstractmethod
+from queue import Queue
 
-from ...objects.result import Result
+from ...objects import Result, ScannerResult
 
 
 class BaseScanner(ABC):
     """Base scanner"""
+    def __init__(self):
+        self.payload_queue = Queue()
+
+    def __str__(self) -> str:
+        return type(self).__name__
+
     @abstractmethod
     def inspect_result(self, result: Result) -> None:
         """Inspects the FuzingTool result to add new information if needed
@@ -32,7 +39,8 @@ class BaseScanner(ABC):
         @type result: Result
         @param result: The result object
         """
-        pass
+        scanner_name = str(self)
+        result.scanners_res[scanner_name] = ScannerResult(scanner_name)
 
     @abstractmethod
     def scan(self, result: Result) -> bool:
@@ -43,3 +51,20 @@ class BaseScanner(ABC):
         @reeturns bool: A match flag
         """
         pass
+
+    @abstractmethod
+    def process(self, result: Result) -> None:
+        """Process the FuzzingTool result
+        
+        @type result: Result
+        @param result: The result object
+        """
+        pass
+
+    def _enqueue_payload(self, result: Result, payload: str) -> None:
+        self.payload_queue.put(payload)
+        scanner_res: ScannerResult = self._get_self_res(result)
+        scanner_res.queued_payloads += 1
+
+    def _get_self_res(self, result: Result) -> ScannerResult:
+        return result.scanners_res[str(self)]

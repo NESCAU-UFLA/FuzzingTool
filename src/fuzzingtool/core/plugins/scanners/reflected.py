@@ -22,7 +22,6 @@ from ...bases.base_plugin import Plugin
 from ...bases.base_scanner import BaseScanner
 from ....objects.result import Result
 from ....decorators.plugin_meta import plugin_meta
-from ....decorators.append_args import append_args
 
 
 @plugin_meta
@@ -33,11 +32,14 @@ class Reflected(BaseScanner, Plugin):
     __type__ = ""
     __version__ = "0.1"
 
-    @append_args
     def inspect_result(self, result: Result) -> None:
-        result.custom['reflected'] = None
+        BaseScanner.inspect_result(self, result)
+        self._get_self_res(result).data['reflected'] = None
 
     def scan(self, result: Result) -> bool:
         reflected = result.payload in result.get_response().text
-        result.custom['reflected'] = reflected
+        self._get_self_res(result).data['reflected'] = reflected
         return reflected
+
+    def process(self, result: Result) -> None:
+        pass
