@@ -55,7 +55,7 @@ class BaseScanner(ABC):
     @abstractmethod
     def process(self, result: Result) -> None:
         """Process the FuzzingTool result
-        
+
         @type result: Result
         @param result: The result object
         """
