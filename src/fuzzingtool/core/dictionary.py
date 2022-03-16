@@ -38,8 +38,8 @@ class Dictionary:
         @param wordlist: The wordlist with the payloads
         """
         self.__wordlist = wordlist
+        self.__size = len(self.__wordlist)
         self.__payloads = Queue()
-        self.__additional_size = 0
 
     def __next__(self) -> List[str]:
         """Gets the next payload to be processed
@@ -62,7 +62,7 @@ class Dictionary:
         length_encoders = len(Payloader.encoder)
         if length_encoders == 0:
             length_encoders = 1
-        return (len(self.__wordlist) + self.__additional_size
+        return (self.__size
                 * length_suffix
                 * length_prefix
                 * length_encoders)
@@ -76,10 +76,10 @@ class Dictionary:
 
     def reload(self) -> None:
         """Reloads the payloads queue with the wordlist content"""
-        self.__additional_size = 0
         for payload in self.__wordlist:
             self.__payloads.put(payload)
 
-    def put(self, payload: str) -> None:
-        self.__payloads.put(payload)
-        self.__additional_size += 1
+    def fill_from_queue(self, payloads_queue: Queue) -> None:
+        while not payloads_queue.empty():
+            self.__payloads.put(payloads_queue.get())
+            self.__size += 1

@@ -158,10 +158,11 @@ class CliController(FuzzController):
             if not self.is_verbose_mode():
                 CliOutput.print("")
 
-    def fuzzer_join(self):
+    def join(self):
+        """Blocks until the fuzzer is running"""
         while self.fuzzer.is_running():
             try:
-                super().fuzzer_join()
+                super().join()
             except KeyboardInterrupt:
                 self.cli_output.warning_box("Ctrl+C detected, pausing threads ...")
                 self.handle_pause()
@@ -180,6 +181,7 @@ class CliController(FuzzController):
             except KeyboardInterrupt:
                 answer = 'q'
             if answer == "q":
+                self._has_job = False
                 self.fuzzer.stop()
                 self.cli_output.abort_box("Test aborted by the user")
             elif answer == 's':

@@ -27,7 +27,7 @@ from ...objects import Result, ScannerResult
 class BaseScanner(ABC):
     """Base scanner"""
     def __init__(self):
-        self.payload_queue = Queue()
+        self.payloads_queue = Queue()
 
     def __str__(self) -> str:
         return type(self).__name__
@@ -62,7 +62,7 @@ class BaseScanner(ABC):
         pass
 
     def _enqueue_payload(self, result: Result, payload: str) -> None:
-        self.payload_queue.put(payload)
+        self.payloads_queue.put(payload)
         scanner_res: ScannerResult = self._get_self_res(result)
         scanner_res.queued_payloads += 1
 

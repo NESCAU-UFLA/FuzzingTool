@@ -18,6 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+from queue import Queue
 from typing import Tuple, List, Union
 import time
 
@@ -32,7 +33,7 @@ from ..core.defaults.scanners import (DataScanner,
 from ..conn.requesters import Requester, SubdomainRequester
 from ..conn.request_parser import check_is_subdomain_fuzzing
 from ..factories import PluginFactory, WordlistFactory
-from ..objects import Error, Result
+from ..objects import BaseItem, Error, Result
 from ..exceptions.main_exceptions import (FuzzControllerException, StopActionInterrupt,
                                           WordlistCreationError, BuildWordlistFails)
 
@@ -87,21 +88,31 @@ class FuzzController:
         self._init_dictionary()
         self.dictionary.reload()
         self.total_requests = len(self.dictionary)
+        self.jobs = Queue()
+        self.jobs.put("wordlist")
 
     def start(self) -> None:
         """Starts the fuzzing application.
            The target is fuzzed based on his own method list
         """
-        Result.reset_index()
+        BaseItem.reset_index()
         self.summary.start_timer()
         try:
-            self.fuzz()
+            while not self.jobs.empty():
+                self.get_job()
+                self.fuzz()
+                self.check_for_new_jobs()
         except StopActionInterrupt as e:
             if self.fuzzer and self.fuzzer.is_running():
                 self.fuzzer.stop()
             raise e
         finally:
             self.summary.stop_timer()
+
+    def get_job(self) -> None:
+        """Get a job from the job queue"""
+        self.this_job = self.jobs.get()
+        self.total_requests = len(self.dictionary)
 
     def fuzz(self) -> None:
         """Prepare the fuzzer for the fuzzing tests"""
@@ -120,17 +131,19 @@ class FuzzController:
             ],
         )
         self.fuzzer.start()
-        self.fuzzer_join()
+        self.join()
 
-    def fuzzer_join(self):
-        """Join the fuzzer"""
+    def join(self) -> None:
+        """Blocks until the fuzzer ends"""
         while self.fuzzer.join():
             if self.stop_action:
                 raise StopActionInterrupt(self.stop_action)
-            if not self.scanner.payload_queue.empty():
-                self.dictionary.put(self.scanner.payload_queue.get())
-                self.total_requests = len(self.dictionary)
         self.fuzzer.stop()
+
+    def check_for_new_jobs(self):
+        if not self.scanner.payloads_queue.empty():
+            self.dictionary.fill_from_queue(self.scanner.payloads_queue)
+            self.jobs.put("scanner queue")
 
     def _stop_callback(self, status: int) -> None:
         """The skip target callback for the blacklist_action
