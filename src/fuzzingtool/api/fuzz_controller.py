@@ -140,7 +140,7 @@ class FuzzController:
                 raise StopActionInterrupt(self.stop_action)
         self.fuzzer.stop()
 
-    def check_for_new_jobs(self):
+    def check_for_new_jobs(self) -> None:
         if not self.scanner.payloads_queue.empty():
             self.dictionary.fill_from_queue(self.scanner.payloads_queue)
             self.jobs.put("scanner queue")

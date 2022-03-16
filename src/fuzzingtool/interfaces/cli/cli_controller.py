@@ -158,7 +158,7 @@ class CliController(FuzzController):
             if not self.is_verbose_mode():
                 CliOutput.print("")
 
-    def join(self):
+    def join(self) -> None:
         """Blocks until the fuzzer is running"""
         while self.fuzzer.is_running():
             try:
@@ -167,7 +167,7 @@ class CliController(FuzzController):
                 self.cli_output.warning_box("Ctrl+C detected, pausing threads ...")
                 self.handle_pause()
 
-    def handle_pause(self):
+    def handle_pause(self) -> None:
         """Handle with the Ctrl+C pause"""
         self.fuzzer.pause()
         self.fuzzer.wait_until_pause()
