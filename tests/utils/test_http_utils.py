@@ -1,5 +1,4 @@
 import unittest
-from unittest.mock import Mock, patch
 
 from src.fuzzingtool.utils.http_utils import *
 from ..mock_utils.response_mock import ResponseMock
