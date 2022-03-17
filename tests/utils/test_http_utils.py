@@ -55,3 +55,24 @@ class TestHttpUtils(unittest.TestCase):
         returned_headers = build_raw_response_header(ResponseMock())
         self.assertIsInstance(returned_headers, str)
         self.assertEqual(returned_headers, return_expected)
+
+    def test_urlparse_file(self):
+        return_expected = "my_file.php"
+        test_url = f"http://test-url.com/test-path/{return_expected}"
+        returned_file = get_parsed_url(test_url).file
+        self.assertIsInstance(returned_file, str)
+        self.assertEqual(returned_file, return_expected)
+
+    def test_urlparse_file_name(self):
+        return_expected = "my_file"
+        test_url = f"http://test-url.com/test-path/{return_expected}.php"
+        returned_file = get_parsed_url(test_url).file_name
+        self.assertIsInstance(returned_file, str)
+        self.assertEqual(returned_file, return_expected)
+
+    def test_urlparse_file_ext(self):
+        return_expected = ".php"
+        test_url = f"http://test-url.com/test-path/my_file{return_expected}"
+        returned_file = get_parsed_url(test_url).file_ext
+        self.assertIsInstance(returned_file, str)
+        self.assertEqual(returned_file, return_expected)
