@@ -28,8 +28,8 @@ class PathScanner(BaseScanner):
     def inspect_result(self, result: Result) -> None:
         super().inspect_result(result)
         self.get_self_res(result).data['redirected'] = ''
-        if result.status > 300 and result.status < 400:
-            self.get_self_res(result).data['redirected'] = result.get_response().headers['Location']
+        if result.history.status > 300 and result.history.status < 400:
+            self.get_self_res(result).data['redirected'] = result.history.response.headers['Location']
 
     def scan(self, result: Result) -> bool:
         return True

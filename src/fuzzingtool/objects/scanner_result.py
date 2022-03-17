@@ -22,4 +22,4 @@ class ScannerResult:
     def __init__(self, scanner_name: str):
         self.source = scanner_name
         self.data = {}
-        self.queued_payloads = 0
+        self.enqueued_payloads = 0

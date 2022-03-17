@@ -22,7 +22,6 @@ from ...bases.base_plugin import Plugin
 from ...bases.base_scanner import BaseScanner
 from ....objects.result import Result
 from ....decorators.plugin_meta import plugin_meta
-from ....utils.http_utils import get_file, get_fname, get_file_ext
 from ....utils.consts import PATH_FUZZING
 
 DEFAULT_EXTENSIONS = ".bak,.tgz,.zip,.tar.gz,~,.rar,.old,.swp"
@@ -53,10 +52,10 @@ class Backups(BaseScanner, Plugin):
         BaseScanner.inspect_result(self, result)
 
     def scan(self, result: Result) -> bool:
-        return get_file_ext(result.url) not in self.extensions
+        return result.history.parsed_url.file_ext not in self.extensions
 
     def process(self, result: Result) -> None:
         for ext in self.extensions:
-            url = result.url
-            self.enqueue_payload(result, f"{get_fname(url)}{ext}")
-            self.enqueue_payload(result, f"{get_file(url)}{ext}")
+            parsed_url = result.history.parsed_url
+            self.enqueue_payload(result, f"{parsed_url.file_name}{ext}")
+            self.enqueue_payload(result, f"{parsed_url.file}{ext}")

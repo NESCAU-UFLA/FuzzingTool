@@ -26,7 +26,7 @@ from typing import Tuple
 from ...objects.result import Result
 from ...utils.consts import MAX_PAYLOAD_LENGTH_TO_OUTPUT, PATH_FUZZING, SUBDOMAIN_FUZZING
 from ...utils.utils import fix_payload_to_output
-from ...utils.http_utils import get_path, get_host, get_pure_url
+from ...utils.http_utils import get_parsed_url, get_pure_url
 from ...utils.result_utils import ResultUtils
 
 
@@ -253,7 +253,7 @@ class CliOutput:
         """
         print("")
         spaces = 3
-        self.print_config("Target", get_host(get_pure_url(target['url'])))
+        self.print_config("Target", get_parsed_url(get_pure_url(target['url'])).hostname)
         self.print_config("Method", target['method'], spaces)
         self.print_config("HTTP headers", target['header'], spaces)
         if target['body']:
@@ -412,13 +412,12 @@ class CliOutput:
         @returns str: The formatted payload to output
         """
         if result.fuzz_type == PATH_FUZZING:
-            try:
-                formatted_payload = get_path(result.url)
-            except ValueError:
-                formatted_payload = result.url
+            formatted_payload = result.history.parsed_url.path
+            if not formatted_payload:
+                return result.history.url
             return formatted_payload
         if result.fuzz_type == SUBDOMAIN_FUZZING:
-            return get_host(result.url)
+            return result.history.parsed_url.hostname
         return result.payload
 
     def __get_formatted_status(self, status: int) -> str:
@@ -454,10 +453,10 @@ class CliOutput:
         @returns Tuple[str, str, str, str, str, str]: The tuple with the formatted result items
         """
         payload, rtt, length, words, lines = ResultUtils.get_formatted_result(
-            self.__get_formatted_payload(result), result.rtt,
-            result.body_size, result.words, result.lines
+            self.__get_formatted_payload(result), result.history.rtt,
+            result.history.body_size, result.words, result.lines
         )
-        return (payload, self.__get_formatted_status(result.status), rtt, length, words, lines)
+        return (payload, self.__get_formatted_status(result.history.status), rtt, length, words, lines)
 
     def __get_formatted_result(self, result: Result) -> str:
         """Format the entire result message
@@ -482,8 +481,8 @@ class CliOutput:
                 if (value is not None and isinstance(value, bool)) or value:
                     custom_str += (f"\n{Colors.LIGHT_YELLOW}|_ {key}: "
                                    f"{ResultUtils.format_custom_field(value)}{Colors.RESET}")
-            if s_res.queued_payloads:
-                custom_str += (f"\n{Colors.LIGHT_YELLOW}|_ Scanner {scanner} queued "
-                               f"{s_res.queued_payloads} payloads{Colors.RESET}")
+            if s_res.enqueued_payloads:
+                custom_str += (f"\n{Colors.LIGHT_YELLOW}|_ Scanner {scanner} enqueued "
+                               f"{s_res.enqueued_payloads} payloads{Colors.RESET}")
         formatted_result_str += custom_str
         return formatted_result_str

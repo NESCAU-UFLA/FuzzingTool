@@ -30,7 +30,7 @@ from ..request_parser import (check_is_url_discovery,
                               check_is_data_fuzzing, request_parser)
 from ...utils.consts import (UNKNOWN_FUZZING, HTTP_METHOD_FUZZING,
                              PATH_FUZZING, SUBDOMAIN_FUZZING, DATA_FUZZING)
-from ...utils.http_utils import get_pure_url, get_host, get_url_without_scheme
+from ...utils.http_utils import get_parsed_url, get_pure_url, get_url_without_scheme
 from ...objects.fuzz_word import FuzzWord
 from ...exceptions.request_exceptions import RequestException
 
@@ -233,7 +233,7 @@ class Requester:
             UnicodeError,
             urllib3.exceptions.LocationParseError
         ):
-            raise RequestException(f"Invalid hostname {get_host(url)} for HTTP request")
+            raise RequestException(f"Invalid hostname {get_parsed_url(url).hostname} for HTTP request")
         except ValueError as e:
             raise RequestException(str(e))
         else:

@@ -78,7 +78,7 @@ class Grep(BaseScanner, Plugin):
         total_greped = 0
         for i, regexer in enumerate(self.__regexers):
             this_greped = list(set([
-                r.group() for r in regexer.finditer(result.get_response().text)
+                r.group() for r in regexer.finditer(result.history.response.text)
             ]))
             total_greped += len(this_greped)
             self.get_self_res(result).data[f'greped_regex_{i}'] = this_greped

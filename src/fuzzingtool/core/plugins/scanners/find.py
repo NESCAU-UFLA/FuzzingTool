@@ -56,7 +56,7 @@ class Find(BaseScanner, Plugin):
 
     def scan(self, result: Result) -> bool:
         found = (True
-                 if self.__regexer.search(result.get_response().text)
+                 if self.__regexer.search(result.history.response.text)
                  else False)
         self.get_self_res(result).data['found'] = found
         return found

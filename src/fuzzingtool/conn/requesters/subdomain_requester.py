@@ -25,7 +25,7 @@ from requests import Response
 
 from .requester import Requester
 from ..request_parser import request_parser
-from ...utils.http_utils import get_host
+from ...utils.http_utils import get_parsed_url
 from ...utils.consts import SUBDOMAIN_FUZZING
 from ...exceptions.request_exceptions import InvalidHostname
 
@@ -47,7 +47,7 @@ class SubdomainRequester(Requester):
     def request(self, payload: str = '') -> Tuple[Response, float, Dict[str, str]]:
         with self._lock:
             request_parser.set_payload(payload)
-            host = get_host(request_parser.get_url(self._url))
+            host = get_parsed_url(request_parser.get_url(self._url)).hostname
         ip = self.resolve_hostname(host)
         return (*(super().request(payload)), {'ip': ip})
 

@@ -29,7 +29,7 @@ from ..argument_builder import ArgumentBuilder as AB
 from ... import __version__
 from ...api.fuzz_controller import FuzzController
 from ...core.bases.base_plugin import Plugin
-from ...utils.http_utils import get_host, get_pure_url
+from ...utils.http_utils import get_parsed_url, get_pure_url
 from ...utils.logger import Logger
 from ...reports.report import Report
 from ...objects import Error, Result
@@ -148,7 +148,7 @@ class CliController(FuzzController):
            Each target is fuzzed based on their own methods list
         """
         self.cli_output.info_box("Start fuzzing on "
-                                 + get_host(get_pure_url(self.requester.get_url())))
+                                 + get_parsed_url(get_pure_url(self.requester.get_url())).hostname)
         try:
             super().start()
         except StopActionInterrupt as e:
@@ -156,7 +156,7 @@ class CliController(FuzzController):
 
     def prepare(self) -> None:
         """Prepare the application before the fuzzing"""
-        self.target_host = get_host(get_pure_url(self.requester.get_url()))
+        self.target_host = get_parsed_url(get_pure_url(self.requester.get_url())).hostname
         if self.is_verbose_mode():
             self.cli_output.info_box(f"Preparing target {self.target_host} ...")
         self.check_ignore_errors()

@@ -37,7 +37,7 @@ class Reflected(BaseScanner, Plugin):
         self.get_self_res(result).data['reflected'] = None
 
     def scan(self, result: Result) -> bool:
-        reflected = result.payload in result.get_response().text
+        reflected = result.payload in result.history.response.text
         self.get_self_res(result).data['reflected'] = reflected
         return reflected
 

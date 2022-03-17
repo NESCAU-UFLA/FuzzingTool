@@ -18,54 +18,24 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+from urllib.parse import ParseResult, urlparse
+from os.path import splitext
+
 from requests import Response
 
 from .consts import FUZZING_MARK
 
 
-def get_host(url: str) -> str:
-    """Get the target host from url
+def get_url_without_scheme(url: str) -> str:
+    """Get the target url without scheme
 
     @type url: str
     @param url: The target URL
-    @returns str: The payloaded target
+    @returns str: The url without scheme
     """
-    url = get_url_without_scheme(url)
-    if '/' in url:
-        return url[:url.index('/')]
+    if '://' in url:
+        return url[(url.index('://')+3):]
     return url
-
-
-def get_path(url: str) -> str:
-    """Get the target path from url
-
-    @type url: str
-    @param url: The target URL
-    @returns str: The payloaded path
-    """
-    url = get_url_without_scheme(url)
-    return url[url.index('/'):]
-
-
-def get_file(url: str) -> str:
-    url = get_url_without_scheme(url)
-    return url[url.rindex('/')+1:]
-
-
-def get_fname(url: str) -> str:
-    file = get_file(url)
-    if '/' in file:
-        file = file[file.rindex('/'):]
-    if '.' in file:
-        file = file[:file.rindex('.')]
-    return file
-
-
-def get_file_ext(url: str) -> str:
-    file = get_file(url)
-    if '.' in file:
-        return file[file.rindex('.'):]
-    return ''
 
 
 def get_pure_url(url: str) -> str:
@@ -82,18 +52,6 @@ def get_pure_url(url: str) -> str:
     return url
 
 
-def get_url_without_scheme(url: str) -> str:
-    """Get the target url without scheme
-
-    @type url: str
-    @param url: The target URL
-    @returns str: The url without scheme
-    """
-    if '://' in url:
-        return url[(url.index('://')+3):]
-    return url
-
-
 def build_raw_response_header(response: Response) -> str:
     """Build the raw response header from requests lib Response object
 
@@ -107,3 +65,21 @@ def build_raw_response_header(response: Response) -> str:
         str_header += f"{key}: {value}\r\n"
     str_header += "\r\n"
     return str_header
+
+
+class UrlParse(ParseResult):
+    @property
+    def file(self) -> str:
+        return self.path.split('/')[-1:][0]
+
+    @property
+    def file_name(self) -> str:
+        return splitext(self.file)[0]
+
+    @property
+    def file_ext(self) -> str:
+        return splitext(self.file)[1]
+
+
+def get_parsed_url(url: str) -> UrlParse:
+    return UrlParse(*urlparse(url))

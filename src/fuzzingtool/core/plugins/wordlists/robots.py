@@ -24,7 +24,7 @@ from requests.exceptions import HTTPError
 
 from ...bases.base_plugin import Plugin
 from ...bases.base_wordlist import BaseWordlist
-from ....utils.http_utils import get_path
+from ....utils.http_utils import get_parsed_url
 from ....conn.requesters.requester import Requester
 from ....decorators.plugin_meta import plugin_meta
 from ....exceptions.request_exceptions import RequestException
@@ -77,6 +77,6 @@ class Robots(BaseWordlist, Plugin):
             )):
                 _, path = line.split(': ', 1)
                 if '://' in path:
-                    path = get_path(path)
+                    path = get_parsed_url(path).path
                 paths.append(path[1:])
         return paths

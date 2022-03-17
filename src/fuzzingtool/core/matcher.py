@@ -127,11 +127,11 @@ class Matcher:
         @param result: The actual result object
         @returns bool: A match flag
         """
-        if self._match_status(result.status):
+        if self._match_status(result.history.status):
             if self._comparator['time'] is not None:
-                return self._match_time(result.rtt, self._comparator['time'])
+                return self._match_time(result.history.rtt, self._comparator['time'])
             if self._comparator['size'] is not None:
-                return self._match_size(int(result.body_size), self._comparator['size'])
+                return self._match_size(int(result.history.body_size), self._comparator['size'])
             if self._comparator['words'] is not None:
                 return self._match_words(result.words, self._comparator['words'])
             if self._comparator['lines'] is not None:

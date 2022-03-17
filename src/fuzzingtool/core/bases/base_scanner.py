@@ -79,4 +79,4 @@ class BaseScanner(ABC):
         @type payload: The payload that'll be enqueued
         """
         self.payloads_queue.put(payload)
-        self.get_self_res(result).queued_payloads += 1
+        self.get_self_res(result).enqueued_payloads += 1
