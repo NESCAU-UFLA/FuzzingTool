@@ -27,7 +27,7 @@ class DataScanner(BaseScanner):
 
     def inspect_result(self, result: Result) -> None:
         super().inspect_result(result)
-        self._get_self_res(result).data['payload_length'] = len(result.payload)
+        self.get_self_res(result).data['payload_length'] = len(result.payload)
 
     def scan(self, result: Result) -> bool:
         return True

@@ -58,5 +58,5 @@ class Backups(BaseScanner, Plugin):
     def process(self, result: Result) -> None:
         for ext in self.extensions:
             url = result.url
-            self._enqueue_payload(result, f"{get_fname(url)}{ext}")
-            self._enqueue_payload(result, f"{get_file(url)}{ext}")
+            self.enqueue_payload(result, f"{get_fname(url)}{ext}")
+            self.enqueue_payload(result, f"{get_file(url)}{ext}")

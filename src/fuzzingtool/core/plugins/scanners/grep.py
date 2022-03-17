@@ -67,9 +67,9 @@ class Grep(BaseScanner, Plugin):
 
     def inspect_result(self, result: Result) -> None:
         BaseScanner.inspect_result(self, result)
-        self._get_self_res(result).data['found'] = None
+        self.get_self_res(result).data['found'] = None
         for i in range(len(self.__regexers)):
-            self._get_self_res(result).data[f'greped_regex_{i}'] = []
+            self.get_self_res(result).data[f'greped_regex_{i}'] = []
 
     def scan(self, result: Result) -> bool:
         return True
@@ -81,5 +81,5 @@ class Grep(BaseScanner, Plugin):
                 r.group() for r in regexer.finditer(result.get_response().text)
             ]))
             total_greped += len(this_greped)
-            self._get_self_res(result).data[f'greped_regex_{i}'] = this_greped
-        self._get_self_res(result).data['found'] = total_greped
+            self.get_self_res(result).data[f'greped_regex_{i}'] = this_greped
+        self.get_self_res(result).data['found'] = total_greped

@@ -52,13 +52,13 @@ class Find(BaseScanner, Plugin):
 
     def inspect_result(self, result: Result) -> None:
         BaseScanner.inspect_result(self, result)
-        self._get_self_res(result).data['found'] = None
+        self.get_self_res(result).data['found'] = None
 
     def scan(self, result: Result) -> bool:
         found = (True
                  if self.__regexer.search(result.get_response().text)
                  else False)
-        self._get_self_res(result).data['found'] = found
+        self.get_self_res(result).data['found'] = found
         return found
 
     def process(self, result: Result) -> None:

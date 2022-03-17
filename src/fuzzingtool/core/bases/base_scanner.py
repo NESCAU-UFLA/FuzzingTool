@@ -61,10 +61,22 @@ class BaseScanner(ABC):
         """
         pass
 
-    def _enqueue_payload(self, result: Result, payload: str) -> None:
-        self.payloads_queue.put(payload)
-        scanner_res: ScannerResult = self._get_self_res(result)
-        scanner_res.queued_payloads += 1
+    def get_self_res(self, result: Result) -> ScannerResult:
+        """Get the self Scanner result
 
-    def _get_self_res(self, result: Result) -> ScannerResult:
+        @type result: Result
+        @param result: The FuzzingTool result object
+        @returns ScannerResult: The self scanner result object
+        """
         return result.scanners_res[str(self)]
+
+    def enqueue_payload(self, result: Result, payload: str) -> None:
+        """Enqueue a payload into the payload queue for the next job
+
+        @type result: Result
+        @param result: The result of the payload
+        @param payload: str
+        @type payload: The payload that'll be enqueued
+        """
+        self.payloads_queue.put(payload)
+        self.get_self_res(result).queued_payloads += 1

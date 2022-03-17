@@ -34,11 +34,11 @@ class Reflected(BaseScanner, Plugin):
 
     def inspect_result(self, result: Result) -> None:
         BaseScanner.inspect_result(self, result)
-        self._get_self_res(result).data['reflected'] = None
+        self.get_self_res(result).data['reflected'] = None
 
     def scan(self, result: Result) -> bool:
         reflected = result.payload in result.get_response().text
-        self._get_self_res(result).data['reflected'] = reflected
+        self.get_self_res(result).data['reflected'] = reflected
         return reflected
 
     def process(self, result: Result) -> None:
