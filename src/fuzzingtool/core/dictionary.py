@@ -79,7 +79,10 @@ class Dictionary:
         for payload in self.__wordlist:
             self.__payloads.put(payload)
 
-    def fill_from_queue(self, payloads_queue: Queue) -> None:
+    def fill_from_queue(self, payloads_queue: Queue, clear: bool = False) -> None:
+        if clear:
+            self.__payloads = Queue()
+            self.__size = 0
         while not payloads_queue.empty():
             self.__payloads.put(payloads_queue.get())
             self.__size += 1

@@ -95,55 +95,18 @@ class FuzzController:
         """Starts the fuzzing application.
            The target is fuzzed based on his own method list
         """
-        BaseItem.reset_index()
         self.summary.start_timer()
         try:
             while not self.jobs.empty():
-                self.get_job()
-                self.fuzz()
-                self.check_for_new_jobs()
+                self._get_job()
+                self._fuzz()
+                self._check_for_new_jobs()
         except StopActionInterrupt as e:
             if self.fuzzer and self.fuzzer.is_running():
                 self.fuzzer.stop()
             raise e
         finally:
             self.summary.stop_timer()
-
-    def get_job(self) -> None:
-        """Get a job from the job queue"""
-        self.this_job = self.jobs.get()
-        self.total_requests = len(self.dictionary)
-
-    def fuzz(self) -> None:
-        """Prepare the fuzzer for the fuzzing tests"""
-        self.fuzzer = Fuzzer(
-            requester=self.requester,
-            dictionary=self.dictionary,
-            matcher=self.matcher,
-            scanner=self.scanner,
-            delay=self.delay,
-            number_of_threads=self.number_of_threads,
-            blacklist_status=self.blacklist_status,
-            result_callback=self._result_callback,
-            exception_callbacks=[
-                self._invalid_hostname_callback,
-                self._request_exception_callback
-            ],
-        )
-        self.fuzzer.start()
-        self.join()
-
-    def join(self) -> None:
-        """Blocks until the fuzzer ends"""
-        while self.fuzzer.join():
-            if self.stop_action:
-                raise StopActionInterrupt(self.stop_action)
-        self.fuzzer.stop()
-
-    def check_for_new_jobs(self) -> None:
-        if not self.scanner.payloads_queue.empty():
-            self.dictionary.fill_from_queue(self.scanner.payloads_queue)
-            self.jobs.put("scanner queue")
 
     def _stop_callback(self, status: int) -> None:
         """The skip target callback for the blacklist_action
@@ -259,6 +222,43 @@ class FuzzController:
             self.dict_metadata['removed'] = previous_length-atual_length
         self.dict_metadata['len'] = atual_length
         self.dictionary = Dictionary(final_wordlist)
+
+    def _get_job(self) -> None:
+        """Get a job from the job queue"""
+        self.this_job = self.jobs.get()
+        BaseItem.reset_index()
+        self.total_requests = len(self.dictionary)
+
+    def _fuzz(self) -> None:
+        """Prepare the fuzzer for the fuzzing tests"""
+        self.fuzzer = Fuzzer(
+            requester=self.requester,
+            dictionary=self.dictionary,
+            matcher=self.matcher,
+            scanner=self.scanner,
+            delay=self.delay,
+            number_of_threads=self.number_of_threads,
+            blacklist_status=self.blacklist_status,
+            result_callback=self._result_callback,
+            exception_callbacks=[
+                self._invalid_hostname_callback,
+                self._request_exception_callback
+            ],
+        )
+        self.fuzzer.start()
+        self._join()
+
+    def _join(self) -> None:
+        """Blocks until the fuzzer ends"""
+        while self.fuzzer.join():
+            if self.stop_action:
+                raise StopActionInterrupt(self.stop_action)
+        self.fuzzer.stop()
+
+    def _check_for_new_jobs(self) -> None:
+        if not self.scanner.payloads_queue.empty():
+            self.dictionary.fill_from_queue(self.scanner.payloads_queue, clear=True)
+            self.jobs.put("scanner queue")
 
     def __get_default_args(self) -> dict:
         """Gets the default arguments for the program

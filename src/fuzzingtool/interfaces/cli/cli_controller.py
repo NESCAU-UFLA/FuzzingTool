@@ -158,44 +158,6 @@ class CliController(FuzzController):
             if not self.is_verbose_mode():
                 CliOutput.print("")
 
-    def join(self) -> None:
-        """Blocks until the fuzzer is running"""
-        while self.fuzzer.is_running():
-            try:
-                super().join()
-            except KeyboardInterrupt:
-                self.cli_output.warning_box("Ctrl+C detected, pausing threads ...")
-                self.handle_pause()
-
-    def handle_pause(self) -> None:
-        """Handle with the Ctrl+C pause"""
-        self.fuzzer.pause()
-        self.fuzzer.wait_until_pause()
-        self.summary.pause_timer()
-        if not self.is_verbose_mode():
-            CliOutput.print("")
-        answer = ''
-        while answer not in ['q', 'c']:
-            try:
-                answer = self.cli_output.ask_data("[c]ontinue | [s]tatus | [q]uit")
-            except KeyboardInterrupt:
-                answer = 'q'
-            if answer == "q":
-                self._has_job = False
-                self.fuzzer.stop()
-                self.cli_output.abort_box("Test aborted by the user")
-            elif answer == 's':
-                str_percentage = self.cli_output.get_percentage(
-                    self.last_index,
-                    self.total_requests
-                )
-                self.cli_output.info_box(
-                    f"Progress: {Colors.LIGHT_YELLOW}{str_percentage}{Colors.RESET} completed"
-                )
-            elif answer == "c":
-                self.summary.resume_timer()
-                self.fuzzer.resume()
-
     def prepare(self) -> None:
         """Prepare the application before the fuzzing"""
         self.target_host = get_host(get_pure_url(self.requester.get_url()))
@@ -300,6 +262,44 @@ class CliController(FuzzController):
             if self.is_verbose_mode():
                 for e in self.wordlist_errors:
                     self.cli_output.warning_box(str(e))
+
+    def _join(self) -> None:
+        """Blocks until the fuzzer is running"""
+        while self.fuzzer.is_running():
+            try:
+                super()._join()
+            except KeyboardInterrupt:
+                self.cli_output.warning_box("Ctrl+C detected, pausing threads ...")
+                self._handle_pause()
+
+    def _handle_pause(self) -> None:
+        """Handle with the Ctrl+C pause"""
+        self.fuzzer.pause()
+        self.fuzzer.wait_until_pause()
+        self.summary.pause_timer()
+        if not self.is_verbose_mode():
+            CliOutput.print("")
+        answer = ''
+        while answer not in ['q', 'c']:
+            try:
+                answer = self.cli_output.ask_data("[c]ontinue | [s]tatus | [q]uit")
+            except KeyboardInterrupt:
+                answer = 'q'
+            if answer == "q":
+                self._has_job = False
+                self.fuzzer.stop()
+                self.cli_output.abort_box("Test aborted by the user")
+            elif answer == 's':
+                str_percentage = self.cli_output.get_percentage(
+                    self.last_index,
+                    self.total_requests
+                )
+                self.cli_output.info_box(
+                    f"Progress: {Colors.LIGHT_YELLOW}{str_percentage}{Colors.RESET} completed"
+                )
+            elif answer == "c":
+                self.summary.resume_timer()
+                self.fuzzer.resume()
 
     def __init_report(self) -> None:
         """Initialize the report"""
