@@ -326,7 +326,7 @@ class CliOutput:
 
     def _get_break(self) -> str:
         """Get a break line if the last message was inline
-        
+
         @returns str: The break line
         """
         if self.__last_inline:
