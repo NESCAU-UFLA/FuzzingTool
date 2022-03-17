@@ -90,7 +90,6 @@ class CliController(FuzzController):
             self.cli_output.error_box(str(e))
         if not self.args["simple_output"]:
             self.print_configs()
-        self.cli_output.set_verbosity_mode(self.is_verbose_mode())
         try:
             self.check_connection()
             self.prepare()
@@ -154,9 +153,6 @@ class CliController(FuzzController):
             super().start()
         except StopActionInterrupt as e:
             self.cli_output.abort_box(f"{str(e)}. Program stopped.")
-        else:
-            if not self.is_verbose_mode():
-                CliOutput.print("")
 
     def prepare(self) -> None:
         """Prepare the application before the fuzzing"""
@@ -207,8 +203,6 @@ class CliController(FuzzController):
                 f"Status code {str(status)} detected. Pausing threads ..."
             )
             self.fuzzer.wait_until_pause()
-            if not self.is_verbose_mode():
-                CliOutput.print("")
             self.cli_output.info_box(
                 f"Waiting for {self.blacklist_status.action_param} seconds ..."
             )
@@ -277,8 +271,6 @@ class CliController(FuzzController):
         self.fuzzer.pause()
         self.fuzzer.wait_until_pause()
         self.summary.pause_timer()
-        if not self.is_verbose_mode():
-            CliOutput.print("")
         answer = ''
         while answer not in ['q', 'c']:
             try:

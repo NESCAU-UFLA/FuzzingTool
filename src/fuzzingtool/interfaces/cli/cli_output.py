@@ -125,7 +125,6 @@ class CliOutput:
 
     def __init__(self):
         self.__lock = threading.Lock()
-        self.__break_line = ''
         self.__last_inline = False
         self.__info = f'{Colors.GRAY}[{Colors.BLUE_GRAY}INFO{Colors.GRAY}]{Colors.RESET} '
         self.__warning = f'{Colors.GRAY}[{Colors.YELLOW}WARNING{Colors.GRAY}]{Colors.RESET} '
@@ -147,24 +146,13 @@ class CliOutput:
         self.__worked = f'{Colors.GRAY}[{Colors.GREEN}+{Colors.GRAY}]{Colors.RESET} '
         self.__not_worked = f'{Colors.GRAY}[{Colors.RED}-{Colors.GRAY}]{Colors.RESET} '
 
-    def set_verbosity_mode(self, verbose_mode: bool) -> None:
-        """Set the verbosity mode
-
-        @type verbose_mode: bool
-        @param verbose_mode: The verbose mode flag
-        """
-        if verbose_mode:
-            self.__break_line = ''
-        else:
-            self.__break_line = '\n'
-
     def info_box(self, msg: str) -> None:
         """Print the message with a info label
 
         @type msg: str
         @param msg: The message
         """
-        print(f'{self.__get_time()}{self.__get_info(msg)}')
+        print(f'{self._get_break()}{self.__get_time()}{self.__get_info(msg)}')
 
     def error_box(self, msg: str) -> None:
         """End the application with error label and a message
@@ -172,7 +160,7 @@ class CliOutput:
         @type msg: str
         @param msg: The message
         """
-        exit(f'{self.__get_time()}{self.__get_error(msg)}')
+        exit(f'{self._get_break()}{self.__get_time()}{self.__get_error(msg)}')
 
     def warning_box(self, msg: str) -> None:
         """Print the message with a warning label
@@ -182,8 +170,7 @@ class CliOutput:
         """
         with self.__lock:
             sys.stdout.flush()
-            print(f'{self.__break_line}'
-                  f'{self.__get_time()}{self.__get_warning(msg)}')
+            print(f'{self._get_break()}{self.__get_time()}{self.__get_warning(msg)}')
 
     def abort_box(self, msg: str) -> None:
         """Print the message with abort label and a message
@@ -193,8 +180,7 @@ class CliOutput:
         """
         with self.__lock:
             sys.stdout.flush()
-            print(f'{self.__break_line}'
-                  f'{self.__get_time()}{self.__get_abort(msg)}')
+            print(f'{self._get_break()}{self.__get_time()}{self.__get_abort(msg)}')
 
     def worked_box(self, msg: str) -> None:
         """Print the message with worked label and a message
@@ -226,7 +212,7 @@ class CliOutput:
             get_type = self.__get_warning
         else:
             get_type = self.__get_info
-        print(f"{self.__get_time()}{get_type(msg)} (y/N) ", end='')
+        print(f"{self._get_break()}{self.__get_time()}{get_type(msg)} (y/N) ", end='')
         action = input()
         if action == 'y' or action == 'Y':
             return True
@@ -239,7 +225,7 @@ class CliOutput:
         @param msg: The message
         @returns mixed: The data asked
         """
-        print(self.__get_time()+self.__get_info(msg), end=': ')
+        print(f"{self._get_break()}{self.__get_time()}{self.__get_info(msg)}", end=': ')
         return input()
 
     def print_config(self, key: str, value: str = '', spaces: int = 0) -> None:
@@ -337,6 +323,16 @@ class CliOutput:
                     self.__last_inline = False
                     self.__erase_line()
                 self.worked_box(formatted_result_str)
+
+    def _get_break(self) -> str:
+        """Get a break line if the last message was inline
+        
+        @returns str: The break line
+        """
+        if self.__last_inline:
+            self.__last_inline = False
+            return '\n'
+        return ''
 
     def __get_time(self) -> str:
         """Get a time label
