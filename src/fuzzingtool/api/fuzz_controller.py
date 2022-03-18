@@ -258,6 +258,7 @@ class FuzzController:
         self.fuzzer.stop()
 
     def _check_for_new_jobs(self):
+        """Check for new jobs on job manager"""
         self.job_manager.check_for_new_jobs()
 
     def __get_default_args(self) -> dict:

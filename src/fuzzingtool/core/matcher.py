@@ -236,7 +236,7 @@ class Matcher:
             @type comparator: str
             @param comparator: The value to be compared
             @returns Tuple[Callable, str]: The callback match function,
-                                            and the new comparator value
+                                           and the new comparator value
             """
             comparator = str(comparator)
             for key, value in match.items():

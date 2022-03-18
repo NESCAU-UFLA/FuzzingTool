@@ -25,7 +25,11 @@ from ...objects import Result, ScannerResult
 
 
 class BaseScanner(ABC):
-    """Base scanner"""
+    """Base scanner
+
+    Attributes:
+        payloads_queue: The payload queue for new requests
+    """
     def __init__(self):
         self.payloads_queue = Queue()
 

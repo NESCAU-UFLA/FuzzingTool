@@ -178,10 +178,10 @@ class Fuzzer:
         self.__player.set()
 
     def wait_until_pause(self) -> None:
-        while self.__paused_threads < (self.__running_threads-1):
-            """Do nothing until all threads are paused"""
+        """Blocks until all threads are paused"""
+        while self.__paused_threads < self.__running_threads:
             pass
-        time.sleep(0.2)
+        time.sleep(0.1)
 
     def __threat_result(self,
                         response: Response,

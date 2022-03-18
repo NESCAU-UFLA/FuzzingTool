@@ -68,18 +68,38 @@ def build_raw_response_header(response: Response) -> str:
 
 
 class UrlParse(ParseResult):
+    """Class that has utils url parsing functions"""
     @property
     def file(self) -> str:
+        """Get the file name and extension
+
+        @returns str: The file name and extension
+        """
         return self.path.split('/')[-1:][0]
 
     @property
     def file_name(self) -> str:
+        """Get the file name only
+
+        @returns str: The file name only
+        """
         return splitext(self.file)[0]
 
     @property
     def file_ext(self) -> str:
+        """Get the file extension only
+
+        @returns str: The file extension only
+        """
         return splitext(self.file)[1]
 
 
 def get_parsed_url(url: str) -> UrlParse:
+    """Get the url parser object
+       Has some common url parts (like scheme, hostname and path)
+
+    @type url: str
+    @param url: The url that'll be parsed
+    @returns UrlParse: The url parser object
+    """
     return UrlParse(*urlparse(url))

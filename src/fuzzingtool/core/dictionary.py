@@ -29,6 +29,7 @@ class Dictionary:
 
     Attributes:
         wordlist: The wordlist that contains the payloads backup
+        size: The payload queue size
         payloads: The queue that contains all payloads inside the wordlist
     """
     def __init__(self, wordlist: list):
@@ -82,6 +83,13 @@ class Dictionary:
             self.__size += 1
 
     def fill_from_queue(self, payloads_queue: Queue, clear: bool = False) -> None:
+        """Fill the payloads queue with another queue
+
+        @type payloads_queue: Queue
+        @param payloads_queue: The other payload quele that'll enqueue the payloads
+        @type clear: bool
+        @param clear: The flag to say if the payload queue needs to be cleared before
+        """
         if clear:
             self.__payloads = Queue()
             self.__size = 0
