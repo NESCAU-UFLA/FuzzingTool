@@ -28,7 +28,6 @@ from .cli_output import CliOutput, Colors
 from ..argument_builder import ArgumentBuilder as AB
 from ... import __version__
 from ...api.fuzz_controller import FuzzController
-from ...core.bases.base_plugin import Plugin
 from ...utils.http_utils import get_parsed_url, get_pure_url
 from ...utils.logger import Logger
 from ...reports.report import Report
