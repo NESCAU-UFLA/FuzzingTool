@@ -38,15 +38,19 @@ class JobManager:
                  dictionary: Dictionary,
                  job_providers: Dict[str, Queue]):
         self.current_job = None
+        wordlist_queue = Queue()
+        for payload in dictionary.wordlist:
+            wordlist_queue.put(payload)
         self.pending_jobs = Queue()
-        self.pending_jobs.put("wordlist")
+        self.pending_jobs.put(("wordlist", wordlist_queue))
         self.total_requests = 0
         self.dictionary = dictionary
         self.job_providers = job_providers
 
     def get_job(self) -> None:
         """Gets a new job to run"""
-        self.current_job = self.pending_jobs.get()
+        self.current_job, job_queue = self.pending_jobs.get()
+        self.dictionary.fill_from_queue(job_queue, clear=True)
         self.total_requests = len(self.dictionary)
 
     def has_pending_jobs(self) -> bool:
@@ -72,5 +76,4 @@ class JobManager:
         """
         for job_provider, job_queue in self.job_providers.items():
             if not job_queue.empty():
-                self.pending_jobs.put(job_provider)
-                self.dictionary.fill_from_queue(job_queue, clear=True)
+                self.pending_jobs.put((job_provider, job_queue))

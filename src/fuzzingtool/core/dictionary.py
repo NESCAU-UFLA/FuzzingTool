@@ -38,7 +38,7 @@ class Dictionary:
         @type wordlist: list
         @param wordlist: The wordlist with the payloads
         """
-        self.__wordlist = wordlist
+        self.wordlist = wordlist
         self.__size = 0
         self.__payloads = Queue()
 
@@ -78,7 +78,7 @@ class Dictionary:
 
     def reload(self) -> None:
         """Reloads the payloads queue with the wordlist content"""
-        for payload in self.__wordlist:
+        for payload in self.wordlist:
             self.__payloads.put(payload)
             self.__size += 1
 
