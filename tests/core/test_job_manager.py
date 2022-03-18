@@ -9,12 +9,12 @@ from src.fuzzingtool.core.dictionary import Dictionary
 class TestJobManager(unittest.TestCase):
     def test_get_job(self):
         test_job_manager = JobManager(
-            dictionary=Dictionary(wordlist=[]),
+            dictionary=Dictionary(wordlist=["test-payload"]),
             job_providers={}
         )
         test_job_manager.get_job()
         self.assertEqual(test_job_manager.current_job, "wordlist")
-        self.assertEqual(test_job_manager.total_requests, 0)
+        self.assertEqual(test_job_manager.total_requests, 1)
 
     def test_has_pending_jobs(self):
         test_job_manager = JobManager(

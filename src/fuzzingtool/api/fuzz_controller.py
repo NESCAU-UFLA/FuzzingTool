@@ -86,7 +86,6 @@ class FuzzController:
         self.delay = self.args["delay"]
         self.number_of_threads = self.args["threads"]
         self._init_dictionary()
-        self.dictionary.reload()
         self.job_manager = JobManager(
             dictionary=self.dictionary,
             job_providers={
