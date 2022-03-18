@@ -35,8 +35,8 @@ class Payload:
         @type payload: str
         @param payload: The payload that'll be mutated
         """
-        self.raw = payload
-        self.final = payload
+        self.raw: str = payload
+        self.final: str = payload
         self.config = {}
 
     def __str__(self) -> str:

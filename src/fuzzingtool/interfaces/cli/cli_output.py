@@ -26,7 +26,7 @@ from typing import Tuple
 from ...objects.result import Result
 from ...utils.consts import MAX_PAYLOAD_LENGTH_TO_OUTPUT, PATH_FUZZING, SUBDOMAIN_FUZZING
 from ...utils.utils import fix_payload_to_output
-from ...utils.http_utils import get_path, get_host, get_pure_url
+from ...utils.http_utils import get_parsed_url, get_pure_url
 from ...utils.result_utils import ResultUtils
 
 
@@ -125,7 +125,6 @@ class CliOutput:
 
     def __init__(self):
         self.__lock = threading.Lock()
-        self.__break_line = ''
         self.__last_inline = False
         self.__info = f'{Colors.GRAY}[{Colors.BLUE_GRAY}INFO{Colors.GRAY}]{Colors.RESET} '
         self.__warning = f'{Colors.GRAY}[{Colors.YELLOW}WARNING{Colors.GRAY}]{Colors.RESET} '
@@ -147,24 +146,13 @@ class CliOutput:
         self.__worked = f'{Colors.GRAY}[{Colors.GREEN}+{Colors.GRAY}]{Colors.RESET} '
         self.__not_worked = f'{Colors.GRAY}[{Colors.RED}-{Colors.GRAY}]{Colors.RESET} '
 
-    def set_verbosity_mode(self, verbose_mode: bool) -> None:
-        """Set the verbosity mode
-
-        @type verbose_mode: bool
-        @param verbose_mode: The verbose mode flag
-        """
-        if verbose_mode:
-            self.__break_line = ''
-        else:
-            self.__break_line = '\n'
-
     def info_box(self, msg: str) -> None:
         """Print the message with a info label
 
         @type msg: str
         @param msg: The message
         """
-        print(f'{self.__get_time()}{self.__get_info(msg)}')
+        print(f'{self._get_break()}{self.__get_time()}{self.__get_info(msg)}')
 
     def error_box(self, msg: str) -> None:
         """End the application with error label and a message
@@ -172,7 +160,7 @@ class CliOutput:
         @type msg: str
         @param msg: The message
         """
-        exit(f'{self.__get_time()}{self.__get_error(msg)}')
+        exit(f'{self._get_break()}{self.__get_time()}{self.__get_error(msg)}')
 
     def warning_box(self, msg: str) -> None:
         """Print the message with a warning label
@@ -182,8 +170,7 @@ class CliOutput:
         """
         with self.__lock:
             sys.stdout.flush()
-            print(f'{self.__break_line}'
-                  f'{self.__get_time()}{self.__get_warning(msg)}')
+            print(f'{self._get_break()}{self.__get_time()}{self.__get_warning(msg)}')
 
     def abort_box(self, msg: str) -> None:
         """Print the message with abort label and a message
@@ -193,8 +180,7 @@ class CliOutput:
         """
         with self.__lock:
             sys.stdout.flush()
-            print(f'{self.__break_line}'
-                  f'{self.__get_time()}{self.__get_abort(msg)}')
+            print(f'{self._get_break()}{self.__get_time()}{self.__get_abort(msg)}')
 
     def worked_box(self, msg: str) -> None:
         """Print the message with worked label and a message
@@ -226,7 +212,7 @@ class CliOutput:
             get_type = self.__get_warning
         else:
             get_type = self.__get_info
-        print(f"{self.__get_time()}{get_type(msg)} (y/N) ", end='')
+        print(f"{self._get_break()}{self.__get_time()}{get_type(msg)} (y/N) ", end='')
         action = input()
         if action == 'y' or action == 'Y':
             return True
@@ -239,7 +225,7 @@ class CliOutput:
         @param msg: The message
         @returns mixed: The data asked
         """
-        print(self.__get_time()+self.__get_info(msg), end=': ')
+        print(f"{self._get_break()}{self.__get_time()}{self.__get_info(msg)}", end=': ')
         return input()
 
     def print_config(self, key: str, value: str = '', spaces: int = 0) -> None:
@@ -267,7 +253,7 @@ class CliOutput:
         """
         print("")
         spaces = 3
-        self.print_config("Target", get_host(get_pure_url(target['url'])))
+        self.print_config("Target", get_parsed_url(get_pure_url(target['url'])).hostname)
         self.print_config("Method", target['method'], spaces)
         self.print_config("HTTP headers", target['header'], spaces)
         if target['body']:
@@ -337,6 +323,16 @@ class CliOutput:
                     self.__last_inline = False
                     self.__erase_line()
                 self.worked_box(formatted_result_str)
+
+    def _get_break(self) -> str:
+        """Get a break line if the last message was inline
+
+        @returns str: The break line
+        """
+        if self.__last_inline:
+            self.__last_inline = False
+            return '\n'
+        return ''
 
     def __get_time(self) -> str:
         """Get a time label
@@ -416,13 +412,12 @@ class CliOutput:
         @returns str: The formatted payload to output
         """
         if result.fuzz_type == PATH_FUZZING:
-            try:
-                formatted_payload = get_path(result.url)
-            except ValueError:
-                formatted_payload = result.url
+            formatted_payload = result.history.parsed_url.path
+            if not formatted_payload:
+                return result.history.url
             return formatted_payload
         if result.fuzz_type == SUBDOMAIN_FUZZING:
-            return get_host(result.url)
+            return result.history.parsed_url.hostname
         return result.payload
 
     def __get_formatted_status(self, status: int) -> str:
@@ -458,10 +453,10 @@ class CliOutput:
         @returns Tuple[str, str, str, str, str, str]: The tuple with the formatted result items
         """
         payload, rtt, length, words, lines = ResultUtils.get_formatted_result(
-            self.__get_formatted_payload(result), result.rtt,
-            result.body_size, result.words, result.lines
+            self.__get_formatted_payload(result), result.history.rtt,
+            result.history.body_size, result.words, result.lines
         )
-        return (payload, self.__get_formatted_status(result.status), rtt, length, words, lines)
+        return (payload, self.__get_formatted_status(result.history.status), rtt, length, words, lines)
 
     def __get_formatted_result(self, result: Result) -> str:
         """Format the entire result message
@@ -480,11 +475,14 @@ class CliOutput:
             f"{Colors.LIGHT_GRAY}Words{Colors.RESET} {words} | "
             f"{Colors.LIGHT_GRAY}Lines{Colors.RESET} {lines}{Colors.GRAY}]{Colors.RESET}"
         )
-        if result.custom:
-            custom_str = ''
-            for key, value in result.custom.items():
+        custom_str = ''
+        for scanner, s_res in result.scanners_res.items():
+            for key, value in s_res.data.items():
                 if (value is not None and isinstance(value, bool)) or value:
                     custom_str += (f"\n{Colors.LIGHT_YELLOW}|_ {key}: "
                                    f"{ResultUtils.format_custom_field(value)}{Colors.RESET}")
-            formatted_result_str += custom_str
+            if s_res.enqueued_payloads:
+                custom_str += (f"\n{Colors.LIGHT_YELLOW}|_ Scanner {scanner} enqueued "
+                               f"{s_res.enqueued_payloads} payloads{Colors.RESET}")
+        formatted_result_str += custom_str
         return formatted_result_str

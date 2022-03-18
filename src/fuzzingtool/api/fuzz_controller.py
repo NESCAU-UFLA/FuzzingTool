@@ -25,14 +25,15 @@ from ..interfaces.argument_builder import ArgumentBuilder as AB
 from ..utils.utils import split_str_to_list
 from ..utils.file_utils import read_file
 from ..utils.result_utils import ResultUtils
-from ..core import BlacklistStatus, Dictionary, Fuzzer, Matcher, Payloader, Summary
+from ..core import (BlacklistStatus, Dictionary, Fuzzer,
+                    JobManager, Matcher, Payloader, Summary)
+from ..core.bases import BaseScanner, BaseEncoder
 from ..core.defaults.scanners import (DataScanner,
                                       PathScanner, SubdomainScanner)
-from ..core.bases import BaseScanner, BaseEncoder
 from ..conn.requesters import Requester, SubdomainRequester
 from ..conn.request_parser import check_is_subdomain_fuzzing
 from ..factories import PluginFactory, WordlistFactory
-from ..objects import Error, Result
+from ..objects import BaseItem, Error, Result
 from ..exceptions.main_exceptions import (FuzzControllerException, StopActionInterrupt,
                                           WordlistCreationError, BuildWordlistFails)
 
@@ -86,48 +87,29 @@ class FuzzController:
         self.number_of_threads = self.args["threads"]
         self._init_dictionary()
         self.dictionary.reload()
-        self.total_requests = len(self.dictionary)
+        self.job_manager = JobManager(
+            dictionary=self.dictionary,
+            job_providers={
+                str(scanner): scanner.payloads_queue for scanner in self.scanners
+            }
+        )
 
     def start(self) -> None:
         """Starts the fuzzing application.
            The target is fuzzed based on his own method list
         """
-        Result.reset_index()
         self.summary.start_timer()
         try:
-            self.fuzz()
+            while self.job_manager.has_pending_jobs():
+                self._get_job()
+                self._fuzz()
+                self._check_for_new_jobs()
         except StopActionInterrupt as e:
             if self.fuzzer and self.fuzzer.is_running():
                 self.fuzzer.stop()
             raise e
         finally:
             self.summary.stop_timer()
-
-    def fuzz(self) -> None:
-        """Prepare the fuzzer for the fuzzing tests"""
-        self.fuzzer = Fuzzer(
-            requester=self.requester,
-            dictionary=self.dictionary,
-            matcher=self.matcher,
-            scanner=self.scanner,
-            delay=self.delay,
-            number_of_threads=self.number_of_threads,
-            blacklist_status=self.blacklist_status,
-            result_callback=self._result_callback,
-            exception_callbacks=[
-                self._invalid_hostname_callback,
-                self._request_exception_callback
-            ],
-        )
-        self.fuzzer.start()
-        self.fuzzer_join()
-
-    def fuzzer_join(self):
-        """Join the fuzzer"""
-        while self.fuzzer.join():
-            if self.stop_action:
-                raise StopActionInterrupt(self.stop_action)
-        self.fuzzer.stop()
 
     def _stop_callback(self, status: int) -> None:
         """The skip target callback for the blacklist_action
@@ -220,13 +202,13 @@ class FuzzController:
 
     def _init_scanner(self) -> None:
         """Initialize the scanner"""
+        self.scanners: List[BaseScanner] = [self.__get_default_scanner()]
         if self.args["scanner"]:
             scanner, param = AB.build_scanner(self.args["scanner"])
-            self.scanner: BaseScanner = PluginFactory.object_creator(
+            plugin_scanner: BaseScanner = PluginFactory.object_creator(
                 scanner, 'scanners', param
             )
-        else:
-            self.scanner = self.__get_default_scanner()
+            self.scanners.append(plugin_scanner)
 
     def _init_dictionary(self) -> None:
         """Initialize the dictionary"""
@@ -243,6 +225,41 @@ class FuzzController:
             self.dict_metadata['removed'] = previous_length-atual_length
         self.dict_metadata['len'] = atual_length
         self.dictionary = Dictionary(final_wordlist)
+
+    def _get_job(self) -> None:
+        """Get a job from the job queue"""
+        BaseItem.reset_index()
+        self.job_manager.get_job()
+
+    def _fuzz(self) -> None:
+        """Prepare the fuzzer for the fuzzing tests"""
+        self.fuzzer = Fuzzer(
+            requester=self.requester,
+            dictionary=self.dictionary,
+            matcher=self.matcher,
+            scanners=self.scanners,
+            delay=self.delay,
+            number_of_threads=self.number_of_threads,
+            blacklist_status=self.blacklist_status,
+            result_callback=self._result_callback,
+            exception_callbacks=[
+                self._invalid_hostname_callback,
+                self._request_exception_callback
+            ],
+        )
+        self.fuzzer.start()
+        self._join()
+
+    def _join(self) -> None:
+        """Blocks until the fuzzer ends"""
+        while self.fuzzer.join():
+            if self.stop_action:
+                raise StopActionInterrupt(self.stop_action)
+        self.fuzzer.stop()
+
+    def _check_for_new_jobs(self):
+        """Check for new jobs on job manager"""
+        self.job_manager.check_for_new_jobs()
 
     def __get_default_args(self) -> dict:
         """Gets the default arguments for the program

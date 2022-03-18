@@ -127,11 +127,11 @@ class Matcher:
         @param result: The actual result object
         @returns bool: A match flag
         """
-        if self._match_status(result.status):
+        if self._match_status(result.history.status):
             if self._comparator['time'] is not None:
-                return self._match_time(result.rtt, self._comparator['time'])
+                return self._match_time(result.history.rtt, self._comparator['time'])
             if self._comparator['size'] is not None:
-                return self._match_size(int(result.body_size), self._comparator['size'])
+                return self._match_size(int(result.history.body_size), self._comparator['size'])
             if self._comparator['words'] is not None:
                 return self._match_words(result.words, self._comparator['words'])
             if self._comparator['lines'] is not None:
@@ -236,7 +236,7 @@ class Matcher:
             @type comparator: str
             @param comparator: The value to be compared
             @returns Tuple[Callable, str]: The callback match function,
-                                            and the new comparator value
+                                           and the new comparator value
             """
             comparator = str(comparator)
             for key, value in match.items():
@@ -294,10 +294,14 @@ class Matcher:
                            lines: str) -> dict:
         """The comparator setter
 
-        @type size: str
-        @param size: The size to be compared with response body
         @type time: str
         @param time: The time to be compared with the RTT
+        @type size: str
+        @param size: The size to be compared with response body
+        @type words: str
+        @param words: The number of words to be compared with response body
+        @type lines: str
+        @param lines: The number of lines to be compared with responde body
         @returns dict: The data comparator
         """
         comparator = {

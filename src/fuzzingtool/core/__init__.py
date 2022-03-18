@@ -23,6 +23,7 @@ from .defaults import *
 from .blacklist_status import BlacklistStatus
 from .dictionary import Dictionary
 from .fuzzer import Fuzzer
+from .job_manager import JobManager
 from .matcher import Matcher
 from .payloader import Payloader
 from .summary import Summary

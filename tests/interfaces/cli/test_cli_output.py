@@ -3,9 +3,8 @@ from unittest.mock import Mock, patch
 from datetime import datetime
 
 from src.fuzzingtool.interfaces.cli.cli_output import Colors, CliOutput
-from src.fuzzingtool.objects import Payload, Result
+from src.fuzzingtool.objects import Payload, Result, ScannerResult
 from src.fuzzingtool.utils.consts import PATH_FUZZING, SUBDOMAIN_FUZZING
-from src.fuzzingtool.utils.http_utils import get_host, get_path
 from src.fuzzingtool.utils.result_utils import ResultUtils
 from ...mock_utils.response_mock import ResponseMock
 
@@ -86,27 +85,26 @@ class TestCliOutput(unittest.TestCase):
         )
         returned_payload = CliOutput()._CliOutput__get_formatted_payload(test_result)
         self.assertIsInstance(returned_payload, str)
-        self.assertEqual(returned_payload, get_path(test_result.url))
+        self.assertEqual(returned_payload, test_result.history.parsed_url.path)
 
-    @patch("src.fuzzingtool.interfaces.cli.cli_output.get_path")
-    def test_get_formatted_payload_with_path_fuzz_and_raise_exception(self, mock_get_path: Mock):
+    def test_get_formatted_payload_with_path_fuzz_and_raise_exception(self):
         test_result = Result(
             response=ResponseMock(),
             fuzz_type=PATH_FUZZING,
         )
-        mock_get_path.side_effect = ValueError
+        test_result.history.url = "http://test-url.com"
         returned_payload = CliOutput()._CliOutput__get_formatted_payload(test_result)
         self.assertIsInstance(returned_payload, str)
-        self.assertEqual(returned_payload, test_result.url)
+        self.assertEqual(returned_payload, test_result.history.url)
 
-    def test_get_formatted_payload_with_path_fuzz(self):
+    def test_get_formatted_payload_with_subdomain_fuzz(self):
         test_result = Result(
             response=ResponseMock(),
             fuzz_type=SUBDOMAIN_FUZZING,
         )
         returned_payload = CliOutput()._CliOutput__get_formatted_payload(test_result)
         self.assertIsInstance(returned_payload, str)
-        self.assertEqual(returned_payload, get_host(test_result.url))
+        self.assertEqual(returned_payload, test_result.history.parsed_url.hostname)
 
     def test_get_formatted_status_with_status_404(self):
         test_status = 404
@@ -169,11 +167,11 @@ class TestCliOutput(unittest.TestCase):
         mock_format_result.return_value = ('', '', '', '', '')
         cli_output = CliOutput()
         returned_items = cli_output._CliOutput__get_formatted_result_items(test_result)
-        mock_format_status.assert_called_once_with(test_result.status)
+        mock_format_status.assert_called_once_with(test_result.history.status)
         mock_format_result.assert_called_once_with(
             cli_output._CliOutput__get_formatted_payload(test_result),
-            test_result.rtt,
-            test_result.body_size,
+            test_result.history.rtt,
+            test_result.history.body_size,
             test_result.words,
             test_result.lines
         )
@@ -227,8 +225,10 @@ class TestCliOutput(unittest.TestCase):
             test_lines
         )
         test_result = Result(response=ResponseMock())
-        test_result.custom['test_0'] = None
-        test_result.custom['test_1'] = "test_custom"
+        test_scanner = "test-scanner"
+        test_result.scanners_res[test_scanner] = ScannerResult(test_scanner)
+        test_result.scanners_res[test_scanner].data['test_0'] = None
+        test_result.scanners_res[test_scanner].data['test_1'] = "test_custom"
         return_expected = (
             f"{test_payload} {Colors.GRAY}["
             f"{Colors.LIGHT_GRAY}Code{Colors.RESET} {test_status_code} | "
@@ -237,7 +237,7 @@ class TestCliOutput(unittest.TestCase):
             f"{Colors.LIGHT_GRAY}Words{Colors.RESET} {test_words} | "
             f"{Colors.LIGHT_GRAY}Lines{Colors.RESET} {test_lines}{Colors.GRAY}]{Colors.RESET}"
             f"\n{Colors.LIGHT_YELLOW}|_ test_1: "
-            f"{ResultUtils.format_custom_field(test_result.custom['test_1'])}{Colors.RESET}"
+            f"{ResultUtils.format_custom_field(test_result.scanners_res[test_scanner].data['test_1'])}{Colors.RESET}"
         )
         returned_data = CliOutput()._CliOutput__get_formatted_result(test_result)
         mock_format_items.assert_called_once_with(test_result)

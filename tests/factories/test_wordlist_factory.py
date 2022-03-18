@@ -71,14 +71,14 @@ class TestWordlistFactory(unittest.TestCase):
 
     @patch("src.fuzzingtool.factories.wordlist_factory.Requester.get_url")
     @patch("src.fuzzingtool.factories.wordlist_factory.get_pure_url")
-    @patch("src.fuzzingtool.factories.wordlist_factory.get_host")
+    @patch("src.fuzzingtool.factories.wordlist_factory.get_parsed_url")
     @patch("src.fuzzingtool.factories.wordlist_factory.PluginFactory.object_creator")
     @patch("src.fuzzingtool.factories.wordlist_factory.PluginFactory.class_creator")
     def test_creator_with_subdomain_fuzzing_plugin_and_requester(
         self,
         mock_plugin_class_creator: Mock,
         mock_plugin_object_creator: Mock,
-        mock_get_host: Mock,
+        mock_get_parsed_url: Mock,
         mock_get_pure_url: Mock,
         mock_requester_get_url: Mock
     ):
@@ -89,13 +89,13 @@ class TestWordlistFactory(unittest.TestCase):
         test_host = "test-url.com"
         mock_plugin_class_creator.return_value = CrtSh
         mock_plugin_object_creator.return_value = CrtSh(test_host)
-        mock_get_host.return_value = test_host
+        mock_get_parsed_url.return_value.hostname = test_host
         mock_get_pure_url.return_value = test_pure_url
         mock_requester_get_url.return_value = test_requester_url
         returned_data = WordlistFactory.creator(test_name, '', test_requester)
         mock_plugin_class_creator.assert_called_with(test_name, "wordlists")
         mock_plugin_object_creator.assert_called_once_with(test_name, "wordlists", test_host)
-        mock_get_host.assert_called_once_with(test_pure_url)
+        mock_get_parsed_url.assert_called_once_with(test_pure_url)
         mock_get_pure_url.assert_called_once_with(test_requester_url)
         mock_requester_get_url.assert_called_once()
         self.assertIsInstance(returned_data, CrtSh)

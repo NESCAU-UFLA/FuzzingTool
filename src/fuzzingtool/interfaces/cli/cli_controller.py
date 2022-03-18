@@ -22,15 +22,16 @@ import time
 import threading
 from argparse import Namespace
 
+from fuzzingtool.objects.payload import Payload
+
 from .cli_output import CliOutput, Colors
 from ..argument_builder import ArgumentBuilder as AB
 from ... import __version__
 from ...api.fuzz_controller import FuzzController
-from ...core.bases.base_plugin import Plugin
-from ...utils.http_utils import get_host, get_pure_url
+from ...utils.http_utils import get_parsed_url, get_pure_url
 from ...utils.logger import Logger
 from ...reports.report import Report
-from ...objects import BaseItem, Error, Result, Payload
+from ...objects import Error, Result
 from ...exceptions.base_exceptions import FuzzingToolException
 from ...exceptions.main_exceptions import FuzzControllerException, StopActionInterrupt
 from ...exceptions.request_exceptions import RequestException
@@ -88,7 +89,6 @@ class CliController(FuzzController):
             self.cli_output.error_box(str(e))
         if not self.args["simple_output"]:
             self.print_configs()
-        self.cli_output.set_verbosity_mode(self.is_verbose_mode())
         try:
             self.check_connection()
             self.prepare()
@@ -147,58 +147,19 @@ class CliController(FuzzController):
            Each target is fuzzed based on their own methods list
         """
         self.cli_output.info_box("Start fuzzing on "
-                                 + get_host(get_pure_url(self.requester.get_url())))
+                                 + get_parsed_url(get_pure_url(self.requester.get_url())).hostname)
         try:
             super().start()
         except StopActionInterrupt as e:
             self.cli_output.abort_box(f"{str(e)}. Program stopped.")
-        else:
-            if not self.is_verbose_mode():
-                CliOutput.print("")
-
-    def fuzzer_join(self):
-        while self.fuzzer.is_running():
-            try:
-                super().fuzzer_join()
-            except KeyboardInterrupt:
-                self.cli_output.warning_box("Ctrl+C detected, pausing threads ...")
-                self.handle_pause()
-
-    def handle_pause(self):
-        """Handle with the Ctrl+C pause"""
-        self.fuzzer.pause()
-        self.fuzzer.wait_until_pause()
-        self.summary.pause_timer()
-        if not self.is_verbose_mode():
-            CliOutput.print("")
-        answer = ''
-        while answer not in ['q', 'c']:
-            try:
-                answer = self.cli_output.ask_data("[c]ontinue | [s]tatus | [q]uit")
-            except KeyboardInterrupt:
-                answer = 'q'
-            if answer == "q":
-                self.fuzzer.stop()
-                self.cli_output.abort_box("Test aborted by the user")
-            elif answer == 's':
-                str_percentage = self.cli_output.get_percentage(
-                    BaseItem.index,
-                    self.total_requests
-                )
-                self.cli_output.info_box(
-                    f"Progress: {Colors.LIGHT_YELLOW}{str_percentage}{Colors.RESET} completed"
-                )
-            elif answer == "c":
-                self.summary.resume_timer()
-                self.fuzzer.resume()
 
     def prepare(self) -> None:
         """Prepare the application before the fuzzing"""
-        self.target_host = get_host(get_pure_url(self.requester.get_url()))
+        self.target_host = get_parsed_url(get_pure_url(self.requester.get_url())).hostname
         if self.is_verbose_mode():
             self.cli_output.info_box(f"Preparing target {self.target_host} ...")
         self.check_ignore_errors()
-        if (not isinstance(self.scanner, Plugin) and
+        if (len(self.scanners) == 1 and
                 (self.requester.is_data_fuzzing() and
                  not self.matcher.comparator_is_set())):
             self.cli_output.info_box("DataFuzzing detected, checking for a data comparator ...")
@@ -241,8 +202,6 @@ class CliController(FuzzController):
                 f"Status code {str(status)} detected. Pausing threads ..."
             )
             self.fuzzer.wait_until_pause()
-            if not self.is_verbose_mode():
-                CliOutput.print("")
             self.cli_output.info_box(
                 f"Waiting for {self.blacklist_status.action_param} seconds ..."
             )
@@ -260,14 +219,15 @@ class CliController(FuzzController):
                 self.summary.results.append(result)
                 self.cli_output.print_result(result, validate)
             self.cli_output.progress_status(
-                result.index, self.total_requests, result.payload
+                result.index, self.job_manager.total_requests, result.payload
             )
+        self.last_index = result.index
 
     def _request_exception_callback(self, error: Error) -> None:
         if self.ignore_errors:
             if not self.verbose[0]:
                 self.cli_output.progress_status(
-                    error.index, self.total_requests, error.payload
+                    error.index, self.job_manager.total_requests, error.payload
                 )
             else:
                 if self.verbose[1]:
@@ -276,6 +236,7 @@ class CliController(FuzzController):
                 self.logger.write(str(error), error.payload)
         else:
             self.stop_action = str(error)
+        self.last_index = error.index
 
     def _invalid_hostname_callback(self, error: Error) -> None:
         if self.verbose[0]:
@@ -283,8 +244,9 @@ class CliController(FuzzController):
                 self.cli_output.not_worked_box(str(error))
         else:
             self.cli_output.progress_status(
-                error.index, self.total_requests, error.payload
+                error.index, self.job_manager.total_requests, error.payload
             )
+        self.last_index = error.index
 
     def _init_dictionary(self) -> None:
         try:
@@ -293,6 +255,63 @@ class CliController(FuzzController):
             if self.is_verbose_mode():
                 for e in self.wordlist_errors:
                     self.cli_output.warning_box(str(e))
+
+    def _join(self) -> None:
+        """Blocks until the fuzzer is running"""
+        while self.fuzzer.is_running():
+            try:
+                super()._join()
+            except KeyboardInterrupt:
+                self.cli_output.warning_box("Ctrl+C detected, pausing threads ...")
+                self._handle_pause()
+
+    def _handle_pause(self) -> None:
+        """Handle with the Ctrl+C pause"""
+        self.fuzzer.pause()
+        self.fuzzer.wait_until_pause()
+        self.summary.pause_timer()
+        options = "[c]ontinue | [p]rogress | [q]uit"
+        if (self.job_manager.has_pending_jobs()
+                or self.job_manager.has_pending_jobs_from_providers()):
+            options += " | [s]kip"
+        answer = ''
+        while answer not in ['q', 'c', 's']:
+            try:
+                answer = self.cli_output.ask_data(options)
+            except KeyboardInterrupt:
+                answer = 'q'
+            if answer == 'q':
+                self._handle_quit()
+            elif answer == 'p':
+                self._handle_progress()
+            elif answer == "c":
+                self._handle_continue()
+            elif answer == 's':
+                self._handle_skip()
+
+    def _handle_quit(self):
+        """Handle with the quit option when pause"""
+        raise StopActionInterrupt("Test aborted")
+
+    def _handle_progress(self):
+        """Handle with the progress option when pause"""
+        str_percentage = self.cli_output.get_percentage(
+            self.last_index,
+            self.job_manager.total_requests
+        )
+        self.cli_output.info_box(
+            f"Progress: {Colors.LIGHT_YELLOW}{str_percentage}{Colors.RESET} completed"
+        )
+
+    def _handle_continue(self):
+        """Handle with the continue option when pause"""
+        self.summary.resume_timer()
+        self.fuzzer.resume()
+
+    def _handle_skip(self):
+        """Handle with the skip option when pause"""
+        self.fuzzer.stop()
+        self.cli_output.abort_box(f"Current job ({self.job_manager.current_job}) skipped")
 
     def __init_report(self) -> None:
         """Initialize the report"""

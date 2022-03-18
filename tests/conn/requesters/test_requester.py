@@ -8,7 +8,7 @@ from src.fuzzingtool.objects.fuzz_word import FuzzWord
 from src.fuzzingtool.utils.consts import (FUZZING_MARK, UNKNOWN_FUZZING, HTTP_METHOD_FUZZING,
                                           PATH_FUZZING, DATA_FUZZING)
 from src.fuzzingtool.exceptions.request_exceptions import RequestException
-from src.fuzzingtool.utils.http_utils import get_host
+from src.fuzzingtool.utils.http_utils import get_parsed_url
 from ...mock_utils.response_mock import ResponseMock
 
 
@@ -315,7 +315,7 @@ class TestRequester(unittest.TestCase):
         mock_request.side_effect = UnicodeError
         with self.assertRaises(RequestException) as e:
             requester.request()
-        self.assertEqual(str(e.exception), f"Invalid hostname {get_host(test_url)} for HTTP request")
+        self.assertEqual(str(e.exception), f"Invalid hostname {get_parsed_url(test_url).hostname} for HTTP request")
         mock_request.side_effect = ValueError
         with self.assertRaises(RequestException) as e:
             requester.request()

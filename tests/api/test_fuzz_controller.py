@@ -77,7 +77,8 @@ class TestFuzzController(unittest.TestCase):
     @patch("src.fuzzingtool.api.fuzz_controller.PluginFactory.object_creator")
     def test_init_scanner_with_plugin_scanner(self, mock_object_creator: Mock):
         mock_object_creator.return_value = Reflected()
-        test_fuzz_controller = FuzzController(scanner="Reflected")
+        test_fuzz_controller = FuzzController(url=f"http://test-url.com/", scanner="Reflected")
+        test_fuzz_controller._init_requester()
         test_fuzz_controller._init_scanner()
         mock_object_creator.assert_called_once_with("Reflected", "scanners", '')
 

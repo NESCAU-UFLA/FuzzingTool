@@ -50,7 +50,7 @@ class Fuzzer:
                  requester: Requester,
                  dictionary: Dictionary,
                  matcher: Matcher,
-                 scanner: BaseScanner,
+                 scanners: List[BaseScanner],
                  delay: float,
                  number_of_threads: int,
                  blacklist_status: BlacklistStatus,
@@ -64,8 +64,8 @@ class Fuzzer:
         @param dict: The dicttionary object to deal with the payload dictionary
         @type matcher: Matcher
         @param matcher: The matcher for the results
-        @type scanner: BaseScanner
-        @param scanner: The fuzzing results scanner
+        @type scanners: List[BaseScanner]
+        @param scanners: The fuzzing results scanners
         @type delay: float
         @param delay: The delay between each request
         @type number_of_threads: int
@@ -83,7 +83,7 @@ class Fuzzer:
         self.__requester = requester
         self.__dict = dictionary
         self.__matcher = matcher
-        self.__scanner = scanner
+        self.__scanners = scanners
         self.__delay = delay
         self.__running = True
         self.__blacklist_status = blacklist_status
@@ -178,8 +178,8 @@ class Fuzzer:
         self.__player.set()
 
     def wait_until_pause(self) -> None:
-        while self.__paused_threads < (self.__running_threads-1):
-            """Do nothing until all threads are paused"""
+        """Blocks until all threads are paused"""
+        while self.__paused_threads < self.__running_threads:
             pass
         time.sleep(0.1)
 
@@ -187,7 +187,7 @@ class Fuzzer:
                         response: Response,
                         rtt: float,
                         payload: Payload,
-                        *args):
+                        *args) -> None:
         """Threats the result
 
         @type response: Response
@@ -201,10 +201,14 @@ class Fuzzer:
                 response.status_code in self.__blacklist_status.codes):
             self.__blacklist_status.do_action(response.status_code)
         result = Result(response, rtt, payload, self.__requester.get_fuzzing_type())
-        self.__scanner.inspect_result(result, *args)
-        self.result_callback(
-            result,
-            (self.__scanner.scan(result)
-             if self.__matcher.match(result)
-             else False)
-        )
+        if self.__matcher.match(result):
+            valid = True
+            for scanner in self.__scanners:
+                scanner.inspect_result(result, *args)
+                if scanner.scan(result):
+                    scanner.process(result)
+                else:
+                    valid = False
+        else:
+            valid = False
+        self.result_callback(result, valid)

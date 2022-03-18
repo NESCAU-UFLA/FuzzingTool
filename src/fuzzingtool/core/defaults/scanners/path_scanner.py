@@ -26,10 +26,10 @@ class PathScanner(BaseScanner):
     __author__ = ("Vitor Oriel",)
 
     def inspect_result(self, result: Result) -> None:
-        result.custom['redirected'] = ''
-        if result.status > 300 and result.status < 400:
-            result.custom['redirected'] = (result.get_response()
-                                                 .headers['Location'])
+        super().inspect_result(result)
+        self.get_self_res(result).data['redirected'] = ''
+        if result.history.status > 300 and result.history.status < 400:
+            self.get_self_res(result).data['redirected'] = result.history.response.headers['Location']
 
     def scan(self, result: Result) -> bool:
         return True

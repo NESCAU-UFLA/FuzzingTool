@@ -29,6 +29,7 @@ class Dictionary:
 
     Attributes:
         wordlist: The wordlist that contains the payloads backup
+        size: The payload queue size
         payloads: The queue that contains all payloads inside the wordlist
     """
     def __init__(self, wordlist: list):
@@ -38,6 +39,7 @@ class Dictionary:
         @param wordlist: The wordlist with the payloads
         """
         self.__wordlist = wordlist
+        self.__size = 0
         self.__payloads = Queue()
 
     def __next__(self) -> List[str]:
@@ -45,6 +47,7 @@ class Dictionary:
 
         @returns list: The payloads used in the request
         """
+        self.__size -= 1
         return Payloader.get_customized_payload(self.__payloads.get())
 
     def __len__(self) -> int:
@@ -61,7 +64,7 @@ class Dictionary:
         length_encoders = len(Payloader.encoder)
         if length_encoders == 0:
             length_encoders = 1
-        return (len(self.__wordlist)
+        return (self.__size
                 * length_suffix
                 * length_prefix
                 * length_encoders)
@@ -75,6 +78,21 @@ class Dictionary:
 
     def reload(self) -> None:
         """Reloads the payloads queue with the wordlist content"""
-        self.__payloads = Queue()
         for payload in self.__wordlist:
             self.__payloads.put(payload)
+            self.__size += 1
+
+    def fill_from_queue(self, payloads_queue: Queue, clear: bool = False) -> None:
+        """Fill the payloads queue with another queue
+
+        @type payloads_queue: Queue
+        @param payloads_queue: The other payload quele that'll enqueue the payloads
+        @type clear: bool
+        @param clear: The flag to say if the payload queue needs to be cleared before
+        """
+        if clear:
+            self.__payloads = Queue()
+            self.__size = 0
+        while not payloads_queue.empty():
+            self.__payloads.put(payloads_queue.get())
+            self.__size += 1
