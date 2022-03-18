@@ -32,7 +32,6 @@ class TestRequester(unittest.TestCase):
                      mock_resolve_hostname: Mock,
                      mock_request: Mock):
         expected_ip = "127.0.0.1"
-        expected_ip_dict = {'ip': expected_ip}
         test_payload = ''
         requester = SubdomainRequester("https://test-url.com/")
         mock_resolve_hostname.return_value = expected_ip
@@ -44,8 +43,8 @@ class TestRequester(unittest.TestCase):
         self.assertIsInstance(returned_response, Response)
         self.assertIsInstance(returned_rtt, float)
         self.assertEqual(returned_rtt, 0.0)
-        self.assertIsInstance(returned_ip, dict)
-        self.assertDictEqual(returned_ip, expected_ip_dict)
+        self.assertIsInstance(returned_ip, str)
+        self.assertEqual(returned_ip, expected_ip)
 
     def test_set_fuzzing_type(self):
         return_expected = SUBDOMAIN_FUZZING

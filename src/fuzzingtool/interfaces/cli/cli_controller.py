@@ -160,7 +160,7 @@ class CliController(FuzzController):
         if self.is_verbose_mode():
             self.cli_output.info_box(f"Preparing target {self.target_host} ...")
         self.check_ignore_errors()
-        if (not isinstance(self.scanner, Plugin) and
+        if (len(self.scanners) == 1 and
                 (self.requester.is_data_fuzzing() and
                  not self.matcher.comparator_is_set())):
             self.cli_output.info_box("DataFuzzing detected, checking for a data comparator ...")

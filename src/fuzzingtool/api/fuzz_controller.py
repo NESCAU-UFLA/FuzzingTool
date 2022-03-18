@@ -90,7 +90,7 @@ class FuzzController:
         self.job_manager = JobManager(
             dictionary=self.dictionary,
             job_providers={
-                'Scanner queue': self.scanner.payloads_queue
+                str(scanner): scanner.payloads_queue for scanner in self.scanners
             }
         )
 
@@ -202,13 +202,13 @@ class FuzzController:
 
     def _init_scanner(self) -> None:
         """Initialize the scanner"""
+        self.scanners: List[BaseScanner] = [self.__get_default_scanner()]
         if self.args["scanner"]:
             scanner, param = AB.build_scanner(self.args["scanner"])
-            self.scanner: BaseScanner = PluginFactory.object_creator(
+            plugin_scanner: BaseScanner = PluginFactory.object_creator(
                 scanner, 'scanners', param
             )
-        else:
-            self.scanner = self.__get_default_scanner()
+            self.scanners.append(plugin_scanner)
 
     def _init_dictionary(self) -> None:
         """Initialize the dictionary"""
@@ -237,7 +237,7 @@ class FuzzController:
             requester=self.requester,
             dictionary=self.dictionary,
             matcher=self.matcher,
-            scanner=self.scanner,
+            scanners=self.scanners,
             delay=self.delay,
             number_of_threads=self.number_of_threads,
             blacklist_status=self.blacklist_status,

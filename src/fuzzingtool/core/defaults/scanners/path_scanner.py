@@ -33,6 +33,3 @@ class PathScanner(BaseScanner):
 
     def scan(self, result: Result) -> bool:
         return True
-
-    def process(self, result: Result) -> None:
-        pass

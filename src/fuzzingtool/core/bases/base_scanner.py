@@ -56,7 +56,6 @@ class BaseScanner(ABC):
         """
         pass
 
-    @abstractmethod
     def process(self, result: Result) -> None:
         """Process the FuzzingTool result
 

@@ -49,7 +49,7 @@ class SubdomainRequester(Requester):
             request_parser.set_payload(payload)
             host = get_parsed_url(request_parser.get_url(self._url)).hostname
         ip = self.resolve_hostname(host)
-        return (*(super().request(payload)), {'ip': ip})
+        return (*(super().request(payload)), ip)
 
     def _set_fuzzing_type(self) -> int:
         return SUBDOMAIN_FUZZING

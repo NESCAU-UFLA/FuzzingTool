@@ -20,19 +20,14 @@
 
 from ...bases.base_scanner import BaseScanner
 from ....objects.result import Result
-from ....decorators.append_args import append_args
 
 
 class SubdomainScanner(BaseScanner):
     __author__ = ("Vitor Oriel",)
 
-    @append_args
-    def inspect_result(self, result: Result) -> None:
-        """The decorator append_args will deal with the IP custom result attribute."""
+    def inspect_result(self, result: Result, ip: str) -> None:
         super().inspect_result(result)
+        self.get_self_res(result).data['ip'] = ip
 
     def scan(self, result: Result) -> bool:
         return True
-
-    def process(self, result: Result) -> None:
-        pass

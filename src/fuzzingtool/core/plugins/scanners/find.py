@@ -60,6 +60,3 @@ class Find(BaseScanner, Plugin):
                  else False)
         self.get_self_res(result).data['found'] = found
         return found
-
-    def process(self, result: Result) -> None:
-        pass

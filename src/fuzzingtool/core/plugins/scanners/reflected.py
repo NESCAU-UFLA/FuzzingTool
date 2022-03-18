@@ -40,6 +40,3 @@ class Reflected(BaseScanner, Plugin):
         reflected = result.payload in result.history.response.text
         self.get_self_res(result).data['reflected'] = reflected
         return reflected
-
-    def process(self, result: Result) -> None:
-        pass
