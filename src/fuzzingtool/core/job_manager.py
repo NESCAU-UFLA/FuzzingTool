@@ -18,12 +18,39 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from .bases import *
-from .defaults import *
-from .blacklist_status import BlacklistStatus
+from queue import Queue
+from typing import Dict
+
 from .dictionary import Dictionary
-from .fuzzer import Fuzzer
-from .job_manager import JobManager
-from .matcher import Matcher
-from .payloader import Payloader
-from .summary import Summary
+
+
+class JobManager:
+    def __init__(self,
+                 dictionary: Dictionary,
+                 job_providers: Dict[str, Queue]):
+        self.current_job = None
+        self.pending_jobs = Queue()
+        self.pending_jobs.put("wordlist")
+        self.total_requests = 0
+        self.dictionary = dictionary
+        self.job_providers = job_providers
+
+    def get_job(self) -> None:
+        """Gets a new job to run"""
+        self.current_job = self.pending_jobs.get()
+        self.total_requests = len(self.dictionary)
+
+    def has_pending_jobs(self) -> bool:
+        return not self.pending_jobs.empty()
+
+    def has_pending_jobs_from_providers(self) -> bool:
+        for job_queue in self.job_providers.values():
+            if not job_queue.empty():
+                return True
+        return False
+
+    def check_for_new_jobs(self):
+        for job_provider, job_queue in self.job_providers.items():
+            if not job_queue.empty():
+                self.pending_jobs.put(job_provider)
+                self.dictionary.fill_from_queue(job_queue, clear=True)

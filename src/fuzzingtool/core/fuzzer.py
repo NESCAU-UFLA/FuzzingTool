@@ -181,7 +181,7 @@ class Fuzzer:
         while self.__paused_threads < (self.__running_threads-1):
             """Do nothing until all threads are paused"""
             pass
-        time.sleep(0.1)
+        time.sleep(0.2)
 
     def __threat_result(self,
                         response: Response,

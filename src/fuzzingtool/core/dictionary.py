@@ -38,7 +38,7 @@ class Dictionary:
         @param wordlist: The wordlist with the payloads
         """
         self.__wordlist = wordlist
-        self.__size = len(self.__wordlist)
+        self.__size = 0
         self.__payloads = Queue()
 
     def __next__(self) -> List[str]:
@@ -46,6 +46,7 @@ class Dictionary:
 
         @returns list: The payloads used in the request
         """
+        self.__size -= 1
         return Payloader.get_customized_payload(self.__payloads.get())
 
     def __len__(self) -> int:
@@ -78,6 +79,7 @@ class Dictionary:
         """Reloads the payloads queue with the wordlist content"""
         for payload in self.__wordlist:
             self.__payloads.put(payload)
+            self.__size += 1
 
     def fill_from_queue(self, payloads_queue: Queue, clear: bool = False) -> None:
         if clear:

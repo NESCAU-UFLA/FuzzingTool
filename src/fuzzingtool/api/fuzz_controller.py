@@ -18,7 +18,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from queue import Queue
 from typing import Tuple, List, Union
 import time
 
@@ -26,7 +25,8 @@ from ..interfaces.argument_builder import ArgumentBuilder as AB
 from ..utils.utils import split_str_to_list
 from ..utils.file_utils import read_file
 from ..utils.result_utils import ResultUtils
-from ..core import BlacklistStatus, Dictionary, Fuzzer, Matcher, Payloader, Summary
+from ..core import (BlacklistStatus, Dictionary, Fuzzer,
+                    JobManager, Matcher, Payloader, Summary)
 from ..core.bases import BaseScanner, BaseEncoder
 from ..core.defaults.scanners import (DataScanner,
                                       PathScanner, SubdomainScanner)
@@ -87,9 +87,12 @@ class FuzzController:
         self.number_of_threads = self.args["threads"]
         self._init_dictionary()
         self.dictionary.reload()
-        self.total_requests = len(self.dictionary)
-        self.jobs = Queue()
-        self.jobs.put("wordlist")
+        self.job_manager = JobManager(
+            dictionary=self.dictionary,
+            job_providers={
+                'Scanner queue': self.scanner.payloads_queue
+            }
+        )
 
     def start(self) -> None:
         """Starts the fuzzing application.
@@ -97,7 +100,7 @@ class FuzzController:
         """
         self.summary.start_timer()
         try:
-            while not self.jobs.empty():
+            while self.job_manager.has_pending_jobs():
                 self._get_job()
                 self._fuzz()
                 self._check_for_new_jobs()
@@ -225,9 +228,8 @@ class FuzzController:
 
     def _get_job(self) -> None:
         """Get a job from the job queue"""
-        self.this_job = self.jobs.get()
         BaseItem.reset_index()
-        self.total_requests = len(self.dictionary)
+        self.job_manager.get_job()
 
     def _fuzz(self) -> None:
         """Prepare the fuzzer for the fuzzing tests"""
@@ -255,10 +257,8 @@ class FuzzController:
                 raise StopActionInterrupt(self.stop_action)
         self.fuzzer.stop()
 
-    def _check_for_new_jobs(self) -> None:
-        if not self.scanner.payloads_queue.empty():
-            self.dictionary.fill_from_queue(self.scanner.payloads_queue, clear=True)
-            self.jobs.put("scanner queue")
+    def _check_for_new_jobs(self):
+        self.job_manager.check_for_new_jobs()
 
     def __get_default_args(self) -> dict:
         """Gets the default arguments for the program

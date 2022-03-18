@@ -220,7 +220,7 @@ class CliController(FuzzController):
                 self.summary.results.append(result)
                 self.cli_output.print_result(result, validate)
             self.cli_output.progress_status(
-                result.index, self.total_requests, result.payload
+                result.index, self.job_manager.total_requests, result.payload
             )
         self.last_index = result.index
 
@@ -228,7 +228,7 @@ class CliController(FuzzController):
         if self.ignore_errors:
             if not self.verbose[0]:
                 self.cli_output.progress_status(
-                    error.index, self.total_requests, error.payload
+                    error.index, self.job_manager.total_requests, error.payload
                 )
             else:
                 if self.verbose[1]:
@@ -245,7 +245,7 @@ class CliController(FuzzController):
                 self.cli_output.not_worked_box(str(error))
         else:
             self.cli_output.progress_status(
-                error.index, self.total_requests, error.payload
+                error.index, self.job_manager.total_requests, error.payload
             )
         self.last_index = error.index
 
@@ -271,27 +271,44 @@ class CliController(FuzzController):
         self.fuzzer.pause()
         self.fuzzer.wait_until_pause()
         self.summary.pause_timer()
+        options = "[c]ontinue | [p]rogress | [q]uit"
+        if (self.job_manager.has_pending_jobs()
+                or self.job_manager.has_pending_jobs_from_providers()):
+            options += " | [s]kip"
         answer = ''
-        while answer not in ['q', 'c']:
+        while answer not in ['q', 'c', 's']:
             try:
-                answer = self.cli_output.ask_data("[c]ontinue | [s]tatus | [q]uit")
+                answer = self.cli_output.ask_data(options)
             except KeyboardInterrupt:
                 answer = 'q'
-            if answer == "q":
-                self._has_job = False
-                self.fuzzer.stop()
-                self.cli_output.abort_box("Test aborted by the user")
-            elif answer == 's':
-                str_percentage = self.cli_output.get_percentage(
-                    self.last_index,
-                    self.total_requests
-                )
-                self.cli_output.info_box(
-                    f"Progress: {Colors.LIGHT_YELLOW}{str_percentage}{Colors.RESET} completed"
-                )
+            if answer == 'q':
+                self._handle_quit()
+            elif answer == 'p':
+                self._handle_progress()
             elif answer == "c":
-                self.summary.resume_timer()
-                self.fuzzer.resume()
+                self._handle_continue()
+            elif answer == 's':
+                self._handle_skip()
+
+    def _handle_quit(self):
+        raise StopActionInterrupt("Test aborted")
+
+    def _handle_progress(self):
+        str_percentage = self.cli_output.get_percentage(
+            self.last_index,
+            self.job_manager.total_requests
+        )
+        self.cli_output.info_box(
+            f"Progress: {Colors.LIGHT_YELLOW}{str_percentage}{Colors.RESET} completed"
+        )
+
+    def _handle_continue(self):
+        self.summary.resume_timer()
+        self.fuzzer.resume()
+
+    def _handle_skip(self):
+        self.fuzzer.stop()
+        self.cli_output.abort_box(f"Current job ({self.job_manager.current_job}) skipped")
 
     def __init_report(self) -> None:
         """Initialize the report"""

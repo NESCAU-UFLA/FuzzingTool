@@ -52,10 +52,11 @@ class Backups(BaseScanner, Plugin):
         BaseScanner.inspect_result(self, result)
 
     def scan(self, result: Result) -> bool:
-        return result.history.parsed_url.file_ext not in self.extensions
+        return True
 
     def process(self, result: Result) -> None:
-        for ext in self.extensions:
-            parsed_url = result.history.parsed_url
-            self.enqueue_payload(result, f"{parsed_url.file_name}{ext}")
-            self.enqueue_payload(result, f"{parsed_url.file}{ext}")
+        if result.history.parsed_url.file_ext not in self.extensions:
+            for ext in self.extensions:
+                parsed_url = result.history.parsed_url
+                self.enqueue_payload(result, f"{parsed_url.file_name}{ext}")
+                self.enqueue_payload(result, f"{parsed_url.file}{ext}")
