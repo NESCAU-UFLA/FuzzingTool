@@ -31,7 +31,7 @@ from ...api.fuzz_controller import FuzzController
 from ...utils.http_utils import get_parsed_url, get_pure_url
 from ...utils.logger import Logger
 from ...reports.report import Report
-from ...objects import Error, Result
+from ...objects import BaseItem, Error, Result
 from ...exceptions.base_exceptions import FuzzingToolException
 from ...exceptions.main_exceptions import FuzzControllerException, StopActionInterrupt
 from ...exceptions.request_exceptions import RequestException
@@ -209,19 +209,18 @@ class CliController(FuzzController):
             self.cli_output.info_box("Resuming target ...")
             self.fuzzer.resume()
 
-    def _result_callback(self, result: Result, validate: bool) -> None:
+    def _result_callback(self, result: Result, valid: bool) -> None:
         if self.verbose[0]:
-            if validate:
+            if valid:
                 self.summary.results.append(result)
-            self.cli_output.print_result(result, validate)
+            self.cli_output.print_result(result, valid)
         else:
-            if validate:
+            if valid:
                 self.summary.results.append(result)
-                self.cli_output.print_result(result, validate)
+                self.cli_output.print_result(result, valid)
             self.cli_output.progress_status(
                 result.index, self.job_manager.total_requests, result.payload
             )
-        self.last_index = result.index
 
     def _request_exception_callback(self, error: Error) -> None:
         if self.ignore_errors:
@@ -236,7 +235,6 @@ class CliController(FuzzController):
                 self.logger.write(str(error), error.payload)
         else:
             self.stop_action = str(error)
-        self.last_index = error.index
 
     def _invalid_hostname_callback(self, error: Error) -> None:
         if self.verbose[0]:
@@ -246,7 +244,6 @@ class CliController(FuzzController):
             self.cli_output.progress_status(
                 error.index, self.job_manager.total_requests, error.payload
             )
-        self.last_index = error.index
 
     def _init_dictionary(self) -> None:
         try:
@@ -296,7 +293,7 @@ class CliController(FuzzController):
     def _handle_progress(self):
         """Handle with the progress option when pause"""
         str_percentage = self.cli_output.get_percentage(
-            self.last_index,
+            BaseItem.index,
             self.job_manager.total_requests
         )
         self.cli_output.info_box(

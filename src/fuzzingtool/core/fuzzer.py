@@ -20,16 +20,13 @@
 
 from threading import Thread, Event
 import time
-from typing import Callable, List
+from typing import Callable, List, Union, Any
 
 from requests.models import Response
 
-from .blacklist_status import BlacklistStatus
 from .dictionary import Dictionary
-from .matcher import Matcher
-from .bases.base_scanner import BaseScanner
 from ..conn.requesters import Requester
-from ..objects import Error, Payload, Result
+from ..objects import Error, Payload
 from ..exceptions.request_exceptions import RequestException, InvalidHostname
 
 
@@ -39,55 +36,38 @@ class Fuzzer:
     Attributes:
         requester: The requester object to deal with the requests
         dict: The dictionary object to handle with the payloads
-        matcher: A matcher object, used to match the results
-        scanner: A scanner object, used to validate the results
         delay: The delay between each test
         running: A flag to say if the application is running or not
-        blacklist_status: The blacklist status object to handle
-                          with the blacklisted status
     """
     def __init__(self,
                  requester: Requester,
                  dictionary: Dictionary,
-                 matcher: Matcher,
-                 scanners: List[BaseScanner],
                  delay: float,
                  number_of_threads: int,
-                 blacklist_status: BlacklistStatus,
-                 result_callback: Callable[[dict, bool], None],
-                 exception_callbacks: List[Callable[[str, str], None]]):
+                 response_callback: Callable[[dict, bool], None],
+                 exception_callbacks: Callable[[Response, float, Payload, Union[Any, None]], None]):
         """Class constructor
 
         @type requester: Requester
         @param requester: The requester object to deal with the requests
         @type dict: Dictionary
         @param dict: The dicttionary object to deal with the payload dictionary
-        @type matcher: Matcher
-        @param matcher: The matcher for the results
-        @type scanners: List[BaseScanner]
-        @param scanners: The fuzzing results scanners
         @type delay: float
         @param delay: The delay between each request
         @type number_of_threads: int
         @param number_of_threads: The number of threads
                                   used in the fuzzing tests
-        @type blacklist_status: blacklist_status
-        @param blacklist_status: The blacklist status object
-                                 to handle with the blacklisted status
-        @type result_callback: Callable
-        @param result_callback: The callback function for the results
+        @type response_callback: Callable
+        @param response_callback: The callback function for the results
         @type exception_callbacks: List[Callable]
         @param exception_callbacks: The list that handles
                                     with exception callbacks
         """
         self.__requester = requester
         self.__dict = dictionary
-        self.__matcher = matcher
-        self.__scanners = scanners
         self.__delay = delay
         self.__running = True
-        self.__blacklist_status = blacklist_status
-        self.result_callback = result_callback
+        self.response_callback = response_callback
         self.exception_callbacks = exception_callbacks
         self.setup_threads(number_of_threads)
 
@@ -137,7 +117,7 @@ class Fuzzer:
                 except RequestException as e:
                     self.exception_callbacks[1](Error(e, payload))
                 else:
-                    self.__threat_result(response, rtt, payload, *args)
+                    self.response_callback(response, rtt, payload, *args)
                 finally:
                     time.sleep(self.__delay)
             if self.is_paused():
@@ -182,33 +162,3 @@ class Fuzzer:
         while self.__paused_threads < self.__running_threads:
             pass
         time.sleep(0.1)
-
-    def __threat_result(self,
-                        response: Response,
-                        rtt: float,
-                        payload: Payload,
-                        *args) -> None:
-        """Threats the result
-
-        @type response: Response
-        @param response: The response object from the request
-        @type rtt: float
-        @param rtt: The elapsed time between request and response
-        @type payload: Payload
-        @param payload: The payload used in the request
-        """
-        if (self.__blacklist_status and
-                response.status_code in self.__blacklist_status.codes):
-            self.__blacklist_status.do_action(response.status_code)
-        result = Result(response, rtt, payload, self.__requester.get_fuzzing_type())
-        if self.__matcher.match(result):
-            valid = True
-            for scanner in self.__scanners:
-                scanner.inspect_result(result, *args)
-                if scanner.scan(result):
-                    scanner.process(result)
-                else:
-                    valid = False
-        else:
-            valid = False
-        self.result_callback(result, valid)
