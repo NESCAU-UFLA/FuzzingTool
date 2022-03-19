@@ -20,7 +20,7 @@
 
 from threading import Thread, Event
 import time
-from typing import Callable, List, Union, Any
+from typing import Callable, Union, Any
 
 from requests.models import Response
 
