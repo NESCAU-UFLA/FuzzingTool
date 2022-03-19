@@ -76,4 +76,7 @@ class JobManager:
         """
         for job_provider, job_queue in self.job_providers.items():
             if not job_queue.empty():
-                self.pending_jobs.put((job_provider, job_queue))
+                new_job = Queue()
+                while not job_queue.empty():
+                    new_job.put(job_queue.get())
+                self.pending_jobs.put((job_provider, new_job))
