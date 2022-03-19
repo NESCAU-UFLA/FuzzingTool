@@ -31,7 +31,7 @@ from ...api.fuzz_controller import FuzzController
 from ...utils.http_utils import get_parsed_url, get_pure_url
 from ...utils.logger import Logger
 from ...reports.report import Report
-from ...objects import BaseItem, Error, Result
+from ...objects import BaseItem, Error, Result, HttpHistory
 from ...exceptions.base_exceptions import FuzzingToolException
 from ...exceptions.main_exceptions import FuzzControllerException, StopActionInterrupt
 from ...exceptions.request_exceptions import RequestException
@@ -367,7 +367,7 @@ class CliController(FuzzController):
             response, rtt = self.requester.request(payload)
         except RequestException as e:
             raise StopActionInterrupt(str(e))
-        result_to_comparator = Result(response, rtt, Payload(payload))
+        result_to_comparator = Result(HttpHistory(response, rtt), Payload(payload))
         self.cli_output.print_result(result_to_comparator, False)
         time = self.__get_comparator_value(
             name_value="RTT",

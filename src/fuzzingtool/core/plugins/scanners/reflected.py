@@ -32,11 +32,5 @@ class Reflected(BaseScanner, Plugin):
     __type__ = ""
     __version__ = "0.1"
 
-    def inspect_result(self, result: Result) -> None:
-        BaseScanner.inspect_result(self, result)
-        self.get_self_res(result).data['reflected'] = None
-
     def scan(self, result: Result) -> bool:
-        reflected = result.payload in result.history.response.text
-        self.get_self_res(result).data['reflected'] = reflected
-        return reflected
+        return result.payload in result.history.response.text

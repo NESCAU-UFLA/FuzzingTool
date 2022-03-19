@@ -17,8 +17,14 @@ class TestHttpHistory(unittest.TestCase):
         self.assertEqual(test_history.body_size, 25)
         self.assertEqual(test_history.response_time, 2.0)
         self.assertEqual(test_history.request_time, 1.0)
+        self.assertEqual(test_history.ip, '')
         self.assertEqual(test_history.request, test_response.request)
         self.assertEqual(test_history.response, test_response)
+
+    def test_http_history_with_ip(self):
+        expected_ip = '127.0.0.1'
+        test_history = HttpHistory(ResponseMock(), 3.0, expected_ip)
+        self.assertEqual(test_history.ip, expected_ip)
 
     @patch("src.fuzzingtool.objects.http_history.build_raw_response_header")
     def test_headers(self, mock_build_raw_response_header: Mock):

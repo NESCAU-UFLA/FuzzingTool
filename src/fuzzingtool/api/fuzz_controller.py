@@ -35,7 +35,7 @@ from ..core.defaults.scanners import (DataScanner,
 from ..conn.requesters import Requester, SubdomainRequester
 from ..conn.request_parser import check_is_subdomain_fuzzing
 from ..factories import PluginFactory, WordlistFactory
-from ..objects import BaseItem, Error, Result, Payload
+from ..objects import BaseItem, Error, Result, HttpHistory, Payload
 from ..exceptions.main_exceptions import (FuzzControllerException, StopActionInterrupt,
                                           WordlistCreationError, BuildWordlistFails)
 
@@ -390,7 +390,7 @@ class FuzzController:
                           response: Response,
                           rtt: float,
                           payload: Payload,
-                          *args) -> None:
+                          *ip) -> None:
         """Handle the response from the request
 
         @type response: Response
@@ -403,10 +403,12 @@ class FuzzController:
         if (self.blacklist_status and
                 response.status_code in self.blacklist_status.codes):
             self.blacklist_status.do_action(response.status_code)
-        result = Result(response, rtt, payload, self.requester.get_fuzzing_type())
-        self._result_callback(result, self.__result_is_valid(result, *args))
+        result = Result(HttpHistory(response, rtt, *ip),
+                        payload,
+                        self.requester.get_fuzzing_type())
+        self._result_callback(result, self.__result_is_valid(result))
 
-    def __result_is_valid(self, result: Result, *args):
+    def __result_is_valid(self, result: Result):
         """Checks if the result is valid or not
 
         @type result: Result
@@ -414,7 +416,6 @@ class FuzzController:
         """
         if self.matcher.match(result):
             for scanner in self.scanners:
-                scanner.inspect_result(result, *args)
                 if not scanner.scan(result):
                     return False
                 scanner.process(result)

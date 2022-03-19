@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import Mock, patch
 
-from src.fuzzingtool.objects import Payload, Result, ScannerResult
+from src.fuzzingtool.objects import Payload, Result, HttpHistory, ScannerResult
 from src.fuzzingtool.objects.base_objects import BaseItem
 from src.fuzzingtool.utils.result_utils import ResultUtils
 from ..mock_utils.response_mock import ResponseMock
@@ -17,8 +17,7 @@ class TestResult(unittest.TestCase):
     def test_result(self):
         test_response = ResponseMock()
         result = Result(
-            response=test_response,
-            rtt=3.0,
+            history=HttpHistory(response=test_response, rtt=3.0),
             payload=Payload('test-payload')
         )
         self.assertEqual(result.words, 5)
@@ -27,8 +26,7 @@ class TestResult(unittest.TestCase):
     def test_result_str(self):
         test_response = ResponseMock()
         result = Result(
-            response=test_response,
-            rtt=3.0,
+            history=HttpHistory(response=test_response, rtt=3.0),
             payload=Payload('test-payload')
         )
         test_scanner = "test-scanner"
@@ -59,8 +57,7 @@ class TestResult(unittest.TestCase):
         Result.save_headers = True
         Result.save_body = True
         result = Result(
-            response=ResponseMock(),
-            rtt=3.0,
+            history=HttpHistory(ResponseMock(), 3.0, '127.0.0.1'),
             payload=payload
         )
         test_scanner = "test-scanner"
@@ -78,6 +75,7 @@ class TestResult(unittest.TestCase):
             'body_size': result.history.body_size,
             'words': result.words,
             'lines': result.lines,
+            'ip': result.history.ip,
             'test-key': "test-value",
             'payload': result.payload,
             'payload_raw': payload.raw,

@@ -19,7 +19,19 @@
 # SOFTWARE.
 
 class ScannerResult:
+    """Class to store the information provided from scanners
+
+    Attributes:
+        source: The scanner source name
+        data: The data provided from the scanner
+        enqueued_payloads: The quantity of enqueued payloads by the scanner
+    """
     def __init__(self, scanner_name: str):
+        """Class constructor
+
+        @type scanner_name: str
+        @param scanner_name: The name of the scanner that created this result
+        """
         self.source = scanner_name
         self.data = {}
         self.enqueued_payloads = 0

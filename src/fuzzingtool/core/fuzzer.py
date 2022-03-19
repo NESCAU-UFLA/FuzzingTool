@@ -90,7 +90,6 @@ class Fuzzer:
         self.__paused_threads = 0
         self.__join_timeout = 0.001*float(number_of_threads)
         self.__player = Event()
-        self.__player.clear()  # Not necessary, but force the blocking of the threads
 
     def is_running(self) -> bool:
         """The running flag getter
@@ -111,13 +110,13 @@ class Fuzzer:
         while not self.__dict.is_empty():
             for payload in next(self.__dict):
                 try:
-                    response, rtt, *args = self.__requester.request(str(payload))
+                    response, rtt, *ip = self.__requester.request(str(payload))
                 except InvalidHostname as e:
                     self.exception_callbacks[0](Error(e, payload))
                 except RequestException as e:
                     self.exception_callbacks[1](Error(e, payload))
                 else:
-                    self.response_callback(response, rtt, payload, *args)
+                    self.response_callback(response, rtt, payload, *ip)
                 finally:
                     time.sleep(self.__delay)
             if self.is_paused():
@@ -138,7 +137,7 @@ class Fuzzer:
 
     def start(self) -> None:
         """Starts the fuzzer application"""
-        self.__player.set()  # Awake threads
+        self.__player.set()
         for thread in self.__threads:
             thread.start()
 
