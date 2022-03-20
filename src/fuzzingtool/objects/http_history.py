@@ -18,18 +18,37 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from requests import PreparedRequest, Response
+from requests.models import PreparedRequest, Response
 
 from ..utils.http_utils import build_raw_response_header, UrlParse, get_parsed_url
 
 
 class HttpHistory:
-    def __init__(self, response: Response, rtt: float):
+    """Class that stores the HTTP information from the ressult
+
+    Attributes:
+        url: The requested target URL
+        method: The method used in the request
+        rtt: The elapsed time on both request and response
+        status: The response HTTP status code
+        body_size: The length of the response body content
+        ip: The IP from the request, if provided
+        response: The Response object from python requests
+    """
+    def __init__(self, response: Response, rtt: float = 0.0, *ip):
+        """Class constructor
+
+        @type response: Response
+        @param response: The response given in the request
+        @type rtt: float
+        @param rtt: The elapsed time on both request and response
+        """
         self.url = response.url
         self.method = response.request.method
         self.rtt = float('%.6f' % (rtt))
         self.status = response.status_code
         self.body_size = len(response.content)
+        self.ip = ip[0] if ip else ''
         self.__response = response
 
     @property

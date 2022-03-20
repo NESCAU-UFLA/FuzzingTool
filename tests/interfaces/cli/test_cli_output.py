@@ -3,7 +3,7 @@ from unittest.mock import Mock, patch
 from datetime import datetime
 
 from src.fuzzingtool.interfaces.cli.cli_output import Colors, CliOutput
-from src.fuzzingtool.objects import Payload, Result, ScannerResult
+from src.fuzzingtool.objects import Payload, Result, HttpHistory, ScannerResult
 from src.fuzzingtool.utils.consts import PATH_FUZZING, SUBDOMAIN_FUZZING
 from src.fuzzingtool.utils.result_utils import ResultUtils
 from ...mock_utils.response_mock import ResponseMock
@@ -71,7 +71,7 @@ class TestCliOutput(unittest.TestCase):
 
     def test_get_formatted_payload(self):
         test_result = Result(
-            response=ResponseMock(),
+            HttpHistory(response=ResponseMock()),
             payload=Payload("test-payload"),
         )
         returned_payload = CliOutput()._CliOutput__get_formatted_payload(test_result)
@@ -80,7 +80,7 @@ class TestCliOutput(unittest.TestCase):
 
     def test_get_formatted_payload_with_path_fuzz(self):
         test_result = Result(
-            response=ResponseMock(),
+            HttpHistory(response=ResponseMock()),
             fuzz_type=PATH_FUZZING,
         )
         returned_payload = CliOutput()._CliOutput__get_formatted_payload(test_result)
@@ -89,7 +89,7 @@ class TestCliOutput(unittest.TestCase):
 
     def test_get_formatted_payload_with_path_fuzz_and_raise_exception(self):
         test_result = Result(
-            response=ResponseMock(),
+            HttpHistory(response=ResponseMock()),
             fuzz_type=PATH_FUZZING,
         )
         test_result.history.url = "http://test-url.com"
@@ -99,7 +99,7 @@ class TestCliOutput(unittest.TestCase):
 
     def test_get_formatted_payload_with_subdomain_fuzz(self):
         test_result = Result(
-            response=ResponseMock(),
+            HttpHistory(response=ResponseMock()),
             fuzz_type=SUBDOMAIN_FUZZING,
         )
         returned_payload = CliOutput()._CliOutput__get_formatted_payload(test_result)
@@ -158,7 +158,7 @@ class TestCliOutput(unittest.TestCase):
     @patch("src.fuzzingtool.interfaces.cli.cli_output.ResultUtils.get_formatted_result")
     def test_get_formatted_result_items(self, mock_format_result: Mock, mock_format_status: Mock):
         test_result = Result(
-            response=ResponseMock(),
+            HttpHistory(response=ResponseMock()),
             payload=Payload("test-payload")
         )
         expected_status = "test_status"
@@ -194,7 +194,7 @@ class TestCliOutput(unittest.TestCase):
             test_words,
             test_lines
         )
-        test_result = Result(response=ResponseMock())
+        test_result = Result(HttpHistory(response=ResponseMock()))
         return_expected = (
             f"{test_payload} {Colors.GRAY}["
             f"{Colors.LIGHT_GRAY}Code{Colors.RESET} {test_status_code} | "
@@ -224,7 +224,7 @@ class TestCliOutput(unittest.TestCase):
             test_words,
             test_lines
         )
-        test_result = Result(response=ResponseMock())
+        test_result = Result(HttpHistory(response=ResponseMock()))
         test_scanner = "test-scanner"
         test_result.scanners_res[test_scanner] = ScannerResult(test_scanner)
         test_result.scanners_res[test_scanner].data['test_0'] = None

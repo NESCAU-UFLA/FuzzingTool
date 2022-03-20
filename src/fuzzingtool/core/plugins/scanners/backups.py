@@ -42,19 +42,16 @@ class Backups(BaseScanner, Plugin):
 
     """
     Attributes:
-        regexers: The regexes objects to grep the content into the response body
+        extensions: The extensions to look for
     """
     def __init__(self, extensions: list):
         self.extensions = extensions if extensions else DEFAULT_EXTENSIONS.split(',')
         BaseScanner.__init__(self)
 
-    def inspect_result(self, result: Result) -> None:
-        BaseScanner.inspect_result(self, result)
-
     def scan(self, result: Result) -> bool:
         return True
 
-    def process(self, result: Result) -> None:
+    def _process(self, result: Result) -> None:
         if result.history.parsed_url.file_ext not in self.extensions:
             for ext in self.extensions:
                 parsed_url = result.history.parsed_url

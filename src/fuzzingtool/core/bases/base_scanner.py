@@ -37,16 +37,6 @@ class BaseScanner(ABC):
         return type(self).__name__
 
     @abstractmethod
-    def inspect_result(self, result: Result) -> None:
-        """Inspects the FuzingTool result to add new information if needed
-
-        @type result: Result
-        @param result: The result object
-        """
-        scanner_name = str(self)
-        result.scanners_res[scanner_name] = ScannerResult(scanner_name)
-
-    @abstractmethod
     def scan(self, result: Result) -> bool:
         """Scan the FuzzingTool result
 
@@ -57,12 +47,15 @@ class BaseScanner(ABC):
         pass
 
     def process(self, result: Result) -> None:
-        """Process the FuzzingTool result
+        """Process the FuzzingTool result from this base scanner.
+           Do not override this function. If you need so, override _process method instead
 
         @type result: Result
         @param result: The result object
         """
-        pass
+        scanner_name = str(self)
+        result.scanners_res[scanner_name] = ScannerResult(scanner_name)
+        self._process(result)
 
     def get_self_res(self, result: Result) -> ScannerResult:
         """Get the self Scanner result
@@ -83,3 +76,11 @@ class BaseScanner(ABC):
         """
         self.payloads_queue.put(payload)
         self.get_self_res(result).enqueued_payloads += 1
+
+    def _process(self, result: Result) -> None:
+        """Process the FuzzingTool result through child scanner if needed
+
+        @type result: Result
+        @param result: The result object
+        """
+        pass

@@ -65,21 +65,14 @@ class Grep(BaseScanner, Plugin):
                 raise BadArgumentFormat(f"invalid regex: {regex}")
         BaseScanner.__init__(self)
 
-    def inspect_result(self, result: Result) -> None:
-        BaseScanner.inspect_result(self, result)
-        self.get_self_res(result).data['found'] = None
-        for i in range(len(self.__regexers)):
-            self.get_self_res(result).data[f'greped_regex_{i}'] = []
-
     def scan(self, result: Result) -> bool:
         return True
 
-    def process(self, result: Result) -> None:
-        total_greped = 0
+    def _process(self, result: Result) -> None:
+        self.get_self_res(result).data['found'] = 0
         for i, regexer in enumerate(self.__regexers):
             this_greped = list(set([
                 r.group() for r in regexer.finditer(result.history.response.text)
             ]))
-            total_greped += len(this_greped)
+            self.get_self_res(result).data['found'] += len(this_greped)
             self.get_self_res(result).data[f'greped_regex_{i}'] = this_greped
-        self.get_self_res(result).data['found'] = total_greped

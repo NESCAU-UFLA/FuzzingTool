@@ -20,8 +20,6 @@
 
 from typing import Iterator, Tuple
 
-from requests import Response
-
 from .base_objects import BaseItem
 from .http_history import HttpHistory
 from .payload import Payload
@@ -33,45 +31,33 @@ class Result(BaseItem):
     """The FuzzingTool result object
 
     Attributes:
+        history: The HTTP history of the result
         payload: The string payload used in the request
-        url: The requested target URL
-        method: The method used in the request
-        rtt: The elapsed time on both request and response
-        request_time: The elapsed time only for the request
-        response_time: The elapsed time only for the response
-        status: The response HTTP status code
-        headers: The response raw HTTP headers
-        headers_length: The length of the raw HTTP headers
-        body_size: The length of the response body content
         words: The quantitty of words in the response body
         lines: The quantity of lines in the response body
-        custom: A dictionary to store custom data from the scanners
+        scanners_res: The results dict provided from the scanners
         _payload: The Payload object
-        response: The Response object from python requests
     """
     save_payload_configs = False
     save_headers = False
     save_body = False
 
     def __init__(self,
-                 response: Response,
-                 rtt: float = 0.0,
+                 history: HttpHistory,
                  payload: Payload = Payload(),
                  fuzz_type: int = UNKNOWN_FUZZING):
         """Class constructor
 
-        @type response: Response
-        @param response: The response given in the request
-        @type rtt: float
-        @param rtt: The elapsed time on both request and response
+        @type history: HttpHistory
+        @param history: The HTTP history of this result
         @type payload: Payload
         @param payload: The payload used in the request
         @type fuzz_type: int
         @param fuzz_type: The request fuzzing type
         """
         super().__init__()
+        self.history = history
         self.payload = payload.final
-        self.history = HttpHistory(response, rtt)
         content = self.history.response.content
         self.words = len(content.split())
         self.lines = content.count(b'\n')
@@ -114,6 +100,8 @@ class Result(BaseItem):
         yield 'body_size', self.history.body_size
         yield 'words', self.words
         yield 'lines', self.lines
+        if self.history.ip:
+            yield 'ip', self.history.ip
         for s_res in self.scanners_res.values():
             for key, value in s_res.data.items():
                 yield key, ResultUtils.format_custom_field(value, force_detailed=True)

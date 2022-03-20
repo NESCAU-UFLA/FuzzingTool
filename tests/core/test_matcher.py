@@ -2,7 +2,7 @@ import unittest
 import operator
 
 from src.fuzzingtool.core.matcher import Matcher
-from src.fuzzingtool.objects.result import Result
+from src.fuzzingtool.objects.result import Result, HttpHistory
 from src.fuzzingtool.exceptions.main_exceptions import BadArgumentType
 from ..mock_utils.response_mock import ResponseMock
 
@@ -141,7 +141,7 @@ class TestMatcher(unittest.TestCase):
 
     def test_match_status_with_match(self):
         return_expected = True
-        test_result = Result(response=ResponseMock())
+        test_result = Result(HttpHistory(response=ResponseMock()))
         returned_match_flag = Matcher(
             allowed_status="200",
         ).match(test_result)
@@ -150,7 +150,7 @@ class TestMatcher(unittest.TestCase):
 
     def test_match_status_without_match(self):
         return_expected = False
-        test_result = Result(response=ResponseMock())
+        test_result = Result(HttpHistory(response=ResponseMock()))
         returned_match_flag = Matcher(
             allowed_status="401",
         ).match(test_result)
@@ -159,7 +159,7 @@ class TestMatcher(unittest.TestCase):
 
     def test_match_time(self):
         return_expected = True
-        test_result = Result(response=ResponseMock(), rtt=3.0)
+        test_result = Result(HttpHistory(response=ResponseMock(), rtt=3.0))
         returned_match_flag = Matcher(
             allowed_status="200",
             time="<=4"
@@ -169,7 +169,7 @@ class TestMatcher(unittest.TestCase):
 
     def test_match_size(self):
         return_expected = True
-        test_result = Result(response=ResponseMock())
+        test_result = Result(HttpHistory(response=ResponseMock()))
         returned_match_flag = Matcher(
             allowed_status="200",
             size=">=10",
@@ -179,7 +179,7 @@ class TestMatcher(unittest.TestCase):
 
     def test_match_words(self):
         return_expected = False
-        test_result = Result(response=ResponseMock(), rtt=3.0)
+        test_result = Result(HttpHistory(response=ResponseMock()))
         returned_match_flag = Matcher(
             allowed_status="200",
             words="<=4"
@@ -189,7 +189,7 @@ class TestMatcher(unittest.TestCase):
 
     def test_match_lines(self):
         return_expected = True
-        test_result = Result(response=ResponseMock(), rtt=3.0)
+        test_result = Result(HttpHistory(response=ResponseMock()))
         returned_match_flag = Matcher(
             allowed_status="200",
             lines="==2"

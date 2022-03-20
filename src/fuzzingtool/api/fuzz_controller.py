@@ -21,6 +21,8 @@
 from typing import Tuple, List, Union
 import time
 
+from requests.models import Response
+
 from ..interfaces.argument_builder import ArgumentBuilder as AB
 from ..utils.utils import split_str_to_list
 from ..utils.file_utils import read_file
@@ -33,7 +35,7 @@ from ..core.defaults.scanners import (DataScanner,
 from ..conn.requesters import Requester, SubdomainRequester
 from ..conn.request_parser import check_is_subdomain_fuzzing
 from ..factories import PluginFactory, WordlistFactory
-from ..objects import BaseItem, Error, Result
+from ..objects import BaseItem, Error, Result, HttpHistory, Payload
 from ..exceptions.main_exceptions import (FuzzControllerException, StopActionInterrupt,
                                           WordlistCreationError, BuildWordlistFails)
 
@@ -89,7 +91,7 @@ class FuzzController:
         self.job_manager = JobManager(
             dictionary=self.dictionary,
             job_providers={
-                str(scanner): scanner.payloads_queue for scanner in self.scanners
+                str(scanner): scanner.payloads_queue for scanner in self.scanners[1:]
             }
         )
 
@@ -101,7 +103,7 @@ class FuzzController:
         try:
             while self.job_manager.has_pending_jobs():
                 self._get_job()
-                self._fuzz()
+                self.__fuzz()
                 self._check_for_new_jobs()
         except StopActionInterrupt as e:
             if self.fuzzer and self.fuzzer.is_running():
@@ -130,13 +132,13 @@ class FuzzController:
             time.sleep(self.blacklist_status.action_param)
             self.fuzzer.resume()
 
-    def _result_callback(self, result: Result, validate: bool) -> None:
-        """Callback function for the results output
+    def _result_callback(self, result: Result, valid: bool) -> None:
+        """Callback function for the FuzzingTool results
 
         @type result: Result
-        @param result: The FuzzingTool result
-        @type validate: bool
-        @param validate: A validator flag for the result, gived by the scanner
+        @param result: The FuzzingTool result object
+        @type valid: bool
+        @param valid: A validator flag for the result
         """
         pass
 
@@ -229,25 +231,6 @@ class FuzzController:
         """Get a job from the job queue"""
         BaseItem.reset_index()
         self.job_manager.get_job()
-
-    def _fuzz(self) -> None:
-        """Prepare the fuzzer for the fuzzing tests"""
-        self.fuzzer = Fuzzer(
-            requester=self.requester,
-            dictionary=self.dictionary,
-            matcher=self.matcher,
-            scanners=self.scanners,
-            delay=self.delay,
-            number_of_threads=self.number_of_threads,
-            blacklist_status=self.blacklist_status,
-            result_callback=self._result_callback,
-            exception_callbacks=[
-                self._invalid_hostname_callback,
-                self._request_exception_callback
-            ],
-        )
-        self.fuzzer.start()
-        self._join()
 
     def _join(self) -> None:
         """Blocks until the fuzzer ends"""
@@ -386,3 +369,55 @@ class FuzzController:
                 return PathScanner()
             return SubdomainScanner()
         return DataScanner()
+
+    def __fuzz(self) -> None:
+        """Prepare the fuzzer for the fuzzing tests"""
+        self.fuzzer = Fuzzer(
+            requester=self.requester,
+            dictionary=self.dictionary,
+            delay=self.delay,
+            number_of_threads=self.number_of_threads,
+            response_callback=self.__handle_response,
+            exception_callbacks=[
+                self._invalid_hostname_callback,
+                self._request_exception_callback
+            ],
+        )
+        self.fuzzer.start()
+        self._join()
+
+    def __handle_response(self,
+                          response: Response,
+                          rtt: float,
+                          payload: Payload,
+                          *ip) -> None:
+        """Handle the response from the request
+
+        @type response: Response
+        @param response: The response object from the request
+        @type rtt: float
+        @param rtt: The elapsed time between request and response
+        @type payload: Payload
+        @param payload: The payload used in the request
+        """
+        if (self.blacklist_status and
+                response.status_code in self.blacklist_status.codes):
+            self.blacklist_status.do_action(response.status_code)
+        result = Result(HttpHistory(response, rtt, *ip),
+                        payload,
+                        self.requester.get_fuzzing_type())
+        self._result_callback(result, self.__result_is_valid(result))
+
+    def __result_is_valid(self, result: Result):
+        """Checks if the result is valid or not
+
+        @type result: Result
+        @param result: The FuzzingTool result object
+        """
+        if self.matcher.match(result):
+            for scanner in self.scanners:
+                if not scanner.scan(result):
+                    return False
+                scanner.process(result)
+            return True
+        return False

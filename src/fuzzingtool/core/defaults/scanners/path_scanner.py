@@ -25,11 +25,10 @@ from ....objects.result import Result
 class PathScanner(BaseScanner):
     __author__ = ("Vitor Oriel",)
 
-    def inspect_result(self, result: Result) -> None:
-        super().inspect_result(result)
+    def scan(self, result: Result) -> bool:
+        return True
+
+    def _process(self, result: Result) -> None:
         self.get_self_res(result).data['redirected'] = ''
         if result.history.status > 300 and result.history.status < 400:
             self.get_self_res(result).data['redirected'] = result.history.response.headers['Location']
-
-    def scan(self, result: Result) -> bool:
-        return True

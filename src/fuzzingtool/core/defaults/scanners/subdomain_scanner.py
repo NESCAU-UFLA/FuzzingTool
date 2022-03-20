@@ -25,9 +25,5 @@ from ....objects.result import Result
 class SubdomainScanner(BaseScanner):
     __author__ = ("Vitor Oriel",)
 
-    def inspect_result(self, result: Result, ip: str) -> None:
-        super().inspect_result(result)
-        self.get_self_res(result).data['ip'] = ip
-
     def scan(self, result: Result) -> bool:
         return True
