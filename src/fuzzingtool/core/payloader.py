@@ -24,7 +24,7 @@ from typing import List, Tuple
 from .bases.base_encoder import BaseEncoder
 from .defaults.encoders import ChainEncoder
 from ..objects.payload import Payload
-from ..exceptions.main_exceptions import BadArgumentFormat
+from ..exceptions import BadArgumentFormat
 
 
 class EncodeManager:

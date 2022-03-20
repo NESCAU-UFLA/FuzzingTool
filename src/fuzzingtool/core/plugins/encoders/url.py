@@ -23,7 +23,7 @@ from urllib.parse import quote, unquote
 from ...bases.base_plugin import Plugin
 from ...bases.base_encoder import BaseEncoder
 from ....decorators.plugin_meta import plugin_meta
-from ....exceptions.main_exceptions import BadArgumentFormat
+from ....exceptions import BadArgumentFormat
 
 
 @plugin_meta

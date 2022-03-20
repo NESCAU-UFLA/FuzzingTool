@@ -24,7 +24,7 @@ from ..core.bases.base_wordlist import BaseWordlist
 from ..utils.http_utils import get_parsed_url, get_pure_url
 from ..conn.requesters.requester import Requester
 from ..core.defaults.wordlists import ListWordlist, FileWordlist
-from ..exceptions.main_exceptions import WordlistCreationError
+from ..exceptions import WordlistCreationError
 from ..exceptions.plugin_exceptions import InvalidPlugin, PluginCreationError
 
 

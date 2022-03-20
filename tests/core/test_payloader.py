@@ -4,7 +4,7 @@ from typing import List
 from src.fuzzingtool.core.payloader import Payloader, EncodeManager
 from src.fuzzingtool.core.plugins.encoders.hex import Hex
 from src.fuzzingtool.objects.payload import Payload
-from src.fuzzingtool.exceptions.main_exceptions import BadArgumentFormat
+from src.fuzzingtool.exceptions import BadArgumentFormat
 
 
 def assert_payload_list_is_equal(payloads: List[Payload], other_payloads: List[Payload]) -> None:

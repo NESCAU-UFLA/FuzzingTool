@@ -21,7 +21,7 @@
 from .interfaces.cli.cli_arguments import CliArguments
 from .interfaces.cli.cli_controller import CliController
 from .interfaces.cli.cli_output import Colors
-from .exceptions.main_exceptions import BadArgumentFormat
+from .exceptions import BadArgumentFormat
 
 
 def main_cli() -> None:

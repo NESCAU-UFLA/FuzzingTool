@@ -21,8 +21,7 @@
 from typing import List, Dict, Callable
 
 from ..utils.utils import split_str_to_list
-from ..exceptions.main_exceptions import (BadArgumentType, MissingParameter,
-                                          InvalidArgument)
+from ..exceptions import BadArgumentType, MissingParameter, InvalidArgument
 
 
 class BlacklistStatus:

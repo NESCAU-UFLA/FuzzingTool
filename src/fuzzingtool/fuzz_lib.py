@@ -23,24 +23,24 @@ import time
 
 from requests.models import Response
 
-from ..interfaces.argument_builder import ArgumentBuilder as AB
-from ..utils.utils import split_str_to_list
-from ..utils.file_utils import read_file
-from ..utils.result_utils import ResultUtils
-from ..core import (BlacklistStatus, Dictionary, Fuzzer,
-                    JobManager, Matcher, Payloader, Summary)
-from ..core.bases import BaseScanner, BaseEncoder
-from ..core.defaults.scanners import (DataScanner,
-                                      PathScanner, SubdomainScanner)
-from ..conn.requesters import Requester, SubdomainRequester
-from ..conn.request_parser import check_is_subdomain_fuzzing
-from ..factories import PluginFactory, WordlistFactory
-from ..objects import BaseItem, Error, Result, HttpHistory, Payload
-from ..exceptions.main_exceptions import (FuzzControllerException, StopActionInterrupt,
-                                          WordlistCreationError, BuildWordlistFails)
+from .interfaces.argument_builder import ArgumentBuilder as AB
+from .utils.utils import split_str_to_list
+from .utils.file_utils import read_file
+from .utils.result_utils import ResultUtils
+from .core import (BlacklistStatus, Dictionary, Fuzzer,
+                   JobManager, Matcher, Payloader, Summary)
+from .core.bases import BaseScanner, BaseEncoder
+from .core.defaults.scanners import (DataScanner,
+                                     PathScanner, SubdomainScanner)
+from .conn.requesters import Requester, SubdomainRequester
+from .conn.request_parser import check_is_subdomain_fuzzing
+from .factories import PluginFactory, WordlistFactory
+from .objects import BaseItem, Error, Result, HttpHistory, Payload
+from .exceptions import (FuzzLibException, StopActionInterrupt,
+                         WordlistCreationError, BuildWordlistFails)
 
 
-class FuzzController:
+class FuzzLib:
     def __init__(self, **kwargs):
         self.args = self.__get_default_args()
         self.args.update(kwargs)
@@ -170,7 +170,7 @@ class FuzzController:
                 self.args["raw_http"], self.args["scheme"]
             )
         if not target:
-            raise FuzzControllerException("A target is needed to make the fuzzing")
+            raise FuzzLibException("A target is needed to make the fuzzing")
         if check_is_subdomain_fuzzing(target['url']):
             requester_cls = SubdomainRequester
         else:
@@ -356,7 +356,7 @@ class FuzzController:
             else:
                 final_wordlist.extend(wordlist_obj.get())
         if not final_wordlist:
-            raise FuzzControllerException("The wordlist is empty")
+            raise FuzzLibException("The wordlist is empty")
         return final_wordlist
 
     def __get_default_scanner(self) -> BaseScanner:

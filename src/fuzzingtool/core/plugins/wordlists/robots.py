@@ -28,7 +28,7 @@ from ....utils.http_utils import get_parsed_url
 from ....conn.requesters.requester import Requester
 from ....decorators.plugin_meta import plugin_meta
 from ....exceptions.request_exceptions import RequestException
-from ....exceptions.main_exceptions import MissingParameter, BuildWordlistFails
+from ....exceptions import MissingParameter, BuildWordlistFails
 
 ROBOTS_HTTP_HEADER = {
     'User-Agent': "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:87.0) Gecko/20100101 Firefox/87.0",

@@ -19,7 +19,7 @@
 # SOFTWARE.
 
 from ..core.bases.base_plugin import Plugin
-from ..exceptions.main_exceptions import MetadataException
+from ..exceptions import MetadataException
 
 
 def plugin_meta(cls: Plugin) -> Plugin:

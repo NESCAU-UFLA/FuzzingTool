@@ -27,14 +27,13 @@ from fuzzingtool.objects.payload import Payload
 from .cli_output import CliOutput, Colors
 from ..argument_builder import ArgumentBuilder as AB
 from ... import __version__
-from ...api.fuzz_controller import FuzzController
+from ...fuzz_lib import FuzzLib
 from ...utils.http_utils import get_parsed_url, get_pure_url
 from ...utils.logger import Logger
 from ...reports.report import Report
 from ...objects import BaseItem, Error, Result, HttpHistory
+from ...exceptions import FuzzLibException, StopActionInterrupt, RequestException
 from ...exceptions.base_exceptions import FuzzingToolException
-from ...exceptions.main_exceptions import FuzzControllerException, StopActionInterrupt
-from ...exceptions.request_exceptions import RequestException
 
 
 def banner() -> str:
@@ -53,7 +52,7 @@ def banner() -> str:
     return banner
 
 
-class CliController(FuzzController):
+class CliController(FuzzLib):
     """Class that handle with the entire application
 
     Attributes:
@@ -137,7 +136,7 @@ class CliController(FuzzController):
         except RequestException as e:
             if not self.cli_output.ask_yes_no('warning',
                                               f"{str(e)}. Continue anyway?"):
-                raise FuzzControllerException("No target left for fuzzing")
+                raise FuzzLibException("No target left for fuzzing")
         else:
             if self.is_verbose_mode():
                 self.cli_output.info_box("Connection status: OK")

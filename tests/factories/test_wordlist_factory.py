@@ -5,7 +5,7 @@ from src.fuzzingtool.factories.wordlist_factory import WordlistFactory
 from src.fuzzingtool.conn.requesters import Requester, SubdomainRequester
 from src.fuzzingtool.core.defaults.wordlists import ListWordlist, FileWordlist
 from src.fuzzingtool.core.plugins.wordlists import Robots, CrtSh
-from src.fuzzingtool.exceptions.main_exceptions import WordlistCreationError
+from src.fuzzingtool.exceptions import WordlistCreationError
 from src.fuzzingtool.exceptions.plugin_exceptions import InvalidPlugin, PluginCreationError
 from src.fuzzingtool.utils.consts import FUZZING_MARK
 
