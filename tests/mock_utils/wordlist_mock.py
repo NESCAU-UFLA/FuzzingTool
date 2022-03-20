@@ -1,5 +1,5 @@
 from src.fuzzingtool.core.bases.base_wordlist import BaseWordlist
-from src.fuzzingtool.exceptions.main_exceptions import WordlistCreationError, BuildWordlistFails
+from src.fuzzingtool.exceptions import WordlistCreationError, BuildWordlistFails
 
 
 class WordlistMock(BaseWordlist):

@@ -3,7 +3,7 @@ import operator
 
 from src.fuzzingtool.core.matcher import Matcher
 from src.fuzzingtool.objects.result import Result, HttpHistory
-from src.fuzzingtool.exceptions.main_exceptions import BadArgumentType
+from src.fuzzingtool.exceptions import BadArgumentType
 from ..mock_utils.response_mock import ResponseMock
 
 

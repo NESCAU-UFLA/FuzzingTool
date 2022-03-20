@@ -6,7 +6,7 @@ from src.fuzzingtool.reports import reports
 from src.fuzzingtool.reports.base_report import BaseReport
 from src.fuzzingtool.reports.report import Report, get_report_name_and_type
 from src.fuzzingtool.reports.reports import TxtReport
-from src.fuzzingtool.exceptions.main_exceptions import InvalidArgument
+from src.fuzzingtool.exceptions import InvalidArgument
 
 
 class TestReport(unittest.TestCase):

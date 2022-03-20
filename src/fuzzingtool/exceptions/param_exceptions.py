@@ -21,21 +21,17 @@
 from .base_exceptions import FuzzingToolException
 
 
-class FuzzLibException(FuzzingToolException):
+class MissingParameter(FuzzingToolException):
     pass
 
 
-class StopActionInterrupt(FuzzingToolException):
+class BadArgumentFormat(FuzzingToolException):
     pass
 
 
-class BuildWordlistFails(FuzzingToolException):
+class BadArgumentType(FuzzingToolException):
     pass
 
 
-class WordlistCreationError(FuzzingToolException):
-    pass
-
-
-class MetadataException(FuzzingToolException):
+class InvalidArgument(FuzzingToolException):
     pass

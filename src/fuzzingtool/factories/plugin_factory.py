@@ -25,7 +25,7 @@ from .base_factories import BasePluginFactory
 from ..utils.utils import split_str_to_list
 from ..core.bases.base_plugin import Plugin
 from ..core.plugins import encoders, scanners, wordlists
-from ..exceptions.main_exceptions import MissingParameter, BadArgumentFormat
+from ..exceptions import MissingParameter, BadArgumentFormat
 from ..exceptions.plugin_exceptions import (InvalidPluginCategory, InvalidPlugin,
                                             PluginCreationError)
 

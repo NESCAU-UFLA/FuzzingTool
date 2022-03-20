@@ -1,7 +1,7 @@
 import unittest
 
 from src.fuzzingtool.core.blacklist_status import BlacklistStatus
-from src.fuzzingtool.exceptions.main_exceptions import BadArgumentType
+from src.fuzzingtool.exceptions import BadArgumentType
 
 
 class TestBlacklistStatus(unittest.TestCase):

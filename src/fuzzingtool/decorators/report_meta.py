@@ -19,7 +19,7 @@
 # SOFTWARE.
 
 from ..reports.base_report import BaseReport
-from ..exceptions.main_exceptions import MetadataException
+from ..exceptions import MetadataException
 
 
 def report_meta(cls: BaseReport) -> BaseReport:

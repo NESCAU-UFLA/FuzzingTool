@@ -23,7 +23,7 @@ import operator
 
 from ..objects.result import Result
 from ..utils.utils import split_str_to_list
-from ..exceptions.main_exceptions import BadArgumentType
+from ..exceptions import BadArgumentType
 
 
 def get_allowed_status(status: str,

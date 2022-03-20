@@ -27,7 +27,7 @@ from requests.models import Response
 from .dictionary import Dictionary
 from ..conn.requesters import Requester
 from ..objects import Error, Payload
-from ..exceptions.request_exceptions import RequestException, InvalidHostname
+from ..exceptions import RequestException, InvalidHostname
 
 
 class Fuzzer:

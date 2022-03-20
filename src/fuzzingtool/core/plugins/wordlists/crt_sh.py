@@ -28,7 +28,7 @@ from ...bases.base_wordlist import BaseWordlist
 from ....conn.requesters.requester import Requester
 from ....exceptions.request_exceptions import RequestException
 from ....decorators.plugin_meta import plugin_meta
-from ....exceptions.main_exceptions import MissingParameter, BuildWordlistFails
+from ....exceptions import MissingParameter, BuildWordlistFails
 
 CRTSH_HTTP_HEADER = {
     'Host': "crt.sh",

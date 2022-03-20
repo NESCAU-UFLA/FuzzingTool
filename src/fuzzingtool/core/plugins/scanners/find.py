@@ -24,7 +24,7 @@ from ...bases.base_plugin import Plugin
 from ...bases.base_scanner import BaseScanner
 from ....objects.result import Result
 from ....decorators.plugin_meta import plugin_meta
-from ....exceptions.main_exceptions import MissingParameter, BadArgumentFormat
+from ....exceptions import MissingParameter, BadArgumentFormat
 
 
 @plugin_meta

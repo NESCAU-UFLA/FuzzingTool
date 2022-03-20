@@ -24,7 +24,7 @@ from datetime import datetime
 from . import reports
 from .base_report import BaseReport
 from ..utils.utils import stringfy_list
-from ..exceptions.main_exceptions import InvalidArgument
+from ..exceptions import InvalidArgument
 
 
 def get_report_name_and_type(name: str) -> Tuple[str, str]:

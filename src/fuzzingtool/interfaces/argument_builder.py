@@ -24,7 +24,7 @@ from typing import List, Tuple, Dict
 from ..utils.consts import FUZZING_MARK
 from ..utils.utils import split_str_to_list, parse_option_with_args
 from ..utils.file_utils import read_file
-from ..exceptions.main_exceptions import BadArgumentFormat
+from ..exceptions import BadArgumentFormat
 
 
 class ArgumentBuilder:

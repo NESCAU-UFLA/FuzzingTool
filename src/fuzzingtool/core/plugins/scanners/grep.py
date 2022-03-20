@@ -25,7 +25,7 @@ from ...bases.base_scanner import BaseScanner
 from ....objects.result import Result
 from ....utils.utils import stringfy_list
 from ....decorators.plugin_meta import plugin_meta
-from ....exceptions.main_exceptions import MissingParameter, BadArgumentFormat
+from ....exceptions import MissingParameter, BadArgumentFormat
 
 
 PREPARED_REGEXES = {
