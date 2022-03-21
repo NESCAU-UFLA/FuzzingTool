@@ -290,15 +290,11 @@ class FuzzLib:
             invalid_host_calalback=None,
         )
 
-    def __build_encoders(self) -> Union[
-        Tuple[List[BaseEncoder], List[List[BaseEncoder]]], None
-    ]:
+    def __build_encoders(self) -> Tuple[List[BaseEncoder], List[List[BaseEncoder]]]:
         """Build the encoders
 
-        @returns Tuple | None: The encoders used in the program
+        @returns tuple: The encoders used in the program
         """
-        if not self.args["encoder"]:
-            return None
         encoders_list = AB.build_encoder(self.args["encoder"])
         if self.args["encode_only"]:
             Payloader.encoder.set_regex(self.args["encode_only"])
@@ -333,9 +329,8 @@ class FuzzLib:
             Payloader.set_uppercase()
         elif self.args["capitalize"]:
             Payloader.set_capitalize()
-        encoders = self.__build_encoders()
-        if encoders:
-            Payloader.encoder.set_encoders(encoders)
+        if self.args["encoder"]:
+            Payloader.encoder.set_encoders(self.__build_encoders())
 
     def __build_wordlist(self,
                          wordlists: List[Tuple[str, str]]) -> List[str]:
