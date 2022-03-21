@@ -27,7 +27,7 @@ from .interfaces.argument_builder import ArgumentBuilder as AB
 from .utils.utils import split_str_to_list
 from .utils.file_utils import read_file
 from .utils.result_utils import ResultUtils
-from .core import (BlacklistStatus, Dictionary, Fuzzer,
+from .core import (BlacklistStatus, Dictionary, Fuzzer, Filter,
                    JobManager, Matcher, Payloader, Summary)
 from .core.bases import BaseScanner, BaseEncoder
 from .core.defaults.scanners import (DataScanner,
@@ -70,6 +70,7 @@ class FuzzLib:
            Set the application variables including plugins requires
         """
         self._init_requester()
+        self._init_filter()
         self._init_matcher()
         self._init_scanner()
         if self.args["blacklist_status"]:
@@ -188,6 +189,12 @@ class FuzzLib:
             cookie=self.args["cookie"],
         )
 
+    def _init_filter(self) -> None:
+        self.filter = Filter(
+            self.args['filter_status'],
+            self.args['filter_regex']
+        )
+
     def _init_matcher(self) -> None:
         """Initialize the matcher"""
         self.matcher = Matcher(
@@ -198,8 +205,8 @@ class FuzzLib:
             self.args['match_lines'],
         )
         if (self.requester.is_url_discovery() and
-                self.matcher.allowed_status_is_default()):
-            self.matcher.set_allowed_status("200-399,401,403")
+                self.matcher.status_code_is_default()):
+            self.matcher.set_status_code("200-399,401,403")
 
     def _init_scanner(self) -> None:
         """Initialize the scanner"""
@@ -277,6 +284,8 @@ class FuzzLib:
             match_size=None,
             match_words=None,
             match_lines=None,
+            filter_status=None,
+            filter_regex=None,
             scanner=None,
             # Display options
             simple_output=False,
@@ -409,7 +418,7 @@ class FuzzLib:
         @type result: Result
         @param result: The FuzzingTool result object
         """
-        if self.matcher.match(result):
+        if self.filter.check(result) and self.matcher.match(result):
             for scanner in self.scanners:
                 if not scanner.scan(result):
                     return False

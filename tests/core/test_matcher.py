@@ -8,40 +8,40 @@ from ..mock_utils.response_mock import ResponseMock
 
 
 class TestMatcher(unittest.TestCase):
-    def test_build_allowed_status_without_status(self):
+    def test_build_status_code_without_status(self):
         return_expected = {
             'is_default': True,
             'list': [200],
             'range': []
         }
-        returned_allowed_status_dict = Matcher._Matcher__build_allowed_status(Matcher, None)
-        self.assertIsInstance(returned_allowed_status_dict, dict)
-        self.assertDictEqual(returned_allowed_status_dict, return_expected)
+        returned_status_code_dict = Matcher._Matcher__build_status_code(Matcher, None)
+        self.assertIsInstance(returned_status_code_dict, dict)
+        self.assertDictEqual(returned_status_code_dict, return_expected)
 
-    def test_build_allowed_status_with_list_and_range(self):
+    def test_build_status_code_with_list_and_range(self):
         return_expected = {
             'is_default': False,
             'list': [401, 403],
             'range': [200, 399]
         }
-        returned_allowed_status_dict = Matcher._Matcher__build_allowed_status(Matcher, "200-399,401,403")
-        self.assertIsInstance(returned_allowed_status_dict, dict)
-        self.assertDictEqual(returned_allowed_status_dict, return_expected)
+        returned_status_code_dict = Matcher._Matcher__build_status_code(Matcher, "200-399,401,403")
+        self.assertIsInstance(returned_status_code_dict, dict)
+        self.assertDictEqual(returned_status_code_dict, return_expected)
 
-    def test_build_allowed_status_with_inverted_range(self):
+    def test_build_status_code_with_inverted_range(self):
         return_expected = {
             'is_default': False,
             'list': [],
             'range': [200, 399]
         }
-        returned_allowed_status_dict = Matcher._Matcher__build_allowed_status(Matcher, "399-200")
-        self.assertIsInstance(returned_allowed_status_dict, dict)
-        self.assertDictEqual(returned_allowed_status_dict, return_expected)
+        returned_status_code_dict = Matcher._Matcher__build_status_code(Matcher, "399-200")
+        self.assertIsInstance(returned_status_code_dict, dict)
+        self.assertDictEqual(returned_status_code_dict, return_expected)
 
-    def test_build_allowed_status_with_invalid_status_type(self):
+    def test_build_status_code_with_invalid_status_type(self):
         test_status = "200-399a"
         with self.assertRaises(BadArgumentType) as e:
-            Matcher._Matcher__build_allowed_status(Matcher, test_status)
+            Matcher._Matcher__build_status_code(Matcher, test_status)
         self.assertEqual(str(e.exception), f"The match status argument ({test_status}) must be integer")
 
     def test_get_comparator_and_callback_with_operator_ge(self):
@@ -143,7 +143,7 @@ class TestMatcher(unittest.TestCase):
         return_expected = True
         test_result = Result(HttpHistory(response=ResponseMock()))
         returned_match_flag = Matcher(
-            allowed_status="200",
+            status_code="200",
         ).match(test_result)
         self.assertIsInstance(returned_match_flag, bool)
         self.assertEqual(returned_match_flag, return_expected)
@@ -152,7 +152,7 @@ class TestMatcher(unittest.TestCase):
         return_expected = False
         test_result = Result(HttpHistory(response=ResponseMock()))
         returned_match_flag = Matcher(
-            allowed_status="401",
+            status_code="401",
         ).match(test_result)
         self.assertIsInstance(returned_match_flag, bool)
         self.assertEqual(returned_match_flag, return_expected)
@@ -161,7 +161,7 @@ class TestMatcher(unittest.TestCase):
         return_expected = True
         test_result = Result(HttpHistory(response=ResponseMock(), rtt=3.0))
         returned_match_flag = Matcher(
-            allowed_status="200",
+            status_code="200",
             time="<=4"
         ).match(test_result)
         self.assertIsInstance(returned_match_flag, bool)
@@ -171,7 +171,7 @@ class TestMatcher(unittest.TestCase):
         return_expected = True
         test_result = Result(HttpHistory(response=ResponseMock()))
         returned_match_flag = Matcher(
-            allowed_status="200",
+            status_code="200",
             size=">=10",
         ).match(test_result)
         self.assertIsInstance(returned_match_flag, bool)
@@ -181,7 +181,7 @@ class TestMatcher(unittest.TestCase):
         return_expected = False
         test_result = Result(HttpHistory(response=ResponseMock()))
         returned_match_flag = Matcher(
-            allowed_status="200",
+            status_code="200",
             words="<=4"
         ).match(test_result)
         self.assertIsInstance(returned_match_flag, bool)
@@ -191,7 +191,18 @@ class TestMatcher(unittest.TestCase):
         return_expected = True
         test_result = Result(HttpHistory(response=ResponseMock()))
         returned_match_flag = Matcher(
-            allowed_status="200",
+            status_code="200",
+            lines="==2"
+        ).match(test_result)
+        self.assertIsInstance(returned_match_flag, bool)
+        self.assertEqual(returned_match_flag, return_expected)
+
+    def test_not_match_with_two_matcher_configs(self):
+        return_expected = False
+        test_result = Result(HttpHistory(response=ResponseMock()))
+        returned_match_flag = Matcher(
+            status_code="200",
+            words=">5",
             lines="==2"
         ).match(test_result)
         self.assertIsInstance(returned_match_flag, bool)

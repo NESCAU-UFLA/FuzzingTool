@@ -335,6 +335,20 @@ class CliArguments(argparse.ArgumentParser):
             metavar='QTY_LINES',
         )
         match_opts.add_argument(
+            '-Fc',
+            action='store',
+            dest='filter_status',
+            help="Exclude responses based on a status code",
+            metavar='STATUS',
+        )
+        match_opts.add_argument(
+            '-Fr',
+            action='store',
+            dest='filter_regex',
+            help="Exclude responses based on a regex",
+            metavar='REGEX',
+        )
+        match_opts.add_argument(
             '--scanner',
             action='store',
             dest='scanner',
