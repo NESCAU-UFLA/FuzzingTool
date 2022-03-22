@@ -22,6 +22,7 @@ from queue import Queue
 from typing import Dict
 
 from .dictionary import Dictionary
+from ..objects.payload import Payload
 
 
 class JobManager:
@@ -36,23 +37,25 @@ class JobManager:
     """
     def __init__(self,
                  dictionary: Dictionary,
-                 job_providers: Dict[str, Queue]):
+                 job_providers: Dict[str, Queue],
+                 max_rlevel: int):
         """Class constructor
 
         @type dictionary: Dictionary
         @param dictionary: The dictionary that'll be filled with payloads
-        @type job_providers: Dict[str, Queue]
+        @type job_providers: Dict[str, Queue[Payload]]
         @param job_providers: The job providers, with name and queue
         """
         self.current_job = None
         wordlist_queue = Queue()
         for payload in dictionary.wordlist:
-            wordlist_queue.put(payload)
+            wordlist_queue.put(Payload(payload))
         self.pending_jobs = Queue()
         self.pending_jobs.put(("wordlist", wordlist_queue))
         self.total_requests = 0
         self.dictionary = dictionary
         self.job_providers = job_providers
+        self.max_rlevel = max_rlevel
 
     def get_job(self) -> None:
         """Gets a new job to run"""
@@ -82,8 +85,10 @@ class JobManager:
            If has, fill the dictionary with the payloads and enqueue the job
         """
         for job_provider, job_queue in self.job_providers.items():
-            if not job_queue.empty():
-                new_job = Queue()
-                while not job_queue.empty():
-                    new_job.put(job_queue.get())
+            new_job = Queue()
+            while not job_queue.empty():
+                payload: Payload = job_queue.get()
+                if payload.rlevel <= self.max_rlevel:
+                    new_job.put(payload)
+            if not new_job.empty():
                 self.pending_jobs.put((job_provider, new_job))

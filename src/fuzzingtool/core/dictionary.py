@@ -22,6 +22,7 @@ from queue import Queue
 from typing import List
 
 from .payloader import Payloader
+from ..objects.payload import Payload
 
 
 class Dictionary:
@@ -42,7 +43,7 @@ class Dictionary:
         self.__size = 0
         self.__payloads = Queue()
 
-    def __next__(self) -> List[str]:
+    def __next__(self) -> List[Payload]:
         """Gets the next payload to be processed
 
         @returns list: The payloads used in the request

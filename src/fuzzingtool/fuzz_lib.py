@@ -45,7 +45,6 @@ class FuzzLib:
         self.args = self.__get_default_args()
         self.args.update(kwargs)
         self.requester = None
-        self.elapsed_time = None
         self.fuzzer = None
         self.blacklist_status = None
         self.summary = Summary()
@@ -93,7 +92,8 @@ class FuzzLib:
             dictionary=self.dictionary,
             job_providers={
                 str(scanner): scanner.payloads_queue for scanner in self.scanners[1:]
-            }
+            },
+            max_rlevel=self.args["max_rlevel"]
         )
 
     def start(self) -> None:
@@ -294,6 +294,7 @@ class FuzzLib:
             threads=1,
             delay=0,
             blacklist_status=None,
+            max_rlevel=1,
             # Callbacks
             res_callback=None,
             req_ex_callback=None,
