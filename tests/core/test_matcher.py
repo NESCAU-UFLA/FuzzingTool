@@ -1,4 +1,5 @@
 import unittest
+from unittest.mock import Mock, patch
 import operator
 
 from src.fuzzingtool.core.matcher import Matcher
@@ -139,7 +140,19 @@ class TestMatcher(unittest.TestCase):
         self.assertIsInstance(returned_data, bool)
         self.assertEqual(returned_data, return_expected)
 
-    def test_match_status_with_match(self):
+    @patch("src.fuzzingtool.core.matcher.Matcher._Matcher__build_status_code")
+    def test_set_status_code(self, mock_build_status_code: Mock):
+        test_status = "200"
+        Matcher.set_status_code(Matcher, test_status)
+        mock_build_status_code.assert_called_once_with(test_status)
+
+    @patch("src.fuzzingtool.core.matcher.Matcher._Matcher__build_comparator")
+    def test_set_comparator(self, mock_build_comparator: Mock):
+        test_comparator = ('5', '', '', '')
+        Matcher.set_comparator(Matcher, *test_comparator)
+        mock_build_comparator.assert_called_once_with(*test_comparator)
+
+    def test_match_with_match(self):
         return_expected = True
         test_result = Result(HttpHistory(response=ResponseMock()))
         returned_match_flag = Matcher(
@@ -157,47 +170,47 @@ class TestMatcher(unittest.TestCase):
         self.assertIsInstance(returned_match_flag, bool)
         self.assertEqual(returned_match_flag, return_expected)
 
-    def test_match_time(self):
-        return_expected = True
+    def test_match_time_without_match(self):
+        return_expected = False
         test_result = Result(HttpHistory(response=ResponseMock(), rtt=3.0))
         returned_match_flag = Matcher(
             status_code="200",
-            time="<=4"
+            time=">4"
         ).match(test_result)
         self.assertIsInstance(returned_match_flag, bool)
         self.assertEqual(returned_match_flag, return_expected)
 
-    def test_match_size(self):
-        return_expected = True
-        test_result = Result(HttpHistory(response=ResponseMock()))
-        returned_match_flag = Matcher(
-            status_code="200",
-            size=">=10",
-        ).match(test_result)
-        self.assertIsInstance(returned_match_flag, bool)
-        self.assertEqual(returned_match_flag, return_expected)
-
-    def test_match_words(self):
+    def test_match_size_without_match(self):
         return_expected = False
         test_result = Result(HttpHistory(response=ResponseMock()))
         returned_match_flag = Matcher(
             status_code="200",
-            words="<=4"
+            size="<10",
         ).match(test_result)
         self.assertIsInstance(returned_match_flag, bool)
         self.assertEqual(returned_match_flag, return_expected)
 
-    def test_match_lines(self):
-        return_expected = True
+    def test_match_words_without_match(self):
+        return_expected = False
         test_result = Result(HttpHistory(response=ResponseMock()))
         returned_match_flag = Matcher(
             status_code="200",
-            lines="==2"
+            words=">10"
         ).match(test_result)
         self.assertIsInstance(returned_match_flag, bool)
         self.assertEqual(returned_match_flag, return_expected)
 
-    def test_not_match_with_two_matcher_configs(self):
+    def test_match_lines_without_match(self):
+        return_expected = False
+        test_result = Result(HttpHistory(response=ResponseMock()))
+        returned_match_flag = Matcher(
+            status_code="200",
+            lines="!=2"
+        ).match(test_result)
+        self.assertIsInstance(returned_match_flag, bool)
+        self.assertEqual(returned_match_flag, return_expected)
+
+    def test_not_match_with_two_configs(self):
         return_expected = False
         test_result = Result(HttpHistory(response=ResponseMock()))
         returned_match_flag = Matcher(
