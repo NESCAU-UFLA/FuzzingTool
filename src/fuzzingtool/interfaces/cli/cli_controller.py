@@ -285,11 +285,11 @@ class CliController(FuzzLib):
             elif answer == 's':
                 self._handle_skip()
 
-    def _handle_quit(self):
+    def _handle_quit(self) -> None:
         """Handle with the quit option when pause"""
         raise StopActionInterrupt("Test aborted")
 
-    def _handle_progress(self):
+    def _handle_progress(self) -> None:
         """Handle with the progress option when pause"""
         str_percentage = self.cli_output.get_percentage(
             BaseItem.index,
@@ -299,12 +299,12 @@ class CliController(FuzzLib):
             f"Progress: {Colors.LIGHT_YELLOW}{str_percentage}{Colors.RESET} completed"
         )
 
-    def _handle_continue(self):
+    def _handle_continue(self) -> None:
         """Handle with the continue option when pause"""
         self.summary.resume_timer()
         self.fuzzer.resume()
 
-    def _handle_skip(self):
+    def _handle_skip(self) -> None:
         """Handle with the skip option when pause"""
         self.fuzzer.stop()
         self.cli_output.abort_box(f"Current job ({self.job_manager.current_job}) skipped")

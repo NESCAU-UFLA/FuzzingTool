@@ -22,6 +22,7 @@ from .bases import *
 from .defaults import *
 from .blacklist_status import BlacklistStatus
 from .dictionary import Dictionary
+from .filter import Filter
 from .fuzzer import Fuzzer
 from .job_manager import JobManager
 from .matcher import Matcher

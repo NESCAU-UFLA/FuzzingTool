@@ -27,7 +27,7 @@ from .interfaces.argument_builder import ArgumentBuilder as AB
 from .utils.utils import split_str_to_list
 from .utils.file_utils import read_file
 from .utils.result_utils import ResultUtils
-from .core import (BlacklistStatus, Dictionary, Fuzzer,
+from .core import (BlacklistStatus, Dictionary, Fuzzer, Filter,
                    JobManager, Matcher, Payloader, Summary)
 from .core.bases import BaseScanner, BaseEncoder
 from .core.defaults.scanners import (DataScanner,
@@ -70,6 +70,7 @@ class FuzzLib:
            Set the application variables including plugins requires
         """
         self._init_requester()
+        self._init_filter()
         self._init_matcher()
         self._init_scanner()
         if self.args["blacklist_status"]:
@@ -188,6 +189,13 @@ class FuzzLib:
             cookie=self.args["cookie"],
         )
 
+    def _init_filter(self) -> None:
+        """Initialize the filter"""
+        self.filter = Filter(
+            self.args['filter_status'],
+            self.args['filter_regex']
+        )
+
     def _init_matcher(self) -> None:
         """Initialize the matcher"""
         self.matcher = Matcher(
@@ -198,8 +206,8 @@ class FuzzLib:
             self.args['match_lines'],
         )
         if (self.requester.is_url_discovery() and
-                self.matcher.allowed_status_is_default()):
-            self.matcher.set_allowed_status("200-399,401,403")
+                self.matcher.status_code_is_default()):
+            self.matcher.set_status_code("200-399,401,403")
 
     def _init_scanner(self) -> None:
         """Initialize the scanner"""
@@ -239,7 +247,7 @@ class FuzzLib:
                 raise StopActionInterrupt(self.stop_action)
         self.fuzzer.stop()
 
-    def _check_for_new_jobs(self):
+    def _check_for_new_jobs(self) -> None:
         """Check for new jobs on job manager"""
         self.job_manager.check_for_new_jobs()
 
@@ -277,6 +285,8 @@ class FuzzLib:
             match_size=None,
             match_words=None,
             match_lines=None,
+            filter_status=None,
+            filter_regex=None,
             scanner=None,
             # Display options
             simple_output=False,
@@ -290,15 +300,11 @@ class FuzzLib:
             invalid_host_calalback=None,
         )
 
-    def __build_encoders(self) -> Union[
-        Tuple[List[BaseEncoder], List[List[BaseEncoder]]], None
-    ]:
+    def __build_encoders(self) -> Tuple[List[BaseEncoder], List[List[BaseEncoder]]]:
         """Build the encoders
 
-        @returns Tuple | None: The encoders used in the program
+        @returns tuple: The encoders used in the program
         """
-        if not self.args["encoder"]:
-            return None
         encoders_list = AB.build_encoder(self.args["encoder"])
         if self.args["encode_only"]:
             Payloader.encoder.set_regex(self.args["encode_only"])
@@ -333,9 +339,8 @@ class FuzzLib:
             Payloader.set_uppercase()
         elif self.args["capitalize"]:
             Payloader.set_capitalize()
-        encoders = self.__build_encoders()
-        if encoders:
-            Payloader.encoder.set_encoders(encoders)
+        if self.args["encoder"]:
+            Payloader.encoder.set_encoders(self.__build_encoders())
 
     def __build_wordlist(self,
                          wordlists: List[Tuple[str, str]]) -> List[str]:
@@ -414,7 +419,7 @@ class FuzzLib:
         @type result: Result
         @param result: The FuzzingTool result object
         """
-        if self.matcher.match(result):
+        if self.filter.check(result) and self.matcher.match(result):
             for scanner in self.scanners:
                 if not scanner.scan(result):
                     return False

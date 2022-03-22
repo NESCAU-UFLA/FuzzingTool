@@ -303,7 +303,8 @@ class CliArguments(argparse.ArgumentParser):
             '-Mc',
             action='store',
             dest='match_status',
-            help="Match responses based on their status codes",
+            help=("Match responses based on their status codes. "
+                  "Set a list of codes and/or a range, like: 200,300-400,401"),
             metavar='STATUS',
         )
         match_opts.add_argument(
@@ -333,6 +334,20 @@ class CliArguments(argparse.ArgumentParser):
             dest='match_lines',
             help="Match responses based on their quantity of lines on body",
             metavar='QTY_LINES',
+        )
+        match_opts.add_argument(
+            '-Fc',
+            action='store',
+            dest='filter_status',
+            help="Exclude responses based on status code(s), separated by comma if more than one",
+            metavar='STATUS',
+        )
+        match_opts.add_argument(
+            '-Fr',
+            action='store',
+            dest='filter_regex',
+            help="Exclude responses based on a regex",
+            metavar='REGEX',
         )
         match_opts.add_argument(
             '--scanner',

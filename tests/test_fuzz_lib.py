@@ -49,12 +49,12 @@ class TestFuzzController(unittest.TestCase):
             FuzzLib(wordlist="test")._init_requester()
         self.assertEqual(str(e.exception), "A target is needed to make the fuzzing")
 
-    @patch("src.fuzzingtool.fuzz_lib.Matcher.set_allowed_status")
-    def test_init_matcher(self, mock_set_allowed_status: Mock):
+    @patch("src.fuzzingtool.fuzz_lib.Matcher.set_status_code")
+    def test_init_matcher(self, mock_set_status_code: Mock):
         test_fuzz_lib = FuzzLib(url=f"http://test-url.com/{FUZZING_MARK}")
         test_fuzz_lib._init_requester()
         test_fuzz_lib._init_matcher()
-        mock_set_allowed_status.assert_called_once_with("200-399,401,403")
+        mock_set_status_code.assert_called_once_with("200-399,401,403")
 
     def test_get_default_scanner_with_path_scanner(self):
         test_fuzz_lib = FuzzLib(url=f"http://test-url.com/{FUZZING_MARK}")
@@ -86,11 +86,6 @@ class TestFuzzController(unittest.TestCase):
     def test_init_scanner_with_default_scanner(self, mock_get_default_scanner: Mock):
         FuzzLib(url=f"http://test-url.com/{FUZZING_MARK}")._init_scanner()
         mock_get_default_scanner.assert_called_once()
-
-    def test_build_encoders_with_no_encoder(self):
-        return_expected = None
-        returned_encoder = FuzzLib()._FuzzLib__build_encoders()
-        self.assertEqual(returned_encoder, return_expected)
 
     @patch("src.fuzzingtool.fuzz_lib.PluginFactory.object_creator")
     def test_build_encoders_with_encoders(self, mock_object_creator: Mock):
