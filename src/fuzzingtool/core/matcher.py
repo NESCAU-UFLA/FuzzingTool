@@ -69,12 +69,16 @@ class Matcher:
                  lines: str = None):
         """Class constructor
 
-        @type status_code: dict
-        @param status_code: The allowed status dictionary
-        @type comparator: dict
-        @param comparator: The dict with comparator data
-        @type match_functions: Tuple[Callable, Callable]
-        @param match_functions: The callback functions for the match comparator
+        @type status_code: str
+        @param status_code: The allowed status codes string
+        @type time: str
+        @param time: The time to be compared with the RTT
+        @type size: str
+        @param size: The size to be compared with the response body length
+        @type words: str
+        @param words: The number of words to be compared with the response body
+        @type lines: str
+        @param lines: The number of lines to be compared with the response body
         """
         self._status_code = self.__build_status_code(status_code)
         self._comparator = self.__build_comparator(time, size, words, lines)
@@ -112,10 +116,14 @@ class Matcher:
                        lines: str) -> None:
         """The comparator setter
 
-        @type size: str
-        @param size: The size to be compared with response body
         @type time: str
         @param time: The time to be compared with the RTT
+        @type size: str
+        @param size: The size to be compared with the response body length
+        @type words: str
+        @param words: The number of words to be compared with the response body
+        @type lines: str
+        @param lines: The number of lines to be compared with the response body
         """
         self._comparator = self.__build_comparator(time, size, words, lines)
 

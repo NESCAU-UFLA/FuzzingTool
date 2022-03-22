@@ -37,6 +37,13 @@ class JobManager:
     def __init__(self,
                  dictionary: Dictionary,
                  job_providers: Dict[str, Queue]):
+        """Class constructor
+
+        @type dictionary: Dictionary
+        @param dictionary: The dictionary that'll be filled with payloads
+        @type job_providers: Dict[str, Queue]
+        @param job_providers: The job providers, with name and queue
+        """
         self.current_job = None
         wordlist_queue = Queue()
         for payload in dictionary.wordlist:
