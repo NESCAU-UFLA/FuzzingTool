@@ -27,6 +27,7 @@ class Payload:
     Attributes:
         raw: The payload before the mutation
         final: The payloa after the mutation
+        rlevel: The recursion level of the payload
         config: The config of the payload mutation
     """
     def __init__(self, payload: str = ''):
@@ -37,12 +38,13 @@ class Payload:
         """
         self.raw: str = payload
         self.final: str = payload
+        self.rlevel = 0
         self.config = {}
 
     def __str__(self) -> str:
         return self.final
 
-    def update(self, other: object) -> object:
+    def update(self, other: 'Payload') -> 'Payload':
         """Update the base payload from another payload
 
         @type other: Payload
@@ -51,10 +53,11 @@ class Payload:
         """
         self.raw = other.raw
         self.final = other.final
+        self.rlevel = other.rlevel
         self.config = {key: value for key, value in other.config.items()}
         return self
 
-    def with_prefix(self, prefix: str) -> object:
+    def with_prefix(self, prefix: str) -> 'Payload':
         """Build the payload with prefix
 
         @type prefix: str
@@ -65,7 +68,7 @@ class Payload:
         self.final = prefix + self.final
         return self
 
-    def with_suffix(self, suffix: str) -> object:
+    def with_suffix(self, suffix: str) -> 'Payload':
         """Build the payload with suffix
 
         @type suffix: str
@@ -76,7 +79,7 @@ class Payload:
         self.final += suffix
         return self
 
-    def with_case(self, case_callback: Callable, case_method: str) -> object:
+    def with_case(self, case_callback: Callable, case_method: str) -> 'Payload':
         """Build the payload with case (upper, lower, cap)
 
         @type case_callback: Callable
@@ -89,7 +92,7 @@ class Payload:
         self.final = case_callback(self.final)
         return self
 
-    def with_encoder(self, encoded: str, encoder: str) -> object:
+    def with_encoder(self, encoded: str, encoder: str) -> 'Payload':
         """Build the payload with an encoder
 
         @type encoded: str
@@ -100,4 +103,16 @@ class Payload:
         """
         self.config['encoder'] = encoder
         self.final = encoded
+        return self
+
+    def with_recursion(self, payload: str) -> 'Payload':
+        """Build the payload recursively
+
+        @type payload: str
+        @param payload: The payload that'll be send to recursion
+        @returns Payload: The updated payload
+        """
+        self.config[f'rlevel_{self.rlevel}'] = self.final
+        self.rlevel += 1
+        self.final = payload
         return self

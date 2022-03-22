@@ -452,3 +452,12 @@ class CliArguments(argparse.ArgumentParser):
                   "wait=SECONDS (to pause the app for some seconds)"),
             metavar='STATUS:ACTION',
         )
+        more_opts.add_argument(
+            '--max-rlevel',
+            action='store',
+            dest='max_rlevel',
+            help="Define the maximum recursion level from jobs",
+            metavar='RECURSION_LEVEL',
+            type=int,
+            default=1,
+        )

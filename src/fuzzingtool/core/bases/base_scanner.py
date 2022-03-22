@@ -21,7 +21,7 @@
 from abc import ABC, abstractmethod
 from queue import Queue
 
-from ...objects import Result, ScannerResult
+from ...objects import Payload, Result, ScannerResult
 
 
 class BaseScanner(ABC):
@@ -71,10 +71,10 @@ class BaseScanner(ABC):
 
         @type result: Result
         @param result: The result of the payload
-        @param payload: str
-        @type payload: The payload that'll be enqueued
+        @type payload: str
+        @param payload: The payload that'll be enqueued
         """
-        self.payloads_queue.put(payload)
+        self.payloads_queue.put(Payload().update(result._payload).with_recursion(payload))
         self.get_self_res(result).enqueued_payloads += 1
 
     def _process(self, result: Result) -> None:

@@ -205,14 +205,14 @@ class Payloader:
         Payloader.case = case
 
     @staticmethod
-    def get_customized_payload(payload: str) -> List[Payload]:
+    def get_customized_payload(payload: Payload) -> List[Payload]:
         """Gets the payload list ajusted with the console options
 
-        @type payload: str
-        @param payload: The string payload gived by the payloads queue
+        @type payload: Payload
+        @param payload: The payload object gived by the payloads queue
         @returns List[Payload]: The payloads used in the request
         """
-        ajusted_payloads = [Payload(payload)]
+        ajusted_payloads = [payload]
         if Payloader.prefix:
             ajusted_payloads = [Payload().update(payload).with_prefix(prefix)
                                 for prefix in Payloader.prefix
