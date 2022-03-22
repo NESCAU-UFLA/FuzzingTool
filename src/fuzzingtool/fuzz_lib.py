@@ -45,7 +45,6 @@ class FuzzLib:
         self.args = self.__get_default_args()
         self.args.update(kwargs)
         self.requester = None
-        self.elapsed_time = None
         self.fuzzer = None
         self.blacklist_status = None
         self.summary = Summary()
