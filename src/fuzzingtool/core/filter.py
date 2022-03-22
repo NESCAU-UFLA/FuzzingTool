@@ -19,40 +19,64 @@
 # SOFTWARE.
 
 import re
-from typing import Pattern
+from typing import List, Pattern
 
 from ..objects.result import Result
 from ..exceptions import BadArgumentFormat, BadArgumentType
 
 
 class Filter:
-    def __init__(self, status_code: str, regex: str):
-        self.status_code = None if not status_code else self.__build_status_code(status_code)
-        self.regexer = None if not regex else self.__build_regexer(regex)
+    """Class responsible to filter the results by exclusion rules
+
+    Attributes:
+        status_codes: The list with excluded status codes
+        regexer: The regex object to exclude by regex
+    """
+    def __init__(self, status_code: str = None, regex: str = None):
+        """Class constructor
+
+        @type status_code: str
+        @param status_code: The status code string for filtering
+        @type regex: str
+        @param regex: The regular expression for filtering
+        """
+        self._status_codes = [] if not status_code else self.__build_status_codes(status_code)
+        self._regexer = None if not regex else self.__build_regexer(regex)
 
     def check(self, result: Result) -> bool:
-        if (self.status_code is not None and
-                result.history.status == self.status_code):
+        """Checks if the filter configs matches with the result attributes
+
+        @type result: Result
+        @param result: The FuzzingTool result object
+        @returns bool: A filter flag
+        """
+        if result.history.status in self._status_codes:
             return False
-        if (self.regexer is not None and
-                self.regexer.search(result.history.response.text)):
+        if (self._regexer is not None and
+                self._regexer.search(result.history.response.text)):
             return False
         return True
 
-    def __build_status_code(self, status_code: str) -> int:
+    def __build_status_codes(self, status_code: str) -> List[int]:
+        """Build the status codes list
+
+        @type status_code: str
+        @param status_code: The status code string
+        @returns List[str]: The list with status codes as integers
+        """
         try:
-            status_code = int(status_code)
+            status_codes = [int(status) for status in status_code.split(',')]
         except ValueError:
             raise BadArgumentType(
                 f"The filter status argument ({status_code}) must be integer"
             )
-        return status_code
+        return status_codes
 
     def __build_regexer(self, regex: str) -> Pattern[str]:
-        """The regexer builder
+        """Build the regexer object
 
         @type regex: str
-        @param regex: The regular expression to set
+        @param regex: The regular expression to be setted
         @returns Pattern[str]: The regex object
         """
         try:

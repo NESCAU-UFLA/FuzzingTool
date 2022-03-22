@@ -127,21 +127,21 @@ class Matcher:
         @param result: The actual result object
         @returns bool: A match flag
         """
-        if self._match_status(result.history.status):
-            if (self._comparator['time'] is not None and
-                    not self._match_time(result.history.rtt, self._comparator['time'])):
-                return False
-            if (self._comparator['size'] is not None and
-                    not self._match_size(int(result.history.body_size), self._comparator['size'])):
-                return False
-            if (self._comparator['words'] is not None and
-                    not self._match_words(result.words, self._comparator['words'])):
-                return False
-            if (self._comparator['lines'] is not None and
-                    not self._match_lines(result.lines, self._comparator['lines'])):
-                return False
-            return True
-        return False
+        if not self._match_status(result.history.status):
+            return False
+        if (self._comparator['time'] is not None and
+                not self._match_time(result.history.rtt, self._comparator['time'])):
+            return False
+        if (self._comparator['size'] is not None and
+                not self._match_size(int(result.history.body_size), self._comparator['size'])):
+            return False
+        if (self._comparator['words'] is not None and
+                not self._match_words(result.words, self._comparator['words'])):
+            return False
+        if (self._comparator['lines'] is not None and
+                not self._match_lines(result.lines, self._comparator['lines'])):
+            return False
+        return True
 
     def _match_status(self, status: int) -> bool:
         """Check if the result status match with the allowed status dict

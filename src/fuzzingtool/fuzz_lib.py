@@ -190,6 +190,7 @@ class FuzzLib:
         )
 
     def _init_filter(self) -> None:
+        """Initialize the filter"""
         self.filter = Filter(
             self.args['filter_status'],
             self.args['filter_regex']
@@ -246,7 +247,7 @@ class FuzzLib:
                 raise StopActionInterrupt(self.stop_action)
         self.fuzzer.stop()
 
-    def _check_for_new_jobs(self):
+    def _check_for_new_jobs(self) -> None:
         """Check for new jobs on job manager"""
         self.job_manager.check_for_new_jobs()
 
