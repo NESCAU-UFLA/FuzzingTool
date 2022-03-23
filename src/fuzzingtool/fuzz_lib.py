@@ -96,8 +96,8 @@ class FuzzLib:
         self.job_manager = JobManager(
             dictionary=self.dictionary,
             job_providers={
+                **{str(scanner): scanner.payloads_queue for scanner in self.scanners[1:]},
                 "recursion": self.recursion_manager.payloads_queue,
-                **{str(scanner): scanner.payloads_queue for scanner in self.scanners[1:]}
             },
             max_rlevel=self.args["max_rlevel"]
         )
@@ -255,7 +255,7 @@ class FuzzLib:
         self.fuzzer.stop()
 
     def _check_for_new_jobs(self) -> None:
-        """Check for new jobs on job manager"""
+        """Check for new jobs"""
         if self.recursion_manager.has_recursive_job():
             self.recursion_manager.fill_payloads_queue()
         self.job_manager.check_for_new_jobs()
