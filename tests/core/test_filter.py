@@ -23,8 +23,8 @@ class TestFilter(unittest.TestCase):
     def test_build_regexer_with_invalid_regex(self):
         test_regex = r"[a-z][A-Z]((?"
         with self.assertRaises(BadArgumentFormat) as e:
-            Filter._Filter__build_regexer(Filter, test_regex)
-        self.assertEqual(str(e.exception), f"Invalid regex format {test_regex}")
+            Filter(regex=test_regex)
+        self.assertEqual(str(e.exception), f"Invalid regex format {test_regex} on Filter")
 
     def test_check_with_found_status(self):
         return_expected = False

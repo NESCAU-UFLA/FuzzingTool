@@ -204,6 +204,7 @@ class FuzzLib:
             self.args['match_size'],
             self.args['match_words'],
             self.args['match_lines'],
+            self.args['match_regex'],
         )
         if (self.requester.is_url_discovery() and
                 self.matcher.status_code_is_default()):
@@ -279,12 +280,13 @@ class FuzzLib:
             upper=False,
             lower=False,
             capitalize=False,
-            # Match and Scanner options
+            # Matcher, Filter and Scanner options
             match_status=None,
             match_time=None,
             match_size=None,
             match_words=None,
             match_lines=None,
+            match_regex=None,
             filter_status=None,
             filter_regex=None,
             scanner=None,

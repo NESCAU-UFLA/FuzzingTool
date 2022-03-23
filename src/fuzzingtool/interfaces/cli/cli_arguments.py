@@ -336,6 +336,13 @@ class CliArguments(argparse.ArgumentParser):
             metavar='QTY_LINES',
         )
         match_opts.add_argument(
+            '-Mr',
+            action='store',
+            dest='match_regex',
+            help="Match responses based on a regex",
+            metavar='REGEX',
+        )
+        match_opts.add_argument(
             '-Fc',
             action='store',
             dest='filter_status',

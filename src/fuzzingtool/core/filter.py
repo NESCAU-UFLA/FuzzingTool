@@ -18,14 +18,14 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-import re
-from typing import List, Pattern
+from typing import List
 
+from .bases.base_validator import BaseValidator
 from ..objects.result import Result
-from ..exceptions import BadArgumentFormat, BadArgumentType
+from ..exceptions import BadArgumentType
 
 
-class Filter:
+class Filter(BaseValidator):
     """Class responsible to filter the results by exclusion rules
 
     Attributes:
@@ -41,7 +41,7 @@ class Filter:
         @param regex: The regular expression for filtering
         """
         self._status_codes = [] if not status_code else self.__build_status_codes(status_code)
-        self._regexer = None if not regex else self.__build_regexer(regex)
+        super().__init__(regex)
 
     def check(self, result: Result) -> bool:
         """Checks if the filter configs matches with the result attributes
@@ -71,16 +71,3 @@ class Filter:
                 f"The filter status argument ({status_code}) must be integer"
             )
         return status_codes
-
-    def __build_regexer(self, regex: str) -> Pattern[str]:
-        """Build the regexer object
-
-        @type regex: str
-        @param regex: The regular expression to be setted
-        @returns Pattern[str]: The regex object
-        """
-        try:
-            regexer = re.compile(regex, re.IGNORECASE)
-        except re.error:
-            raise BadArgumentFormat(f"Invalid regex format {regex}")
-        return regexer
