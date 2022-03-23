@@ -1,9 +1,9 @@
-name: Integration
+name: integration
 
 on: push
 
 jobs:
-  integration:
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -13,7 +13,7 @@ jobs:
       - name: Linter
         run: flake8 src/fuzzingtool --extend-ignore=E501,E731 --per-file-ignores="__init__.py:F401,F403,W292" --statistics
 
-      - name: Build
+      - name: Package
         run: |
           python3 setup.py sdist
           cd dist

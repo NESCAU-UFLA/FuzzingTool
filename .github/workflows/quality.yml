@@ -1,4 +1,4 @@
-name: SonarCloud
+name: code quality
 
 on:
   push:
