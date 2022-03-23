@@ -28,7 +28,7 @@ from .utils.utils import split_str_to_list
 from .utils.file_utils import read_file
 from .utils.result_utils import ResultUtils
 from .core import (BlacklistStatus, Dictionary, Fuzzer, Filter,
-                   JobManager, Matcher, Payloader, Summary)
+                   JobManager, Matcher, Payloader, RecursionManager, Summary)
 from .core.bases import BaseScanner, BaseEncoder
 from .core.defaults.scanners import (DataScanner,
                                      PathScanner, SubdomainScanner)
@@ -88,10 +88,16 @@ class FuzzLib:
         self.delay = self.args["delay"]
         self.number_of_threads = self.args["threads"]
         self._init_dictionary()
+        self.has_recursion = self.args["recursive"]
+        self.recursion_manager = RecursionManager(
+            max_rlevel=self.args["max_rlevel"],
+            wordlist=self.dictionary.wordlist
+        )
         self.job_manager = JobManager(
             dictionary=self.dictionary,
             job_providers={
-                str(scanner): scanner.payloads_queue for scanner in self.scanners[1:]
+                "recursion": self.recursion_manager.payloads_queue,
+                **{str(scanner): scanner.payloads_queue for scanner in self.scanners[1:]}
             },
             max_rlevel=self.args["max_rlevel"]
         )
@@ -250,6 +256,8 @@ class FuzzLib:
 
     def _check_for_new_jobs(self) -> None:
         """Check for new jobs on job manager"""
+        if self.recursion_manager.has_recursive_job():
+            self.recursion_manager.fill_payloads_queue()
         self.job_manager.check_for_new_jobs()
 
     def __get_default_args(self) -> dict:
@@ -296,6 +304,7 @@ class FuzzLib:
             threads=1,
             delay=0,
             blacklist_status=None,
+            recursive=False,
             max_rlevel=1,
             # Callbacks
             res_callback=None,
@@ -427,5 +436,7 @@ class FuzzLib:
                 if not scanner.scan(result):
                     return False
                 scanner.process(result)
+            if self.has_recursion:
+                self.recursion_manager.check_for_recursion(result)
             return True
         return False

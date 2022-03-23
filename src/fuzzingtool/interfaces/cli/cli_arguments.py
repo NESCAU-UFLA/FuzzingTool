@@ -462,6 +462,13 @@ class CliArguments(argparse.ArgumentParser):
             metavar='STATUS:ACTION',
         )
         more_opts.add_argument(
+            '--recursive',
+            action='store_true',
+            dest='recursive',
+            help="Set recursive mode",
+            default=False,
+        )
+        more_opts.add_argument(
             '--max-rlevel',
             action='store',
             dest='max_rlevel',

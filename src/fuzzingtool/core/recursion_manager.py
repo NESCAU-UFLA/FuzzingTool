@@ -18,14 +18,31 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from .bases import *
-from .defaults import *
-from .blacklist_status import BlacklistStatus
-from .dictionary import Dictionary
-from .filter import Filter
-from .fuzzer import Fuzzer
-from .job_manager import JobManager
-from .matcher import Matcher
-from .payloader import Payloader
-from .recursion_manager import RecursionManager
-from .summary import Summary
+from queue import Queue
+from typing import List
+
+from ..objects import Payload, Result
+
+
+class RecursionManager:
+    def __init__(self, max_rlevel: int, wordlist: List[Payload]):
+        self.max_rlevel = max_rlevel
+        self.wordlist = wordlist
+        self.directories_queue = Queue()
+        self.payloads_queue = Queue()
+    
+    def has_recursive_job(self) -> bool:
+        return not self.directories_queue.empty()
+
+    def fill_payloads_queue(self) -> None:
+        recursive_directory = self.directories_queue.get()
+        for wordlist_payload in self.wordlist:
+            new_payload = Payload().update(recursive_directory)
+            new_payload.final += wordlist_payload
+            self.payloads_queue.put(new_payload)
+
+    def check_for_recursion(self, result: Result) -> None:
+        parsed_url = result.history.parsed_url
+        payload = result._payload
+        if parsed_url.is_path and payload.rlevel < self.max_rlevel:
+            self.directories_queue.put(Payload().update(payload).with_recursion(parsed_url.path[1:]))

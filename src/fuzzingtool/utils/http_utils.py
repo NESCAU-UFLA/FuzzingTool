@@ -93,6 +93,10 @@ class UrlParse(ParseResult):
         """
         return splitext(self.file)[1]
 
+    @property
+    def is_path(self) -> bool:
+        return self.path.endswith('/')
+
 
 def get_parsed_url(url: str) -> UrlParse:
     """Get the url parser object
