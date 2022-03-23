@@ -21,6 +21,7 @@
 from typing import List, Dict, Tuple, Callable, Union, Type
 import operator
 
+from .bases.base_validator import BaseValidator
 from ..objects.result import Result
 from ..utils.utils import split_str_to_list
 from ..exceptions import BadArgumentType
@@ -52,7 +53,7 @@ def get_status_code(status: str,
         )
 
 
-class Matcher:
+class Matcher(BaseValidator):
     """Class to handle with the match validations
 
     Attributes:
@@ -66,7 +67,8 @@ class Matcher:
                  time: str = None,
                  size: str = None,
                  words: str = None,
-                 lines: str = None):
+                 lines: str = None,
+                 regex: str = None):
         """Class constructor
 
         @type status_code: str
@@ -79,9 +81,12 @@ class Matcher:
         @param words: The number of words to be compared with the response body
         @type lines: str
         @param lines: The number of lines to be compared with the response body
+        @type regex: str
+        @param regex: The regular expression to be compared with the response body
         """
         self._status_code = self.__build_status_code(status_code)
         self._comparator = self.__build_comparator(time, size, words, lines)
+        super().__init__(regex)
 
     def status_code_is_default(self) -> bool:
         """Check if the allowed status is set as default config
@@ -148,6 +153,9 @@ class Matcher:
             return False
         if (self._comparator['lines'] is not None and
                 not self._match_lines(result.lines, self._comparator['lines'])):
+            return False
+        if (self._regexer is not None and
+                not self._regexer.search(result.history.response.text)):
             return False
         return True
 

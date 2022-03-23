@@ -34,16 +34,18 @@ class CliArguments(argparse.ArgumentParser):
     """Class to handle with the arguments parsing
        Overrides the error method from argparse.ArgumentParser,
        raising an exception instead of exiting
-
-    @type args: List[str]
-    @param args: The arguments list
     """
     def __init__(self, args: List[str] = None):
+        """Class constructor
+
+        @type args: List[str]
+        @param args: The arguments list
+        """
         if args:
             self.args = args
         else:
             self.args = sys.argv
-        usage = "Usage: FuzzingTool [-u|-r TARGET]+ [-w WORDLIST]+ [options]*"
+        usage = "Usage: FuzzingTool -u|-r TARGET -w WORDLIST [options]*"
         examples = ("For usage examples, see: "
                     "https://github.com/NESCAU-UFLA/FuzzingTool/wiki/Usage-Examples")
         if len(self.args) < 2:
@@ -334,6 +336,13 @@ class CliArguments(argparse.ArgumentParser):
             dest='match_lines',
             help="Match responses based on their quantity of lines on body",
             metavar='QTY_LINES',
+        )
+        match_opts.add_argument(
+            '-Mr',
+            action='store',
+            dest='match_regex',
+            help="Match responses based on a regex",
+            metavar='REGEX',
         )
         match_opts.add_argument(
             '-Fc',
