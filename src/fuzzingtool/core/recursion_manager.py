@@ -30,7 +30,7 @@ class RecursionManager:
         self.wordlist = wordlist
         self.directories_queue = Queue()
         self.payloads_queue = Queue()
-    
+
     def has_recursive_job(self) -> bool:
         return not self.directories_queue.empty()
 
