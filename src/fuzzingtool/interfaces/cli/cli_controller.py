@@ -51,15 +51,12 @@ def banner() -> str:
 
 
 class CliController(FuzzLib):
-    """Class that handle with the entire application
+    """Class that handle with the CLI application
 
     Attributes:
-        requesters: The requesters list
-        started_time: The time when start the fuzzing test
-        fuzzer: The fuzzer object to handle with the fuzzing test
         lock: A thread locker to prevent overwrites on logfiles
-        blacklist_status: The blacklist status object
         logger: The object to handle with the program log
+        cli_output: The object that handles the terminal output
     """
     def __init__(self, arguments: Namespace):
         super().__init__(**vars(arguments))
