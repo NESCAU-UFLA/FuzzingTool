@@ -26,7 +26,7 @@ from ..objects.payload import Payload
 
 
 class JobManager:
-    """Class responsible to manage the jobs from controller
+    """Class responsible to manage the jobs
 
     Attributes:
         current_job: The current job that's running
@@ -34,6 +34,7 @@ class JobManager:
         total_requests: The total requests that'll be made on fuzzing
         dictionary: The payload dictionary
         job_providers: The job providers that enqueue new payloads for requests
+        max_rlevel: The maximum jobs recursion level
     """
     def __init__(self,
                  dictionary: Dictionary,

@@ -21,7 +21,7 @@
 from urllib.parse import ParseResult, urlparse
 from os.path import splitext
 
-from requests import Response
+from requests.models import Response
 
 from .consts import FUZZING_MARK
 

@@ -51,15 +51,12 @@ def banner() -> str:
 
 
 class CliController(FuzzLib):
-    """Class that handle with the entire application
+    """Class that handle with the CLI application
 
     Attributes:
-        requesters: The requesters list
-        started_time: The time when start the fuzzing test
-        fuzzer: The fuzzer object to handle with the fuzzing test
         lock: A thread locker to prevent overwrites on logfiles
-        blacklist_status: The blacklist status object
         logger: The object to handle with the program log
+        cli_output: The object that handles the terminal output
     """
     def __init__(self, arguments: Namespace):
         super().__init__(**vars(arguments))
@@ -203,7 +200,7 @@ class CliController(FuzzLib):
                 f"Waiting for {self.blacklist_status.action_param} seconds ..."
             )
             time.sleep(self.blacklist_status.action_param)
-            self.cli_output.info_box("Resuming target ...")
+            self.cli_output.info_box("Resuming job ...")
             self.fuzzer.resume()
 
     def _result_callback(self, result: Result, valid: bool) -> None:
@@ -266,7 +263,8 @@ class CliController(FuzzLib):
         self.summary.pause_timer()
         options = "[c]ontinue | [p]rogress | [q]uit"
         if (self.job_manager.has_pending_jobs()
-                or self.job_manager.has_pending_jobs_from_providers()):
+                or self.job_manager.has_pending_jobs_from_providers()
+                or self.recursion_manager.has_recursive_job()):
             options += " | [s]kip"
         answer = ''
         while answer not in ['q', 'c', 's']:

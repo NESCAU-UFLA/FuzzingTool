@@ -28,7 +28,7 @@ from .utils.utils import split_str_to_list
 from .utils.file_utils import read_file
 from .utils.result_utils import ResultUtils
 from .core import (BlacklistStatus, Dictionary, Fuzzer, Filter,
-                   JobManager, Matcher, Payloader, Summary)
+                   JobManager, Matcher, Payloader, RecursionManager, Summary)
 from .core.bases import BaseScanner, BaseEncoder
 from .core.defaults.scanners import (DataScanner,
                                      PathScanner, SubdomainScanner)
@@ -88,18 +88,22 @@ class FuzzLib:
         self.delay = self.args["delay"]
         self.number_of_threads = self.args["threads"]
         self._init_dictionary()
+        self.has_recursion = self.args["recursive"]
+        self.recursion_manager = RecursionManager(
+            max_rlevel=self.args["max_rlevel"],
+            wordlist=self.dictionary.wordlist
+        )
         self.job_manager = JobManager(
             dictionary=self.dictionary,
             job_providers={
-                str(scanner): scanner.payloads_queue for scanner in self.scanners[1:]
+                **{str(scanner): scanner.payloads_queue for scanner in self.scanners[1:]},
+                "recursion": self.recursion_manager.payloads_queue,
             },
             max_rlevel=self.args["max_rlevel"]
         )
 
     def start(self) -> None:
-        """Starts the fuzzing application.
-           The target is fuzzed based on his own method list
-        """
+        """Starts the fuzzing application"""
         self.summary.start_timer()
         try:
             while self.job_manager.has_pending_jobs():
@@ -249,7 +253,9 @@ class FuzzLib:
         self.fuzzer.stop()
 
     def _check_for_new_jobs(self) -> None:
-        """Check for new jobs on job manager"""
+        """Check for new jobs"""
+        if self.recursion_manager.has_recursive_job():
+            self.recursion_manager.fill_payloads_queue()
         self.job_manager.check_for_new_jobs()
 
     def __get_default_args(self) -> dict:
@@ -296,6 +302,7 @@ class FuzzLib:
             threads=1,
             delay=0,
             blacklist_status=None,
+            recursive=False,
             max_rlevel=1,
             # Callbacks
             res_callback=None,
@@ -414,18 +421,21 @@ class FuzzLib:
         result = Result(HttpHistory(response, rtt, *ip),
                         payload,
                         self.requester.get_fuzzing_type())
-        self._result_callback(result, self.__result_is_valid(result))
+        self._result_callback(result, self.__handle_result(result))
 
-    def __result_is_valid(self, result: Result):
-        """Checks if the result is valid or not
+    def __handle_result(self, result: Result) -> bool:
+        """Checks if the result is valid or not, and process it
 
         @type result: Result
         @param result: The FuzzingTool result object
+        @returns bool: A flag to say if the result is valid or not
         """
         if self.filter.check(result) and self.matcher.match(result):
             for scanner in self.scanners:
                 if not scanner.scan(result):
                     return False
                 scanner.process(result)
+            if self.has_recursion:
+                self.recursion_manager.check_for_recursion(result)
             return True
         return False

@@ -176,7 +176,7 @@ class Payloader:
         """The uppercase setter"""
         def case(ajusted_payloads: List[Payload]) -> List[Payload]:
             return [
-                payload.with_case(str.upper, "Upper")
+                Payload().update(payload).with_case(str.upper, "Upper")
                 for payload in ajusted_payloads
             ]
 
@@ -187,7 +187,7 @@ class Payloader:
         """The lowercase setter"""
         def case(ajusted_payloads: List[Payload]) -> List[Payload]:
             return [
-                payload.with_case(str.lower, "Lower")
+                Payload().update(payload).with_case(str.lower, "Lower")
                 for payload in ajusted_payloads
             ]
 
@@ -198,7 +198,7 @@ class Payloader:
         """The capitalize setter"""
         def case(ajusted_payloads: List[Payload]) -> List[Payload]:
             return [
-                payload.with_case(str.capitalize, "Capitalize")
+                Payload().update(payload).with_case(str.capitalize, "Capitalize")
                 for payload in ajusted_payloads
             ]
 

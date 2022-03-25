@@ -56,6 +56,14 @@ class HttpHistory:
         return get_parsed_url(self.url)
 
     @property
+    def is_path(self) -> bool:
+        """Checks if the url path is a directory
+
+        @returns bool: A flag to say if it's a directory path
+        """
+        return self.url[-1] == '/'
+
+    @property
     def raw_headers(self) -> str:
         return build_raw_response_header(self.__response)
 
