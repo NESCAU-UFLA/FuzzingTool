@@ -57,6 +57,10 @@ class HttpHistory:
 
     @property
     def is_path(self) -> bool:
+        """Checks if the url path is a directory
+
+        @returns bool: A flag to say if it's a directory path
+        """
         return self.url[-1] == '/'
 
     @property

@@ -103,9 +103,7 @@ class FuzzLib:
         )
 
     def start(self) -> None:
-        """Starts the fuzzing application.
-           The target is fuzzed based on his own method list
-        """
+        """Starts the fuzzing application"""
         self.summary.start_timer()
         try:
             while self.job_manager.has_pending_jobs():
@@ -423,13 +421,14 @@ class FuzzLib:
         result = Result(HttpHistory(response, rtt, *ip),
                         payload,
                         self.requester.get_fuzzing_type())
-        self._result_callback(result, self.__result_is_valid(result))
+        self._result_callback(result, self.__handle_result(result))
 
-    def __result_is_valid(self, result: Result):
-        """Checks if the result is valid or not
+    def __handle_result(self, result: Result) -> bool:
+        """Checks if the result is valid or not, and process it
 
         @type result: Result
         @param result: The FuzzingTool result object
+        @returns bool: A flag to say if the result is valid or not
         """
         if self.filter.check(result) and self.matcher.match(result):
             for scanner in self.scanners:

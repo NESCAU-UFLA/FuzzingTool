@@ -21,7 +21,7 @@
 from urllib.parse import ParseResult, urlparse
 from os.path import splitext
 
-from requests import Response
+from requests.models import Response
 
 from .consts import FUZZING_MARK
 
@@ -92,10 +92,6 @@ class UrlParse(ParseResult):
         @returns str: The file extension only
         """
         return splitext(self.file)[1]
-
-    @property
-    def is_path(self) -> bool:
-        return self.path.endswith('/')
 
 
 def get_parsed_url(url: str) -> UrlParse:
