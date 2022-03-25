@@ -53,14 +53,6 @@ class RecursionManager:
         """
         return not self.directories_queue.empty()
 
-    def fill_payloads_queue(self) -> None:
-        """Fill the payloads queue with recursive directory payloads"""
-        recursive_directory = self.directories_queue.get()
-        for wordlist_payload in self.wordlist:
-            new_payload = Payload().update(recursive_directory)
-            new_payload.final += wordlist_payload
-            self.payloads_queue.put(new_payload)
-
     def check_for_recursion(self, result: Result) -> None:
         """Check if a result is eligible for recursion, and enqueue it into the directories queue
 
@@ -72,3 +64,11 @@ class RecursionManager:
             self.directories_queue.put(
                 Payload().update(payload).with_recursion(result.history.parsed_url.path[1:])
             )
+
+    def fill_payloads_queue(self) -> None:
+        """Fill the payloads queue with recursive directory payloads"""
+        recursive_directory = self.directories_queue.get()
+        for wordlist_payload in self.wordlist:
+            new_payload = Payload().update(recursive_directory)
+            new_payload.final += wordlist_payload
+            self.payloads_queue.put(new_payload)
