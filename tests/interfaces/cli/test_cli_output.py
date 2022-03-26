@@ -87,7 +87,7 @@ class TestCliOutput(unittest.TestCase):
         self.assertIsInstance(returned_payload, str)
         self.assertEqual(returned_payload, test_result.history.parsed_url.path)
 
-    def test_get_formatted_payload_with_path_fuzz_and_raise_exception(self):
+    def test_get_formatted_payload_with_path_fuzz_without_directory(self):
         test_result = Result(
             HttpHistory(response=ResponseMock()),
             fuzz_type=PATH_FUZZING,
