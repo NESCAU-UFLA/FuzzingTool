@@ -47,7 +47,7 @@ class JobManager:
         @type job_providers: Dict[str, Queue[Payload]]
         @param job_providers: The job providers, with name and queue
         """
-        self.current_job = None
+        self.current_job: str = None
         wordlist_queue = Queue()
         for payload in dictionary.wordlist:
             wordlist_queue.put(Payload(payload))

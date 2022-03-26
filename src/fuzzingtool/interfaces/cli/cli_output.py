@@ -22,6 +22,7 @@ from datetime import datetime
 import threading
 import sys
 from typing import Tuple
+from math import floor, ceil, log10
 
 from ...objects.result import Result
 from ...utils.consts import MAX_PAYLOAD_LENGTH_TO_OUTPUT, PATH_FUZZING, SUBDOMAIN_FUZZING
@@ -146,6 +147,18 @@ class CliOutput:
         self.__worked = f'{Colors.GRAY}[{Colors.GREEN}+{Colors.GRAY}]{Colors.RESET} '
         self.__not_worked = f'{Colors.GRAY}[{Colors.RED}-{Colors.GRAY}]{Colors.RESET} '
 
+    def set_new_job(self, total_requests: int, current_job: str) -> None:
+        """Set the variables from job manager
+
+        @type total_requests: int
+        @param total_requests: The number of requests that'll be made
+        @type current_job: str
+        @param current_job: The current job name
+        """
+        self.__total_requests = total_requests
+        self.__request_indent = ceil(log10(total_requests))
+        self.__current_job = current_job
+
     def info_box(self, msg: str) -> None:
         """Print the message with a info label
 
@@ -267,44 +280,40 @@ class CliOutput:
         self.print_config("Dictionary size", dict_size)
         print("")
 
-    def get_percentage(self, item_index: int, total_requests: int) -> str:
-        """Get the percentage from item_index / total_requests
+    def get_percentage(self, item_index: int) -> str:
+        """Get the percentage string from item_index per total_requests
 
         @type item_index: int
         @param item_index: The actual request index
-        @type total_requests: int
-        @param total_requests: The total of requests quantity
         @returns str: The percentage str
         """
-        return f"{str(int((int(item_index)/total_requests)*100))}%"
+        return f"{self._get_percentage_value(item_index, self.__total_requests)}%"
 
     def progress_status(self,
                         item_index: int,
-                        total_requests: int,
                         payload: str) -> None:
         """Output the progress status of the fuzzing
 
         @type item_index: int
         @param item_index: The actual request index
-        @type total_requests: int
-        @param total_requests: The total of requests quantity
         @type payload: str
         @param payload: The payload used in the request
         """
-        status = (f"{Colors.GRAY}[{Colors.LIGHT_GRAY}{item_index}"
-                  + f"{Colors.GRAY}/{Colors.LIGHT_GRAY}{total_requests}"
-                  + f"{Colors.GRAY}]{Colors.RESET} {Colors.LIGHT_YELLOW}"
-                  + self.get_percentage(item_index, total_requests)
-                  + f"{Colors.RESET}")
+        percentage_value = self._get_percentage_value(item_index, self.__total_requests)
+        status = self._get_progress_bar(percentage_value)
         payload = fix_payload_to_output(payload)
-        while len(payload) < MAX_PAYLOAD_LENGTH_TO_OUTPUT:
-            payload += ' '
+        status += (f" {Colors.LIGHT_YELLOW}{percentage_value:>3}% {Colors.RESET}"
+                   + f"{Colors.GRAY}[{Colors.LIGHT_GRAY}{item_index:>{self.__request_indent}}"
+                   + f"{Colors.GRAY}/{Colors.LIGHT_GRAY}{self.__total_requests}"
+                   + f"{Colors.GRAY}]{Colors.RESET} "
+                   + f"{Colors.GRAY}[{Colors.LIGHT_GRAY}{self.__current_job}"
+                   + f"{Colors.GRAY}]{Colors.RESET}")
+        status += f"{Colors.GRAY} :: {Colors.LIGHT_GRAY}{payload:<{MAX_PAYLOAD_LENGTH_TO_OUTPUT}}"
         with self.__lock:
             if not self.__last_inline:
                 self.__last_inline = True
                 self.__erase_line()
-            print(f"\r{self.__get_time()}{status}"
-                  f"{Colors.GRAY} :: {Colors.LIGHT_GRAY}{payload}", end='')
+            print(f"\r{status}", end='')
 
     def print_result(self, result: Result, vuln_validator: bool) -> None:
         """Custom output print for box mode
@@ -333,6 +342,30 @@ class CliOutput:
             self.__last_inline = False
             return '\n'
         return ''
+
+    def _get_percentage_value(self, item_index: int, total_requests: int) -> int:
+        """Get the percentage from item_index per total_requests
+
+        @type item_index: int
+        @param item_index: The actual request index
+        @type total_requests: int
+        @param total_requests: The total of requests quantity
+        @returns int: The percentage value
+        """
+        return int((item_index/total_requests)*100)
+
+    def _get_progress_bar(self, percentage_value: int) -> str:
+        """Get a formated progress bar
+
+        @type percentage_value: int
+        @param percentage_value: The percentage value of progress status
+        @returns str: The formated progress bar
+        """
+        bar_size = floor(percentage_value/5)
+        spaces = 20-bar_size
+        return (f"{Colors.GRAY}["
+                f"{Colors.LIGHT_GREEN}{Colors.BOLD}{'#'*bar_size}{Colors.RESET}{' '*spaces}"
+                f"{Colors.GRAY}]{Colors.RESET}")
 
     def __get_time(self) -> str:
         """Get a time label

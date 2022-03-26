@@ -28,12 +28,15 @@ class BaseItem(ABC):
     Attributes:
         index: The index of the item
     """
-    index = count(1)
+    index = 1
+    _index = count(1)
 
     @staticmethod
     def reset_index() -> None:
         """Resets the item index"""
-        BaseItem.index = count(1)
+        BaseItem.index = 1
+        BaseItem._index = count(1)
 
     def __init__(self):
-        self.index = next(BaseItem.index)
+        self.index = next(BaseItem._index)
+        BaseItem.index = self.index
