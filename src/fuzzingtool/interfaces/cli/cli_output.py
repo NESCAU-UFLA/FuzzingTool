@@ -156,7 +156,7 @@ class CliOutput:
         """
         self.__total_requests = total_requests
         self.__request_indent = ceil(log10(total_requests))
-        self.__progress_length = (38 # Progress bar, spaces, square brackets and slashes
+        self.__progress_length = (38  # Progress bar, spaces, square brackets and slashes
                                   + MAX_PAYLOAD_LENGTH_TO_OUTPUT
                                   + self.__request_indent * 2)
 
