@@ -249,7 +249,8 @@ class CliController(FuzzLib):
 
     def _get_job(self) -> None:
         super()._get_job()
-        self.cli_output.set_new_job(self.job_manager.total_requests, self.job_manager.current_job)
+        self.cli_output.info_box(f"On job: {self.job_manager.current_job}")
+        self.cli_output.set_new_job(self.job_manager.total_requests)
 
     def _join(self) -> None:
         """Blocks until the fuzzer is running"""

@@ -23,6 +23,7 @@ import threading
 import sys
 from typing import Tuple
 from math import floor, ceil, log10
+from shutil import get_terminal_size
 
 from ...objects.result import Result
 from ...utils.consts import MAX_PAYLOAD_LENGTH_TO_OUTPUT, PATH_FUZZING, SUBDOMAIN_FUZZING
@@ -48,7 +49,7 @@ class Colors:
     BOLD = '\033[1m'
 
     @staticmethod
-    def disable():
+    def disable() -> None:
         """Disable the colors of the program"""
         Colors.RESET = ''
         Colors.GRAY = ''
@@ -147,17 +148,17 @@ class CliOutput:
         self.__worked = f'{Colors.GRAY}[{Colors.GREEN}+{Colors.GRAY}]{Colors.RESET} '
         self.__not_worked = f'{Colors.GRAY}[{Colors.RED}-{Colors.GRAY}]{Colors.RESET} '
 
-    def set_new_job(self, total_requests: int, current_job: str) -> None:
+    def set_new_job(self, total_requests: int) -> None:
         """Set the variables from job manager
 
         @type total_requests: int
         @param total_requests: The number of requests that'll be made
-        @type current_job: str
-        @param current_job: The current job name
         """
         self.__total_requests = total_requests
         self.__request_indent = ceil(log10(total_requests))
-        self.__current_job = current_job
+        self.__progress_length = (38 # Progress bar, spaces, square brackets and slashes
+                                  + MAX_PAYLOAD_LENGTH_TO_OUTPUT
+                                  + self.__request_indent * 2)
 
     def info_box(self, msg: str) -> None:
         """Print the message with a info label
@@ -299,21 +300,20 @@ class CliOutput:
         @type payload: str
         @param payload: The payload used in the request
         """
-        percentage_value = self._get_percentage_value(item_index, self.__total_requests)
-        status = self._get_progress_bar(percentage_value)
-        payload = fix_payload_to_output(payload)
-        status += (f" {Colors.LIGHT_YELLOW}{percentage_value:>3}% {Colors.RESET}"
-                   + f"{Colors.GRAY}[{Colors.LIGHT_GRAY}{item_index:>{self.__request_indent}}"
-                   + f"{Colors.GRAY}/{Colors.LIGHT_GRAY}{self.__total_requests}"
-                   + f"{Colors.GRAY}]{Colors.RESET} "
-                   + f"{Colors.GRAY}[{Colors.LIGHT_GRAY}{self.__current_job}"
-                   + f"{Colors.GRAY}]{Colors.RESET}")
-        status += f"{Colors.GRAY} :: {Colors.LIGHT_GRAY}{payload:<{MAX_PAYLOAD_LENGTH_TO_OUTPUT}}"
-        with self.__lock:
-            if not self.__last_inline:
-                self.__last_inline = True
-                self.__erase_line()
-            print(f"\r{status}", end='')
+        if self.__progress_length <= get_terminal_size()[0]:
+            percentage_value = self._get_percentage_value(item_index, self.__total_requests)
+            status = self._get_progress_bar(percentage_value)
+            payload = fix_payload_to_output(payload)
+            status += (f" {Colors.LIGHT_YELLOW}{percentage_value:>3}% {Colors.RESET}"
+                       + f"{Colors.GRAY}[{Colors.LIGHT_GRAY}{item_index:>{self.__request_indent}}"
+                       + f"{Colors.GRAY}/{Colors.LIGHT_GRAY}{self.__total_requests}"
+                       + f"{Colors.GRAY}]{Colors.RESET}")
+            status += f"{Colors.GRAY} :: {Colors.LIGHT_GRAY}{payload:<{MAX_PAYLOAD_LENGTH_TO_OUTPUT}}"
+            with self.__lock:
+                if not self.__last_inline:
+                    self.__last_inline = True
+                    self.__erase_line()
+                print(f"\r{status}", end='')
 
     def print_result(self, result: Result, vuln_validator: bool) -> None:
         """Custom output print for box mode
