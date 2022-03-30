@@ -62,6 +62,7 @@ class Result(BaseItem):
         self.words = len(content.split())
         self.lines = content.count(b'\n')
         self.fuzz_type = fuzz_type
+        self.job_description = ''
         self.scanners_res = {}
         self._payload = payload
 

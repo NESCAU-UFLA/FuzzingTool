@@ -1,4 +1,5 @@
 import unittest
+from unittest.mock import Mock, patch
 from queue import Queue
 
 from src.fuzzingtool.core.recursion_manager import RecursionManager
@@ -18,11 +19,13 @@ class TestRecursionManager(unittest.TestCase):
         self.assertIsInstance(test_has_recursive_job, bool)
         self.assertEqual(test_has_recursive_job, False)
 
-    def test_check_for_recursion_with_recursion(self):
+    @patch(f"src.fuzzingtool.core.recursion_manager.RecursionManager.notify")
+    def test_check_for_recursion_with_recursion(self, mock_notify: Mock):
         test_directory = "test_directory/"
         test_result = Result(HttpHistory(response=ResponseMock()))
         test_result.history.url += test_directory
         self.recursion_manager.check_for_recursion(test_result)
+        mock_notify.assert_called_once_with(test_result, f"/{test_directory}")
         self.assertEqual(self.recursion_manager.directories_queue.empty(), False)
         enqueued_directory: Payload = self.recursion_manager.directories_queue.get()
         self.assertIsInstance(enqueued_directory, Payload)

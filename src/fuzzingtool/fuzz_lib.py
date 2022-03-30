@@ -101,6 +101,9 @@ class FuzzLib:
             },
             max_rlevel=self.args["max_rlevel"]
         )
+        self.recursion_manager.set_observer(self.job_manager)
+        for scanner in self.scanners[1:]:
+            scanner.set_observer(self.job_manager)
 
     def start(self) -> None:
         """Starts the fuzzing application"""

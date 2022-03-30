@@ -212,14 +212,22 @@ class CliController(FuzzLib):
             if valid:
                 self.summary.results.append(result)
                 self.cli_output.print_result(result, valid)
-            self.cli_output.progress_status(
+            self.__print_progress(
                 result.index, result.payload
             )
+
+    def __print_progress(self, index: int, payload: str) -> None:
+        self.cli_output.progress_status(
+            item_index=index,
+            payload=payload,
+            current_job=self.job_manager.current_job,
+            total_jobs=self.job_manager.total_jobs
+        )
 
     def _request_exception_callback(self, error: Error) -> None:
         if self.ignore_errors:
             if not self.verbose[0]:
-                self.cli_output.progress_status(
+                self.__print_progress(
                     error.index, error.payload
                 )
             else:
@@ -235,7 +243,7 @@ class CliController(FuzzLib):
             if self.verbose[1]:
                 self.cli_output.not_worked_box(str(error))
         else:
-            self.cli_output.progress_status(
+            self.__print_progress(
                 error.index, error.payload
             )
 
@@ -249,7 +257,6 @@ class CliController(FuzzLib):
 
     def _get_job(self) -> None:
         super()._get_job()
-        self.cli_output.info_box(f"On job: {self.job_manager.current_job}")
         self.cli_output.set_new_job(self.job_manager.total_requests)
 
     def _join(self) -> None:

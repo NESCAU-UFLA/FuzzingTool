@@ -292,7 +292,9 @@ class CliOutput:
 
     def progress_status(self,
                         item_index: int,
-                        payload: str) -> None:
+                        payload: str,
+                        current_job: int,
+                        total_jobs: int) -> None:
         """Output the progress status of the fuzzing
 
         @type item_index: int
@@ -300,13 +302,18 @@ class CliOutput:
         @type payload: str
         @param payload: The payload used in the request
         """
-        if self.__progress_length <= get_terminal_size()[0]:
+        jobs_indent = ceil(log10(total_jobs))
+        progress_length = self.__progress_length + (2 * jobs_indent)
+        if progress_length <= get_terminal_size()[0]:
             percentage_value = self._get_percentage_value(item_index, self.__total_requests)
             status = self._get_progress_bar(percentage_value)
             payload = fix_payload_to_output(payload)
             status += (f" {Colors.LIGHT_YELLOW}{percentage_value:>3}% {Colors.RESET}"
                        + f"{Colors.GRAY}[{Colors.LIGHT_GRAY}{item_index:>{self.__request_indent}}"
                        + f"{Colors.GRAY}/{Colors.LIGHT_GRAY}{self.__total_requests}"
+                       + f"{Colors.GRAY}]{Colors.RESET} "
+                       + f"{Colors.GRAY}[{Colors.LIGHT_GRAY}{current_job:>{jobs_indent}}"
+                       + f"{Colors.GRAY}/{Colors.LIGHT_GRAY}{total_jobs}"
                        + f"{Colors.GRAY}]{Colors.RESET}")
             status += f"{Colors.GRAY} :: {Colors.LIGHT_GRAY}{payload:<{MAX_PAYLOAD_LENGTH_TO_OUTPUT}}"
             with self.__lock:
@@ -509,6 +516,8 @@ class CliOutput:
             f"{Colors.LIGHT_GRAY}Lines{Colors.RESET} {lines}{Colors.GRAY}]{Colors.RESET}"
         )
         custom_str = ''
+        if result.job_description:
+            custom_str += f"\n{Colors.LIGHT_YELLOW}|_ {result.job_description}"
         for scanner, s_res in result.scanners_res.items():
             for key, value in s_res.data.items():
                 if (value is not None and isinstance(value, bool)) or value:

@@ -14,7 +14,7 @@ class TestJobManager(unittest.TestCase):
             max_rlevel=1,
         )
         test_job_manager.get_job()
-        self.assertEqual(test_job_manager.current_job, "wordlist")
+        self.assertEqual(test_job_manager.current_job_name, "wordlist")
         self.assertEqual(test_job_manager.total_requests, 1)
 
     def test_has_pending_jobs(self):
@@ -57,5 +57,5 @@ class TestJobManager(unittest.TestCase):
         test_provider_queue.put(Payload("test-payload-job"))
         test_job_manager.check_for_new_jobs()
         test_job_manager.get_job()
-        self.assertEqual(test_job_manager.current_job, "test_provider")
+        self.assertEqual(test_job_manager.current_job_name, "test_provider")
         self.assertEqual(test_job_manager.total_requests, 1)
