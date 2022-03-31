@@ -23,17 +23,34 @@ class TestResult(unittest.TestCase):
         self.assertEqual(result.words, 5)
         self.assertEqual(result.lines, 2)
 
+    def test_get_description(self):
+        test_job_description = "Enqueued new job from Test"
+        result = Result(
+            history=HttpHistory(response=ResponseMock(), rtt=3.0),
+            payload=Payload('test-payload')
+        )
+        result.job_description = test_job_description
+        test_scanner = "test-scanner"
+        test_enqueued_payloads = 5
+        result.scanners_res[test_scanner] = ScannerResult(test_scanner)
+        result.scanners_res[test_scanner].data['test_0'] = None
+        result.scanners_res[test_scanner].data['test_1'] = "test-value"
+        result.scanners_res[test_scanner].enqueued_payloads = test_enqueued_payloads
+        return_expected = (
+            f"\n|_ {test_job_description}"
+            f"\n|_ test_1: test-value"
+            f"\n|_ Scanner {test_scanner} enqueued {test_enqueued_payloads} payloads"
+        )
+        returned_description = result.get_description()
+        self.assertIsInstance(returned_description, str)
+        self.assertEqual(returned_description, return_expected)
+
     def test_result_str(self):
         test_response = ResponseMock()
         result = Result(
             history=HttpHistory(response=test_response, rtt=3.0),
             payload=Payload('test-payload')
         )
-        test_scanner = "test-scanner"
-        result.scanners_res[test_scanner] = ScannerResult(test_scanner)
-        result.scanners_res[test_scanner].data['test_0'] = None
-        result.scanners_res[test_scanner].data['test_1'] = "test-value"
-        result.scanners_res[test_scanner].enqueued_payloads = 5
         payload, rtt, length, words, lines = ResultUtils.get_formatted_result(
             result.payload, result.history.rtt, result.history.body_size,
             result.words, result.lines
@@ -45,8 +62,6 @@ class TestResult(unittest.TestCase):
             f"Size {length} | "
             f"Words {words} | "
             f"Lines {lines}]"
-            f"\n|_ test_1: {result.scanners_res[test_scanner].data['test_1']}"
-            f"\n|_ Scanner {test_scanner} enqueued {result.scanners_res[test_scanner].enqueued_payloads} payloads"
         )
         self.assertEqual(str(result), return_expected)
 

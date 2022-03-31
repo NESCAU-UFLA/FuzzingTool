@@ -1,5 +1,6 @@
 import unittest
 
+from src.fuzzingtool.utils.consts import MAX_PAYLOAD_LENGTH_TO_OUTPUT
 from src.fuzzingtool.utils.result_utils import ResultUtils
 
 
@@ -12,7 +13,7 @@ class TestResultUtils(unittest.TestCase):
         test_words = 40
         test_lines = 7
         return_expected = (
-            '{:<30}'.format(test_payload),
+            f"{test_payload:<{MAX_PAYLOAD_LENGTH_TO_OUTPUT}}",
             '{:>5}'.format(276) + " ms",
             '{:>7}'.format(200) + " B ",
             '{:>6}'.format(test_words),
@@ -33,7 +34,7 @@ class TestResultUtils(unittest.TestCase):
         test_words = 40
         test_lines = 7
         return_expected = (
-            '{:<30}'.format(test_payload),
+            f"{test_payload:<{MAX_PAYLOAD_LENGTH_TO_OUTPUT}}",
             '{:>5}'.format(2.76) + " s ",
             '{:>7}'.format(200) + " B ",
             '{:>6}'.format(test_words),
@@ -54,7 +55,7 @@ class TestResultUtils(unittest.TestCase):
         test_words = 40
         test_lines = 7
         return_expected = (
-            '{:<30}'.format(test_payload),
+            f"{test_payload:<{MAX_PAYLOAD_LENGTH_TO_OUTPUT}}",
             '{:>5}'.format(276) + " ms",
             '{:>7}'.format('1.50') + " KB",
             '{:>6}'.format(test_words),
