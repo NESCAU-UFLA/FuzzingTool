@@ -21,10 +21,11 @@
 from queue import Queue
 from typing import List
 
+from .bases.job_provider import JobProvider
 from ..objects import Payload, Result
 
 
-class RecursionManager:
+class RecursionManager(JobProvider):
     """Class responsible to manage the directory recursion
 
     Attributes:
@@ -45,6 +46,17 @@ class RecursionManager:
         self.wordlist = wordlist
         self.directories_queue = Queue()
         self.payloads_queue = Queue()
+        super().__init__()
+
+    def notify(self, result: Result, path: str) -> None:
+        """Notify the observer with the new job
+
+        @type result: Result
+        @param result: The FuzzingTool result object
+        @type path: str
+        @param path: The path that enqueued the job
+        """
+        self._observer.update(f"directory recursion on path {path}", result)
 
     def has_recursive_job(self) -> bool:
         """Check if has pending recursive job
@@ -61,9 +73,11 @@ class RecursionManager:
         """
         payload = result._payload
         if result.history.is_path and payload.rlevel < self.max_rlevel:
+            path = result.history.parsed_url.path
             self.directories_queue.put(
-                Payload().update(payload).with_recursion(result.history.parsed_url.path[1:])
+                Payload().update(payload).with_recursion(path[1:])
             )
+            self.notify(result, path)
 
     def fill_payloads_queue(self) -> None:
         """Fill the payloads queue with recursive directory payloads"""

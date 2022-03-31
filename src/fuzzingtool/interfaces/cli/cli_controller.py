@@ -212,15 +212,15 @@ class CliController(FuzzLib):
             if valid:
                 self.summary.results.append(result)
                 self.cli_output.print_result(result, valid)
-            self.cli_output.progress_status(
-                result.index, self.job_manager.total_requests, result.payload
+            self.__print_progress(
+                result.index, result.payload
             )
 
     def _request_exception_callback(self, error: Error) -> None:
         if self.ignore_errors:
             if not self.verbose[0]:
-                self.cli_output.progress_status(
-                    error.index, self.job_manager.total_requests, error.payload
+                self.__print_progress(
+                    error.index, error.payload
                 )
             else:
                 if self.verbose[1]:
@@ -235,8 +235,8 @@ class CliController(FuzzLib):
             if self.verbose[1]:
                 self.cli_output.not_worked_box(str(error))
         else:
-            self.cli_output.progress_status(
-                error.index, self.job_manager.total_requests, error.payload
+            self.__print_progress(
+                error.index, error.payload
             )
 
     def _init_dictionary(self) -> None:
@@ -246,6 +246,10 @@ class CliController(FuzzLib):
             if self.is_verbose_mode():
                 for e in self.wordlist_errors:
                     self.cli_output.warning_box(str(e))
+
+    def _get_job(self) -> None:
+        super()._get_job()
+        self.cli_output.set_new_job(self.job_manager.total_requests)
 
     def _join(self) -> None:
         """Blocks until the fuzzer is running"""
@@ -287,10 +291,7 @@ class CliController(FuzzLib):
 
     def _handle_progress(self) -> None:
         """Handle with the progress option when pause"""
-        str_percentage = self.cli_output.get_percentage(
-            BaseItem.index,
-            self.job_manager.total_requests
-        )
+        str_percentage = self.cli_output.get_percentage(BaseItem.index)
         self.cli_output.info_box(
             f"Progress: {Colors.LIGHT_YELLOW}{str_percentage}{Colors.RESET} completed"
         )
@@ -381,6 +382,21 @@ class CliController(FuzzLib):
             ask_message="Insert the quantity of lines"
         )
         return (time, length, words, lines)
+
+    def __print_progress(self, index: int, payload: str) -> None:
+        """Print the progress status
+
+        @type index: int
+        @param index: The actual item index
+        @type payload: str
+        @param payload: The payload used in the previous request
+        """
+        self.cli_output.progress_status(
+            item_index=index,
+            payload=payload,
+            current_job=self.job_manager.current_job,
+            total_jobs=self.job_manager.total_jobs,
+        )
 
     def __handle_valid_results(self,
                                host: str,

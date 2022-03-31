@@ -18,25 +18,29 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from abc import ABC
-from itertools import count
+from abc import ABC, abstractmethod
+
+from .base_observer import BaseObserver
 
 
-class BaseItem(ABC):
-    """Base item for the FuzzingTool objects
+class JobProvider(ABC):
+    """Base class for the job providers
 
     Attributes:
-        index: The index of the item
+        observer: The observer that'll look for this job provider
     """
-    index = 1
-    _index = count(1)
-
-    @staticmethod
-    def reset_index() -> None:
-        """Resets the item index"""
-        BaseItem.index = 1
-        BaseItem._index = count(1)
-
     def __init__(self):
-        self.index = next(BaseItem._index)
-        BaseItem.index = self.index
+        self._observer = None
+
+    def set_observer(self, observer: BaseObserver) -> None:
+        """The observer setter
+
+        @type observer: BaseObserver
+        @param observer: The observer that'll look for this job provider
+        """
+        self._observer = observer
+
+    @abstractmethod
+    def notify(self) -> None:
+        """Notify the observer for some action"""
+        pass

@@ -62,6 +62,7 @@ class Result(BaseItem):
         self.words = len(content.split())
         self.lines = content.count(b'\n')
         self.fuzz_type = fuzz_type
+        self.job_description = ''
         self.scanners_res = {}
         self._payload = payload
 
@@ -78,14 +79,7 @@ class Result(BaseItem):
             f"Words {words} | "
             f"Lines {lines}]"
         )
-        for scanner, s_res in self.scanners_res.items():
-            for key, value in s_res.data.items():
-                if value is not None:
-                    returned_str += (f"\n|_ {key}: "
-                                     f"{ResultUtils.format_custom_field(value)}")
-            if s_res.enqueued_payloads:
-                returned_str += (f"\n|_ Scanner {scanner} enqueued "
-                                 f"{s_res.enqueued_payloads} payloads")
+        returned_str += self.get_description()
         return returned_str
 
     def __iter__(self) -> Iterator[Tuple]:
@@ -114,3 +108,21 @@ class Result(BaseItem):
             yield 'headers', self.history.raw_headers
         if Result.save_body:
             yield 'body', self.history.response.text
+
+    def get_description(self) -> str:
+        """Get the description from the result
+
+        @returns str: The job description and scanners descriptions
+        """
+        description = ''
+        if self.job_description:
+            description += f"\n|_ {self.job_description}"
+        for scanner, s_res in self.scanners_res.items():
+            for key, value in s_res.data.items():
+                if (value is not None and isinstance(value, bool)) or value:
+                    description += (f"\n|_ {key}: "
+                                    f"{ResultUtils.format_custom_field(value)}")
+            if s_res.enqueued_payloads:
+                description += (f"\n|_ Scanner {scanner} enqueued "
+                                f"{s_res.enqueued_payloads} payloads")
+        return description

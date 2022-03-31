@@ -72,35 +72,10 @@ class FuzzLib:
         self._init_filter()
         self._init_matcher()
         self._init_scanner()
-        if self.args["blacklist_status"]:
-            blacklisted_status, action, action_param = AB.build_blacklist_status(
-                self.args["blacklist_status"]
-            )
-            self.blacklist_status = BlacklistStatus(
-                status=blacklisted_status,
-                action=action,
-                action_param=action_param,
-                action_callbacks={
-                    'stop': self._stop_callback,
-                    'wait': self._wait_callback,
-                },
-            )
-        self.delay = self.args["delay"]
-        self.number_of_threads = self.args["threads"]
+        self._init_other_arguments()
         self._init_dictionary()
-        self.has_recursion = self.args["recursive"]
-        self.recursion_manager = RecursionManager(
-            max_rlevel=self.args["max_rlevel"],
-            wordlist=self.dictionary.wordlist
-        )
-        self.job_manager = JobManager(
-            dictionary=self.dictionary,
-            job_providers={
-                **{str(scanner): scanner.payloads_queue for scanner in self.scanners[1:]},
-                "recursion": self.recursion_manager.payloads_queue,
-            },
-            max_rlevel=self.args["max_rlevel"]
-        )
+        self._init_managers()
+        self._set_observer()
 
     def start(self) -> None:
         """Starts the fuzzing application"""
@@ -224,6 +199,25 @@ class FuzzLib:
             )
             self.scanners.append(plugin_scanner)
 
+    def _init_other_arguments(self) -> None:
+        """Initialize the uncategorized arguments"""
+        if self.args["blacklist_status"]:
+            blacklisted_status, action, action_param = AB.build_blacklist_status(
+                self.args["blacklist_status"]
+            )
+            self.blacklist_status = BlacklistStatus(
+                status=blacklisted_status,
+                action=action,
+                action_param=action_param,
+                action_callbacks={
+                    'stop': self._stop_callback,
+                    'wait': self._wait_callback,
+                },
+            )
+        self.delay = self.args["delay"]
+        self.number_of_threads = self.args["threads"]
+        self.has_recursion = self.args["recursive"]
+
     def _init_dictionary(self) -> None:
         """Initialize the dictionary"""
         self.__configure_payloader()
@@ -239,6 +233,27 @@ class FuzzLib:
             self.dict_metadata['removed'] = previous_length-atual_length
         self.dict_metadata['len'] = atual_length
         self.dictionary = Dictionary(final_wordlist)
+
+    def _init_managers(self) -> None:
+        """Initialize the recursion manager and job manager"""
+        self.recursion_manager = RecursionManager(
+            max_rlevel=self.args["max_rlevel"],
+            wordlist=self.dictionary.wordlist
+        )
+        self.job_manager = JobManager(
+            dictionary=self.dictionary,
+            job_providers={
+                **{str(scanner): scanner.payloads_queue for scanner in self.scanners[1:]},
+                "recursion": self.recursion_manager.payloads_queue,
+            },
+            max_rlevel=self.args["max_rlevel"]
+        )
+
+    def _set_observer(self) -> None:
+        """Set the job manager as observer for the job providers"""
+        self.recursion_manager.set_observer(self.job_manager)
+        for scanner in self.scanners[1:]:
+            scanner.set_observer(self.job_manager)
 
     def _get_job(self) -> None:
         """Get a job from the job queue"""

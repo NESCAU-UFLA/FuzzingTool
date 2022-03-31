@@ -21,16 +21,19 @@
 from queue import Queue
 from typing import Dict
 
+from .bases.base_observer import BaseObserver
 from .dictionary import Dictionary
-from ..objects.payload import Payload
+from ..objects import Payload, Result
 
 
-class JobManager:
+class JobManager(BaseObserver):
     """Class responsible to manage the jobs
 
     Attributes:
-        current_job: The current job that's running
+        current_job: The current job index
+        current_job_name: The current job that's running
         pending_jobs: The pending jobs to run
+        total_jobs: The total jobs that'll run
         total_requests: The total requests that'll be made on fuzzing
         dictionary: The payload dictionary
         job_providers: The job providers that enqueue new payloads for requests
@@ -47,20 +50,34 @@ class JobManager:
         @type job_providers: Dict[str, Queue[Payload]]
         @param job_providers: The job providers, with name and queue
         """
-        self.current_job = None
         wordlist_queue = Queue()
         for payload in dictionary.wordlist:
             wordlist_queue.put(Payload(payload))
+        self.current_job = 0
+        self.current_job_name = None
         self.pending_jobs = Queue()
         self.pending_jobs.put(("wordlist", wordlist_queue))
+        self.total_jobs = 1
         self.total_requests = 0
         self.dictionary = dictionary
         self.job_providers = job_providers
         self.max_rlevel = max_rlevel
 
+    def update(self, provider: str, result: Result) -> None:
+        """Update the total jobs count
+
+        @type provider: str
+        @param provider: The provider name
+        @type result: Result
+        @param result: The FuzzingTool result object
+        """
+        self.total_jobs += 1
+        result.job_description = f"Enqueued new job from {provider}"
+
     def get_job(self) -> None:
         """Gets a new job to run"""
-        self.current_job, job_queue = self.pending_jobs.get()
+        self.current_job += 1
+        self.current_job_name, job_queue = self.pending_jobs.get()
         self.dictionary.fill_from_queue(job_queue, clear=True)
         self.total_requests = len(self.dictionary)
 

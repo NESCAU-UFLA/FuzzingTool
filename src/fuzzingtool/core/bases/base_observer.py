@@ -18,25 +18,20 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from abc import ABC
-from itertools import count
+from abc import ABC, abstractmethod
+
+from ...objects.result import Result
 
 
-class BaseItem(ABC):
-    """Base item for the FuzzingTool objects
+class BaseObserver(ABC):
+    """Base class for the observers"""
+    @abstractmethod
+    def update(self, subject_name: str, result: Result) -> None:
+        """Update the Observer stats
 
-    Attributes:
-        index: The index of the item
-    """
-    index = 1
-    _index = count(1)
-
-    @staticmethod
-    def reset_index() -> None:
-        """Resets the item index"""
-        BaseItem.index = 1
-        BaseItem._index = count(1)
-
-    def __init__(self):
-        self.index = next(BaseItem._index)
-        BaseItem.index = self.index
+        @type subject_name: str
+        @param subject_name: The provider name
+        @type result: Result
+        @param result: The FuzzingTool result object
+        """
+        pass

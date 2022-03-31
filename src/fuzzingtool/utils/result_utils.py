@@ -20,6 +20,8 @@
 
 from typing import Tuple
 
+
+from ..utils.consts import MAX_PAYLOAD_LENGTH_TO_OUTPUT
 from ..utils.utils import get_human_length, get_formatted_rtt, fix_payload_to_output
 
 
@@ -49,7 +51,7 @@ class ResultUtils:
         if isinstance(rtt, float):
             rtt = "%.2f" % rtt
         return (
-            f"{fix_payload_to_output(payload):<30}",
+            f"{fix_payload_to_output(payload):<{MAX_PAYLOAD_LENGTH_TO_OUTPUT}}",
             f"{rtt:>5} {time_order}",
             f"{length:>7} {length_order}",
             '{:>6}'.format(words),
