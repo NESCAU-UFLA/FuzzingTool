@@ -29,7 +29,7 @@ class JobProvider(ABC):
     Attributes:
         observer: The observer that'll look for this job provider
     """
-    def __init__(self) -> None:
+    def __init__(self):
         self._observer: BaseObserver = None
 
     def set_observer(self, observer: BaseObserver) -> None:
