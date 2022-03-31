@@ -21,16 +21,19 @@
 from queue import Queue
 from typing import Dict
 
+from .bases.base_observer import BaseObserver
 from .dictionary import Dictionary
 from ..objects import Payload, Result
 
 
-class JobManager:
+class JobManager(BaseObserver):
     """Class responsible to manage the jobs
 
     Attributes:
-        current_job: The current job that's running
+        current_job: The current job index
+        current_job_name: The current job that's running
         pending_jobs: The pending jobs to run
+        total_jobs: The total jobs that'll run
         total_requests: The total requests that'll be made on fuzzing
         dictionary: The payload dictionary
         job_providers: The job providers that enqueue new payloads for requests
@@ -50,10 +53,10 @@ class JobManager:
         wordlist_queue = Queue()
         for payload in dictionary.wordlist:
             wordlist_queue.put(Payload(payload))
-        self.pending_jobs = Queue()
-        self.pending_jobs.put(("wordlist", wordlist_queue))
         self.current_job = 0
         self.current_job_name: str = None
+        self.pending_jobs = Queue()
+        self.pending_jobs.put(("wordlist", wordlist_queue))
         self.total_jobs = 1
         self.total_requests = 0
         self.dictionary = dictionary
@@ -63,6 +66,8 @@ class JobManager:
     def update(self, provider: str, result: Result) -> None:
         """Update the total jobs count
 
+        @type provider: str
+        @param provider: The provider name
         @type result: Result
         @param result: The FuzzingTool result object
         """

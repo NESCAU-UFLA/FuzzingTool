@@ -20,27 +20,18 @@
 
 from abc import ABC, abstractmethod
 
-from .base_observer import BaseObserver
+from ...objects.result import Result
 
 
-class JobProvider(ABC):
-    """Base class for the job providers
-
-    Attributes:
-        observer: The observer that'll look for this job provider
-    """
-    def __init__(self) -> None:
-        self._observer = None
-
-    def set_observer(self, observer: BaseObserver) -> None:
-        """The observer setter
-
-        @type observer: BaseObserver
-        @param observer: The observer that'll look for this job provider
-        """
-        self._observer = observer
-
+class BaseObserver(ABC):
+    """Base class for the observers"""
     @abstractmethod
-    def notify(self) -> None:
-        """Notify the observer for some action"""
+    def update(self, subject_name: str, result: Result) -> None:
+        """Update the Observer stats
+
+        @type subject_name: str
+        @param subject_name: The provider name
+        @type result: Result
+        @param result: The FuzzingTool result object
+        """
         pass
