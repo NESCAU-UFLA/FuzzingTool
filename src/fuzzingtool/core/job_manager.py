@@ -54,7 +54,7 @@ class JobManager(BaseObserver):
         for payload in dictionary.wordlist:
             wordlist_queue.put(Payload(payload))
         self.current_job = 0
-        self.current_job_name: str = None
+        self.current_job_name = None
         self.pending_jobs = Queue()
         self.pending_jobs.put(("wordlist", wordlist_queue))
         self.total_jobs = 1
