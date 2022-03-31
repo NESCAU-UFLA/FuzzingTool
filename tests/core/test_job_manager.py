@@ -3,59 +3,72 @@ from queue import Queue
 
 from src.fuzzingtool.core.job_manager import JobManager
 from src.fuzzingtool.core.dictionary import Dictionary
-from src.fuzzingtool.objects.payload import Payload
+from src.fuzzingtool.objects import Payload, HttpHistory, Result
+from ..mock_utils.response_mock import ResponseMock
 
 
 class TestJobManager(unittest.TestCase):
-    def test_get_job(self):
-        test_job_manager = JobManager(
+    def test_update(self):
+        test_result = Result(HttpHistory(response=ResponseMock()))
+        test_provider = "TestProvider"
+        job_manager = JobManager(
             dictionary=Dictionary(wordlist=["test-payload"]),
             job_providers={},
             max_rlevel=1,
         )
-        test_job_manager.get_job()
-        self.assertEqual(test_job_manager.current_job_name, "wordlist")
-        self.assertEqual(test_job_manager.total_requests, 1)
+        job_manager.update(test_provider, test_result)
+        self.assertEqual(job_manager.total_jobs, 2)
+        self.assertEqual(test_result.job_description, f"Enqueued new job from {test_provider}")
+
+    def test_get_job(self):
+        job_manager = JobManager(
+            dictionary=Dictionary(wordlist=["test-payload"]),
+            job_providers={},
+            max_rlevel=1,
+        )
+        job_manager.get_job()
+        self.assertEqual(job_manager.current_job_name, "wordlist")
+        self.assertEqual(job_manager.total_requests, 1)
 
     def test_has_pending_jobs(self):
-        test_job_manager = JobManager(
+        job_manager = JobManager(
             dictionary=Dictionary(wordlist=[]),
             job_providers={},
             max_rlevel=1,
         )
-        self.assertEqual(test_job_manager.has_pending_jobs(), True)
-        test_job_manager.get_job()
-        self.assertEqual(test_job_manager.has_pending_jobs(), False)
+        self.assertEqual(job_manager.has_pending_jobs(), True)
+        job_manager.get_job()
+        self.assertEqual(job_manager.has_pending_jobs(), False)
 
     def test_has_pending_jobs_from_providers_without_job(self):
         test_provider_queue = Queue()
-        test_job_manager = JobManager(
+        job_manager = JobManager(
             dictionary=Dictionary(wordlist=[]),
             job_providers={'test_provider': test_provider_queue},
             max_rlevel=1,
         )
-        self.assertEqual(test_job_manager.has_pending_jobs_from_providers(), False)
+        self.assertEqual(job_manager.has_pending_jobs_from_providers(), False)
 
     def test_has_pending_jobs_from_providers_with_job(self):
         test_provider_queue = Queue()
-        test_job_manager = JobManager(
+        job_manager = JobManager(
             dictionary=Dictionary(wordlist=[]),
             job_providers={'test_provider': test_provider_queue},
             max_rlevel=1,
         )
         test_provider_queue.put("test-payload-job")
-        self.assertEqual(test_job_manager.has_pending_jobs_from_providers(), True)
+        self.assertEqual(job_manager.has_pending_jobs_from_providers(), True)
 
     def test_check_for_new_jobs(self):
         test_provider_queue = Queue()
-        test_job_manager = JobManager(
+        job_manager = JobManager(
             dictionary=Dictionary(wordlist=[]),
             job_providers={'test_provider': test_provider_queue},
             max_rlevel=1,
         )
-        test_job_manager.get_job()
+        job_manager.get_job()
         test_provider_queue.put(Payload("test-payload-job"))
-        test_job_manager.check_for_new_jobs()
-        test_job_manager.get_job()
-        self.assertEqual(test_job_manager.current_job_name, "test_provider")
-        self.assertEqual(test_job_manager.total_requests, 1)
+        job_manager.check_for_new_jobs()
+        job_manager.get_job()
+        self.assertEqual(job_manager.current_job_name, "test_provider")
+        self.assertEqual(job_manager.total_requests, 1)
