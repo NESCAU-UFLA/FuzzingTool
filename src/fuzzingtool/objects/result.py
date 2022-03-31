@@ -121,8 +121,8 @@ class Result(BaseItem):
             for key, value in s_res.data.items():
                 if (value is not None and isinstance(value, bool)) or value:
                     description += (f"\n|_ {key}: "
-                                   f"{ResultUtils.format_custom_field(value)}")
+                                    f"{ResultUtils.format_custom_field(value)}")
             if s_res.enqueued_payloads:
                 description += (f"\n|_ Scanner {scanner} enqueued "
-                               f"{s_res.enqueued_payloads} payloads")
+                                f"{s_res.enqueued_payloads} payloads")
         return description
