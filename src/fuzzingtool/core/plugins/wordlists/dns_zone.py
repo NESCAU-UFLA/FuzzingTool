@@ -19,13 +19,14 @@
 # SOFTWARE.
 
 from typing import List
+from socket import gethostbyname, gaierror
 
 from dns import resolver, query, zone
 
 from ...bases.base_plugin import Plugin
 from ...bases.base_wordlist import BaseWordlist
 from ....decorators.plugin_meta import plugin_meta
-from ....exceptions import MissingParameter, BuildWordlistFails
+from ....exceptions import MissingParameter, InvalidArgument, BuildWordlistFails
 
 
 @plugin_meta
@@ -46,6 +47,10 @@ class DnsZone(BaseWordlist, Plugin):
         BaseWordlist.__init__(self)
 
     def _build(self) -> List[str]:
+        try:
+            gethostbyname(self.host)
+        except gaierror:
+            raise BuildWordlistFails(f"Couldn't resolve hostname {self.host}")
         name_servers = resolver.resolve(self.host, 'NS')
         name_servers_ips = []
         for ns in name_servers:
