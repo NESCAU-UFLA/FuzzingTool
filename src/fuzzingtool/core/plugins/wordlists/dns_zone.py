@@ -26,7 +26,7 @@ from dns import resolver, query, zone
 from ...bases.base_plugin import Plugin
 from ...bases.base_wordlist import BaseWordlist
 from ....decorators.plugin_meta import plugin_meta
-from ....exceptions import MissingParameter, InvalidArgument, BuildWordlistFails
+from ....exceptions import MissingParameter, BuildWordlistFails
 
 
 @plugin_meta
