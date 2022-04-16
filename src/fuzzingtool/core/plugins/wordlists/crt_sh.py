@@ -21,8 +21,6 @@
 import re
 from typing import List
 
-from bs4 import BeautifulSoup as bs
-
 from ...bases.base_plugin import Plugin
 from ...bases.base_wordlist import BaseWordlist
 from ....conn.requesters.requester import Requester
@@ -52,7 +50,7 @@ class CrtSh(BaseWordlist, Plugin):
     }
     __desc__ = "Build the wordlist based on the content of the site crt.sh"
     __type__ = "SubdomainFuzzing"
-    __version__ = "0.1"
+    __version__ = "0.2"
 
     def __init__(self, host: str):
         if not host:
@@ -61,9 +59,21 @@ class CrtSh(BaseWordlist, Plugin):
         BaseWordlist.__init__(self)
 
     def _build(self) -> List[str]:
+        response_json = self.__get_response_json()
+        if not response_json:
+            raise BuildWordlistFails(f"No certified domains was found for '{self.host}'")
+        domain_list = self.__get_domain_list(response_json)
+        return [domain.split(f'.{self.host}')[0]
+                for domain in domain_list]
+
+    def __get_response_json(self) -> List[dict]:
+        """Get the json response from CrtSh API
+
+        @returns List[dict]: The json response
+        """
         global CRTSH_HTTP_HEADER
         requester = Requester(
-            url=f"https://crt.sh/?q={self.host}",
+            url=f"https://crt.sh/?q={self.host}&output=json",
             method='GET',
             headers=CRTSH_HTTP_HEADER,
         )
@@ -71,16 +81,21 @@ class CrtSh(BaseWordlist, Plugin):
             response, *_ = requester.request()
         except RequestException as e:
             raise BuildWordlistFails(str(e))
-        if 'None found' in response.text:
-            raise BuildWordlistFails(f"No certified domains was found for '{self.host}'")
-        content_list = [element.string
-                        for element in bs(response.text, "html.parser")('td')]
+        return response.json()
+
+    def __get_domain_list(self, response_json: List[dict]) -> List[str]:
+        """Get the domain list from the CrtSh API json response
+
+        @type response_json: List[dict]
+        @param response_json: The CrtSh API json response
+        @returns List[str]: The filtered domain list
+        """
+        content_list = list(set([element['common_name']
+                                 for element in response_json]))
         regex = r"([a-zA-Z0-9]+\.)*[a-zA-Z0-9]+"
         for splited in self.host.split('.'):
-            regex += r"\."+splited
+            regex += r"\." + splited
         regexer = re.compile(regex)
-        domain_list = sorted(set([element
-                                  for element in content_list
-                                  if regexer.match(str(element))]))
-        return [domain.split(f'.{self.host}')[0]
-                for domain in domain_list]
+        return [element
+                for element in content_list
+                if regexer.match(str(element))]
