@@ -18,7 +18,36 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from .backups import Backups
-from .reflected import Reflected
-from .grep import Grep
-from .wappalyzer import Wappalyzer
+import warnings
+warnings.filterwarnings("ignore", category=UserWarning)
+
+import Wappalyzer as WP
+
+from ...bases.base_plugin import Plugin
+from ...bases.base_scanner import BaseScanner
+from ....objects.result import Result
+from ....decorators.plugin_meta import plugin_meta
+
+
+@plugin_meta
+class Wappalyzer(BaseScanner, Plugin):
+    __author__ = ("Vitor Oriel",)
+    __params__ = {}
+    __desc__ = "Lookup for technologies on a web page during discovery scan"
+    __type__ = ""
+    __version__ = "0.1"
+
+    def scan(self, result: Result) -> bool:
+        return True
+
+    def _process(self, result: Result) -> None:
+        wp_technologies_dict = WP.Wappalyzer.latest().analyze_with_versions_and_categories(
+            webpage=WP.WebPage.new_from_response(result.history.response)
+        )
+        technologies = []
+        for key, value in wp_technologies_dict.items():
+            version = ''
+            if value['versions']:
+                version = ' v' + ' | v'.join(value['versions'])
+            technologies.append(f"{key}{version}")
+        self.get_self_res(result).data['technologies'] = technologies
