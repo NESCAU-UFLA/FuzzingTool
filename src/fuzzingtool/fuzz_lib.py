@@ -20,6 +20,7 @@
 
 from typing import Tuple, List, Union
 import time
+from threading import Thread
 
 from requests.models import Response
 
@@ -375,9 +376,13 @@ class FuzzLib:
         @param wordlists: The wordlists used in the dictionary
         @returns List[str]: The builded payload wordlist
         """
-        final_wordlist = []
-        self.wordlist_errors: List[Union[WordlistCreationError, BuildWordlistFails]] = []
-        for wordlist in wordlists:
+        def run(wordlist: Tuple[str, str]) -> None:
+            """Run the wordlist thread function
+
+            @type wordlist: Tuple[str, str]
+            @param wordlist: The wordlist name and parameter
+            """
+            nonlocal final_wordlist
             try:
                 wordlist_obj = WordlistFactory.creator(*wordlist, self.requester)
                 wordlist_obj.build()
@@ -385,6 +390,14 @@ class FuzzLib:
                 self.wordlist_errors.append(e)
             else:
                 final_wordlist.extend(wordlist_obj.get())
+
+        final_wordlist = []
+        wordlist_threads = [Thread(target=run, args=(wordlist,)) for wordlist in wordlists]
+        self.wordlist_errors: List[Union[WordlistCreationError, BuildWordlistFails]] = []
+        for thread in wordlist_threads:
+            thread.start()
+        for thread in wordlist_threads:
+            thread.join()
         if not final_wordlist:
             raise FuzzLibException("The wordlist is empty")
         return final_wordlist
