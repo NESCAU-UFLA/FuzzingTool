@@ -21,8 +21,8 @@
 from typing import Tuple
 
 
-from ..utils.consts import MAX_PAYLOAD_LENGTH_TO_OUTPUT
-from ..utils.utils import get_human_length, get_formatted_rtt, fix_payload_to_output
+from .consts import MAX_PAYLOAD_LENGTH_TO_OUTPUT
+from .utils import get_human_length, get_formatted_rtt, fix_payload_to_output
 
 
 class ResultUtils:
