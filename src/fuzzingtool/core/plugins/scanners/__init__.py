@@ -21,3 +21,4 @@
 from .backups import Backups
 from .reflected import Reflected
 from .grep import Grep
+from .wappalyzer import Wappalyzer

@@ -12,10 +12,12 @@ install_requires = [
     'requests>=2.25.1',
     'beautifulsoup4>=4.9.3',
     'dnspython>=2.1.0',
+    'python-Wappalyzer>=0.3.1',
 ]
 
 dev_requires = [
-    'pytest'
+    'pytest',
+    'pytest-cov',
 ]
 
 setup(
