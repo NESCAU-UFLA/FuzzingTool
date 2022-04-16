@@ -19,7 +19,6 @@
 # SOFTWARE.
 
 import warnings
-warnings.filterwarnings("ignore", category=UserWarning)
 
 import Wappalyzer as WP
 
@@ -36,6 +35,10 @@ class Wappalyzer(BaseScanner, Plugin):
     __desc__ = "Lookup for technologies on a web page during discovery scan"
     __type__ = ""
     __version__ = "0.1"
+
+    def __init__(self):
+        warnings.filterwarnings("ignore", category=UserWarning)
+        BaseScanner.__init__(self)
 
     def scan(self, result: Result) -> bool:
         return True
