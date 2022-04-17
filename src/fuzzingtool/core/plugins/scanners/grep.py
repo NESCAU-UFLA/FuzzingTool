@@ -45,7 +45,7 @@ class Grep(BaseScanner, Plugin):
     __desc__ = ("Grep content based on a regex match into the response body. "
                 "You can use these prepared regexes: "
                 + stringfy_list(list(PREPARED_REGEXES.keys())))
-    __type__ = ""
+    __type__ = None
     __version__ = "0.2"
 
     """

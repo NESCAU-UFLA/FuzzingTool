@@ -30,7 +30,7 @@ class Base64(BaseEncoder, Plugin):
     __author__ = ("Vitor Oriel",)
     __params__ = {}
     __desc__ = "Encode payload using Base64 encoder"
-    __type__ = ''
+    __type__ = None
     __version__ = "0.1"
 
     def encode(self, payload: str) -> str:

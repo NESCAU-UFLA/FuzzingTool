@@ -24,6 +24,7 @@ from typing import List
 
 from .cli_output import CliOutput as CO
 from ... import __version__
+from ...utils.consts import FUZZ_TYPE_NAME
 from ...utils.utils import stringfy_list
 from ...factories.plugin_factory import PluginFactory
 from ...reports.report import Report
@@ -118,10 +119,9 @@ class CliArguments(argparse.ArgumentParser):
         @param category: The package category to search for his plugins
         """
         for plugin_cls in PluginFactory.get_plugins_from_category(category):
-            if not plugin_cls.__type__:
-                type_fuzzing = ''
-            else:
-                type_fuzzing = f" (Used for {plugin_cls.__type__})"
+            type_fuzzing = ''
+            if plugin_cls.__type__ is not None:
+                type_fuzzing = f" (Fuzz type: {FUZZ_TYPE_NAME[plugin_cls.__type__]})"
             if not plugin_cls.__params__:
                 params = ''
             else:

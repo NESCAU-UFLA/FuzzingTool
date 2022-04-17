@@ -33,7 +33,7 @@ class Wappalyzer(BaseScanner, Plugin):
     __author__ = ("Vitor Oriel",)
     __params__ = {}
     __desc__ = "Lookup for technologies on a web page during discovery scan"
-    __type__ = ""
+    __type__ = None
     __version__ = "0.1"
 
     def __init__(self):

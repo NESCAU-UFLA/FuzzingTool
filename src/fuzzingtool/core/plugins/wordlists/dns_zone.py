@@ -26,6 +26,7 @@ from dns import resolver, query, zone
 from ...bases.base_plugin import Plugin
 from ...bases.base_wordlist import BaseWordlist
 from ....decorators.plugin_meta import plugin_meta
+from ....utils.consts import FuzzType
 from ....exceptions import MissingParameter, BuildWordlistFails
 
 
@@ -37,7 +38,7 @@ class DnsZone(BaseWordlist, Plugin):
         'type': str,
     }
     __desc__ = "Build the wordlist based on a DNS zone transfer request"
-    __type__ = "SubdomainFuzzing"
+    __type__ = FuzzType.SUBDOMAIN_FUZZING
     __version__ = "0.2"
 
     def __init__(self, host: str):

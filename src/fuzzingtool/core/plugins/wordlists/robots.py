@@ -27,6 +27,7 @@ from ...bases.base_wordlist import BaseWordlist
 from ....utils.http_utils import get_parsed_url
 from ....conn.requesters.requester import Requester
 from ....decorators.plugin_meta import plugin_meta
+from ....utils.consts import FuzzType
 from ....exceptions.request_exceptions import RequestException
 from ....exceptions import MissingParameter, BuildWordlistFails
 
@@ -44,7 +45,7 @@ class Robots(BaseWordlist, Plugin):
         'type': str,
     }
     __desc__ = "Build the wordlist using the target robots.txt"
-    __type__ = "PathFuzzing"
+    __type__ = FuzzType.PATH_FUZZING
     __version__ = "0.1"
 
     def __init__(self, url: str):

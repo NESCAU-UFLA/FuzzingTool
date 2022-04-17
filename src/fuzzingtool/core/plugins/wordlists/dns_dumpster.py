@@ -28,6 +28,7 @@ from ...bases.base_wordlist import BaseWordlist
 from ....conn.requesters.requester import Requester
 from ....exceptions.request_exceptions import RequestException
 from ....decorators.plugin_meta import plugin_meta
+from ....utils.consts import FuzzType
 from ....exceptions import MissingParameter, BuildWordlistFails
 
 DNSDUMPSTER_HTTP_HEADER = {
@@ -50,7 +51,7 @@ class DnsDumpster(BaseWordlist, Plugin):
         'type': str,
     }
     __desc__ = "Build the wordlist based on the content of the site dnsdumpster.com"
-    __type__ = "SubdomainFuzzing"
+    __type__ = FuzzType.SUBDOMAIN_FUZZING
     __version__ = "0.1"
 
     def __init__(self, host: str):

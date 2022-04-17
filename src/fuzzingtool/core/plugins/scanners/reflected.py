@@ -29,7 +29,7 @@ class Reflected(BaseScanner, Plugin):
     __author__ = ("Vitor Oriel",)
     __params__ = {}
     __desc__ = "Lookup if the payload was reflected in the response body"
-    __type__ = ""
+    __type__ = None
     __version__ = "0.1"
 
     def scan(self, result: Result) -> bool:
