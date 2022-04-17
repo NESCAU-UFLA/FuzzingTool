@@ -23,7 +23,7 @@ from typing import Iterator, Tuple
 from .base_objects import BaseItem
 from .http_history import HttpHistory
 from .payload import Payload
-from ..utils.consts import UNKNOWN_FUZZING
+from ..utils.consts import FuzzType
 from ..utils.result_utils import ResultUtils
 
 
@@ -45,7 +45,7 @@ class Result(BaseItem):
     def __init__(self,
                  history: HttpHistory,
                  payload: Payload = Payload(),
-                 fuzz_type: int = UNKNOWN_FUZZING):
+                 fuzz_type: int = FuzzType.UNKNOWN_FUZZING):
         """Class constructor
 
         @type history: HttpHistory

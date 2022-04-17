@@ -28,8 +28,7 @@ import urllib3.exceptions
 
 from ..request_parser import (check_is_url_discovery,
                               check_is_data_fuzzing, request_parser)
-from ...utils.consts import (UNKNOWN_FUZZING, HTTP_METHOD_FUZZING,
-                             PATH_FUZZING, SUBDOMAIN_FUZZING, DATA_FUZZING)
+from ...utils.consts import FuzzType
 from ...utils.http_utils import get_parsed_url, get_pure_url, get_url_without_scheme
 from ...objects.fuzz_word import FuzzWord
 from ...exceptions.request_exceptions import RequestException
@@ -124,28 +123,28 @@ class Requester:
 
         @returns bool: The method fuzzing flag
         """
-        return self.__fuzzing_type == HTTP_METHOD_FUZZING
+        return self.__fuzzing_type == FuzzType.HTTP_METHOD_FUZZING
 
     def is_data_fuzzing(self) -> bool:
         """The data fuzzing flag getter
 
         @returns bool: The data fuzzing flag
         """
-        return self.__fuzzing_type == DATA_FUZZING
+        return self.__fuzzing_type == FuzzType.DATA_FUZZING
 
     def is_url_discovery(self) -> bool:
         """Checks if the fuzzing is for url discovery (path or subdomain)
 
         @returns bool: A flag to say if is url discovery fuzzing type
         """
-        return self.__fuzzing_type == PATH_FUZZING or self.__fuzzing_type == SUBDOMAIN_FUZZING
+        return self.__fuzzing_type == FuzzType.PATH_FUZZING or self.__fuzzing_type == FuzzType.SUBDOMAIN_FUZZING
 
     def is_path_fuzzing(self) -> bool:
         """Checks if the fuzzing will be path discovery
 
         @returns bool: A flag to say if is path fuzzing
         """
-        return self.__fuzzing_type == PATH_FUZZING
+        return self.__fuzzing_type == FuzzType.PATH_FUZZING
 
     def get_fuzzing_type(self) -> int:
         """The fuzzing type getter
@@ -276,12 +275,12 @@ class Requester:
         @returns int: The fuzzing type int value
         """
         if self.__method.has_fuzzing:
-            return HTTP_METHOD_FUZZING
+            return FuzzType.HTTP_METHOD_FUZZING
         if check_is_url_discovery(self._url):
-            return PATH_FUZZING
+            return FuzzType.PATH_FUZZING
         if check_is_data_fuzzing(self.__url_params, self.__body, self.__header):
-            return DATA_FUZZING
-        return UNKNOWN_FUZZING
+            return FuzzType.DATA_FUZZING
+        return FuzzType.UNKNOWN_FUZZING
 
     def __setup_url(self, url: str) -> Tuple[FuzzWord, str]:
         """The URL setup

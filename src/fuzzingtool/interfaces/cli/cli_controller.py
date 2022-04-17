@@ -26,6 +26,7 @@ from .cli_output import CliOutput, Colors
 from ..argument_builder import ArgumentBuilder as AB
 from ... import __version__
 from ...fuzz_lib import FuzzLib
+from ...utils.consts import FUZZ_TYPE_NAME
 from ...utils.http_utils import get_parsed_url, get_pure_url
 from ...utils.logger import Logger
 from ...reports.report import Report
@@ -114,7 +115,7 @@ class CliController(FuzzLib):
                 'method': self.requester.get_method(),
                 'header': 'custom' if self.args["raw_http"] else 'default',
                 'body': self.args["data"],
-                'type_fuzzing': self.__get_target_fuzzing_type(),
+                'type_fuzzing': FUZZ_TYPE_NAME[self.requester.get_fuzzing_type()],
                 },
             dictionary=self.dict_metadata
         )
@@ -312,21 +313,6 @@ class CliController(FuzzLib):
         Result.save_payload_configs = self.args["save_payload_conf"]
         Result.save_headers = self.args["save_headers"]
         Result.save_body = self.args["save_body"]
-
-    def __get_target_fuzzing_type(self) -> str:
-        """Get the target fuzzing type, as a string format
-
-        @return str: The fuzzing type, as a string
-        """
-        if self.requester.is_method_fuzzing():
-            return "MethodFuzzing"
-        if self.requester.is_data_fuzzing():
-            return "DataFuzzing"
-        if self.requester.is_url_discovery():
-            if self.requester.is_path_fuzzing():
-                return "PathFuzzing"
-            return "SubdomainFuzzing"
-        return "Couldn't determine the fuzzing type"
 
     def __get_comparator_value(self,
                                name_value: str,

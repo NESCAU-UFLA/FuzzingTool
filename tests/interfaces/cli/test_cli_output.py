@@ -3,9 +3,8 @@ from unittest.mock import Mock, patch
 from datetime import datetime
 
 from src.fuzzingtool.interfaces.cli.cli_output import Colors, CliOutput
-from src.fuzzingtool.objects import Payload, Result, HttpHistory, ScannerResult
-from src.fuzzingtool.utils.consts import PATH_FUZZING, SUBDOMAIN_FUZZING
-from src.fuzzingtool.utils.result_utils import ResultUtils
+from src.fuzzingtool.objects import Payload, Result, HttpHistory
+from src.fuzzingtool.utils.consts import FuzzType
 from ...mock_utils.response_mock import ResponseMock
 
 
@@ -81,7 +80,7 @@ class TestCliOutput(unittest.TestCase):
     def test_get_formatted_payload_with_path_fuzz(self):
         test_result = Result(
             HttpHistory(response=ResponseMock()),
-            fuzz_type=PATH_FUZZING,
+            fuzz_type=FuzzType.PATH_FUZZING,
         )
         returned_payload = CliOutput()._CliOutput__get_formatted_payload(test_result)
         self.assertIsInstance(returned_payload, str)
@@ -90,7 +89,7 @@ class TestCliOutput(unittest.TestCase):
     def test_get_formatted_payload_with_path_fuzz_without_directory(self):
         test_result = Result(
             HttpHistory(response=ResponseMock()),
-            fuzz_type=PATH_FUZZING,
+            fuzz_type=FuzzType.PATH_FUZZING,
         )
         test_result.history.url = "http://test-url.com"
         returned_payload = CliOutput()._CliOutput__get_formatted_payload(test_result)
@@ -100,7 +99,7 @@ class TestCliOutput(unittest.TestCase):
     def test_get_formatted_payload_with_subdomain_fuzz(self):
         test_result = Result(
             HttpHistory(response=ResponseMock()),
-            fuzz_type=SUBDOMAIN_FUZZING,
+            fuzz_type=FuzzType.SUBDOMAIN_FUZZING,
         )
         returned_payload = CliOutput()._CliOutput__get_formatted_payload(test_result)
         self.assertIsInstance(returned_payload, str)

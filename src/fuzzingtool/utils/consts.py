@@ -20,11 +20,22 @@
 
 from pathlib import Path
 
-UNKNOWN_FUZZING = -1
-HTTP_METHOD_FUZZING = 0
-PATH_FUZZING = 1
-SUBDOMAIN_FUZZING = 2
-DATA_FUZZING = 3
+
+class FuzzType:
+    UNKNOWN_FUZZING = -1
+    HTTP_METHOD_FUZZING = 0
+    PATH_FUZZING = 1
+    SUBDOMAIN_FUZZING = 2
+    DATA_FUZZING = 3
+
+
+FUZZ_TYPE_NAME = {
+    FuzzType.UNKNOWN_FUZZING: "Unknown Fuzzing",
+    FuzzType.HTTP_METHOD_FUZZING: "HTTP Method Fuzzing",
+    FuzzType.PATH_FUZZING: "Path Fuzzing",
+    FuzzType.SUBDOMAIN_FUZZING: "Subdomain Fuzzing",
+    FuzzType.DATA_FUZZING: "Data Fuzzing",
+}
 
 FUZZING_MARK = 'FUZZ'
 FUZZING_MARK_LEN = len(FUZZING_MARK)

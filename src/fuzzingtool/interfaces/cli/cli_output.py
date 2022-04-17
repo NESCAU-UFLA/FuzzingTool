@@ -26,7 +26,7 @@ from math import floor, ceil, log10
 from shutil import get_terminal_size
 
 from ...objects.result import Result
-from ...utils.consts import MAX_PAYLOAD_LENGTH_TO_OUTPUT, PATH_FUZZING, SUBDOMAIN_FUZZING
+from ...utils.consts import MAX_PAYLOAD_LENGTH_TO_OUTPUT, FuzzType
 from ...utils.utils import fix_payload_to_output
 from ...utils.http_utils import get_parsed_url, get_pure_url
 from ...utils.result_utils import ResultUtils
@@ -451,12 +451,12 @@ class CliOutput:
         @param result: The result of the request
         @returns str: The formatted payload to output
         """
-        if result.fuzz_type == PATH_FUZZING:
+        if result.fuzz_type == FuzzType.PATH_FUZZING:
             formatted_payload = result.history.parsed_url.path
             if not formatted_payload:
                 return result.history.url
             return formatted_payload
-        if result.fuzz_type == SUBDOMAIN_FUZZING:
+        if result.fuzz_type == FuzzType.SUBDOMAIN_FUZZING:
             return result.history.parsed_url.hostname
         return result.payload
 

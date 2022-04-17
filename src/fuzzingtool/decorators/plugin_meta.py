@@ -19,6 +19,7 @@
 # SOFTWARE.
 
 from ..core.bases.base_plugin import Plugin
+from ..utils.consts import FuzzType
 from ..exceptions import MetadataException
 
 
@@ -36,6 +37,12 @@ def plugin_meta(cls: Plugin) -> Plugin:
     if not cls.__desc__:
         raise MetadataException(
             f"Description cannot be blank on plugin {cls.__name__}"
+        )
+    if cls.__type__ is not None and cls.__type__ not in [
+        value for key, value in vars(FuzzType).items() if not key.startswith("__")
+    ]:
+        raise MetadataException(
+            f"Plugin type should be None or a valid FuzzType on plugin {cls.__name__}"
         )
     if not cls.__version__:
         raise MetadataException(f"Version cannot be blank on plugin {cls.__name__}")

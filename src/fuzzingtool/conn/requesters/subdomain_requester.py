@@ -26,7 +26,7 @@ from requests import Response
 from .requester import Requester
 from ..request_parser import request_parser
 from ...utils.http_utils import get_parsed_url
-from ...utils.consts import SUBDOMAIN_FUZZING
+from ...utils.consts import FuzzType
 from ...exceptions.request_exceptions import InvalidHostname
 
 
@@ -52,4 +52,4 @@ class SubdomainRequester(Requester):
         return (*(super().request(payload)), ip)
 
     def _set_fuzzing_type(self) -> int:
-        return SUBDOMAIN_FUZZING
+        return FuzzType.SUBDOMAIN_FUZZING

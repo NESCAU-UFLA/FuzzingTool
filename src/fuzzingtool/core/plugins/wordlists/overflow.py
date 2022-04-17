@@ -34,7 +34,7 @@ class Overflow(BaseWordlist, Plugin):
         'type': str,
     }
     __desc__ = "Build the wordlist for stress and buffer overflow purposes"
-    __type__ = ""
+    __type__ = None
     __version__ = "0.1"
 
     def __init__(self, source_param: str):
