@@ -5,8 +5,7 @@ import requests
 
 from src.fuzzingtool.conn.requesters.requester import Requester
 from src.fuzzingtool.objects.fuzz_word import FuzzWord
-from src.fuzzingtool.utils.consts import (FUZZING_MARK, UNKNOWN_FUZZING, HTTP_METHOD_FUZZING,
-                                          PATH_FUZZING, DATA_FUZZING)
+from src.fuzzingtool.utils.consts import FUZZING_MARK, FuzzType
 from src.fuzzingtool.exceptions.request_exceptions import RequestException
 from src.fuzzingtool.utils.http_utils import get_parsed_url
 from ...mock_utils.response_mock import ResponseMock
@@ -152,7 +151,7 @@ class TestRequester(unittest.TestCase):
         self.assertIsInstance(returned_header, dict)
 
     def test_set_fuzzing_type_for_method_fuzzing(self):
-        return_expected = HTTP_METHOD_FUZZING
+        return_expected = FuzzType.HTTP_METHOD_FUZZING
         test_method = FUZZING_MARK
         requester = Requester("https://test-url.com/", method=test_method)
         returned_data = requester._set_fuzzing_type()
@@ -161,7 +160,7 @@ class TestRequester(unittest.TestCase):
         self.assertEqual(requester.is_method_fuzzing(), True)
 
     def test_set_fuzzing_type_for_path_fuzzing(self):
-        return_expected = PATH_FUZZING
+        return_expected = FuzzType.PATH_FUZZING
         test_url = f"https://test-url.com/{FUZZING_MARK}"
         requester = Requester(test_url)
         returned_data = requester._set_fuzzing_type()
@@ -170,7 +169,7 @@ class TestRequester(unittest.TestCase):
         self.assertEqual(requester.is_path_fuzzing(), True)
 
     def test_set_fuzzing_type_for_data_fuzzing_on_url_params(self):
-        return_expected = DATA_FUZZING
+        return_expected = FuzzType.DATA_FUZZING
         test_url = f"https://test-url.com/?q={FUZZING_MARK}"
         requester = Requester(test_url)
         returned_data = requester._set_fuzzing_type()
@@ -179,7 +178,7 @@ class TestRequester(unittest.TestCase):
         self.assertEqual(requester.is_data_fuzzing(), True)
 
     def test_set_fuzzing_type_for_data_fuzzing_on_body(self):
-        return_expected = DATA_FUZZING
+        return_expected = FuzzType.DATA_FUZZING
         test_body = f"user={FUZZING_MARK}&pass={FUZZING_MARK}"
         requester = Requester("https://test-url.com/", body=test_body)
         returned_data = requester._set_fuzzing_type()
@@ -188,7 +187,7 @@ class TestRequester(unittest.TestCase):
         self.assertEqual(requester.is_data_fuzzing(), True)
 
     def test_set_fuzzing_type_for_data_fuzzing_on_headers(self):
-        return_expected = DATA_FUZZING
+        return_expected = FuzzType.DATA_FUZZING
         test_header = {
             'Cookie': f"TESTSESSID={FUZZING_MARK}"
         }
@@ -199,7 +198,7 @@ class TestRequester(unittest.TestCase):
         self.assertEqual(requester.is_data_fuzzing(), True)
 
     def test_set_fuzzing_type_for_unknown_fuzzing(self):
-        return_expected = UNKNOWN_FUZZING
+        return_expected = FuzzType.UNKNOWN_FUZZING
         returned_data = Requester("https://test-url.com/")._set_fuzzing_type()
         self.assertIsInstance(returned_data, int)
         self.assertEqual(returned_data, return_expected)

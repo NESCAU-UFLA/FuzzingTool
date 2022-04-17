@@ -22,7 +22,7 @@ from ...bases.base_plugin import Plugin
 from ...bases.base_scanner import BaseScanner
 from ....objects.result import Result
 from ....decorators.plugin_meta import plugin_meta
-from ....utils.consts import PATH_FUZZING
+from ....utils.consts import FuzzType
 
 DEFAULT_EXTENSIONS = ".bak,.tgz,.zip,.tar.gz,~,.rar,.old,.swp"
 
@@ -37,7 +37,7 @@ class Backups(BaseScanner, Plugin):
     }
     __desc__ = ("Look for backups extension on matched responses. "
                 f"Default extensions: {DEFAULT_EXTENSIONS}")
-    __type__ = PATH_FUZZING
+    __type__ = FuzzType.PATH_FUZZING
     __version__ = "0.1"
 
     """

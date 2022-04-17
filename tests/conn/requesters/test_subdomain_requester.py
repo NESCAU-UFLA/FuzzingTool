@@ -5,7 +5,7 @@ import socket
 from requests.models import Response
 
 from src.fuzzingtool.conn.requesters.subdomain_requester import SubdomainRequester
-from src.fuzzingtool.utils.consts import SUBDOMAIN_FUZZING
+from src.fuzzingtool.utils.consts import FuzzType
 from src.fuzzingtool.exceptions.request_exceptions import InvalidHostname
 
 
@@ -47,7 +47,7 @@ class TestRequester(unittest.TestCase):
         self.assertEqual(returned_ip, expected_ip)
 
     def test_set_fuzzing_type(self):
-        return_expected = SUBDOMAIN_FUZZING
+        return_expected = FuzzType.SUBDOMAIN_FUZZING
         returned_data = SubdomainRequester("https://test-url.com/")._set_fuzzing_type()
         self.assertIsInstance(returned_data, int)
         self.assertEqual(returned_data, return_expected)
