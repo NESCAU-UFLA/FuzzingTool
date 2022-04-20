@@ -27,7 +27,7 @@ from ... import __version__
 from ...utils.consts import FUZZ_TYPE_NAME
 from ...utils.utils import stringfy_list
 from ...factories.plugin_factory import PluginFactory
-from ...reports.report import Report
+from ...persistence.report import Report
 from ...exceptions import BadArgumentFormat
 
 

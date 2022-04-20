@@ -18,7 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from ..reports.base_report import BaseReport
+from ..persistence.base_report import BaseReport
 from ..exceptions import MetadataException
 
 

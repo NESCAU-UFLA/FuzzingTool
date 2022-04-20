@@ -28,8 +28,7 @@ from ... import __version__
 from ...fuzz_lib import FuzzLib
 from ...utils.consts import FUZZ_TYPE_NAME
 from ...utils.http_utils import get_parsed_url, get_pure_url
-from ...utils.logger import Logger
-from ...reports.report import Report
+from ...persistence import Logger, Report
 from ...objects import BaseItem, Error, Payload, Result, HttpHistory
 from ...exceptions import FuzzLibException, StopActionInterrupt, RequestException
 from ...exceptions.base_exceptions import FuzzingToolException
