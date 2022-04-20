@@ -21,7 +21,7 @@
 from datetime import datetime
 from pathlib import Path
 
-from .consts import OUTPUT_DIRECTORY
+from ..utils.consts import OUTPUT_DIRECTORY
 
 
 class Logger:
