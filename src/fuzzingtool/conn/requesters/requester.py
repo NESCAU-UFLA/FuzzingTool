@@ -116,6 +116,10 @@ class Requester:
         return self._url.word
 
     def get_method(self) -> str:
+        """The request method content getter
+
+        @returns str: The request method
+        """
         return self.__method.word
 
     def is_method_fuzzing(self) -> bool:

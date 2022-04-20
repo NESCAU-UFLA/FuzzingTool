@@ -157,6 +157,7 @@ class TestRequester(unittest.TestCase):
         returned_data = requester._set_fuzzing_type()
         self.assertIsInstance(returned_data, int)
         self.assertEqual(returned_data, return_expected)
+        self.assertEqual(returned_data, requester.get_fuzzing_type())
         self.assertEqual(requester.is_method_fuzzing(), True)
 
     def test_set_fuzzing_type_for_path_fuzzing(self):
@@ -166,6 +167,7 @@ class TestRequester(unittest.TestCase):
         returned_data = requester._set_fuzzing_type()
         self.assertIsInstance(returned_data, int)
         self.assertEqual(returned_data, return_expected)
+        self.assertEqual(returned_data, requester.get_fuzzing_type())
         self.assertEqual(requester.is_path_fuzzing(), True)
 
     def test_set_fuzzing_type_for_data_fuzzing_on_url_params(self):
@@ -175,6 +177,7 @@ class TestRequester(unittest.TestCase):
         returned_data = requester._set_fuzzing_type()
         self.assertIsInstance(returned_data, int)
         self.assertEqual(returned_data, return_expected)
+        self.assertEqual(returned_data, requester.get_fuzzing_type())
         self.assertEqual(requester.is_data_fuzzing(), True)
 
     def test_set_fuzzing_type_for_data_fuzzing_on_body(self):
@@ -184,6 +187,7 @@ class TestRequester(unittest.TestCase):
         returned_data = requester._set_fuzzing_type()
         self.assertIsInstance(returned_data, int)
         self.assertEqual(returned_data, return_expected)
+        self.assertEqual(returned_data, requester.get_fuzzing_type())
         self.assertEqual(requester.is_data_fuzzing(), True)
 
     def test_set_fuzzing_type_for_data_fuzzing_on_headers(self):
@@ -195,6 +199,7 @@ class TestRequester(unittest.TestCase):
         returned_data = requester._set_fuzzing_type()
         self.assertIsInstance(returned_data, int)
         self.assertEqual(returned_data, return_expected)
+        self.assertEqual(returned_data, requester.get_fuzzing_type())
         self.assertEqual(requester.is_data_fuzzing(), True)
 
     def test_set_fuzzing_type_for_unknown_fuzzing(self):
@@ -203,12 +208,25 @@ class TestRequester(unittest.TestCase):
         self.assertIsInstance(returned_data, int)
         self.assertEqual(returned_data, return_expected)
 
+    def test_constructor_with_cookie(self):
+        test_cookie = "COOKIE=TEST"
+        requester = Requester("https://test-url.com/", cookie=test_cookie)
+        returned_cookie: FuzzWord = requester._Requester__header['Cookie']
+        self.assertIsInstance(returned_cookie, FuzzWord)
+        self.assertEqual(returned_cookie.word, test_cookie)
+
     def test_get_url(self):
         return_expected = "https://test-url.com/"
         test_url = "https://test-url.com/"
         returned_data = Requester(test_url).get_url()
         self.assertIsInstance(returned_data, str)
         self.assertEqual(returned_data, return_expected)
+
+    def test_get_method(self):
+        test_method = "GET"
+        returned_data = Requester("https://test-url.com/", method=test_method).get_method()
+        self.assertIsInstance(returned_data, str)
+        self.assertEqual(returned_data, test_method)
 
     def test_set_method(self):
         test_method = "GET"
