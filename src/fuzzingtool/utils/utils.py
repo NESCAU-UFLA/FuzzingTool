@@ -50,21 +50,24 @@ def split_str_to_list(string: str,
     @param ignores: A string to ignores the separator
     @returns List[str]: The splited string
     """
+    def split_with_ignores() -> str:
+        final = []
+        buffer = ''
+        for substr in string.split(separator):
+            if substr:
+                if substr[-1] == ignores:
+                    buffer += substr[:-1]+separator
+                else:
+                    final.extend([buffer+substr])
+                    buffer = ''
+            else:
+                final.extend([buffer])
+                buffer = ''
+        return final
+
     if string:
         if f'{ignores}{separator}' in string:
-            final = []
-            buffer = ''
-            for substr in string.split(separator):
-                if substr:
-                    if substr[-1] == ignores:
-                        buffer += substr[:-1]+separator
-                    else:
-                        final.extend([buffer+substr])
-                        buffer = ''
-                else:
-                    final.extend([buffer])
-                    buffer = ''
-            return final
+            return split_with_ignores()
         return string.split(separator)
     return []
 
