@@ -58,14 +58,10 @@ def split_str_to_list(string: str,
         final = []
         buffer = ''
         for substr in string.split(separator):
-            if substr:
-                if substr[-1] == ignores:
-                    buffer += substr[:-1]+separator
-                else:
-                    final.extend([buffer+substr])
-                    buffer = ''
+            if substr and substr[-1] == ignores:
+                buffer += substr[:-1]+separator
             else:
-                final.extend([buffer])
+                final.extend([buffer+substr])
                 buffer = ''
         return final
 
