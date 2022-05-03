@@ -228,7 +228,7 @@ class Requester:
             response = self._request(method, url, body, url_params, headers, proxy)
             rtt = (time.time() - before)
         except requests.exceptions.ProxyError:
-            raise RequestException("Can't connect to the proxy")
+            raise RequestException(f"Can't connect to the proxy {get_url_without_scheme(proxy['http'])}")
         except requests.exceptions.TooManyRedirects:
             raise RequestException(f"Too many redirects on {url}")
         except requests.exceptions.SSLError:

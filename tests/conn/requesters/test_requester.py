@@ -319,11 +319,12 @@ class TestRequester(unittest.TestCase):
         test_url = "https://test-url.com/"
         test_header_key = "test_key"
         test_header_value = "test_value"
-        requester = Requester(test_url, headers={test_header_key: test_header_value})
+        test_proxy = "test-proxy.com:8080"
+        requester = Requester(test_url, headers={test_header_key: test_header_value}, proxy=test_proxy)
         mock_request.side_effect = requests.exceptions.ProxyError
         with self.assertRaises(RequestException) as e:
             requester.request()
-        self.assertEqual(str(e.exception), "Can't connect to the proxy")
+        self.assertEqual(str(e.exception), f"Can't connect to the proxy {test_proxy}")
         mock_request.side_effect = requests.exceptions.TooManyRedirects
         with self.assertRaises(RequestException) as e:
             requester.request()
