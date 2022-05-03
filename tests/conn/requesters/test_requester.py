@@ -285,15 +285,34 @@ class TestRequester(unittest.TestCase):
         return_expected = (expected_response, expected_rtt)
         test_url = "https://test-url.com/"
         test_payload = "test_payload"
+        test_proxy = "test-proxy.com:8001"
         test_parameters = ("GET", test_url, {}, {}, {})
         mock_get_parameters.return_value = test_parameters
         mock_time.return_value = expected_rtt
         mock_request.return_value = expected_response
-        returned_data = Requester(test_url, proxies=["test-proxy.com:8001"]).request(test_payload)
+        returned_data = Requester(test_url, proxies=[test_proxy]).request(test_payload)
         mock_get_parameters.assert_called_once_with(test_payload)
-        mock_request.assert_called_once_with(*test_parameters)
+        mock_request.assert_called_once_with(*(*test_parameters, {
+            'http': f"http://{test_proxy}",
+            'https': f"https://{test_proxy}"
+        }))
         self.assertIsInstance(returned_data, tuple)
         self.assertTupleEqual(returned_data, return_expected)
+
+    @patch("src.fuzzingtool.conn.requesters.requester.Requester._Requester__get_request_parameters")
+    @patch("src.fuzzingtool.conn.requesters.requester.Requester._request")
+    def test_request_with_replay_proxy(self, mock_request: Mock, mock_get_parameters: Mock):
+        test_url = "https://test-url.com/"
+        test_payload = "test_payload"
+        test_proxy = "test-proxy.com:8001"
+        test_parameters = ("GET", test_url, {}, {}, {})
+        mock_get_parameters.return_value = test_parameters
+        mock_request.return_value = ResponseMock()
+        Requester(test_url, replay_proxy=test_proxy).request(test_payload, replay_proxy=True)
+        mock_request.assert_called_once_with(*(*test_parameters, {
+            'http': f"http://{test_proxy}",
+            'https': f"https://{test_proxy}"
+        }))
 
     @patch("src.fuzzingtool.conn.requesters.requester.Requester._request")
     def test_request_with_raise_exception(self, mock_request: Mock):
