@@ -174,7 +174,7 @@ class CliArguments(argparse.ArgumentParser):
             '--scheme',
             action='store',
             dest='scheme',
-            help="Define the scheme used in the URL (default http)",
+            help="Define the scheme used in the URL (default: http)",
             metavar='SCHEME',
             default="http",
         )
@@ -476,4 +476,11 @@ class CliArguments(argparse.ArgumentParser):
             metavar='RECURSION_LEVEL',
             type=int,
             default=1,
+        )
+        more_opts.add_argument(
+            '--replay-proxy',
+            action='store',
+            dest='replay_proxy',
+            help="Define the proxy to replay request when found matched results",
+            metavar='PROXY',
         )

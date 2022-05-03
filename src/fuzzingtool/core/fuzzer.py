@@ -111,12 +111,11 @@ class Fuzzer:
             for payload in next(self.__dict):
                 try:
                     response, rtt, *ip = self.__requester.request(str(payload))
+                    self.response_callback(response, rtt, payload, *ip)
                 except InvalidHostname as e:
                     self.exception_callbacks[0](Error(e, payload))
                 except RequestException as e:
                     self.exception_callbacks[1](Error(e, payload))
-                else:
-                    self.response_callback(response, rtt, payload, *ip)
                 finally:
                     time.sleep(self.__delay)
             if self.is_paused():

@@ -167,6 +167,7 @@ class FuzzLib:
                      if self.args["proxies"] else []),
             timeout=self.args["timeout"],
             cookie=self.args["cookie"],
+            replay_proxy=self.args["replay_proxy"],
         )
 
     def _init_filter(self) -> None:
@@ -218,6 +219,7 @@ class FuzzLib:
         self.delay = self.args["delay"]
         self.number_of_threads = self.args["threads"]
         self.has_recursion = self.args["recursive"]
+        self.replay_proxy = self.args["replay_proxy"]
 
     def _init_dictionary(self) -> None:
         """Initialize the dictionary"""
@@ -320,6 +322,7 @@ class FuzzLib:
             blacklist_status=None,
             recursive=False,
             max_rlevel=1,
+            replay_proxy=None,
             # Callbacks
             res_callback=None,
             req_ex_callback=None,
@@ -449,10 +452,10 @@ class FuzzLib:
         result = Result(HttpHistory(response, rtt, *ip),
                         payload,
                         self.requester.get_fuzzing_type())
-        self._result_callback(result, self.__handle_result(result))
+        self.__handle_result(result)
 
-    def __handle_result(self, result: Result) -> bool:
-        """Checks if the result is valid or not, and process it
+    def __is_valid(self, result: Result) -> bool:
+        """Checks if the result is valid or not
 
         @type result: Result
         @param result: The FuzzingTool result object
@@ -462,8 +465,22 @@ class FuzzLib:
             for scanner in self.scanners:
                 if not scanner.scan(result):
                     return False
+            return True
+        return False
+
+    def __handle_result(self, result: Result) -> bool:
+        """Process the result
+
+        @type result: Result
+        @param result: The FuzzingTool result object
+        """
+        if self.__is_valid(result):
+            for scanner in self.scanners:
                 scanner.process(result)
             if self.has_recursion:
                 self.recursion_manager.check_for_recursion(result)
-            return True
-        return False
+            self._result_callback(result, True)
+            if self.replay_proxy:
+                self.requester.request(result.payload, replay_proxy=True)
+        else:
+            self._result_callback(result, False)
