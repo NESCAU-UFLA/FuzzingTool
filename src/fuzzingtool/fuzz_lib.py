@@ -25,6 +25,7 @@ from threading import Thread
 from requests.models import Response
 
 from .interfaces.argument_builder import ArgumentBuilder as AB
+from .utils.consts import PluginCategory
 from .utils.utils import split_str_to_list
 from .utils.file_utils import read_file
 from .utils.result_utils import ResultUtils
@@ -197,7 +198,7 @@ class FuzzLib:
         if self.args["scanner"]:
             scanner, param = AB.build_scanner(self.args["scanner"])
             plugin_scanner: BaseScanner = PluginFactory.object_creator(
-                scanner, 'scanners', param
+                PluginCategory.scanner, scanner, param
             )
             self.scanners.append(plugin_scanner)
 
@@ -349,7 +350,7 @@ class FuzzLib:
             for encoder in encoders:
                 name, param = encoder
                 encoder = PluginFactory.object_creator(
-                    name, 'encoders', param
+                    PluginCategory.encoder, name, param
                 )
                 append_to.append(encoder)
             if is_chain:

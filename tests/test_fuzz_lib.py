@@ -3,7 +3,7 @@ from unittest.mock import Mock, patch
 
 from src.fuzzingtool.fuzz_lib import FuzzLib
 from src.fuzzingtool.conn.requesters import Requester, SubdomainRequester
-from src.fuzzingtool.utils.consts import FUZZING_MARK
+from src.fuzzingtool.utils.consts import PluginCategory, FUZZING_MARK
 from src.fuzzingtool.exceptions import FuzzLibException, WordlistCreationError
 from src.fuzzingtool.core.defaults.scanners import DataScanner, PathScanner, SubdomainScanner
 from src.fuzzingtool.core.plugins.scanners import Reflected
@@ -80,7 +80,7 @@ class TestFuzzController(unittest.TestCase):
         test_fuzz_lib = FuzzLib(url=f"http://test-url.com/", scanner="Reflected")
         test_fuzz_lib._init_requester()
         test_fuzz_lib._init_scanner()
-        mock_object_creator.assert_called_once_with("Reflected", "scanners", '')
+        mock_object_creator.assert_called_once_with(PluginCategory.scanner, "Reflected", '')
 
     @patch("src.fuzzingtool.fuzz_lib.FuzzLib._FuzzLib__get_default_scanner")
     def test_init_scanner_with_default_scanner(self, mock_get_default_scanner: Mock):
@@ -93,7 +93,7 @@ class TestFuzzController(unittest.TestCase):
         return_expected = ([expected_encoder], [])
         mock_object_creator.return_value = expected_encoder
         returned_encoders = FuzzLib(encoder="Html")._FuzzLib__build_encoders()
-        mock_object_creator.assert_called_once_with("Html", "encoders", '')
+        mock_object_creator.assert_called_once_with(PluginCategory.encoder, "Html", '')
         self.assertEqual(returned_encoders, return_expected)
 
     @patch("src.fuzzingtool.fuzz_lib.PluginFactory.object_creator")
@@ -102,7 +102,7 @@ class TestFuzzController(unittest.TestCase):
         return_expected = ([], [[expected_encoder, expected_encoder]])
         mock_object_creator.return_value = expected_encoder
         returned_encoders = FuzzLib(encoder="Html@Html")._FuzzLib__build_encoders()
-        mock_object_creator.assert_called_with("Html", "encoders", '')
+        mock_object_creator.assert_called_with(PluginCategory.encoder, "Html", '')
         self.assertEqual(returned_encoders, return_expected)
 
     @patch("src.fuzzingtool.fuzz_lib.Payloader.encoder.set_regex")
