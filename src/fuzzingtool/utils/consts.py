@@ -21,6 +21,12 @@
 from pathlib import Path
 
 
+class PluginCategory:
+    encoder = "encoders"
+    scanner = "scanners"
+    wordlist = "wordlists"
+
+
 class FuzzType:
     UNKNOWN_FUZZING = -1
     HTTP_METHOD_FUZZING = 0

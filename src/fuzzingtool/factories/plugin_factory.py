@@ -25,6 +25,7 @@ from .base_factories import BasePluginFactory
 from ..utils.utils import split_str_to_list
 from ..core.bases.base_plugin import Plugin
 from ..core.plugins import encoders, scanners, wordlists
+from ..utils.consts import PluginCategory
 from ..exceptions import MissingParameter, BadArgumentFormat
 from ..exceptions.plugin_exceptions import (InvalidPluginCategory, InvalidPlugin,
                                             PluginCreationError)
@@ -41,9 +42,9 @@ class PluginFactory(BasePluginFactory):
     @staticmethod
     def get_plugins_from_category(category: str) -> List[Type[Plugin]]:
         plugin_categories = {
-            'encoders': encoders,
-            'scanners': scanners,
-            'wordlists': wordlists,
+            PluginCategory.encoder: encoders,
+            PluginCategory.scanner: scanners,
+            PluginCategory.wordlist: wordlists,
         }
         try:
             plugins = [cls for _, cls in plugin_categories[category].__dict__.items()
@@ -53,7 +54,7 @@ class PluginFactory(BasePluginFactory):
         return plugins
 
     @staticmethod
-    def class_creator(name: str, category: str) -> Type[Plugin]:
+    def class_creator(category: str, name: str) -> Type[Plugin]:
         plugin_module = import_module(
             f"fuzzingtool.core.plugins.{category}",
             package=name
@@ -65,9 +66,9 @@ class PluginFactory(BasePluginFactory):
         return plugin_cls
 
     @staticmethod
-    def object_creator(name: str, category: str, params) -> Plugin:
+    def object_creator(category: str, name: str, params) -> Plugin:
         try:
-            plugin_cls = PluginFactory.class_creator(name, category)
+            plugin_cls = PluginFactory.class_creator(category, name)
         except InvalidPlugin as e:
             raise PluginCreationError(str(e))
         if not plugin_cls.__params__:

@@ -7,7 +7,7 @@ from src.fuzzingtool.core.defaults.wordlists import ListWordlist, FileWordlist
 from src.fuzzingtool.core.plugins.wordlists import Robots, CrtSh
 from src.fuzzingtool.exceptions import WordlistCreationError
 from src.fuzzingtool.exceptions.plugin_exceptions import InvalidPlugin, PluginCreationError
-from src.fuzzingtool.utils.consts import FUZZING_MARK
+from src.fuzzingtool.utils.consts import PluginCategory, FUZZING_MARK
 
 
 class TestWordlistFactory(unittest.TestCase):
@@ -16,15 +16,15 @@ class TestWordlistFactory(unittest.TestCase):
         test_name = "[1,2,3,4,5]"
         mock_plugin_class_creator.side_effect = InvalidPlugin
         returned_data = WordlistFactory.creator(test_name, '', None)
-        mock_plugin_class_creator.assert_called_once_with(test_name, "wordlists")
+        mock_plugin_class_creator.assert_called_once_with(PluginCategory.wordlist, test_name)
         self.assertIsInstance(returned_data, ListWordlist)
-    
+
     @patch("src.fuzzingtool.factories.wordlist_factory.PluginFactory.class_creator")
     def test_creator_with_file(self, mock_plugin_class_creator: Mock):
         test_name = "/home/test_wordlists/wordlist.txt"
         mock_plugin_class_creator.side_effect = InvalidPlugin
         returned_data = WordlistFactory.creator(test_name, '', None)
-        mock_plugin_class_creator.assert_called_once_with(test_name, "wordlists")
+        mock_plugin_class_creator.assert_called_once_with(PluginCategory.wordlist, test_name)
         self.assertIsInstance(returned_data, FileWordlist)
 
     @patch("src.fuzzingtool.factories.wordlist_factory.PluginFactory.object_creator")
@@ -39,8 +39,8 @@ class TestWordlistFactory(unittest.TestCase):
         mock_plugin_class_creator.return_value = Robots
         mock_plugin_object_creator.return_value = Robots(test_params)
         returned_data = WordlistFactory.creator(test_name, test_params, None)
-        mock_plugin_class_creator.assert_called_with(test_name, "wordlists")
-        mock_plugin_object_creator.assert_called_once_with(test_name, "wordlists", test_params)
+        mock_plugin_class_creator.assert_called_with(PluginCategory.wordlist, test_name)
+        mock_plugin_object_creator.assert_called_once_with(PluginCategory.wordlist, test_name, test_params)
         self.assertIsInstance(returned_data, Robots)
 
     @patch("src.fuzzingtool.factories.wordlist_factory.Requester.get_url")
@@ -63,8 +63,8 @@ class TestWordlistFactory(unittest.TestCase):
         mock_get_pure_url.return_value = test_pure_url
         mock_requester_get_url.return_value = test_requester_url
         returned_data = WordlistFactory.creator(test_name, '', test_requester)
-        mock_plugin_class_creator.assert_called_with(test_name, "wordlists")
-        mock_plugin_object_creator.assert_called_once_with(test_name, "wordlists", test_pure_url)
+        mock_plugin_class_creator.assert_called_with(PluginCategory.wordlist, test_name)
+        mock_plugin_object_creator.assert_called_once_with(PluginCategory.wordlist, test_name, test_pure_url)
         mock_get_pure_url.assert_called_once_with(test_requester_url)
         mock_requester_get_url.assert_called_once()
         self.assertIsInstance(returned_data, Robots)
@@ -93,8 +93,8 @@ class TestWordlistFactory(unittest.TestCase):
         mock_get_pure_url.return_value = test_pure_url
         mock_requester_get_url.return_value = test_requester_url
         returned_data = WordlistFactory.creator(test_name, '', test_requester)
-        mock_plugin_class_creator.assert_called_with(test_name, "wordlists")
-        mock_plugin_object_creator.assert_called_once_with(test_name, "wordlists", test_host)
+        mock_plugin_class_creator.assert_called_with(PluginCategory.wordlist, test_name)
+        mock_plugin_object_creator.assert_called_once_with(PluginCategory.wordlist, test_name, test_host)
         mock_get_parsed_url.assert_called_once_with(test_pure_url)
         mock_get_pure_url.assert_called_once_with(test_requester_url)
         mock_requester_get_url.assert_called_once()
