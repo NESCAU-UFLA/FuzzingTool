@@ -360,7 +360,7 @@ class CliArguments(argparse.ArgumentParser):
         )
         match_opts.add_argument(
             '--scanner',
-            action='store',
+            action='append',
             dest='scanner',
             help="Define the custom scanner (--help=scanners for more info)",
             metavar='SCANNER',

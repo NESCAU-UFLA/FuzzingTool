@@ -73,7 +73,7 @@ class FuzzLib:
         self._init_requester()
         self._init_filter()
         self._init_matcher()
-        self._init_scanner()
+        self._init_scanners()
         self._init_other_arguments()
         self._init_dictionary()
         self._init_managers()
@@ -192,15 +192,19 @@ class FuzzLib:
                 self.matcher.status_code_is_default()):
             self.matcher.set_status_code("200-399,401,403")
 
-    def _init_scanner(self) -> None:
-        """Initialize the scanner"""
+    def _init_scanners(self) -> None:
+        """Initialize the scanners"""
         self.scanners: List[BaseScanner] = [self.__get_default_scanner()]
         if self.args["scanner"]:
-            scanner, param = AB.build_scanner(self.args["scanner"])
-            plugin_scanner: BaseScanner = PluginFactory.object_creator(
-                PluginCategory.scanner, scanner, param
-            )
-            self.scanners.append(plugin_scanner)
+            scanners = (self.args["scanner"]
+                        if isinstance(self.args["scanner"], list)
+                        else [self.args["scanner"]])
+            for scanner in scanners:
+                scanner, param = AB.build_scanner(scanner)
+                plugin_scanner: BaseScanner = PluginFactory.object_creator(
+                    PluginCategory.scanner, scanner, param
+                )
+                self.scanners.append(plugin_scanner)
 
     def _init_other_arguments(self) -> None:
         """Initialize the uncategorized arguments"""

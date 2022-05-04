@@ -75,16 +75,16 @@ class TestFuzzController(unittest.TestCase):
         self.assertIsInstance(returned_scanner, DataScanner)
 
     @patch("src.fuzzingtool.fuzz_lib.PluginFactory.object_creator")
-    def test_init_scanner_with_plugin_scanner(self, mock_object_creator: Mock):
+    def test_init_scanners_with_plugin_scanner(self, mock_object_creator: Mock):
         mock_object_creator.return_value = Reflected()
         test_fuzz_lib = FuzzLib(url=f"http://test-url.com/", scanner="Reflected")
         test_fuzz_lib._init_requester()
-        test_fuzz_lib._init_scanner()
+        test_fuzz_lib._init_scanners()
         mock_object_creator.assert_called_once_with(PluginCategory.scanner, "Reflected", '')
 
     @patch("src.fuzzingtool.fuzz_lib.FuzzLib._FuzzLib__get_default_scanner")
-    def test_init_scanner_with_default_scanner(self, mock_get_default_scanner: Mock):
-        FuzzLib(url=f"http://test-url.com/{FUZZING_MARK}")._init_scanner()
+    def test_init_scanners_with_default_scanner(self, mock_get_default_scanner: Mock):
+        FuzzLib(url=f"http://test-url.com/{FUZZING_MARK}")._init_scanners()
         mock_get_default_scanner.assert_called_once()
 
     @patch("src.fuzzingtool.fuzz_lib.PluginFactory.object_creator")
