@@ -23,9 +23,9 @@ import threading
 from argparse import Namespace
 
 from .cli_output import CliOutput, Colors
-from ..argument_builder import ArgumentBuilder as AB
 from ... import __version__
 from ...fuzz_lib import FuzzLib
+from ...utils.argument_utils import build_verbose_mode
 from ...utils.consts import FUZZ_TYPE_NAME
 from ...utils.http_utils import get_parsed_url, get_pure_url
 from ...persistence import Logger, Report
@@ -99,7 +99,7 @@ class CliController(FuzzLib):
         """The initialization function.
            Set the application variables including plugins requires
         """
-        self.verbose = AB.build_verbose_mode(
+        self.verbose = build_verbose_mode(
             self.args["common_verbose"],
             self.args["detailed_verbose"]
         )

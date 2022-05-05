@@ -24,7 +24,7 @@ class TestFuzzController(unittest.TestCase):
         test_fuzz_lib._init_requester()
         self.assertIsInstance(test_fuzz_lib.requester, SubdomainRequester)
 
-    @patch("src.fuzzingtool.fuzz_lib.AB.build_target_from_raw_http")
+    @patch("src.fuzzingtool.fuzz_lib.build_target_from_raw_http")
     def test_init_requester_with_raw_http(
         self,
         mock_build_target_from_raw_http: Mock

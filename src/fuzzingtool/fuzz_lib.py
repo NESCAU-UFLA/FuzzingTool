@@ -24,7 +24,9 @@ from threading import Thread
 
 from requests.models import Response
 
-from .interfaces.argument_builder import ArgumentBuilder as AB
+from .utils.argument_utils import (build_target_from_args, build_target_from_raw_http,
+                                   build_wordlist, build_encoder, build_scanner,
+                                   build_blacklist_status)
 from .utils.consts import PluginCategory
 from .utils.utils import split_str_to_list
 from .utils.file_utils import read_file
@@ -144,11 +146,11 @@ class FuzzLib:
         """Initialize the requester"""
         target = None
         if self.args["url"]:
-            target = AB.build_target_from_args(
+            target = build_target_from_args(
                 self.args["url"], self.args["method"], self.args["data"]
             )
         if self.args["raw_http"]:
-            target = AB.build_target_from_raw_http(
+            target = build_target_from_raw_http(
                 self.args["raw_http"], self.args["scheme"]
             )
         if not target:
@@ -200,7 +202,7 @@ class FuzzLib:
                         if isinstance(self.args["scanner"], list)
                         else [self.args["scanner"]])
             for scanner in scanners:
-                scanner, param = AB.build_scanner(scanner)
+                scanner, param = build_scanner(scanner)
                 plugin_scanner: BaseScanner = PluginFactory.object_creator(
                     PluginCategory.scanner, scanner, param
                 )
@@ -209,7 +211,7 @@ class FuzzLib:
     def _init_other_arguments(self) -> None:
         """Initialize the uncategorized arguments"""
         if self.args["blacklist_status"]:
-            blacklisted_status, action, action_param = AB.build_blacklist_status(
+            blacklisted_status, action, action_param = build_blacklist_status(
                 self.args["blacklist_status"]
             )
             self.blacklist_status = BlacklistStatus(
@@ -230,7 +232,7 @@ class FuzzLib:
         """Initialize the dictionary"""
         self.__configure_payloader()
         final_wordlist = self.__build_wordlist(
-            AB.build_wordlist(self.args["wordlist"])
+            build_wordlist(self.args["wordlist"])
         )
         atual_length = len(final_wordlist)
         self.dict_metadata = {}
@@ -339,7 +341,7 @@ class FuzzLib:
 
         @returns tuple: The encoders used in the program
         """
-        encoders_list = AB.build_encoder(self.args["encoder"])
+        encoders_list = build_encoder(self.args["encoder"])
         if self.args["encode_only"]:
             Payloader.encoder.set_regex(self.args["encode_only"])
         encoders_default = []
