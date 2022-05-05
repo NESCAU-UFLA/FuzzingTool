@@ -24,11 +24,12 @@ from requests.exceptions import HTTPError
 
 from ...bases.base_plugin import Plugin
 from ...bases.base_wordlist import BaseWordlist
-from ....utils.http_utils import get_path
+from ....utils.http_utils import get_parsed_url
 from ....conn.requesters.requester import Requester
 from ....decorators.plugin_meta import plugin_meta
+from ....utils.consts import FuzzType
 from ....exceptions.request_exceptions import RequestException
-from ....exceptions.main_exceptions import MissingParameter, BuildWordlistFails
+from ....exceptions import MissingParameter, BuildWordlistFails
 
 ROBOTS_HTTP_HEADER = {
     'User-Agent': "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:87.0) Gecko/20100101 Firefox/87.0",
@@ -44,7 +45,7 @@ class Robots(BaseWordlist, Plugin):
         'type': str,
     }
     __desc__ = "Build the wordlist using the target robots.txt"
-    __type__ = "PathFuzzing"
+    __type__ = FuzzType.PATH_FUZZING
     __version__ = "0.1"
 
     def __init__(self, url: str):
@@ -77,6 +78,6 @@ class Robots(BaseWordlist, Plugin):
             )):
                 _, path = line.split(': ', 1)
                 if '://' in path:
-                    path = get_path(path)
+                    path = get_parsed_url(path).path
                 paths.append(path[1:])
         return paths

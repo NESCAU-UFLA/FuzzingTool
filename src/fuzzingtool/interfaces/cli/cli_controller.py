@@ -22,20 +22,16 @@ import time
 import threading
 from argparse import Namespace
 
-from fuzzingtool.objects.payload import Payload
-
 from .cli_output import CliOutput, Colors
-from ..argument_builder import ArgumentBuilder as AB
 from ... import __version__
-from ...api.fuzz_controller import FuzzController
-from ...core.bases.base_plugin import Plugin
-from ...utils.http_utils import get_host, get_pure_url
-from ...utils.logger import Logger
-from ...reports.report import Report
-from ...objects import Error, Result
+from ...fuzz_lib import FuzzLib
+from ...utils.argument_utils import build_verbose_mode
+from ...utils.consts import FUZZ_TYPE_NAME
+from ...utils.http_utils import get_parsed_url, get_pure_url
+from ...persistence import Logger, Report
+from ...objects import BaseItem, Error, Payload, Result, HttpHistory
+from ...exceptions import FuzzLibException, StopActionInterrupt, RequestException
 from ...exceptions.base_exceptions import FuzzingToolException
-from ...exceptions.main_exceptions import FuzzControllerException, StopActionInterrupt
-from ...exceptions.request_exceptions import RequestException
 
 
 def banner() -> str:
@@ -54,16 +50,13 @@ def banner() -> str:
     return banner
 
 
-class CliController(FuzzController):
-    """Class that handle with the entire application
+class CliController(FuzzLib):
+    """Class that handle with the CLI application
 
     Attributes:
-        requesters: The requesters list
-        started_time: The time when start the fuzzing test
-        fuzzer: The fuzzer object to handle with the fuzzing test
         lock: A thread locker to prevent overwrites on logfiles
-        blacklist_status: The blacklist status object
         logger: The object to handle with the program log
+        cli_output: The object that handles the terminal output
     """
     def __init__(self, arguments: Namespace):
         super().__init__(**vars(arguments))
@@ -90,7 +83,6 @@ class CliController(FuzzController):
             self.cli_output.error_box(str(e))
         if not self.args["simple_output"]:
             self.print_configs()
-        self.cli_output.set_verbosity_mode(self.is_verbose_mode())
         try:
             self.check_connection()
             self.prepare()
@@ -107,7 +99,7 @@ class CliController(FuzzController):
         """The initialization function.
            Set the application variables including plugins requires
         """
-        self.verbose = AB.build_verbose_mode(
+        self.verbose = build_verbose_mode(
             self.args["common_verbose"],
             self.args["detailed_verbose"]
         )
@@ -119,10 +111,10 @@ class CliController(FuzzController):
         self.cli_output.print_configs(
             target={
                 'url': self.requester.get_url(),
-                'methods': [method for method in self.requester.methods],
+                'method': self.requester.get_method(),
                 'header': 'custom' if self.args["raw_http"] else 'default',
                 'body': self.args["data"],
-                'type_fuzzing': self.__get_target_fuzzing_type(),
+                'type_fuzzing': FUZZ_TYPE_NAME[self.requester.get_fuzzing_type()],
                 },
             dictionary=self.dict_metadata
         )
@@ -139,7 +131,7 @@ class CliController(FuzzController):
         except RequestException as e:
             if not self.cli_output.ask_yes_no('warning',
                                               f"{str(e)}. Continue anyway?"):
-                raise FuzzControllerException("No target left for fuzzing")
+                raise FuzzLibException("No target left for fuzzing")
         else:
             if self.is_verbose_mode():
                 self.cli_output.info_box("Connection status: OK")
@@ -149,58 +141,19 @@ class CliController(FuzzController):
            Each target is fuzzed based on their own methods list
         """
         self.cli_output.info_box("Start fuzzing on "
-                                 + get_host(get_pure_url(self.requester.get_url())))
+                                 + get_parsed_url(get_pure_url(self.requester.get_url())).hostname)
         try:
             super().start()
         except StopActionInterrupt as e:
             self.cli_output.abort_box(f"{str(e)}. Program stopped.")
-        else:
-            if not self.is_verbose_mode():
-                CliOutput.print("")
-
-    def fuzzer_join(self):
-        while self.fuzzer.is_running():
-            try:
-                super().fuzzer_join()
-            except KeyboardInterrupt:
-                self.cli_output.warning_box("Ctrl+C detected, pausing threads ...")
-                self.handle_pause()
-
-    def handle_pause(self):
-        """Handle with the Ctrl+C pause"""
-        self.fuzzer.pause()
-        self.fuzzer.wait_until_pause()
-        self.summary.pause_timer()
-        if not self.is_verbose_mode():
-            CliOutput.print("")
-        answer = ''
-        while answer not in ['q', 'c']:
-            try:
-                answer = self.cli_output.ask_data("[c]ontinue | [s]tatus | [q]uit")
-            except KeyboardInterrupt:
-                answer = 'q'
-            if answer == "q":
-                self.fuzzer.stop()
-                self.cli_output.abort_box("Test aborted by the user")
-            elif answer == 's':
-                str_percentage = self.cli_output.get_percentage(
-                    self.last_index,
-                    self.total_requests
-                )
-                self.cli_output.info_box(
-                    f"Progress: {Colors.LIGHT_YELLOW}{str_percentage}{Colors.RESET} completed"
-                )
-            elif answer == "c":
-                self.summary.resume_timer()
-                self.fuzzer.resume()
 
     def prepare(self) -> None:
         """Prepare the application before the fuzzing"""
-        self.target_host = get_host(get_pure_url(self.requester.get_url()))
+        self.target_host = get_parsed_url(get_pure_url(self.requester.get_url())).hostname
         if self.is_verbose_mode():
             self.cli_output.info_box(f"Preparing target {self.target_host} ...")
         self.check_ignore_errors()
-        if (not isinstance(self.scanner, Plugin) and
+        if (len(self.scanners) == 1 and
                 (self.requester.is_data_fuzzing() and
                  not self.matcher.comparator_is_set())):
             self.cli_output.info_box("DataFuzzing detected, checking for a data comparator ...")
@@ -243,34 +196,31 @@ class CliController(FuzzController):
                 f"Status code {str(status)} detected. Pausing threads ..."
             )
             self.fuzzer.wait_until_pause()
-            if not self.is_verbose_mode():
-                CliOutput.print("")
             self.cli_output.info_box(
                 f"Waiting for {self.blacklist_status.action_param} seconds ..."
             )
             time.sleep(self.blacklist_status.action_param)
-            self.cli_output.info_box("Resuming target ...")
+            self.cli_output.info_box("Resuming job ...")
             self.fuzzer.resume()
 
-    def _result_callback(self, result: Result, validate: bool) -> None:
+    def _result_callback(self, result: Result, valid: bool) -> None:
         if self.verbose[0]:
-            if validate:
+            if valid:
                 self.summary.results.append(result)
-            self.cli_output.print_result(result, validate)
+            self.cli_output.print_result(result, valid)
         else:
-            if validate:
+            if valid:
                 self.summary.results.append(result)
-                self.cli_output.print_result(result, validate)
-            self.cli_output.progress_status(
-                result.index, self.total_requests, result.payload
+                self.cli_output.print_result(result, valid)
+            self.__print_progress(
+                result.index, result.payload
             )
-        self.last_index = result.index
 
     def _request_exception_callback(self, error: Error) -> None:
         if self.ignore_errors:
             if not self.verbose[0]:
-                self.cli_output.progress_status(
-                    error.index, self.total_requests, error.payload
+                self.__print_progress(
+                    error.index, error.payload
                 )
             else:
                 if self.verbose[1]:
@@ -279,17 +229,15 @@ class CliController(FuzzController):
                 self.logger.write(str(error), error.payload)
         else:
             self.stop_action = str(error)
-        self.last_index = error.index
 
     def _invalid_hostname_callback(self, error: Error) -> None:
         if self.verbose[0]:
             if self.verbose[1]:
                 self.cli_output.not_worked_box(str(error))
         else:
-            self.cli_output.progress_status(
-                error.index, self.total_requests, error.payload
+            self.__print_progress(
+                error.index, error.payload
             )
-        self.last_index = error.index
 
     def _init_dictionary(self) -> None:
         try:
@@ -299,27 +247,71 @@ class CliController(FuzzController):
                 for e in self.wordlist_errors:
                     self.cli_output.warning_box(str(e))
 
+    def _get_job(self) -> None:
+        super()._get_job()
+        self.cli_output.set_new_job(self.job_manager.total_requests)
+
+    def _join(self) -> None:
+        """Blocks until the fuzzer is running"""
+        while self.fuzzer.is_running():
+            try:
+                super()._join()
+            except KeyboardInterrupt:
+                self.cli_output.warning_box("Ctrl+C detected, pausing threads ...")
+                self._handle_pause()
+
+    def _handle_pause(self) -> None:
+        """Handle with the Ctrl+C pause"""
+        self.fuzzer.pause()
+        self.fuzzer.wait_until_pause()
+        self.summary.pause_timer()
+        options = "[c]ontinue | [p]rogress | [q]uit"
+        if (self.job_manager.has_pending_jobs()
+                or self.job_manager.has_pending_jobs_from_providers()
+                or self.recursion_manager.has_recursive_job()):
+            options += " | [s]kip"
+        answer = ''
+        while answer not in ['q', 'c', 's']:
+            try:
+                answer = self.cli_output.ask_data(options)
+            except KeyboardInterrupt:
+                answer = 'q'
+            if answer == 'q':
+                self._handle_quit()
+            elif answer == 'p':
+                self._handle_progress()
+            elif answer == "c":
+                self._handle_continue()
+            elif answer == 's':
+                self._handle_skip()
+
+    def _handle_quit(self) -> None:
+        """Handle with the quit option when pause"""
+        raise StopActionInterrupt("Test aborted")
+
+    def _handle_progress(self) -> None:
+        """Handle with the progress option when pause"""
+        str_percentage = self.cli_output.get_percentage(BaseItem.index)
+        self.cli_output.info_box(
+            f"Progress: {Colors.LIGHT_YELLOW}{str_percentage}{Colors.RESET} completed"
+        )
+
+    def _handle_continue(self) -> None:
+        """Handle with the continue option when pause"""
+        self.summary.resume_timer()
+        self.fuzzer.resume()
+
+    def _handle_skip(self) -> None:
+        """Handle with the skip option when pause"""
+        self.fuzzer.stop()
+        self.cli_output.abort_box(f"Current job ({self.job_manager.current_job}) skipped")
+
     def __init_report(self) -> None:
         """Initialize the report"""
         self.report = Report.build(self.args["report_name"])
         Result.save_payload_configs = self.args["save_payload_conf"]
         Result.save_headers = self.args["save_headers"]
         Result.save_body = self.args["save_body"]
-
-    def __get_target_fuzzing_type(self) -> str:
-        """Get the target fuzzing type, as a string format
-
-        @return str: The fuzzing type, as a string
-        """
-        if self.requester.is_method_fuzzing():
-            return "MethodFuzzing"
-        if self.requester.is_data_fuzzing():
-            return "DataFuzzing"
-        if self.requester.is_url_discovery():
-            if self.requester.is_path_fuzzing():
-                return "PathFuzzing"
-            return "SubdomainFuzzing"
-        return "Couldn't determine the fuzzing type"
 
     def __get_comparator_value(self,
                                name_value: str,
@@ -356,7 +348,7 @@ class CliController(FuzzController):
             response, rtt = self.requester.request(payload)
         except RequestException as e:
             raise StopActionInterrupt(str(e))
-        result_to_comparator = Result(response, rtt, Payload(payload))
+        result_to_comparator = Result(HttpHistory(response, rtt), Payload(payload))
         self.cli_output.print_result(result_to_comparator, False)
         time = self.__get_comparator_value(
             name_value="RTT",
@@ -375,6 +367,21 @@ class CliController(FuzzController):
             ask_message="Insert the quantity of lines"
         )
         return (time, length, words, lines)
+
+    def __print_progress(self, index: int, payload: str) -> None:
+        """Print the progress status
+
+        @type index: int
+        @param index: The actual item index
+        @type payload: str
+        @param payload: The payload used in the previous request
+        """
+        self.cli_output.progress_status(
+            item_index=index,
+            payload=payload,
+            current_job=self.job_manager.current_job,
+            total_jobs=self.job_manager.total_jobs,
+        )
 
     def __handle_valid_results(self,
                                host: str,

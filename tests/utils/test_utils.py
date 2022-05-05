@@ -70,6 +70,13 @@ class TestUtils(unittest.TestCase):
         self.assertIsInstance(returned_data, list)
         self.assertEqual(returned_data, return_expected)
 
+    def test_split_str_to_list_with_one_separator_and_ignorer_with_blank_result(self):
+        return_expected = ["pay,loa", 'd', '']
+        test_content = "pay\\,loa,d,"
+        returned_data = split_str_to_list(test_content)
+        self.assertIsInstance(returned_data, list)
+        self.assertEqual(returned_data, return_expected)
+
     def test_stringfy_list_with_empty_list(self):
         return_expected = ''
         test_list = []

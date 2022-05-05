@@ -24,7 +24,7 @@ from typing import List, Tuple
 from .bases.base_encoder import BaseEncoder
 from .defaults.encoders import ChainEncoder
 from ..objects.payload import Payload
-from ..exceptions.main_exceptions import BadArgumentFormat
+from ..exceptions import BadArgumentFormat
 
 
 class EncodeManager:
@@ -176,7 +176,7 @@ class Payloader:
         """The uppercase setter"""
         def case(ajusted_payloads: List[Payload]) -> List[Payload]:
             return [
-                payload.with_case(str.upper, "Upper")
+                Payload().update(payload).with_case(str.upper, "Upper")
                 for payload in ajusted_payloads
             ]
 
@@ -187,7 +187,7 @@ class Payloader:
         """The lowercase setter"""
         def case(ajusted_payloads: List[Payload]) -> List[Payload]:
             return [
-                payload.with_case(str.lower, "Lower")
+                Payload().update(payload).with_case(str.lower, "Lower")
                 for payload in ajusted_payloads
             ]
 
@@ -198,21 +198,21 @@ class Payloader:
         """The capitalize setter"""
         def case(ajusted_payloads: List[Payload]) -> List[Payload]:
             return [
-                payload.with_case(str.capitalize, "Capitalize")
+                Payload().update(payload).with_case(str.capitalize, "Capitalize")
                 for payload in ajusted_payloads
             ]
 
         Payloader.case = case
 
     @staticmethod
-    def get_customized_payload(payload: str) -> List[Payload]:
+    def get_customized_payload(payload: Payload) -> List[Payload]:
         """Gets the payload list ajusted with the console options
 
-        @type payload: str
-        @param payload: The string payload gived by the payloads queue
+        @type payload: Payload
+        @param payload: The payload object gived by the payloads queue
         @returns List[Payload]: The payloads used in the request
         """
-        ajusted_payloads = [Payload(payload)]
+        ajusted_payloads = [payload]
         if Payloader.prefix:
             ajusted_payloads = [Payload().update(payload).with_prefix(prefix)
                                 for prefix in Payloader.prefix

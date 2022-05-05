@@ -18,33 +18,24 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from requests import Response
+from urllib.parse import ParseResult, urlparse
+from os.path import splitext
+
+from requests.models import Response
 
 from .consts import FUZZING_MARK
 
 
-def get_host(url: str) -> str:
-    """Get the target host from url
+def get_url_without_scheme(url: str) -> str:
+    """Get the target url without scheme
 
     @type url: str
     @param url: The target URL
-    @returns str: The payloaded target
+    @returns str: The url without scheme
     """
-    url = get_url_without_scheme(url)
-    if '/' in url:
-        return url[:url.index('/')]
+    if '://' in url:
+        return url[(url.index('://')+3):]
     return url
-
-
-def get_path(url: str) -> str:
-    """Get the target path from url
-
-    @type url: str
-    @param url: The target URL
-    @returns str: The payloaded path
-    """
-    url = get_url_without_scheme(url)
-    return url[url.index('/'):]
 
 
 def get_pure_url(url: str) -> str:
@@ -61,18 +52,6 @@ def get_pure_url(url: str) -> str:
     return url
 
 
-def get_url_without_scheme(url: str) -> str:
-    """Get the target url without scheme
-
-    @type url: str
-    @param url: The target URL
-    @returns str: The url without scheme
-    """
-    if '://' in url:
-        return url[(url.index('://')+3):]
-    return url
-
-
 def build_raw_response_header(response: Response) -> str:
     """Build the raw response header from requests lib Response object
 
@@ -86,3 +65,41 @@ def build_raw_response_header(response: Response) -> str:
         str_header += f"{key}: {value}\r\n"
     str_header += "\r\n"
     return str_header
+
+
+class UrlParse(ParseResult):
+    """Class that has utils url parsing functions"""
+    @property
+    def file(self) -> str:
+        """Get the file name and extension
+
+        @returns str: The file name and extension
+        """
+        return self.path.split('/')[-1:][0]
+
+    @property
+    def file_name(self) -> str:
+        """Get the file name only
+
+        @returns str: The file name only
+        """
+        return splitext(self.file)[0]
+
+    @property
+    def file_ext(self) -> str:
+        """Get the file extension only
+
+        @returns str: The file extension only
+        """
+        return splitext(self.file)[1]
+
+
+def get_parsed_url(url: str) -> UrlParse:
+    """Get the url parser object
+       Has some common url parts (like scheme, hostname and path)
+
+    @type url: str
+    @param url: The url that'll be parsed
+    @returns UrlParse: The url parser object
+    """
+    return UrlParse(*urlparse(url))

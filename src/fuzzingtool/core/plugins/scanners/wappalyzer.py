@@ -18,46 +18,39 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-import re
+import warnings
+
+import Wappalyzer as WP
 
 from ...bases.base_plugin import Plugin
 from ...bases.base_scanner import BaseScanner
 from ....objects.result import Result
 from ....decorators.plugin_meta import plugin_meta
-from ....decorators.append_args import append_args
-from ....exceptions.main_exceptions import MissingParameter, BadArgumentFormat
 
 
 @plugin_meta
-class Find(BaseScanner, Plugin):
+class Wappalyzer(BaseScanner, Plugin):
     __author__ = ("Vitor Oriel",)
-    __params__ = {
-        'metavar': "REGEX",
-        'type': str,
-    }
-    __desc__ = "Filter results based on a regex match into the response body"
-    __type__ = ""
+    __params__ = {}
+    __desc__ = "Lookup for technologies on a web page during discovery scan"
+    __type__ = None
     __version__ = "0.1"
 
-    """
-    Attributes:
-        regexer: The regex object to find the content into the response body
-    """
-    def __init__(self, regex: str):
-        if not regex:
-            raise MissingParameter("regex")
-        try:
-            self.__regexer = re.compile(regex)
-        except re.error:
-            raise BadArgumentFormat("invalid regex")
-
-    @append_args
-    def inspect_result(self, result: Result) -> None:
-        result.custom['found'] = None
+    def __init__(self):
+        warnings.filterwarnings("ignore", category=UserWarning)
+        BaseScanner.__init__(self)
 
     def scan(self, result: Result) -> bool:
-        found = (True
-                 if self.__regexer.search(result.get_response().text)
-                 else False)
-        result.custom['found'] = found
-        return found
+        return True
+
+    def _process(self, result: Result) -> None:
+        wp_technologies_dict = WP.Wappalyzer.latest().analyze_with_versions_and_categories(
+            webpage=WP.WebPage.new_from_response(result.history.response)
+        )
+        technologies = []
+        for key, value in wp_technologies_dict.items():
+            version = ''
+            if value['versions']:
+                version = ' v' + ' | v'.join(value['versions'])
+            technologies.append(f"{key}{version}")
+        self.get_self_res(result).data['technologies'] = technologies

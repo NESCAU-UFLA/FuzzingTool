@@ -28,9 +28,8 @@ import urllib3.exceptions
 
 from ..request_parser import (check_is_url_discovery,
                               check_is_data_fuzzing, request_parser)
-from ...utils.consts import (UNKNOWN_FUZZING, HTTP_METHOD_FUZZING,
-                             PATH_FUZZING, SUBDOMAIN_FUZZING, DATA_FUZZING)
-from ...utils.http_utils import get_pure_url, get_host, get_url_without_scheme
+from ...utils.consts import FuzzType
+from ...utils.http_utils import get_parsed_url, get_pure_url, get_url_without_scheme
 from ...objects.fuzz_word import FuzzWord
 from ...exceptions.request_exceptions import RequestException
 
@@ -53,15 +52,15 @@ class Requester:
     def __init__(self,
                  url: str,
                  method: str = 'GET',
-                 methods: List[str] = None,
-                 body: str = '',
+                 body: str = None,
                  headers: Dict[str, str] = None,
                  follow_redirects: bool = True,
-                 proxy: str = '',
+                 proxy: str = None,
                  proxies: List[str] = None,
                  timeout: int = 0,
-                 cookie: str = '',
-                 is_session: bool = False):
+                 cookie: str = None,
+                 is_session: bool = False,
+                 replay_proxy: str = None):
         """Class constructor
 
         @type url: str
@@ -86,6 +85,8 @@ class Requester:
         @param cookie: The cookie HTTP header value
         @type is_session: bool
         @param is_session: The flag to say if the requests will be made as session request
+        @type replay_proxy: str
+        @param replay_proxy: The proxy for replay request on matched responses
         """
         self._url, url_params = self.__setup_url(url)
         self.__url_params = self.__build_data_dict(url_params)
@@ -106,9 +107,9 @@ class Requester:
         if is_session or self.is_path_fuzzing():
             self.__session = requests.Session()
             self._request = self.__session_request
-        self.methods = methods if methods else [self.__method.word]
         if cookie:
             self.__header['Cookie'] = FuzzWord(cookie)
+        self.__replay_proxy = self.__setup_proxy(replay_proxy) if replay_proxy else {}
         self._lock = Lock()
 
     def get_url(self) -> str:
@@ -118,33 +119,40 @@ class Requester:
         """
         return self._url.word
 
+    def get_method(self) -> str:
+        """The request method content getter
+
+        @returns str: The request method
+        """
+        return self.__method.word
+
     def is_method_fuzzing(self) -> bool:
         """The method fuzzing flag getter
 
         @returns bool: The method fuzzing flag
         """
-        return self.__fuzzing_type == HTTP_METHOD_FUZZING
+        return self.__fuzzing_type == FuzzType.HTTP_METHOD_FUZZING
 
     def is_data_fuzzing(self) -> bool:
         """The data fuzzing flag getter
 
         @returns bool: The data fuzzing flag
         """
-        return self.__fuzzing_type == DATA_FUZZING
+        return self.__fuzzing_type == FuzzType.DATA_FUZZING
 
     def is_url_discovery(self) -> bool:
         """Checks if the fuzzing is for url discovery (path or subdomain)
 
         @returns bool: A flag to say if is url discovery fuzzing type
         """
-        return self.__fuzzing_type == PATH_FUZZING or self.__fuzzing_type == SUBDOMAIN_FUZZING
+        return self.__fuzzing_type == FuzzType.PATH_FUZZING or self.__fuzzing_type == FuzzType.SUBDOMAIN_FUZZING
 
     def is_path_fuzzing(self) -> bool:
         """Checks if the fuzzing will be path discovery
 
         @returns bool: A flag to say if is path fuzzing
         """
-        return self.__fuzzing_type == PATH_FUZZING
+        return self.__fuzzing_type == FuzzType.PATH_FUZZING
 
     def get_fuzzing_type(self) -> int:
         """The fuzzing type getter
@@ -172,7 +180,7 @@ class Requester:
     def test_connection(self) -> None:
         """Test the connection with the target, and raise an exception if couldn't connect"""
         try:
-            url = get_pure_url(self._url.word)
+            url = get_pure_url(self.get_url())
             requests.get(
                 url,
                 proxies=self.__proxy,
@@ -197,22 +205,30 @@ class Requester:
         ):
             raise RequestException(f"Failed to establish a connection to {url}")
 
-    def request(self, payload: str = '') -> Tuple[requests.Response, float]:
+    def request(self,
+                payload: str = '',
+                replay_proxy: bool = False) -> Tuple[requests.Response, float]:
         """Make a request and get the response
 
         @type payload: str
         @param payload: The payload used in the request
+        @type replay_proxy: bool
+        @param replay_proxy: The replay proxy flag
         @returns Tuple[Response, float]: The response object of the request
         """
-        if self.__proxies:
-            self.__proxy = random.choice(self.__proxies)
+        if not replay_proxy:
+            proxy = self.__proxy
+            if self.__proxies:
+                proxy = random.choice(self.__proxies)
+        else:
+            proxy = self.__replay_proxy
         method, url, body, url_params, headers = self.__get_request_parameters(payload)
         try:
             before = time.time()
-            response = self._request(method, url, body, url_params, headers)
+            response = self._request(method, url, body, url_params, headers, proxy)
             rtt = (time.time() - before)
         except requests.exceptions.ProxyError:
-            raise RequestException("Can't connect to the proxy")
+            raise RequestException(f"Can't connect to the proxy {get_url_without_scheme(proxy['http'])}")
         except requests.exceptions.TooManyRedirects:
             raise RequestException(f"Too many redirects on {url}")
         except requests.exceptions.SSLError:
@@ -232,7 +248,7 @@ class Requester:
             UnicodeError,
             urllib3.exceptions.LocationParseError
         ):
-            raise RequestException(f"Invalid hostname {get_host(url)} for HTTP request")
+            raise RequestException(f"Invalid hostname {get_parsed_url(url).hostname} for HTTP request")
         except ValueError as e:
             raise RequestException(str(e))
         else:
@@ -243,19 +259,22 @@ class Requester:
                  url: str,
                  body: dict,
                  url_params: dict,
-                 headers: dict) -> requests.Response:
+                 headers: dict,
+                 proxy: dict) -> requests.Response:
         """Performs a request to the target
 
         @type method: str
         @param method: The request method
         @type url: str
         @param url: The target URL
-        @type headers: dict
-        @param headers: The http header of the request
         @type body: dict
         @param body: The body data to be send with the request
         @type url_params: dict
         @param url_params: The URL params to be send with the request
+        @type headers: dict
+        @param headers: The http header of the request
+        @type proxy: str
+        @param proxy: The proxy used in the request
         @returns Response: The response object of the request
         """
         return requests.request(
@@ -264,7 +283,7 @@ class Requester:
             data=body,
             params=url_params,
             headers=headers,
-            proxies=self.__proxy,
+            proxies=proxy,
             timeout=self.__timeout,
             allow_redirects=self.__follow_redirects,
         )
@@ -275,12 +294,12 @@ class Requester:
         @returns int: The fuzzing type int value
         """
         if self.__method.has_fuzzing:
-            return HTTP_METHOD_FUZZING
+            return FuzzType.HTTP_METHOD_FUZZING
         if check_is_url_discovery(self._url):
-            return PATH_FUZZING
+            return FuzzType.PATH_FUZZING
         if check_is_data_fuzzing(self.__url_params, self.__body, self.__header):
-            return DATA_FUZZING
-        return UNKNOWN_FUZZING
+            return FuzzType.DATA_FUZZING
+        return FuzzType.UNKNOWN_FUZZING
 
     def __setup_url(self, url: str) -> Tuple[FuzzWord, str]:
         """The URL setup
@@ -370,19 +389,22 @@ class Requester:
                           url: str,
                           body: dict,
                           url_params: dict,
-                          headers: dict) -> requests.Response:
+                          headers: dict,
+                          proxy: dict) -> requests.Response:
         """Performs a request to the target using Session object
 
         @type method: str
         @param method: The request method
         @type url: str
         @param url: The target URL
-        @type headers: dict
-        @param headers: The http header of the request
         @type body: dict
         @param body: The body data to be send with the request
         @type url_params: dict
         @param url_params: The URL params to be send with the request
+        @type headers: dict
+        @param headers: The http header of the request
+        @type proxy: str
+        @param proxy: The proxy used in the request
         @returns Response: The response object of the request
         """
         return self.__session.send(
@@ -393,7 +415,7 @@ class Requester:
                 params=url_params,
                 headers=headers,
             )),
-            proxies=self.__proxy,
+            proxies=proxy,
             timeout=self.__timeout,
             allow_redirects=self.__follow_redirects,
         )

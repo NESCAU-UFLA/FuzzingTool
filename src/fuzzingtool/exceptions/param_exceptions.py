@@ -18,30 +18,20 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from typing import Callable
-
-from ..core.bases.base_scanner import BaseScanner
-from ..objects.result import Result
+from .base_exceptions import FuzzingToolException
 
 
-def append_args(function: Callable) -> Callable:
-    """Decorator to append extra data from arguments to the result
+class MissingParameter(FuzzingToolException):
+    pass
 
-    @type function: Callable
-    @param function: The function to inspect the result
-    """
-    def wrapper(cls: BaseScanner,
-                result: Result,
-                *args) -> Callable[[BaseScanner, Result], None]:
-        """Wrapper function to the decorator
 
-        @type cls: BaseScanner
-        @param cls: The scanner that are using this decorator function
-        @type result: Result
-        @param result: The result object
-        """
-        if args:
-            result.custom.update(args[0])
-        return function(cls, result)
+class BadArgumentFormat(FuzzingToolException):
+    pass
 
-    return wrapper
+
+class BadArgumentType(FuzzingToolException):
+    pass
+
+
+class InvalidArgument(FuzzingToolException):
+    pass

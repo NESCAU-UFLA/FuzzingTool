@@ -20,12 +20,10 @@
 
 from typing import Iterator, Tuple
 
-from requests import Response
-
 from .base_objects import BaseItem
+from .http_history import HttpHistory
 from .payload import Payload
-from ..utils.consts import UNKNOWN_FUZZING
-from ..utils.http_utils import build_raw_response_header
+from ..utils.consts import FuzzType
 from ..utils.result_utils import ResultUtils
 
 
@@ -33,106 +31,98 @@ class Result(BaseItem):
     """The FuzzingTool result object
 
     Attributes:
+        history: The HTTP history of the result
         payload: The string payload used in the request
-        url: The requested target URL
-        method: The method used in the request
-        rtt: The elapsed time on both request and response
-        request_time: The elapsed time only for the request
-        response_time: The elapsed time only for the response
-        status: The response HTTP status code
-        headers: The response raw HTTP headers
-        headers_length: The length of the raw HTTP headers
-        body_size: The length of the response body content
         words: The quantitty of words in the response body
         lines: The quantity of lines in the response body
-        custom: A dictionary to store custom data from the scanners
+        scanners_res: The results dict provided from the scanners
         _payload: The Payload object
-        response: The Response object from python requests
     """
     save_payload_configs = False
     save_headers = False
     save_body = False
 
     def __init__(self,
-                 response: Response,
-                 rtt: float = 0.0,
+                 history: HttpHistory,
                  payload: Payload = Payload(),
-                 fuzz_type: int = UNKNOWN_FUZZING):
+                 fuzz_type: int = FuzzType.UNKNOWN_FUZZING):
         """Class constructor
 
-        @type response: Response
-        @param response: The response given in the request
-        @type rtt: float
-        @param rtt: The elapsed time on both request and response
+        @type history: HttpHistory
+        @param history: The HTTP history of this result
         @type payload: Payload
         @param payload: The payload used in the request
+        @type fuzz_type: int
+        @param fuzz_type: The request fuzzing type
         """
         super().__init__()
+        self.history = history
         self.payload = payload.final
-        self.url = response.url
-        self.method = response.request.method
-        self.rtt = float('%.6f' % (rtt))
-        response_time = response.elapsed.total_seconds()
-        self.request_time = float('%.6f' % (rtt-response_time))
-        self.response_time = response_time
-        self.status = response.status_code
-        content = response.content
-        self.headers = build_raw_response_header(response)
-        self.headers_length = len(self.headers)
-        self.body_size = len(content)
+        content = self.history.response.content
         self.words = len(content.split())
         self.lines = content.count(b'\n')
         self.fuzz_type = fuzz_type
-        self.custom = {}
+        self.job_description = ''
+        self.scanners_res = {}
         self._payload = payload
-        self.__response = response
 
     def __str__(self) -> str:
         payload, rtt, length, words, lines = ResultUtils.get_formatted_result(
-            self.payload, self.rtt, self.body_size,
+            self.payload, self.history.rtt, self.history.body_size,
             self.words, self.lines
         )
         returned_str = (
             f"{payload} ["
-            f"Code {self.status} | "
+            f"Code {self.history.status} | "
             f"RTT {rtt} | "
             f"Size {length} | "
             f"Words {words} | "
             f"Lines {lines}]"
         )
-        for key, value in self.custom.items():
-            if value is not None:
-                returned_str += (f"\n|_ {key}: "
-                                 f"{ResultUtils.format_custom_field(value)}")
+        returned_str += self.get_description()
         return returned_str
 
     def __iter__(self) -> Iterator[Tuple]:
         yield 'index', self.index
-        yield 'url', self.url
-        yield 'method', self.method
-        yield 'rtt', self.rtt
-        yield 'request_time', self.request_time
-        yield 'response_time', self.response_time
-        yield 'status', self.status
-        yield 'headers_length', self.headers_length
-        yield 'body_size', self.body_size
+        yield 'url', self.history.url
+        yield 'method', self.history.method
+        yield 'rtt', self.history.rtt
+        yield 'request_time', self.history.request_time
+        yield 'response_time', self.history.response_time
+        yield 'status', self.history.status
+        yield 'headers_length', self.history.headers_length
+        yield 'body_size', self.history.body_size
         yield 'words', self.words
         yield 'lines', self.lines
-        for key, value in self.custom.items():
-            yield key, ResultUtils.format_custom_field(value, force_detailed=True)
+        if self.history.ip:
+            yield 'ip', self.history.ip
+        for s_res in self.scanners_res.values():
+            for key, value in s_res.data.items():
+                yield key, ResultUtils.format_custom_field(value, force_detailed=True)
         yield 'payload', self.payload
         if Result.save_payload_configs:
             yield 'payload_raw', self._payload.raw
             for key, value in self._payload.config.items():
                 yield f"payload_{key}", value
         if Result.save_headers:
-            yield 'headers', self.headers
+            yield 'headers', self.history.raw_headers
         if Result.save_body:
-            yield 'body', self.__response.text
+            yield 'body', self.history.response.text
 
-    def get_response(self) -> Response:
-        """The response getter
+    def get_description(self) -> str:
+        """Get the description from the result
 
-        @returns Response: The response of the request
+        @returns str: The job description and scanners descriptions
         """
-        return self.__response
+        description = ''
+        if self.job_description:
+            description += f"\n|_ {self.job_description}"
+        for scanner, s_res in self.scanners_res.items():
+            for key, value in s_res.data.items():
+                if (value is not None and isinstance(value, bool)) or value:
+                    description += (f"\n|_ {key}: "
+                                    f"{ResultUtils.format_custom_field(value)}")
+            if s_res.enqueued_payloads:
+                description += (f"\n|_ Scanner {scanner} enqueued "
+                                f"{s_res.enqueued_payloads} payloads")
+        return description

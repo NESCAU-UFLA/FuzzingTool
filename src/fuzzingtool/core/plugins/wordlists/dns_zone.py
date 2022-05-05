@@ -19,13 +19,15 @@
 # SOFTWARE.
 
 from typing import List
+from socket import gethostbyname, gaierror
 
 from dns import resolver, query, zone
 
 from ...bases.base_plugin import Plugin
 from ...bases.base_wordlist import BaseWordlist
 from ....decorators.plugin_meta import plugin_meta
-from ....exceptions.main_exceptions import MissingParameter, BuildWordlistFails
+from ....utils.consts import FuzzType
+from ....exceptions import MissingParameter, BuildWordlistFails
 
 
 @plugin_meta
@@ -36,7 +38,7 @@ class DnsZone(BaseWordlist, Plugin):
         'type': str,
     }
     __desc__ = "Build the wordlist based on a DNS zone transfer request"
-    __type__ = "SubdomainFuzzing"
+    __type__ = FuzzType.SUBDOMAIN_FUZZING
     __version__ = "0.2"
 
     def __init__(self, host: str):
@@ -46,6 +48,10 @@ class DnsZone(BaseWordlist, Plugin):
         BaseWordlist.__init__(self)
 
     def _build(self) -> List[str]:
+        try:
+            gethostbyname(self.host)
+        except gaierror:
+            raise BuildWordlistFails(f"Couldn't resolve hostname {self.host}")
         name_servers = resolver.resolve(self.host, 'NS')
         name_servers_ips = []
         for ns in name_servers:

@@ -22,11 +22,13 @@ from datetime import datetime
 import threading
 import sys
 from typing import Tuple
+from math import floor, ceil, log10
+from shutil import get_terminal_size
 
 from ...objects.result import Result
-from ...utils.consts import MAX_PAYLOAD_LENGTH_TO_OUTPUT, PATH_FUZZING, SUBDOMAIN_FUZZING
-from ...utils.utils import stringfy_list, fix_payload_to_output
-from ...utils.http_utils import get_path, get_host, get_pure_url
+from ...utils.consts import MAX_PAYLOAD_LENGTH_TO_OUTPUT, FuzzType
+from ...utils.utils import fix_payload_to_output
+from ...utils.http_utils import get_parsed_url, get_pure_url
 from ...utils.result_utils import ResultUtils
 
 
@@ -47,7 +49,7 @@ class Colors:
     BOLD = '\033[1m'
 
     @staticmethod
-    def disable():
+    def disable() -> None:
         """Disable the colors of the program"""
         Colors.RESET = ''
         Colors.GRAY = ''
@@ -125,7 +127,6 @@ class CliOutput:
 
     def __init__(self):
         self.__lock = threading.Lock()
-        self.__break_line = ''
         self.__last_inline = False
         self.__info = f'{Colors.GRAY}[{Colors.BLUE_GRAY}INFO{Colors.GRAY}]{Colors.RESET} '
         self.__warning = f'{Colors.GRAY}[{Colors.YELLOW}WARNING{Colors.GRAY}]{Colors.RESET} '
@@ -147,16 +148,17 @@ class CliOutput:
         self.__worked = f'{Colors.GRAY}[{Colors.GREEN}+{Colors.GRAY}]{Colors.RESET} '
         self.__not_worked = f'{Colors.GRAY}[{Colors.RED}-{Colors.GRAY}]{Colors.RESET} '
 
-    def set_verbosity_mode(self, verbose_mode: bool) -> None:
-        """Set the verbosity mode
+    def set_new_job(self, total_requests: int) -> None:
+        """Set the variables from job manager
 
-        @type verbose_mode: bool
-        @param verbose_mode: The verbose mode flag
+        @type total_requests: int
+        @param total_requests: The number of requests that'll be made
         """
-        if verbose_mode:
-            self.__break_line = ''
-        else:
-            self.__break_line = '\n'
+        self.__total_requests = total_requests
+        self.__request_indent = ceil(log10(total_requests))
+        self.__progress_length = (38  # Progress bar, spaces, square brackets and slashes
+                                  + MAX_PAYLOAD_LENGTH_TO_OUTPUT
+                                  + self.__request_indent * 2)
 
     def info_box(self, msg: str) -> None:
         """Print the message with a info label
@@ -164,7 +166,7 @@ class CliOutput:
         @type msg: str
         @param msg: The message
         """
-        print(f'{self.__get_time()}{self.__get_info(msg)}')
+        print(f'{self._get_break()}{self.__get_time()}{self.__get_info(msg)}')
 
     def error_box(self, msg: str) -> None:
         """End the application with error label and a message
@@ -172,7 +174,7 @@ class CliOutput:
         @type msg: str
         @param msg: The message
         """
-        exit(f'{self.__get_time()}{self.__get_error(msg)}')
+        exit(f'{self._get_break()}{self.__get_time()}{self.__get_error(msg)}')
 
     def warning_box(self, msg: str) -> None:
         """Print the message with a warning label
@@ -182,8 +184,7 @@ class CliOutput:
         """
         with self.__lock:
             sys.stdout.flush()
-            print(f'{self.__break_line}'
-                  f'{self.__get_time()}{self.__get_warning(msg)}')
+            print(f'{self._get_break()}{self.__get_time()}{self.__get_warning(msg)}')
 
     def abort_box(self, msg: str) -> None:
         """Print the message with abort label and a message
@@ -193,8 +194,7 @@ class CliOutput:
         """
         with self.__lock:
             sys.stdout.flush()
-            print(f'{self.__break_line}'
-                  f'{self.__get_time()}{self.__get_abort(msg)}')
+            print(f'{self._get_break()}{self.__get_time()}{self.__get_abort(msg)}')
 
     def worked_box(self, msg: str) -> None:
         """Print the message with worked label and a message
@@ -226,7 +226,7 @@ class CliOutput:
             get_type = self.__get_warning
         else:
             get_type = self.__get_info
-        print(f"{self.__get_time()}{get_type(msg)} (y/N) ", end='')
+        print(f"{self._get_break()}{self.__get_time()}{get_type(msg)} (y/N) ", end='')
         action = input()
         if action == 'y' or action == 'Y':
             return True
@@ -239,7 +239,7 @@ class CliOutput:
         @param msg: The message
         @returns mixed: The data asked
         """
-        print(self.__get_time()+self.__get_info(msg), end=': ')
+        print(f"{self._get_break()}{self.__get_time()}{self.__get_info(msg)}", end=': ')
         return input()
 
     def print_config(self, key: str, value: str = '', spaces: int = 0) -> None:
@@ -267,10 +267,8 @@ class CliOutput:
         """
         print("")
         spaces = 3
-        self.print_config("Target", get_host(get_pure_url(target['url'])))
-        self.print_config("Methods",
-                          stringfy_list(target['methods']),
-                          spaces)
+        self.print_config("Target", get_parsed_url(get_pure_url(target['url'])).hostname)
+        self.print_config("Method", target['method'], spaces)
         self.print_config("HTTP headers", target['header'], spaces)
         if target['body']:
             self.print_config("Body data", target['body'], spaces)
@@ -283,44 +281,46 @@ class CliOutput:
         self.print_config("Dictionary size", dict_size)
         print("")
 
-    def get_percentage(self, item_index: int, total_requests: int) -> str:
-        """Get the percentage from item_index / total_requests
+    def get_percentage(self, item_index: int) -> str:
+        """Get the percentage string from item_index per total_requests
 
         @type item_index: int
         @param item_index: The actual request index
-        @type total_requests: int
-        @param total_requests: The total of requests quantity
         @returns str: The percentage str
         """
-        return f"{str(int((int(item_index)/total_requests)*100))}%"
+        return f"{self._get_percentage_value(item_index, self.__total_requests)}%"
 
     def progress_status(self,
                         item_index: int,
-                        total_requests: int,
-                        payload: str) -> None:
+                        payload: str,
+                        current_job: int,
+                        total_jobs: int) -> None:
         """Output the progress status of the fuzzing
 
         @type item_index: int
         @param item_index: The actual request index
-        @type total_requests: int
-        @param total_requests: The total of requests quantity
         @type payload: str
         @param payload: The payload used in the request
         """
-        status = (f"{Colors.GRAY}[{Colors.LIGHT_GRAY}{item_index}"
-                  + f"{Colors.GRAY}/{Colors.LIGHT_GRAY}{total_requests}"
-                  + f"{Colors.GRAY}]{Colors.RESET} {Colors.LIGHT_YELLOW}"
-                  + self.get_percentage(item_index, total_requests)
-                  + f"{Colors.RESET}")
-        payload = fix_payload_to_output(payload)
-        while len(payload) < MAX_PAYLOAD_LENGTH_TO_OUTPUT:
-            payload += ' '
-        with self.__lock:
-            if not self.__last_inline:
-                self.__last_inline = True
-                self.__erase_line()
-            print(f"\r{self.__get_time()}{status}"
-                  f"{Colors.GRAY} :: {Colors.LIGHT_GRAY}{payload}", end='')
+        jobs_indent = ceil(log10(total_jobs))
+        progress_length = self.__progress_length + (2 * jobs_indent)
+        if progress_length <= get_terminal_size()[0]:
+            percentage_value = self._get_percentage_value(item_index, self.__total_requests)
+            status = self._get_progress_bar(percentage_value)
+            payload = fix_payload_to_output(payload)
+            status += (f" {Colors.LIGHT_YELLOW}{percentage_value:>3}% {Colors.RESET}"
+                       + f"{Colors.GRAY}[{Colors.LIGHT_GRAY}{item_index:>{self.__request_indent}}"
+                       + f"{Colors.GRAY}/{Colors.LIGHT_GRAY}{self.__total_requests}"
+                       + f"{Colors.GRAY}]{Colors.RESET} "
+                       + f"{Colors.GRAY}[{Colors.LIGHT_GRAY}{current_job:>{jobs_indent}}"
+                       + f"{Colors.GRAY}/{Colors.LIGHT_GRAY}{total_jobs}"
+                       + f"{Colors.GRAY}]{Colors.RESET}")
+            status += f"{Colors.GRAY} :: {Colors.LIGHT_GRAY}{payload:<{MAX_PAYLOAD_LENGTH_TO_OUTPUT}}"
+            with self.__lock:
+                if not self.__last_inline:
+                    self.__last_inline = True
+                    self.__erase_line()
+                print(f"\r{status}", end='')
 
     def print_result(self, result: Result, vuln_validator: bool) -> None:
         """Custom output print for box mode
@@ -339,6 +339,40 @@ class CliOutput:
                     self.__last_inline = False
                     self.__erase_line()
                 self.worked_box(formatted_result_str)
+
+    def _get_break(self) -> str:
+        """Get a break line if the last message was inline
+
+        @returns str: The break line
+        """
+        if self.__last_inline:
+            self.__last_inline = False
+            return '\n'
+        return ''
+
+    def _get_percentage_value(self, item_index: int, total_requests: int) -> int:
+        """Get the percentage from item_index per total_requests
+
+        @type item_index: int
+        @param item_index: The actual request index
+        @type total_requests: int
+        @param total_requests: The total of requests quantity
+        @returns int: The percentage value
+        """
+        return int((item_index/total_requests)*100)
+
+    def _get_progress_bar(self, percentage_value: int) -> str:
+        """Get a formated progress bar
+
+        @type percentage_value: int
+        @param percentage_value: The percentage value of progress status
+        @returns str: The formated progress bar
+        """
+        bar_size = floor(percentage_value/5)
+        spaces = 20-bar_size
+        return (f"{Colors.GRAY}["
+                f"{Colors.LIGHT_GREEN}{Colors.BOLD}{'#'*bar_size}{Colors.RESET}{' '*spaces}"
+                f"{Colors.GRAY}]{Colors.RESET}")
 
     def __get_time(self) -> str:
         """Get a time label
@@ -417,14 +451,13 @@ class CliOutput:
         @param result: The result of the request
         @returns str: The formatted payload to output
         """
-        if result.fuzz_type == PATH_FUZZING:
-            try:
-                formatted_payload = get_path(result.url)
-            except ValueError:
-                formatted_payload = result.url
+        if result.fuzz_type == FuzzType.PATH_FUZZING:
+            formatted_payload = result.history.parsed_url.path
+            if not formatted_payload:
+                return result.history.url
             return formatted_payload
-        if result.fuzz_type == SUBDOMAIN_FUZZING:
-            return get_host(result.url)
+        if result.fuzz_type == FuzzType.SUBDOMAIN_FUZZING:
+            return result.history.parsed_url.hostname
         return result.payload
 
     def __get_formatted_status(self, status: int) -> str:
@@ -460,10 +493,10 @@ class CliOutput:
         @returns Tuple[str, str, str, str, str, str]: The tuple with the formatted result items
         """
         payload, rtt, length, words, lines = ResultUtils.get_formatted_result(
-            self.__get_formatted_payload(result), result.rtt,
-            result.body_size, result.words, result.lines
+            self.__get_formatted_payload(result), result.history.rtt,
+            result.history.body_size, result.words, result.lines
         )
-        return (payload, self.__get_formatted_status(result.status), rtt, length, words, lines)
+        return (payload, self.__get_formatted_status(result.history.status), rtt, length, words, lines)
 
     def __get_formatted_result(self, result: Result) -> str:
         """Format the entire result message
@@ -482,11 +515,5 @@ class CliOutput:
             f"{Colors.LIGHT_GRAY}Words{Colors.RESET} {words} | "
             f"{Colors.LIGHT_GRAY}Lines{Colors.RESET} {lines}{Colors.GRAY}]{Colors.RESET}"
         )
-        if result.custom:
-            custom_str = ''
-            for key, value in result.custom.items():
-                if (value is not None and isinstance(value, bool)) or value:
-                    custom_str += (f"\n{Colors.LIGHT_YELLOW}|_ {key}: "
-                                   f"{ResultUtils.format_custom_field(value)}{Colors.RESET}")
-            formatted_result_str += custom_str
+        formatted_result_str += f"{Colors.LIGHT_YELLOW}{result.get_description()}{Colors.RESET}"
         return formatted_result_str

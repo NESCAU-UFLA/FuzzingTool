@@ -18,21 +18,33 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from abc import ABC, abstractmethod
+from abc import abstractmethod
+from queue import Queue
 
-from ...objects.result import Result
+from .job_provider import JobProvider
+from ...objects import Payload, Result, ScannerResult
 
 
-class BaseScanner(ABC):
-    """Base scanner"""
-    @abstractmethod
-    def inspect_result(self, result: Result) -> None:
-        """Inspects the FuzingTool result to add new information if needed
+class BaseScanner(JobProvider):
+    """Base scanner (ABC)
+
+    Attributes:
+        payloads_queue: The payload queue for new requests
+    """
+    def __init__(self):
+        self.payloads_queue = Queue()
+        super().__init__()
+
+    def __str__(self) -> str:
+        return type(self).__name__
+
+    def notify(self, result: Result) -> None:
+        """Notify the observer with the new job
 
         @type result: Result
-        @param result: The result object
+        @param result: The FuzzingTool result object
         """
-        pass
+        self._observer.update(str(self), result)
 
     @abstractmethod
     def scan(self, result: Result) -> bool:
@@ -41,5 +53,47 @@ class BaseScanner(ABC):
         @type result: Result
         @param result: The result object
         @reeturns bool: A match flag
+        """
+        pass
+
+    def process(self, result: Result) -> None:
+        """Process the FuzzingTool result from this base scanner.
+           Do not override this function. If you need so, override _process method instead
+
+        @type result: Result
+        @param result: The result object
+        """
+        scanner_name = str(self)
+        result.scanners_res[scanner_name] = ScannerResult(scanner_name)
+        self._process(result)
+
+    def get_self_res(self, result: Result) -> ScannerResult:
+        """Get the self Scanner result
+
+        @type result: Result
+        @param result: The FuzzingTool result object
+        @returns ScannerResult: The self scanner result object
+        """
+        return result.scanners_res[str(self)]
+
+    def enqueue_payload(self, result: Result, payload: str) -> None:
+        """Enqueue a payload into the payload queue for the next job
+
+        @type result: Result
+        @param result: The result of the payload
+        @type payload: str
+        @param payload: The payload that'll be enqueued
+        """
+        was_empty = self.payloads_queue.empty()
+        self.payloads_queue.put(Payload().update(result._payload).with_recursion(payload))
+        self.get_self_res(result).enqueued_payloads += 1
+        if was_empty:
+            self.notify(result)
+
+    def _process(self, result: Result) -> None:
+        """Process the FuzzingTool result through child scanner if needed
+
+        @type result: Result
+        @param result: The result object
         """
         pass

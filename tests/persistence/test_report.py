@@ -2,11 +2,11 @@ import unittest
 from unittest.mock import Mock, patch
 from datetime import datetime
 
-from src.fuzzingtool.reports import reports
-from src.fuzzingtool.reports.base_report import BaseReport
-from src.fuzzingtool.reports.report import Report, get_report_name_and_type
-from src.fuzzingtool.reports.reports import TxtReport
-from src.fuzzingtool.exceptions.main_exceptions import InvalidArgument
+from src.fuzzingtool.persistence import reports
+from src.fuzzingtool.persistence.base_report import BaseReport
+from src.fuzzingtool.persistence.report import Report, get_report_name_and_type
+from src.fuzzingtool.persistence.reports import TxtReport
+from src.fuzzingtool.exceptions import InvalidArgument
 
 
 class TestReport(unittest.TestCase):
@@ -17,7 +17,7 @@ class TestReport(unittest.TestCase):
         self.assertIsInstance(returned_data, tuple)
         self.assertEqual(returned_data, return_expected)
 
-    @patch("src.fuzzingtool.reports.report.datetime")
+    @patch("src.fuzzingtool.persistence.report.datetime")
     def test_get_report_name_and_type_with_only_extension(self, mock_datetime: Mock):
         test_datetime_now = datetime(2021, 1, 1, 0, 0)
         mock_datetime.now.return_value = test_datetime_now
@@ -34,14 +34,14 @@ class TestReport(unittest.TestCase):
         self.assertIsInstance(returned_data, dict)
         self.assertEqual(returned_data, return_expected)
 
-    @patch("src.fuzzingtool.reports.report.Report.get_available_reports")
+    @patch("src.fuzzingtool.persistence.report.Report.get_available_reports")
     def test_build(self, mock_get_available_reports: Mock):
         test_name = "test_report.txt"
         mock_get_available_reports.return_value = {'txt': TxtReport}
         returned_data = Report.build(test_name)
         self.assertIsInstance(returned_data, BaseReport)
 
-    @patch("src.fuzzingtool.reports.report.Report.get_available_reports")
+    @patch("src.fuzzingtool.persistence.report.Report.get_available_reports")
     def test_build_with_invalid_format(self, mock_get_available_reports: Mock):
         test_name = "test_report.test"
         mock_get_available_reports.return_value = {'txt': TxtReport}

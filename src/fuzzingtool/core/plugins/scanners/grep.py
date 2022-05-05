@@ -25,8 +25,7 @@ from ...bases.base_scanner import BaseScanner
 from ....objects.result import Result
 from ....utils.utils import stringfy_list
 from ....decorators.plugin_meta import plugin_meta
-from ....decorators.append_args import append_args
-from ....exceptions.main_exceptions import MissingParameter, BadArgumentFormat
+from ....exceptions import MissingParameter, BadArgumentFormat
 
 
 PREPARED_REGEXES = {
@@ -46,7 +45,7 @@ class Grep(BaseScanner, Plugin):
     __desc__ = ("Grep content based on a regex match into the response body. "
                 "You can use these prepared regexes: "
                 + stringfy_list(list(PREPARED_REGEXES.keys())))
-    __type__ = ""
+    __type__ = None
     __version__ = "0.2"
 
     """
@@ -64,20 +63,16 @@ class Grep(BaseScanner, Plugin):
                 self.__regexers.append(re.compile(regex))
             except re.error:
                 raise BadArgumentFormat(f"invalid regex: {regex}")
-
-    @append_args
-    def inspect_result(self, result: Result) -> None:
-        result.custom['found'] = None
-        for i in range(len(self.__regexers)):
-            result.custom[f'greped_regex_{i}'] = []
+        BaseScanner.__init__(self)
 
     def scan(self, result: Result) -> bool:
-        total_greped = 0
+        return True
+
+    def _process(self, result: Result) -> None:
+        self.get_self_res(result).data['found'] = 0
         for i, regexer in enumerate(self.__regexers):
             this_greped = list(set([
-                r.group() for r in regexer.finditer(result.get_response().text)
+                r.group() for r in regexer.finditer(result.history.response.text)
             ]))
-            total_greped += len(this_greped)
-            result.custom[f'greped_regex_{i}'] = this_greped
-        result.custom['found'] = total_greped
-        return True if total_greped else False
+            self.get_self_res(result).data['found'] += len(this_greped)
+            self.get_self_res(result).data[f'greped_regex_{i}'] = this_greped

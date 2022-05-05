@@ -12,10 +12,12 @@ install_requires = [
     'requests>=2.25.1',
     'beautifulsoup4>=4.9.3',
     'dnspython>=2.1.0',
+    'python-Wappalyzer>=0.3.1',
 ]
 
 dev_requires = [
-    'pytest'
+    'pytest',
+    'pytest-cov',
 ]
 
 setup(
@@ -33,7 +35,7 @@ setup(
     package_dir={'fuzzingtool': 'src/fuzzingtool'},
     entry_points={
         'console_scripts': [
-            'FuzzingTool = fuzzingtool.fuzzingtool:main_cli'
+            'fuzzingtool = fuzzingtool.fuzzingtool:main_cli'
         ]
     },
     install_requires=install_requires,

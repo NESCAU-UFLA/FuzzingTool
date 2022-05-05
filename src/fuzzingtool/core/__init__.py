@@ -22,7 +22,10 @@ from .bases import *
 from .defaults import *
 from .blacklist_status import BlacklistStatus
 from .dictionary import Dictionary
+from .filter import Filter
 from .fuzzer import Fuzzer
+from .job_manager import JobManager
 from .matcher import Matcher
 from .payloader import Payloader
+from .recursion_manager import RecursionManager
 from .summary import Summary

@@ -1,13 +1,9 @@
-name: Snyk
+name: sca
 
-on: 
-  pull_request:
-    branches:
-      - develop
-      - master
+on: push
 
 jobs:
-  security:
+  snyk:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@master

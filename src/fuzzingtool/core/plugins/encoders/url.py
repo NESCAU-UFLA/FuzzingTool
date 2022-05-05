@@ -23,7 +23,7 @@ from urllib.parse import quote, unquote
 from ...bases.base_plugin import Plugin
 from ...bases.base_encoder import BaseEncoder
 from ....decorators.plugin_meta import plugin_meta
-from ....exceptions.main_exceptions import BadArgumentFormat
+from ....exceptions import BadArgumentFormat
 
 
 @plugin_meta
@@ -34,7 +34,7 @@ class Url(BaseEncoder, Plugin):
         'type': str,
     }
     __desc__ = "Replace special characters in string using the %xx escape. Letters, digits, and the characters '_.-~' are never quoted."
-    __type__ = ''
+    __type__ = None
     __version__ = "0.2"
 
     def __init__(self, encode_level: int):

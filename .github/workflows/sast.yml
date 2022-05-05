@@ -1,13 +1,9 @@
-name: Bandit-SAST
+name: sast
 
-on: 
-  pull_request:
-    branches:
-      - develop
-      - master
+on: push
 
 jobs:
-  bandit-sast:
+  bandit:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@master

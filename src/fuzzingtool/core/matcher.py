@@ -21,70 +21,79 @@
 from typing import List, Dict, Tuple, Callable, Union, Type
 import operator
 
+from .bases.base_validator import BaseValidator
 from ..objects.result import Result
 from ..utils.utils import split_str_to_list
-from ..exceptions.main_exceptions import BadArgumentType
+from ..exceptions import BadArgumentType
 
 
-def get_allowed_status(status: str,
-                       allowed_list: List[int],
-                       allowed_range: List[int]) -> None:
+def get_status_code(status: str,
+                    status_list: List[int],
+                    status_range: List[int]) -> None:
     """Get the allowed status code list and range
 
     @type status: str
     @param status: The status cod given in the terminal
-    @type allowed_list: List[int]
-    @param allowed_list: The allowed status codes list
-    @type allowed_range: List[int]
-    @param allowed_range: The range of allowed status codes
+    @type status_list: List[int]
+    @param status_list: The allowed status codes list
+    @type status_range: List[int]
+    @param status_range: The range of allowed status codes
     """
     try:
         if '-' not in status:
-            allowed_list.append(int(status))
+            status_list.append(int(status))
         else:
             code_left, code_right = (int(code) for code in status.split('-', 1))
             if code_right < code_left:
                 code_left, code_right = code_right, code_left
-            allowed_range[:] = [code_left, code_right]
+            status_range[:] = [code_left, code_right]
     except ValueError:
         raise BadArgumentType(
             f"The match status argument ({status}) must be integer"
         )
 
 
-class Matcher:
+class Matcher(BaseValidator):
     """Class to handle with the match validations
 
     Attributes:
         comparator: The dictionary with the default
                     entries to be compared with the current request
-        allowed_status: The dictionary with the
-                        allowed status codes (and range)
+        status_code: The dictionary with the
+                     allowed status codes (and range)
     """
     def __init__(self,
-                 allowed_status: str = None,
+                 status_code: str = None,
                  time: str = None,
                  size: str = None,
                  words: str = None,
-                 lines: str = None):
+                 lines: str = None,
+                 regex: str = None):
         """Class constructor
 
-        @type allowed_status: dict
-        @param allowed_status: The allowed status dictionary
-        @type comparator: dict
-        @param comparator: The dict with comparator data
-        @type match_functions: Tuple[Callable, Callable]
-        @param match_functions: The callback functions for the match comparator
+        @type status_code: str
+        @param status_code: The allowed status codes string
+        @type time: str
+        @param time: The time to be compared with the RTT
+        @type size: str
+        @param size: The size to be compared with the response body length
+        @type words: str
+        @param words: The number of words to be compared with the response body
+        @type lines: str
+        @param lines: The number of lines to be compared with the response body
+        @type regex: str
+        @param regex: The regular expression to be compared with the response body
         """
-        self._allowed_status = self.__build_allowed_status(allowed_status)
+        self._status_code = self.__build_status_code(status_code)
         self._comparator = self.__build_comparator(time, size, words, lines)
+        super().__init__(regex)
 
-    def allowed_status_is_default(self) -> bool:
+    def status_code_is_default(self) -> bool:
         """Check if the allowed status is set as default config
 
         @returns bool: If the allowed status is the default or not
         """
-        return self._allowed_status['is_default']
+        return self._status_code['is_default']
 
     def comparator_is_set(self) -> bool:
         """Check if any of the comparators are seted
@@ -97,13 +106,13 @@ class Matcher:
                 return True
         return False
 
-    def set_allowed_status(self, allowed_status: str) -> None:
+    def set_status_code(self, status_code: str) -> None:
         """The allowed status setter
 
-        @type allowed_status: str
-        @param allowed_status: The allowed status
+        @type status_code: str
+        @param status_code: The allowed status
         """
-        self._allowed_status = self.__build_allowed_status(allowed_status)
+        self._status_code = self.__build_status_code(status_code)
 
     def set_comparator(self,
                        time: str,
@@ -112,10 +121,14 @@ class Matcher:
                        lines: str) -> None:
         """The comparator setter
 
-        @type size: str
-        @param size: The size to be compared with response body
         @type time: str
         @param time: The time to be compared with the RTT
+        @type size: str
+        @param size: The size to be compared with the response body length
+        @type words: str
+        @param words: The number of words to be compared with the response body
+        @type lines: str
+        @param lines: The number of lines to be compared with the response body
         """
         self._comparator = self.__build_comparator(time, size, words, lines)
 
@@ -127,17 +140,24 @@ class Matcher:
         @param result: The actual result object
         @returns bool: A match flag
         """
-        if self._match_status(result.status):
-            if self._comparator['time'] is not None:
-                return self._match_time(result.rtt, self._comparator['time'])
-            if self._comparator['size'] is not None:
-                return self._match_size(int(result.body_size), self._comparator['size'])
-            if self._comparator['words'] is not None:
-                return self._match_words(result.words, self._comparator['words'])
-            if self._comparator['lines'] is not None:
-                return self._match_lines(result.lines, self._comparator['lines'])
-            return True
-        return False
+        if not self._match_status(result.history.status):
+            return False
+        if (self._comparator['time'] is not None and
+                not self._match_time(result.history.rtt, self._comparator['time'])):
+            return False
+        if (self._comparator['size'] is not None and
+                not self._match_size(int(result.history.body_size), self._comparator['size'])):
+            return False
+        if (self._comparator['words'] is not None and
+                not self._match_words(result.words, self._comparator['words'])):
+            return False
+        if (self._comparator['lines'] is not None and
+                not self._match_lines(result.lines, self._comparator['lines'])):
+            return False
+        if (self._regexer is not None and
+                not self._regexer.search(result.history.response.text)):
+            return False
+        return True
 
     def _match_status(self, status: int) -> bool:
         """Check if the result status match with the allowed status dict
@@ -146,10 +166,10 @@ class Matcher:
         @param status: The result status code
         @returns bool: if match returns True else False
         """
-        return (status in self._allowed_status['list']
-                or (self._allowed_status['range']
-                    and (self._allowed_status['range'][0] <= status
-                         and status <= self._allowed_status['range'][1])))
+        return (status in self._status_code['list']
+                or (self._status_code['range']
+                    and (self._status_code['range'][0] <= status
+                         and status <= self._status_code['range'][1])))
 
     def _match_time(self, time: float, comparator_time: float) -> bool:
         """Check if the result time match with the comparator dict
@@ -195,23 +215,23 @@ class Matcher:
         """
         pass
 
-    def __build_allowed_status(self, allowed_status: str) -> dict:
+    def __build_status_code(self, status_code: str) -> dict:
         """Build the matcher attribute for allowed status
 
-        @type allowed_status: str
-        @param allowed_status: The allowed status codes to match results
+        @type status_code: str
+        @param status_code: The allowed status codes to match results
         @returns dict: The allowed status code,
                        list and range, parsed into a dict
         """
-        if not allowed_status:
+        if not status_code:
             is_default = True
             allowed_list = [200]
         else:
             is_default = False
             allowed_list = []
         allowed_range = []
-        for status in split_str_to_list(allowed_status):
-            get_allowed_status(status, allowed_list, allowed_range)
+        for status in split_str_to_list(status_code):
+            get_status_code(status, allowed_list, allowed_range)
         return {
             'is_default': is_default,
             'list': allowed_list,
@@ -236,7 +256,7 @@ class Matcher:
             @type comparator: str
             @param comparator: The value to be compared
             @returns Tuple[Callable, str]: The callback match function,
-                                            and the new comparator value
+                                           and the new comparator value
             """
             comparator = str(comparator)
             for key, value in match.items():
@@ -294,10 +314,14 @@ class Matcher:
                            lines: str) -> dict:
         """The comparator setter
 
-        @type size: str
-        @param size: The size to be compared with response body
         @type time: str
         @param time: The time to be compared with the RTT
+        @type size: str
+        @param size: The size to be compared with response body
+        @type words: str
+        @param words: The number of words to be compared with response body
+        @type lines: str
+        @param lines: The number of lines to be compared with responde body
         @returns dict: The data comparator
         """
         comparator = {

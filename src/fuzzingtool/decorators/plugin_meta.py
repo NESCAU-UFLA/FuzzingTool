@@ -19,7 +19,8 @@
 # SOFTWARE.
 
 from ..core.bases.base_plugin import Plugin
-from ..exceptions.main_exceptions import MetadataException
+from ..utils.consts import FuzzType
+from ..exceptions import MetadataException
 
 
 def plugin_meta(cls: Plugin) -> Plugin:
@@ -36,6 +37,12 @@ def plugin_meta(cls: Plugin) -> Plugin:
     if not cls.__desc__:
         raise MetadataException(
             f"Description cannot be blank on plugin {cls.__name__}"
+        )
+    if cls.__type__ is not None and cls.__type__ not in [
+        value for key, value in vars(FuzzType).items() if not key.startswith("__")
+    ]:
+        raise MetadataException(
+            f"Plugin type should be None or a valid FuzzType on plugin {cls.__name__}"
         )
     if not cls.__version__:
         raise MetadataException(f"Version cannot be blank on plugin {cls.__name__}")
@@ -64,7 +71,7 @@ def _check_params_meta(cls: Plugin) -> None:
     @type cls: Plugin
     @param cls: The class with the plugin metadata
     """
-    if not (type(cls.__params__) is dict):
+    if (type(cls.__params__) is not dict):
         raise MetadataException("The parameters must be a "
                                 f"dictionary on plugin {cls.__name__}")
     param_dict_keys = cls.__params__.keys()

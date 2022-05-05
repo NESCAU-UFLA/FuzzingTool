@@ -3,7 +3,7 @@ from unittest.mock import Mock, patch, mock_open
 from datetime import datetime
 from pathlib import Path
 
-from src.fuzzingtool.utils.logger import Logger
+from src.fuzzingtool.persistence.logger import Logger
 from src.fuzzingtool.utils.consts import OUTPUT_DIRECTORY
 
 
@@ -14,7 +14,7 @@ class TestLogger(unittest.TestCase):
         self.test_path = Path(f"{OUTPUT_DIRECTORY}/{self.test_host}")
         self.test_output = Path(f"{self.test_path}/logs/log-{self.default_datetime.strftime('%Y-%m-%d_%H:%M')}.log")
 
-    @patch("src.fuzzingtool.utils.logger.datetime")
+    @patch("src.fuzzingtool.persistence.logger.datetime")
     @patch("builtins.open", new_callable=mock_open)
     def test_setup(self, mock_file: Mock, mock_date: Mock):
         test_datetime_now = self.default_datetime.strftime('%Y/%m/%d %H:%M')
@@ -26,7 +26,7 @@ class TestLogger(unittest.TestCase):
         self.assertIsInstance(returned_data, str)
         self.assertEqual(returned_data, str(self.test_output))
 
-    @patch("src.fuzzingtool.utils.logger.datetime")
+    @patch("src.fuzzingtool.persistence.logger.datetime")
     def test_setup_with_path_mkdir(self, mock_date: Mock):
         mock_date.now.return_value = self.default_datetime
         Logger().setup(self.test_host)
@@ -37,7 +37,7 @@ class TestLogger(unittest.TestCase):
         self.test_path.rmdir()
         self.assertEqual(self.test_path.exists(), False)
 
-    @patch("src.fuzzingtool.utils.logger.datetime")
+    @patch("src.fuzzingtool.persistence.logger.datetime")
     @patch("builtins.open", new_callable=mock_open)
     def test_write(self, mock_file: Mock, mock_date: Mock):
         test_payload = "wp-admin.php"

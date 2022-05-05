@@ -18,16 +18,29 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from .fuzz_controller import FuzzController
-from ..interfaces.cli.cli_arguments import CliArguments
+from abc import ABC, abstractmethod
+
+from .base_observer import BaseObserver
 
 
-def fuzz(**kwargs) -> None:
-    FuzzController(**kwargs).main()
+class JobProvider(ABC):
+    """Base class for the job providers
 
+    Attributes:
+        observer: The observer that'll look for this job provider
+    """
+    def __init__(self):
+        self._observer = None
 
-def fuzz_cli(args: str, **kwargs) -> None:
-    args = ['FuzzingTool'] + args.split(' ')
-    args = vars(CliArguments(args).get_arguments())
-    args.update(kwargs)
-    FuzzController(**args).main()
+    def set_observer(self, observer: BaseObserver) -> None:
+        """The observer setter
+
+        @type observer: BaseObserver
+        @param observer: The observer that'll look for this job provider
+        """
+        self._observer = observer
+
+    @abstractmethod
+    def notify(self) -> None:
+        """Notify the observer for some action"""
+        pass

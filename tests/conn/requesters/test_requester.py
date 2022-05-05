@@ -5,10 +5,9 @@ import requests
 
 from src.fuzzingtool.conn.requesters.requester import Requester
 from src.fuzzingtool.objects.fuzz_word import FuzzWord
-from src.fuzzingtool.utils.consts import (FUZZING_MARK, UNKNOWN_FUZZING, HTTP_METHOD_FUZZING,
-                                          PATH_FUZZING, DATA_FUZZING)
+from src.fuzzingtool.utils.consts import FUZZING_MARK, FuzzType
 from src.fuzzingtool.exceptions.request_exceptions import RequestException
-from src.fuzzingtool.utils.http_utils import get_host
+from src.fuzzingtool.utils.http_utils import get_parsed_url
 from ...mock_utils.response_mock import ResponseMock
 
 
@@ -152,43 +151,47 @@ class TestRequester(unittest.TestCase):
         self.assertIsInstance(returned_header, dict)
 
     def test_set_fuzzing_type_for_method_fuzzing(self):
-        return_expected = HTTP_METHOD_FUZZING
+        return_expected = FuzzType.HTTP_METHOD_FUZZING
         test_method = FUZZING_MARK
         requester = Requester("https://test-url.com/", method=test_method)
         returned_data = requester._set_fuzzing_type()
         self.assertIsInstance(returned_data, int)
         self.assertEqual(returned_data, return_expected)
+        self.assertEqual(returned_data, requester.get_fuzzing_type())
         self.assertEqual(requester.is_method_fuzzing(), True)
 
     def test_set_fuzzing_type_for_path_fuzzing(self):
-        return_expected = PATH_FUZZING
+        return_expected = FuzzType.PATH_FUZZING
         test_url = f"https://test-url.com/{FUZZING_MARK}"
         requester = Requester(test_url)
         returned_data = requester._set_fuzzing_type()
         self.assertIsInstance(returned_data, int)
         self.assertEqual(returned_data, return_expected)
+        self.assertEqual(returned_data, requester.get_fuzzing_type())
         self.assertEqual(requester.is_path_fuzzing(), True)
 
     def test_set_fuzzing_type_for_data_fuzzing_on_url_params(self):
-        return_expected = DATA_FUZZING
+        return_expected = FuzzType.DATA_FUZZING
         test_url = f"https://test-url.com/?q={FUZZING_MARK}"
         requester = Requester(test_url)
         returned_data = requester._set_fuzzing_type()
         self.assertIsInstance(returned_data, int)
         self.assertEqual(returned_data, return_expected)
+        self.assertEqual(returned_data, requester.get_fuzzing_type())
         self.assertEqual(requester.is_data_fuzzing(), True)
 
     def test_set_fuzzing_type_for_data_fuzzing_on_body(self):
-        return_expected = DATA_FUZZING
+        return_expected = FuzzType.DATA_FUZZING
         test_body = f"user={FUZZING_MARK}&pass={FUZZING_MARK}"
         requester = Requester("https://test-url.com/", body=test_body)
         returned_data = requester._set_fuzzing_type()
         self.assertIsInstance(returned_data, int)
         self.assertEqual(returned_data, return_expected)
+        self.assertEqual(returned_data, requester.get_fuzzing_type())
         self.assertEqual(requester.is_data_fuzzing(), True)
 
     def test_set_fuzzing_type_for_data_fuzzing_on_headers(self):
-        return_expected = DATA_FUZZING
+        return_expected = FuzzType.DATA_FUZZING
         test_header = {
             'Cookie': f"TESTSESSID={FUZZING_MARK}"
         }
@@ -196,13 +199,21 @@ class TestRequester(unittest.TestCase):
         returned_data = requester._set_fuzzing_type()
         self.assertIsInstance(returned_data, int)
         self.assertEqual(returned_data, return_expected)
+        self.assertEqual(returned_data, requester.get_fuzzing_type())
         self.assertEqual(requester.is_data_fuzzing(), True)
 
     def test_set_fuzzing_type_for_unknown_fuzzing(self):
-        return_expected = UNKNOWN_FUZZING
+        return_expected = FuzzType.UNKNOWN_FUZZING
         returned_data = Requester("https://test-url.com/")._set_fuzzing_type()
         self.assertIsInstance(returned_data, int)
         self.assertEqual(returned_data, return_expected)
+
+    def test_constructor_with_cookie(self):
+        test_cookie = "COOKIE=TEST"
+        requester = Requester("https://test-url.com/", cookie=test_cookie)
+        returned_cookie: FuzzWord = requester._Requester__header['Cookie']
+        self.assertIsInstance(returned_cookie, FuzzWord)
+        self.assertEqual(returned_cookie.word, test_cookie)
 
     def test_get_url(self):
         return_expected = "https://test-url.com/"
@@ -210,6 +221,12 @@ class TestRequester(unittest.TestCase):
         returned_data = Requester(test_url).get_url()
         self.assertIsInstance(returned_data, str)
         self.assertEqual(returned_data, return_expected)
+
+    def test_get_method(self):
+        test_method = "GET"
+        returned_data = Requester("https://test-url.com/", method=test_method).get_method()
+        self.assertIsInstance(returned_data, str)
+        self.assertEqual(returned_data, test_method)
 
     def test_set_method(self):
         test_method = "GET"
@@ -268,26 +285,46 @@ class TestRequester(unittest.TestCase):
         return_expected = (expected_response, expected_rtt)
         test_url = "https://test-url.com/"
         test_payload = "test_payload"
+        test_proxy = "test-proxy.com:8001"
         test_parameters = ("GET", test_url, {}, {}, {})
         mock_get_parameters.return_value = test_parameters
         mock_time.return_value = expected_rtt
         mock_request.return_value = expected_response
-        returned_data = Requester(test_url, proxies=["test-proxy.com:8001"]).request(test_payload)
+        returned_data = Requester(test_url, proxies=[test_proxy]).request(test_payload)
         mock_get_parameters.assert_called_once_with(test_payload)
-        mock_request.assert_called_once_with(*test_parameters)
+        mock_request.assert_called_once_with(*(*test_parameters, {
+            'http': f"http://{test_proxy}",
+            'https': f"https://{test_proxy}"
+        }))
         self.assertIsInstance(returned_data, tuple)
         self.assertTupleEqual(returned_data, return_expected)
+
+    @patch("src.fuzzingtool.conn.requesters.requester.Requester._Requester__get_request_parameters")
+    @patch("src.fuzzingtool.conn.requesters.requester.Requester._request")
+    def test_request_with_replay_proxy(self, mock_request: Mock, mock_get_parameters: Mock):
+        test_url = "https://test-url.com/"
+        test_payload = "test_payload"
+        test_proxy = "test-proxy.com:8001"
+        test_parameters = ("GET", test_url, {}, {}, {})
+        mock_get_parameters.return_value = test_parameters
+        mock_request.return_value = ResponseMock()
+        Requester(test_url, replay_proxy=test_proxy).request(test_payload, replay_proxy=True)
+        mock_request.assert_called_once_with(*(*test_parameters, {
+            'http': f"http://{test_proxy}",
+            'https': f"https://{test_proxy}"
+        }))
 
     @patch("src.fuzzingtool.conn.requesters.requester.Requester._request")
     def test_request_with_raise_exception(self, mock_request: Mock):
         test_url = "https://test-url.com/"
         test_header_key = "test_key"
         test_header_value = "test_value"
-        requester = Requester(test_url, headers={test_header_key: test_header_value})
+        test_proxy = "test-proxy.com:8080"
+        requester = Requester(test_url, headers={test_header_key: test_header_value}, proxy=test_proxy)
         mock_request.side_effect = requests.exceptions.ProxyError
         with self.assertRaises(RequestException) as e:
             requester.request()
-        self.assertEqual(str(e.exception), "Can't connect to the proxy")
+        self.assertEqual(str(e.exception), f"Can't connect to the proxy {test_proxy}")
         mock_request.side_effect = requests.exceptions.TooManyRedirects
         with self.assertRaises(RequestException) as e:
             requester.request()
@@ -315,7 +352,7 @@ class TestRequester(unittest.TestCase):
         mock_request.side_effect = UnicodeError
         with self.assertRaises(RequestException) as e:
             requester.request()
-        self.assertEqual(str(e.exception), f"Invalid hostname {get_host(test_url)} for HTTP request")
+        self.assertEqual(str(e.exception), f"Invalid hostname {get_parsed_url(test_url).hostname} for HTTP request")
         mock_request.side_effect = ValueError
         with self.assertRaises(RequestException) as e:
             requester.request()

@@ -21,27 +21,11 @@
 from .base_exceptions import FuzzingToolException
 
 
-class FuzzControllerException(FuzzingToolException):
+class FuzzLibException(FuzzingToolException):
     pass
 
 
 class StopActionInterrupt(FuzzingToolException):
-    pass
-
-
-class MissingParameter(FuzzingToolException):
-    pass
-
-
-class BadArgumentFormat(FuzzingToolException):
-    pass
-
-
-class BadArgumentType(FuzzingToolException):
-    pass
-
-
-class InvalidArgument(FuzzingToolException):
     pass
 
 

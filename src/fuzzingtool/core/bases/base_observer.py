@@ -17,3 +17,21 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+
+from abc import ABC, abstractmethod
+
+from ...objects.result import Result
+
+
+class BaseObserver(ABC):
+    """Base class for the observers"""
+    @abstractmethod
+    def update(self, subject_name: str, result: Result) -> None:
+        """Update the Observer stats
+
+        @type subject_name: str
+        @param subject_name: The provider name
+        @type result: Result
+        @param result: The FuzzingTool result object
+        """
+        pass

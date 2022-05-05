@@ -22,7 +22,6 @@ from ...bases.base_plugin import Plugin
 from ...bases.base_scanner import BaseScanner
 from ....objects.result import Result
 from ....decorators.plugin_meta import plugin_meta
-from ....decorators.append_args import append_args
 
 
 @plugin_meta
@@ -30,14 +29,8 @@ class Reflected(BaseScanner, Plugin):
     __author__ = ("Vitor Oriel",)
     __params__ = {}
     __desc__ = "Lookup if the payload was reflected in the response body"
-    __type__ = ""
+    __type__ = None
     __version__ = "0.1"
 
-    @append_args
-    def inspect_result(self, result: Result) -> None:
-        result.custom['reflected'] = None
-
     def scan(self, result: Result) -> bool:
-        reflected = result.payload in result.get_response().text
-        result.custom['reflected'] = reflected
-        return reflected
+        return result.payload in result.history.response.text

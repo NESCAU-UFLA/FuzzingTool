@@ -1,5 +1,4 @@
 import unittest
-from unittest.mock import Mock, patch
 
 from src.fuzzingtool.utils.http_utils import *
 from ..mock_utils.response_mock import ResponseMock
@@ -41,36 +40,6 @@ class TestHttpUtils(unittest.TestCase):
         self.assertIsInstance(returned_data, str)
         self.assertEqual(returned_data, return_expected)
 
-    @patch("src.fuzzingtool.utils.http_utils.get_url_without_scheme")
-    def test_get_path(self, mock_get_url_without_scheme: Mock):
-        return_expected = "/"
-        test_url = "https://test-url.com/"
-        mock_get_url_without_scheme.return_value = "test-url.com/"
-        returned_data = get_path(test_url)
-        mock_get_url_without_scheme.assert_called_once_with(test_url)
-        self.assertIsInstance(returned_data, str)
-        self.assertEqual(returned_data, return_expected)
-
-    @patch("src.fuzzingtool.utils.http_utils.get_url_without_scheme")
-    def test_get_host_without_root_directory(self, mock_get_url_without_scheme: Mock):
-        return_expected = "test-url.com"
-        test_url = "https://test-url.com"
-        mock_get_url_without_scheme.return_value = "test-url.com"
-        returned_data = get_host(test_url)
-        mock_get_url_without_scheme.assert_called_once_with(test_url)
-        self.assertIsInstance(returned_data, str)
-        self.assertEqual(returned_data, return_expected)
- 
-    @patch("src.fuzzingtool.utils.http_utils.get_url_without_scheme")
-    def test_get_host_with_root_directory(self, mock_get_url_without_scheme: Mock):
-        return_expected = "test-url.com"
-        test_url = "https://test-url.com/"
-        mock_get_url_without_scheme.return_value = "test-url.com/"
-        returned_data = get_host(test_url)
-        mock_get_url_without_scheme.assert_called_once_with(test_url)
-        self.assertIsInstance(returned_data, str)
-        self.assertEqual(returned_data, return_expected)
-
     def test_build_raw_response_header(self):
         return_expected = (
             "HTTP/1.1 200 OK\r\n"
@@ -85,3 +54,24 @@ class TestHttpUtils(unittest.TestCase):
         returned_headers = build_raw_response_header(ResponseMock())
         self.assertIsInstance(returned_headers, str)
         self.assertEqual(returned_headers, return_expected)
+
+    def test_urlparse_file(self):
+        return_expected = "my_file.php"
+        test_url = f"http://test-url.com/test-path/{return_expected}"
+        returned_file = get_parsed_url(test_url).file
+        self.assertIsInstance(returned_file, str)
+        self.assertEqual(returned_file, return_expected)
+
+    def test_urlparse_file_name(self):
+        return_expected = "my_file"
+        test_url = f"http://test-url.com/test-path/{return_expected}.php"
+        returned_file = get_parsed_url(test_url).file_name
+        self.assertIsInstance(returned_file, str)
+        self.assertEqual(returned_file, return_expected)
+
+    def test_urlparse_file_ext(self):
+        return_expected = ".php"
+        test_url = f"http://test-url.com/test-path/my_file{return_expected}"
+        returned_file = get_parsed_url(test_url).file_ext
+        self.assertIsInstance(returned_file, str)
+        self.assertEqual(returned_file, return_expected)

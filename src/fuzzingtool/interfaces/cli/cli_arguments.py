@@ -24,26 +24,29 @@ from typing import List
 
 from .cli_output import CliOutput as CO
 from ... import __version__
+from ...utils.consts import FUZZ_TYPE_NAME
 from ...utils.utils import stringfy_list
 from ...factories.plugin_factory import PluginFactory
-from ...reports.report import Report
-from ...exceptions.main_exceptions import BadArgumentFormat
+from ...persistence.report import Report
+from ...exceptions import BadArgumentFormat
 
 
 class CliArguments(argparse.ArgumentParser):
     """Class to handle with the arguments parsing
        Overrides the error method from argparse.ArgumentParser,
        raising an exception instead of exiting
-
-    @type args: List[str]
-    @param args: The arguments list
     """
     def __init__(self, args: List[str] = None):
+        """Class constructor
+
+        @type args: List[str]
+        @param args: The arguments list
+        """
         if args:
             self.args = args
         else:
             self.args = sys.argv
-        usage = "Usage: FuzzingTool [-u|-r TARGET]+ [-w WORDLIST]+ [options]*"
+        usage = "Usage: fuzzingtool -u|-r TARGET -w WORDLIST [options]*"
         examples = ("For usage examples, see: "
                     "https://github.com/NESCAU-UFLA/FuzzingTool/wiki/Usage-Examples")
         if len(self.args) < 2:
@@ -116,10 +119,9 @@ class CliArguments(argparse.ArgumentParser):
         @param category: The package category to search for his plugins
         """
         for plugin_cls in PluginFactory.get_plugins_from_category(category):
-            if not plugin_cls.__type__:
-                type_fuzzing = ''
-            else:
-                type_fuzzing = f" (Used for {plugin_cls.__type__})"
+            type_fuzzing = ''
+            if plugin_cls.__type__ is not None:
+                type_fuzzing = f" (Fuzz type: {FUZZ_TYPE_NAME[plugin_cls.__type__]})"
             if not plugin_cls.__params__:
                 params = ''
             else:
@@ -172,7 +174,7 @@ class CliArguments(argparse.ArgumentParser):
             '--scheme',
             action='store',
             dest='scheme',
-            help="Define the scheme used in the URL (default http)",
+            help="Define the scheme used in the URL (default: http)",
             metavar='SCHEME',
             default="http",
         )
@@ -303,7 +305,8 @@ class CliArguments(argparse.ArgumentParser):
             '-Mc',
             action='store',
             dest='match_status',
-            help="Match responses based on their status codes",
+            help=("Match responses based on their status codes. "
+                  "Set a list of codes and/or a range, like: 200,300-400,401"),
             metavar='STATUS',
         )
         match_opts.add_argument(
@@ -335,8 +338,29 @@ class CliArguments(argparse.ArgumentParser):
             metavar='QTY_LINES',
         )
         match_opts.add_argument(
-            '--scanner',
+            '-Mr',
             action='store',
+            dest='match_regex',
+            help="Match responses based on a regex",
+            metavar='REGEX',
+        )
+        match_opts.add_argument(
+            '-Fc',
+            action='store',
+            dest='filter_status',
+            help="Exclude responses based on status code(s), separated by comma if more than one",
+            metavar='STATUS',
+        )
+        match_opts.add_argument(
+            '-Fr',
+            action='store',
+            dest='filter_regex',
+            help="Exclude responses based on a regex",
+            metavar='REGEX',
+        )
+        match_opts.add_argument(
+            '--scanner',
+            action='append',
             dest='scanner',
             help="Define the custom scanner (--help=scanners for more info)",
             metavar='SCANNER',
@@ -414,7 +438,7 @@ class CliArguments(argparse.ArgumentParser):
             '-t',
             action='store',
             dest='threads',
-            help="Define the number of threads used in the tests",
+            help="Define the number of threads used in the tests (default: 1)",
             metavar='NUMBEROFTHREADS',
             type=int,
             default=1,
@@ -423,7 +447,7 @@ class CliArguments(argparse.ArgumentParser):
             '--delay',
             action='store',
             dest='delay',
-            help="Define delay between each request",
+            help="Define delay between each request (default: 0)",
             metavar='DELAY',
             type=float,
             default=0,
@@ -436,4 +460,27 @@ class CliArguments(argparse.ArgumentParser):
                   "Available actions: stop (to stop the app), "
                   "wait=SECONDS (to pause the app for some seconds)"),
             metavar='STATUS:ACTION',
+        )
+        more_opts.add_argument(
+            '--recursive',
+            action='store_true',
+            dest='recursive',
+            help="Set recursive mode for each directory found on path fuzzing",
+            default=False,
+        )
+        more_opts.add_argument(
+            '--max-rlevel',
+            action='store',
+            dest='max_rlevel',
+            help="Define the maximum recursion level from jobs (default: 1)",
+            metavar='RECURSION_LEVEL',
+            type=int,
+            default=1,
+        )
+        more_opts.add_argument(
+            '--replay-proxy',
+            action='store',
+            dest='replay_proxy',
+            help="Define the proxy to replay request when found matched results",
+            metavar='PROXY',
         )

@@ -18,6 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+from .backups import Backups
 from .reflected import Reflected
-from .find import Find
 from .grep import Grep
+from .wappalyzer import Wappalyzer

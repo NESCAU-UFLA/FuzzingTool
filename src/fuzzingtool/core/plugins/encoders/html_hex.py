@@ -28,7 +28,7 @@ class HtmlHex(BaseEncoder, Plugin):
     __author__ = ("Vitor Oriel",)
     __params__ = {}
     __desc__ = "Encode payload to html hexadecimal format"
-    __type__ = ''
+    __type__ = None
     __version__ = "0.1"
 
     def encode(self, payload: str) -> str:

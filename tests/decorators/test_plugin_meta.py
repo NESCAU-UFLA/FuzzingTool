@@ -1,7 +1,7 @@
 import unittest
 
 from src.fuzzingtool.decorators.plugin_meta import plugin_meta
-from src.fuzzingtool.exceptions.main_exceptions import MetadataException
+from src.fuzzingtool.exceptions import MetadataException
 
 
 class TestPluginMeta(unittest.TestCase):
@@ -19,7 +19,7 @@ class TestPluginMeta(unittest.TestCase):
                 __author__ = "Test Author"
                 __params__ = {}
                 __desc__ = "Test Description"
-                __type__ = "Test Type"
+                __type__ = None
         self.assertEqual(str(e.exception), "Metadata __version__ not specified on plugin TestPlugin")
 
     def test_blank_meta_on_author(self):
@@ -29,7 +29,7 @@ class TestPluginMeta(unittest.TestCase):
                 __author__ = ''
                 __params__ = {}
                 __desc__ = "Test Description"
-                __type__ = "Test Type"
+                __type__ = None
                 __version__ = "Test Version"
         self.assertEqual(str(e.exception), "Author cannot be empty on plugin TestPlugin")
 
@@ -40,7 +40,7 @@ class TestPluginMeta(unittest.TestCase):
                 __author__ = "Test Author"
                 __params__ = {}
                 __desc__ = ''
-                __type__ = "Test Type"
+                __type__ = None
                 __version__ = "Test Version"
         self.assertEqual(str(e.exception), "Description cannot be blank on plugin TestPlugin")
 
@@ -51,7 +51,7 @@ class TestPluginMeta(unittest.TestCase):
                 __author__ = "Test Author"
                 __params__ = {}
                 __desc__ = "Test Description"
-                __type__ = "Test Type"
+                __type__ = None
                 __version__ = ''
         self.assertEqual(str(e.exception), "Version cannot be blank on plugin TestPlugin")
 
@@ -62,7 +62,7 @@ class TestPluginMeta(unittest.TestCase):
                 __author__ = "TestAuthor"
                 __params__ = "Test Param"
                 __desc__ = "Test Description"
-                __type__ = "Test Type"
+                __type__ = None
                 __version__ = "Test Version"
         self.assertEqual(str(e.exception), "The parameters must be a dictionary on plugin TestPlugin")
 
@@ -75,7 +75,7 @@ class TestPluginMeta(unittest.TestCase):
                     'metavar': "TEST_METAVAR"
                 }
                 __desc__ = "Test Description"
-                __type__ = "Test Type"
+                __type__ = None
                 __version__ = "Test Version"
         self.assertEqual(str(e.exception), "Key type must be in parameters dict on plugin TestPlugin")
 
@@ -89,7 +89,7 @@ class TestPluginMeta(unittest.TestCase):
                     'type': None
                 }
                 __desc__ = "Test Description"
-                __type__ = "Test Type"
+                __type__ = None
                 __version__ = "Test Version"
         self.assertEqual(str(e.exception), "Value of type cannot be empty in parameters dict on plugin TestPlugin")
 
@@ -103,7 +103,7 @@ class TestPluginMeta(unittest.TestCase):
                     'type': list
                 }
                 __desc__ = "Test Description"
-                __type__ = "Test Type"
+                __type__ = None
                 __version__ = "Test Version"
         self.assertEqual(str(e.exception), "The key 'cli_list_separator' must be present when parameter type is list on plugin TestPlugin")
 
@@ -118,6 +118,17 @@ class TestPluginMeta(unittest.TestCase):
                     'cli_list_separator': ''
                 }
                 __desc__ = "Test Description"
-                __type__ = "Test Type"
+                __type__ = None
                 __version__ = "Test Version"
         self.assertEqual(str(e.exception), "Value of 'cli_list_separator' cannot be blank on TestPlugin")
+
+    def test_invalid_fuzz_type(self):
+        with self.assertRaises(MetadataException) as e:
+            @plugin_meta
+            class TestPlugin:
+                __author__ = "Test Author"
+                __params__ = {}
+                __desc__ = "Test Description"
+                __type__ = "Fuzz Type"
+                __version__ = "Test Version"
+        self.assertEqual(str(e.exception), "Plugin type should be None or a valid FuzzType on plugin TestPlugin")

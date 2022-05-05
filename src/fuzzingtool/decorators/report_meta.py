@@ -18,8 +18,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from ..reports.base_report import BaseReport
-from ..exceptions.main_exceptions import MetadataException
+from ..persistence.base_report import BaseReport
+from ..exceptions import MetadataException
 
 
 def report_meta(cls: BaseReport) -> BaseReport:
