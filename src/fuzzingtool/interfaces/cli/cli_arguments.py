@@ -46,7 +46,7 @@ class CliArguments(argparse.ArgumentParser):
             self.args = args
         else:
             self.args = sys.argv
-        usage = "Usage: FuzzingTool -u|-r TARGET -w WORDLIST [options]*"
+        usage = "Usage: fuzzingtool -u|-r TARGET -w WORDLIST [options]*"
         examples = ("For usage examples, see: "
                     "https://github.com/NESCAU-UFLA/FuzzingTool/wiki/Usage-Examples")
         if len(self.args) < 2:

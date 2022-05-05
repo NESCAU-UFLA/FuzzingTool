@@ -28,7 +28,7 @@ def main_cli() -> None:
     try:
         arguments = CliArguments().get_arguments()
     except BadArgumentFormat as e:
-        exit(str(e).capitalize())
+        exit(str(e))
     if arguments.disable_colors:
         Colors.disable()
     CliController(arguments).main()

@@ -18,4 +18,16 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from .api import fuzz, fuzz_cli
+from .fuzz_lib import FuzzLib
+from .interfaces.cli.cli_arguments import CliArguments
+
+
+def fuzz(**kwargs) -> None:
+    FuzzLib(**kwargs).main()
+
+
+def fuzz_cli(args: str, **kwargs) -> None:
+    args = ['fuzzingtool'] + args.split(' ')
+    args = vars(CliArguments(args).get_arguments())
+    args.update(kwargs)
+    FuzzLib(**args).main()
