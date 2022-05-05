@@ -44,12 +44,14 @@ class SubdomainRequester(Requester):
         except socket.gaierror:
             raise InvalidHostname(f"Can't resolve hostname {hostname}")
 
-    def request(self, payload: str = '') -> Tuple[Response, float, Dict[str, str]]:
+    def request(self,
+                payload: str = '',
+                replay_proxy: bool = False) -> Tuple[Response, float, Dict[str, str]]:
         with self._lock:
             request_parser.set_payload(payload)
             host = get_parsed_url(request_parser.get_url(self._url)).hostname
         ip = self.resolve_hostname(host)
-        return (*(super().request(payload)), ip)
+        return (*(super().request(payload, replay_proxy)), ip)
 
     def _set_fuzzing_type(self) -> int:
         return FuzzType.SUBDOMAIN_FUZZING

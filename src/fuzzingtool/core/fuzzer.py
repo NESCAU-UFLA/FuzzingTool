@@ -158,5 +158,6 @@ class Fuzzer:
     def wait_until_pause(self) -> None:
         """Blocks until all threads are paused"""
         while self.__paused_threads < self.__running_threads:
+            """Wait until all threads are paused"""
             pass
         time.sleep(0.1)

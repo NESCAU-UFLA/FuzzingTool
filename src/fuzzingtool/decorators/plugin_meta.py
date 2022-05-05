@@ -71,7 +71,7 @@ def _check_params_meta(cls: Plugin) -> None:
     @type cls: Plugin
     @param cls: The class with the plugin metadata
     """
-    if not (type(cls.__params__) is dict):
+    if (type(cls.__params__) is not dict):
         raise MetadataException("The parameters must be a "
                                 f"dictionary on plugin {cls.__name__}")
     param_dict_keys = cls.__params__.keys()
