@@ -234,7 +234,7 @@ class CliArguments(argparse.ArgumentParser):
         dictionary_opts = self.add_argument_group('Dictionary options')
         dictionary_opts.add_argument(
             '-w',
-            action='store',
+            action='append',
             dest='wordlist',
             help=("Define the wordlists with the payloads, separating with ';' "
                   "(--help=wordlists for more info)"),

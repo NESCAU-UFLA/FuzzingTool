@@ -18,8 +18,10 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from ..utils.utils import get_indexes_to_parse
-from ..utils.consts import FUZZING_MARK, FUZZING_MARK_LEN
+from typing import Tuple
+
+from .payload import Payload
+from ..utils.fuzz_mark import FuzzMark
 
 
 class FuzzWord:
@@ -30,15 +32,17 @@ class FuzzWord:
         fuzzing_indexes: The fuzzing indexes of the word
         has_fuzzing: A flag to say if the word will be fuzzed or not
     """
-    def __init__(self, word: str = FUZZING_MARK):
+    def __init__(self, word: str = FuzzMark.BASE_MARK):
         """Class constructor
 
         @type word: str
         @param word: The word that'll be fuzzed or not
         """
         self.word = word
-        self.fuzzing_indexes = get_indexes_to_parse(word, FUZZING_MARK)
-        self.has_fuzzing = True if self.fuzzing_indexes else False
+        self.fuzz_dict = {
+            mark: mark in word for mark in FuzzMark.all_marks
+        }
+        self.has_fuzzing = any([has_mark for has_mark in self.fuzz_dict.values()])
 
     def __hash__(self) -> int:
         return hash(self.word)
@@ -46,18 +50,18 @@ class FuzzWord:
     def __eq__(self, other: object) -> bool:
         return hash(self) == hash(other)
 
-    def get_payloaded_word(self, payload: str) -> str:
+    def get_payloaded_word(self, payloads: Tuple[Payload]) -> str:
         """Gets the word with the payload inside
 
-        @type payload: str
+        @type payload: Payload
         @param payload: The payload used in the fuzzing indexes
         @returns str: The word with the payload inside
         """
         if not self.has_fuzzing:
             return self.word
         payloaded_word = self.word
-        for i in self.fuzzing_indexes:
-            head = payloaded_word[:i]
-            tail = payloaded_word[(i+FUZZING_MARK_LEN):]
-            payloaded_word = head + payload + tail
+        for payload in payloads:
+            fuzz_mark = payload.fuzz_mark
+            if self.fuzz_dict[fuzz_mark]:
+                payloaded_word = payloaded_word.replace(fuzz_mark, payload.final)
         return payloaded_word

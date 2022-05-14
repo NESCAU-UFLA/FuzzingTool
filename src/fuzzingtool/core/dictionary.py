@@ -19,7 +19,9 @@
 # SOFTWARE.
 
 from queue import Queue
-from typing import List
+from itertools import product
+from builtins import zip
+from typing import List, Iterator, Tuple
 
 from .payloader import Payloader
 from ..objects.payload import Payload
@@ -33,23 +35,24 @@ class Dictionary:
         size: The payload queue size
         payloads: The queue that contains all payloads inside the wordlist
     """
-    def __init__(self, wordlist: list):
+    def __init__(self, wordlist: List[Payload]):
         """Class constructor
 
         @type wordlist: list
-        @param wordlist: The wordlist with the payloads
+        @param wordlist: The wordlist and mark with the payloads
         """
-        self.wordlist = wordlist
+        self.wordlist = product(*wordlist)
         self.__size = 0
         self.__payloads = Queue()
 
-    def __next__(self) -> List[Payload]:
+    def __next__(self) -> Iterator[Tuple[Payload]]:
         """Gets the next payload to be processed
 
         @returns list: The payloads used in the request
         """
         self.__size -= 1
-        return Payloader.get_customized_payload(self.__payloads.get())
+        return zip(*[Payloader.get_customized_payload(payload)
+                     for payload in self.__payloads.get()])
 
     def __len__(self) -> int:
         """Gets the wordlist length

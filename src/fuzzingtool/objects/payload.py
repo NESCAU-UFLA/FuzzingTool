@@ -20,6 +20,8 @@
 
 from typing import Callable
 
+from ..utils.consts import FUZZING_MARK
+
 
 class Payload:
     """Class to represent a Payload
@@ -30,7 +32,9 @@ class Payload:
         rlevel: The recursion level of the payload
         config: The config of the payload mutation
     """
-    def __init__(self, payload: str = ''):
+    def __init__(self,
+                 payload: str = '',
+                 fuzz_mark: str = FUZZING_MARK):
         """Class constructor
 
         @type payload: str
@@ -40,6 +44,7 @@ class Payload:
         self.final: str = payload
         self.rlevel = 0
         self.config = {}
+        self.fuzz_mark = fuzz_mark
 
     def __str__(self) -> str:
         return self.final
@@ -55,6 +60,7 @@ class Payload:
         self.final = other.final
         self.rlevel = other.rlevel
         self.config = {key: value for key, value in other.config.items()}
+        self.fuzz_mark = other.fuzz_mark
         return self
 
     def with_prefix(self, prefix: str) -> 'Payload':

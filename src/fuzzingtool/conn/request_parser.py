@@ -78,7 +78,7 @@ class RequestParser:
         payload: The payload used in the request
     """
     def __init__(self):
-        self.__payload = ''
+        self.__payload = ('',)
 
     def get_method(self, method: FuzzWord) -> str:
         """The new method getter
@@ -98,7 +98,7 @@ class RequestParser:
         """
         return url.get_payloaded_word(self.__payload)
 
-    def get_header(self, header: dict) -> dict:
+    def get_header(self, header: Dict[str, FuzzWord]) -> dict:
         """The new HTTP Header getter
 
         @type httpHeder: dict

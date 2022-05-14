@@ -108,14 +108,14 @@ class Fuzzer:
     def run(self) -> None:
         """Run the threads"""
         while not self.__dict.is_empty():
-            for payload in next(self.__dict):
+            for payload_tuple in next(self.__dict):
                 try:
-                    response, rtt, *ip = self.__requester.request(str(payload))
-                    self.response_callback(response, rtt, payload, *ip)
+                    response, rtt, *ip = self.__requester.request(payload_tuple)
+                    self.response_callback(response, rtt, payload_tuple, *ip)
                 except InvalidHostname as e:
-                    self.exception_callbacks[0](Error(e, payload))
+                    self.exception_callbacks[0](Error(e, payload_tuple))
                 except RequestException as e:
-                    self.exception_callbacks[1](Error(e, payload))
+                    self.exception_callbacks[1](Error(e, payload_tuple))
                 finally:
                     time.sleep(self.__delay)
             if self.is_paused():

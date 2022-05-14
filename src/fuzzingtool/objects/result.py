@@ -44,7 +44,7 @@ class Result(BaseItem):
 
     def __init__(self,
                  history: HttpHistory,
-                 payload: Payload = Payload(),
+                 payloads: Tuple[Payload] = None,
                  fuzz_type: int = FuzzType.UNKNOWN_FUZZING):
         """Class constructor
 
@@ -57,18 +57,18 @@ class Result(BaseItem):
         """
         super().__init__()
         self.history = history
-        self.payload = payload.final
+        self.payloads = [payload.final for payload in payloads]
         content = self.history.response.content
         self.words = len(content.split())
         self.lines = content.count(b'\n')
         self.fuzz_type = fuzz_type
         self.job_description = ''
         self.scanners_res = {}
-        self._payload = payload
+        self._payloads = payloads
 
     def __str__(self) -> str:
         payload, rtt, length, words, lines = ResultUtils.get_formatted_result(
-            self.payload, self.history.rtt, self.history.body_size,
+            self.payloads, self.history.rtt, self.history.body_size,
             self.words, self.lines
         )
         returned_str = (

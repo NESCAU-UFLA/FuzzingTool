@@ -292,22 +292,22 @@ class CliOutput:
 
     def progress_status(self,
                         item_index: int,
-                        payload: str,
+                        payloads: str,
                         current_job: int,
                         total_jobs: int) -> None:
         """Output the progress status of the fuzzing
 
         @type item_index: int
         @param item_index: The actual request index
-        @type payload: str
-        @param payload: The payload used in the request
+        @type payloads: str
+        @param payloads: The payloads used in the request
         """
         jobs_indent = ceil(log10(total_jobs))
         progress_length = self.__progress_length + (2 * jobs_indent)
         if progress_length <= get_terminal_size()[0]:
             percentage_value = self._get_percentage_value(item_index, self.__total_requests)
             status = self._get_progress_bar(percentage_value)
-            payload = fix_payload_to_output(payload)
+            payload = fix_payload_to_output(':'.join(payloads))
             status += (f" {Colors.LIGHT_YELLOW}{percentage_value:>3}% {Colors.RESET}"
                        + f"{Colors.GRAY}[{Colors.LIGHT_GRAY}{item_index:>{self.__request_indent}}"
                        + f"{Colors.GRAY}/{Colors.LIGHT_GRAY}{self.__total_requests}"
@@ -458,7 +458,7 @@ class CliOutput:
             return formatted_payload
         if result.fuzz_type == FuzzType.SUBDOMAIN_FUZZING:
             return result.history.parsed_url.hostname
-        return result.payload
+        return ':'.join(result.payloads)
 
     def __get_formatted_status(self, status: int) -> str:
         """Formats the status code to output

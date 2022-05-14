@@ -19,7 +19,7 @@
 # SOFTWARE.
 
 from queue import Queue
-from typing import Dict
+from typing import Dict, List, Tuple
 
 from .bases.base_observer import BaseObserver
 from .dictionary import Dictionary
@@ -52,7 +52,7 @@ class JobManager(BaseObserver):
         """
         wordlist_queue = Queue()
         for payload in dictionary.wordlist:
-            wordlist_queue.put(Payload(payload))
+            wordlist_queue.put(payload)
         self.current_job = 0
         self.current_job_name = None
         self.pending_jobs = Queue()

@@ -30,6 +30,7 @@ from .utils.argument_utils import (build_target_from_args, build_target_from_raw
 from .utils.consts import PluginCategory
 from .utils.utils import split_str_to_list
 from .utils.file_utils import read_file
+from .utils.fuzz_mark import FuzzMark
 from .utils.result_utils import ResultUtils
 from .core import (BlacklistStatus, Dictionary, Fuzzer, Filter,
                    JobManager, Matcher, Payloader, RecursionManager, Summary)
@@ -72,6 +73,7 @@ class FuzzLib:
         """The initialization function.
            Set the application variables including plugins requires
         """
+        self._pre_init_wordlist()
         self._init_requester()
         self._init_filter()
         self._init_matcher()
@@ -141,6 +143,11 @@ class FuzzLib:
         @param error: The error gived by the exception
         """
         pass
+
+    def _pre_init_wordlist(self) -> None:
+        self.__wordlists_and_marks = build_wordlist(self.args["wordlist"])
+        for _, fuzz_mark in self.__wordlists_and_marks:
+            FuzzMark.all_marks.add(fuzz_mark)
 
     def _init_requester(self) -> None:
         """Initialize the requester"""
@@ -231,18 +238,24 @@ class FuzzLib:
     def _init_dictionary(self) -> None:
         """Initialize the dictionary"""
         self.__configure_payloader()
-        final_wordlist = self.__build_wordlist(
-            build_wordlist(self.args["wordlist"])
-        )
-        atual_length = len(final_wordlist)
-        self.dict_metadata = {}
-        if self.args["unique"]:
-            previous_length = atual_length
-            final_wordlist = set(final_wordlist)
+        final_wordlist_and_mark: List[Tuple[str, str]] = []
+        for wordlists, fuzz_mark in self.__wordlists_and_marks:
+            final_wordlist_and_mark.append(
+                [Payload(payload, fuzz_mark)
+                 for payload in self.__build_wordlist(wordlists)]
+            )
+        self.dict_metadata = []
+        for final_wordlist in final_wordlist_and_mark:
+            dict_metadata = {}
             atual_length = len(final_wordlist)
-            self.dict_metadata['removed'] = previous_length-atual_length
-        self.dict_metadata['len'] = atual_length
-        self.dictionary = Dictionary(final_wordlist)
+            if self.args["unique"]:
+                previous_length = atual_length
+                final_wordlist[:] = list(set(final_wordlist))
+                atual_length = len(final_wordlist)
+                dict_metadata['removed'] = previous_length-atual_length
+            dict_metadata['len'] = atual_length
+            self.dict_metadata.append(dict_metadata)
+        self.dictionary = Dictionary(final_wordlist_and_mark)
 
     def _init_managers(self) -> None:
         """Initialize the recursion manager and job manager"""

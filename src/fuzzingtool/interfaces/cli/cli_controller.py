@@ -18,6 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+from typing import Tuple
 import time
 import threading
 from argparse import Namespace
@@ -213,7 +214,7 @@ class CliController(FuzzLib):
                 self.summary.results.append(result)
                 self.cli_output.print_result(result, valid)
             self.__print_progress(
-                result.index, result.payload
+                result.index, result.payloads
             )
 
     def _request_exception_callback(self, error: Error) -> None:
@@ -368,7 +369,7 @@ class CliController(FuzzLib):
         )
         return (time, length, words, lines)
 
-    def __print_progress(self, index: int, payload: str) -> None:
+    def __print_progress(self, index: int, payloads: Tuple[str]) -> None:
         """Print the progress status
 
         @type index: int
@@ -378,7 +379,7 @@ class CliController(FuzzLib):
         """
         self.cli_output.progress_status(
             item_index=index,
-            payload=payload,
+            payloads=payloads,
             current_job=self.job_manager.current_job,
             total_jobs=self.job_manager.total_jobs,
         )

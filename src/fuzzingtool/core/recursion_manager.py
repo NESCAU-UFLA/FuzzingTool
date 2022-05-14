@@ -34,7 +34,7 @@ class RecursionManager(JobProvider):
         directories_queue: The control queue for directories found
         payloads_queue: The jobs queue for the job manager
     """
-    def __init__(self, max_rlevel: int, wordlist: List[str]):
+    def __init__(self, max_rlevel: int, wordlist: List[Payload]):
         """Class constructor
 
         @type max_rlevel: int
@@ -81,8 +81,8 @@ class RecursionManager(JobProvider):
 
     def fill_payloads_queue(self) -> None:
         """Fill the payloads queue with recursive directory payloads"""
-        recursive_directory = self.directories_queue.get()
+        recursive_directory: Payload = self.directories_queue.get()
         for wordlist_payload in self.wordlist:
             new_payload = Payload().update(recursive_directory)
-            new_payload.final += wordlist_payload
+            new_payload.final += wordlist_payload.raw
             self.payloads_queue.put(new_payload)

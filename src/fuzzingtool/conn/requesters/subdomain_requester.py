@@ -45,7 +45,7 @@ class SubdomainRequester(Requester):
             raise InvalidHostname(f"Can't resolve hostname {hostname}")
 
     def request(self,
-                payload: str = '',
+                payload: Tuple[str] = None,
                 replay_proxy: bool = False) -> Tuple[Response, float, Dict[str, str]]:
         with self._lock:
             request_parser.set_payload(payload)
