@@ -99,11 +99,13 @@ class Result(BaseItem):
         for s_res in self.scanners_res.values():
             for key, value in s_res.data.items():
                 yield key, ResultUtils.format_custom_field(value, force_detailed=True)
-        yield 'payload', self.payload
-        if Result.save_payload_configs:
-            yield 'payload_raw', self._payload.raw
-            for key, value in self._payload.config.items():
-                yield f"payload_{key}", value
+        for payload in self._payloads:
+            payload_key = f"payload_{payload.fuzz_mark}"
+            yield payload_key, payload.final
+            if Result.save_payload_configs:
+                yield f'{payload_key}_raw', payload.raw
+                for key, value in payload.config.items():
+                    yield f"{payload_key}_{key}", value
         if Result.save_headers:
             yield 'headers', self.history.raw_headers
         if Result.save_body:

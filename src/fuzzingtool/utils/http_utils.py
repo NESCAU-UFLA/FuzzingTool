@@ -23,7 +23,7 @@ from os.path import splitext
 
 from requests.models import Response
 
-from .consts import FUZZING_MARK
+from .fuzz_mark import get_marks
 
 
 def get_url_without_scheme(url: str) -> str:
@@ -39,17 +39,20 @@ def get_url_without_scheme(url: str) -> str:
 
 
 def get_pure_url(url: str) -> str:
-    """Gets the URL without the FUZZING_MARK variable
+    """Gets the URL without the fuzzing marks
 
     @type url: str
     @param url: The target URL
     @returns str: The target URL without fuzzing marks
     """
-    if FUZZING_MARK in url:
-        if f'{FUZZING_MARK}.' in url:
-            return url.replace(f'{FUZZING_MARK}.', '')
-        return url.replace(FUZZING_MARK, '')
-    return url
+    for fuzz_mark in get_marks(url):
+        if fuzz_mark in url:
+            if f'{fuzz_mark}.' in url:
+                url = url.replace(f'{fuzz_mark}.', '')
+            else:
+                url = url.replace(fuzz_mark, '')
+    parsed_url = get_parsed_url(url)
+    return f"{parsed_url.scheme}://{parsed_url.netloc}/"
 
 
 def build_raw_response_header(response: Response) -> str:

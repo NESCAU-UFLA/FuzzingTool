@@ -18,9 +18,11 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+from queue import Queue
 from typing import Tuple, List, Union
 import time
 from threading import Thread
+from itertools import product
 
 from requests.models import Response
 
@@ -75,6 +77,7 @@ class FuzzLib:
         """
         self._pre_init_wordlist()
         self._init_requester()
+        self._check_for_recursion_mark()
         self._init_filter()
         self._init_matcher()
         self._init_scanners()
@@ -180,6 +183,16 @@ class FuzzLib:
             replay_proxy=self.args["replay_proxy"],
         )
 
+    def _check_for_recursion_mark(self) -> None:
+        recursion_mark = None
+        for mark, has_mark in self.requester._url.fuzz_dict.items():
+            if has_mark and self.requester.get_url().endswith(mark):
+                recursion_mark = mark
+        if recursion_mark is not None:
+            for i, fuzz_mark in enumerate(FuzzMark.all_marks):
+                if fuzz_mark == recursion_mark:
+                    FuzzMark.recursion_mark_index = i
+
     def _init_filter(self) -> None:
         """Initialize the filter"""
         self.filter = Filter(
@@ -238,14 +251,17 @@ class FuzzLib:
     def _init_dictionary(self) -> None:
         """Initialize the dictionary"""
         self.__configure_payloader()
-        final_wordlist_and_mark: List[Tuple[str, str]] = []
+        final_wordlist_and_mark: List[List[Payload]] = []
+        self.dict_metadata: List[dict] = []
         for wordlists, fuzz_mark in self.__wordlists_and_marks:
             final_wordlist_and_mark.append(
                 [Payload(payload, fuzz_mark)
                  for payload in self.__build_wordlist(wordlists)]
             )
-        self.dict_metadata = []
-        for final_wordlist in final_wordlist_and_mark:
+            self.dict_metadata.append({
+                'fuzz_mark': fuzz_mark
+            })
+        for i, final_wordlist in enumerate(final_wordlist_and_mark):
             dict_metadata = {}
             atual_length = len(final_wordlist)
             if self.args["unique"]:
@@ -254,8 +270,11 @@ class FuzzLib:
                 atual_length = len(final_wordlist)
                 dict_metadata['removed'] = previous_length-atual_length
             dict_metadata['len'] = atual_length
-            self.dict_metadata.append(dict_metadata)
-        self.dictionary = Dictionary(final_wordlist_and_mark)
+            self.dict_metadata[i].update(dict_metadata)
+        wordlist_queue = Queue()
+        for payloads in product(*final_wordlist_and_mark):
+            wordlist_queue.put(payloads)
+        self.dictionary = Dictionary(wordlist_queue, self.args["recursive"])
 
     def _init_managers(self) -> None:
         """Initialize the recursion manager and job manager"""

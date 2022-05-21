@@ -47,7 +47,7 @@ class FuzzWord:
     def __hash__(self) -> int:
         return hash(self.word)
 
-    def __eq__(self, other: object) -> bool:
+    def __eq__(self, other: 'FuzzWord') -> bool:
         return hash(self) == hash(other)
 
     def get_payloaded_word(self, payloads: Tuple[Payload]) -> str:

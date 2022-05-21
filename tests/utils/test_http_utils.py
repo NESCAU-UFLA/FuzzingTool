@@ -1,6 +1,7 @@
 import unittest
 
 from src.fuzzingtool.utils.http_utils import *
+from src.fuzzingtool.utils.fuzz_mark import FuzzMark
 from ..mock_utils.response_mock import ResponseMock
 
 
@@ -28,14 +29,14 @@ class TestHttpUtils(unittest.TestCase):
 
     def test_get_pure_url_with_mark(self):
         return_expected = "https://test-url.com/"
-        test_url = f"https://test-url.com/{FUZZING_MARK}"
+        test_url = f"https://test-url.com/{FuzzMark.BASE_MARK}"
         returned_data = get_pure_url(test_url)
         self.assertIsInstance(returned_data, str)
         self.assertEqual(returned_data, return_expected)
 
     def test_get_pure_url_with_mark_and_dot(self):
         return_expected = "https://test-url.com/"
-        test_url = f"https://{FUZZING_MARK}.test-url.com/"
+        test_url = f"https://{FuzzMark.BASE_MARK}.test-url.com/"
         returned_data = get_pure_url(test_url)
         self.assertIsInstance(returned_data, str)
         self.assertEqual(returned_data, return_expected)

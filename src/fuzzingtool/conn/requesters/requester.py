@@ -26,6 +26,8 @@ from typing import List, Dict, Tuple
 import requests
 import urllib3.exceptions
 
+from fuzzingtool.objects.payload import Payload
+
 from ..request_parser import (check_is_url_discovery,
                               check_is_data_fuzzing, request_parser)
 from ...utils.consts import FuzzType
@@ -206,19 +208,18 @@ class Requester:
             raise RequestException(f"Failed to establish a connection to {url}")
 
     def request(self,
-                payload: Tuple[str] = None,
+                payload: Tuple[Payload] = (Payload(),),
                 replay_proxy: bool = False) -> Tuple[requests.Response, float]:
         """Make a request and get the response
 
-        @type payload: str
+        @type payload: Tuple[Payload]
         @param payload: The payload tuple used in the request
         @type replay_proxy: bool
         @param replay_proxy: The replay proxy flag
         @returns Tuple[Response, float]: The response object of the request
         """
-        method, url, body, url_params, headers, proxy = self.__prepare_request_parameters(
-            payload, replay_proxy
-        )
+        proxy = self.__prepare_proxy(replay_proxy)
+        method, url, body, url_params, headers = self.__get_request_parameters(payload)
         try:
             before = time.time()
             response = self._request(method, url, body, url_params, headers, proxy)
@@ -361,6 +362,16 @@ class Requester:
             'https': f"https://{proxy}",
         }
 
+    def __prepare_proxy(self,
+                        replay_proxy: bool) -> Dict[str, str]:
+        if not replay_proxy:
+            proxy = self.__proxy
+            if self.__proxies:
+                proxy = random.choice(self.__proxies)
+        else:
+            proxy = self.__replay_proxy
+        return proxy
+
     def __get_request_parameters(self, payload: str) -> Tuple[
         str, str, dict, dict, dict
     ]:
@@ -379,21 +390,6 @@ class Requester:
                 request_parser.get_data(self.__url_params),
                 request_parser.get_header(self.__header),
             )
-
-    def __prepare_request_parameters(self,
-                                     payload: Tuple[str],
-                                     replay_proxy: bool) -> Tuple:
-        if payload is None:
-            payload = ('',)
-        if isinstance(payload, str):
-            payload: Tuple[str] = (payload,)
-        if not replay_proxy:
-            proxy = self.__proxy
-            if self.__proxies:
-                proxy = random.choice(self.__proxies)
-        else:
-            proxy = self.__replay_proxy
-        return (*self.__get_request_parameters(payload), proxy)
 
     def __session_request(self,
                           method: str,

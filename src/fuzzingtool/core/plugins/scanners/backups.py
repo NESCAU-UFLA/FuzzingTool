@@ -55,5 +55,5 @@ class Backups(BaseScanner, Plugin):
         if result.history.parsed_url.file_ext not in self.extensions:
             for ext in self.extensions:
                 parsed_url = result.history.parsed_url
-                self.enqueue_payload(result, f"{parsed_url.file_name}{ext}")
-                self.enqueue_payload(result, f"{parsed_url.file}{ext}")
+                self.enqueue_path(result, f"{parsed_url.file_name}{ext}")
+                self.enqueue_path(result, f"{parsed_url.file}{ext}")

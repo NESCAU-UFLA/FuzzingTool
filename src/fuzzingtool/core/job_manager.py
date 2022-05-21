@@ -19,11 +19,12 @@
 # SOFTWARE.
 
 from queue import Queue
-from typing import Dict, List, Tuple
+from typing import Dict, Tuple
 
 from .bases.base_observer import BaseObserver
 from .dictionary import Dictionary
 from ..objects import Payload, Result
+from ..utils.fuzz_mark import FuzzMark
 
 
 class JobManager(BaseObserver):
@@ -50,13 +51,10 @@ class JobManager(BaseObserver):
         @type job_providers: Dict[str, Queue[Payload]]
         @param job_providers: The job providers, with name and queue
         """
-        wordlist_queue = Queue()
-        for payload in dictionary.wordlist:
-            wordlist_queue.put(payload)
         self.current_job = 0
         self.current_job_name = None
         self.pending_jobs = Queue()
-        self.pending_jobs.put(("wordlist", wordlist_queue))
+        self.pending_jobs.put(("wordlist", dictionary.wordlist))
         self.total_jobs = 1
         self.total_requests = 0
         self.dictionary = dictionary
@@ -105,8 +103,8 @@ class JobManager(BaseObserver):
         for job_provider, job_queue in self.job_providers.items():
             new_job = Queue()
             while not job_queue.empty():
-                payload: Payload = job_queue.get()
-                if payload.rlevel <= self.max_rlevel:
-                    new_job.put(payload)
+                payloads: Tuple[Payload] = job_queue.get()
+                if payloads[FuzzMark.recursion_mark_index].rlevel <= self.max_rlevel:
+                    new_job.put(payloads)
             if not new_job.empty():
                 self.pending_jobs.put((job_provider, new_job))

@@ -117,7 +117,7 @@ class CliController(FuzzLib):
                 'body': self.args["data"],
                 'type_fuzzing': FUZZ_TYPE_NAME[self.requester.get_fuzzing_type()],
                 },
-            dictionary=self.dict_metadata
+            dictionaries=self.dict_metadata
         )
 
     def check_connection(self) -> None:

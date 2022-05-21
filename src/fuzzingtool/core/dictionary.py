@@ -19,9 +19,8 @@
 # SOFTWARE.
 
 from queue import Queue
-from itertools import product
 from builtins import zip
-from typing import List, Iterator, Tuple
+from typing import Iterator, Tuple
 
 from .payloader import Payloader
 from ..objects.payload import Payload
@@ -35,13 +34,14 @@ class Dictionary:
         size: The payload queue size
         payloads: The queue that contains all payloads inside the wordlist
     """
-    def __init__(self, wordlist: List[Payload]):
+    def __init__(self, wordlist: Queue[Tuple[Payload]], has_recursion: bool):
         """Class constructor
 
         @type wordlist: list
         @param wordlist: The wordlist and mark with the payloads
         """
-        self.wordlist = product(*wordlist)
+        self.wordlist = wordlist
+        self.__has_recursion = has_recursion
         self.__size = 0
         self.__payloads = Queue()
 
@@ -50,9 +50,12 @@ class Dictionary:
 
         @returns list: The payloads used in the request
         """
+        next_payload_tuple: Tuple[Payload] = self.__payloads.get()
+        if self.__has_recursion:
+            self.wordlist.put(next_payload_tuple)
         self.__size -= 1
         return zip(*[Payloader.get_customized_payload(payload)
-                     for payload in self.__payloads.get()])
+                     for payload in next_payload_tuple])
 
     def __len__(self) -> int:
         """Gets the wordlist length

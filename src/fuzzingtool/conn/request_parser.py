@@ -20,7 +20,7 @@
 
 from typing import Dict
 from ..objects.fuzz_word import FuzzWord
-from ..utils.consts import FUZZING_MARK
+from ..utils.fuzz_mark import get_marks
 
 
 def check_is_subdomain_fuzzing(url: str) -> bool:
@@ -30,8 +30,11 @@ def check_is_subdomain_fuzzing(url: str) -> bool:
     @param url: The target URL
     @returns bool: The subdomain fuzzing flag
     """
-    return (('.' in url and FUZZING_MARK in url)
-            and url.index(FUZZING_MARK) < url.index('.'))
+    for fuzz_mark in get_marks(url):
+        if (('.' in url and fuzz_mark in url)
+                and url.index(fuzz_mark) < url.index('.')):
+            return True
+    return False
 
 
 def check_is_url_discovery(url: FuzzWord) -> bool:

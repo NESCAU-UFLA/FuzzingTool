@@ -18,14 +18,20 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from .utils import get_indexes_to_parse
+from typing import List
 
 
 class FuzzMark:
     BASE_MARK = "FUZZ"
     all_marks = set()
-    recursion_mark: str = None
+    recursion_mark_index: int = None
 
 
 def has_fuzz_mark(string: str) -> bool:
     return any([fuzz_mark in string for fuzz_mark in FuzzMark.all_marks])
+
+
+def get_marks(string: str) -> List[str]:
+    if FuzzMark.all_marks:
+        return [mark for mark in FuzzMark.all_marks if mark in string]
+    return [FuzzMark.BASE_MARK]

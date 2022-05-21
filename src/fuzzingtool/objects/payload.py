@@ -49,6 +49,12 @@ class Payload:
     def __str__(self) -> str:
         return self.final
 
+    def __hash__(self) -> int:
+        return hash(f"{self.raw}{self.final}{self.rlevel}{self.fuzz_mark}")
+
+    def __eq__(self, other: 'Payload') -> bool:
+        return hash(self) == hash(other)
+
     def update(self, other: 'Payload') -> 'Payload':
         """Update the base payload from another payload
 

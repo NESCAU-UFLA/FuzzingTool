@@ -257,13 +257,13 @@ class CliOutput:
 
     def print_configs(self,
                       target: dict,
-                      dictionary: dict) -> None:
+                      dictionaries: list[dict]) -> None:
         """Prints the program configuration
 
         @type target: dict
         @param taget: The target
-        @type dictionary: dict
-        @param dictionary: The dictionary used in the tests
+        @type dictionaries: list[dict]
+        @param dictionaries: The dictionaries used in the tests
         """
         print("")
         spaces = 3
@@ -273,12 +273,13 @@ class CliOutput:
         if target['body']:
             self.print_config("Body data", target['body'], spaces)
         self.print_config("Fuzzing type", target['type_fuzzing'], spaces)
-        dict_size = dictionary['len']
-        if 'removed' in dictionary.keys() and dictionary['removed']:
-            dict_size = (f"{dictionary['len']} "
-                         f"(removed {dictionary['removed']} "
-                         f"duplicated payloads)")
-        self.print_config("Dictionary size", dict_size)
+        for dictionary in dictionaries:
+            dict_size = dictionary['len']
+            if 'removed' in dictionary.keys() and dictionary['removed']:
+                dict_size = (f"{dictionary['len']} "
+                            f"(removed {dictionary['removed']} "
+                            f"duplicated payloads)")
+            self.print_config("Dictionary", f"{dictionary['fuzz_mark']}:{dict_size}")
         print("")
 
     def get_percentage(self, item_index: int) -> str:
