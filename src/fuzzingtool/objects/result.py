@@ -18,11 +18,12 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from typing import Iterator, Tuple
+from typing import Iterator, Tuple, Dict
 
 from .base_objects import BaseItem
 from .http_history import HttpHistory
 from .payload import Payload
+from .scanner_result import ScannerResult
 from ..utils.consts import FuzzType
 from ..utils.result_utils import ResultUtils
 
@@ -44,7 +45,7 @@ class Result(BaseItem):
 
     def __init__(self,
                  history: HttpHistory,
-                 payloads: Tuple[Payload] = None,
+                 payloads: Tuple[Payload] = (Payload(),),
                  fuzz_type: int = FuzzType.UNKNOWN_FUZZING):
         """Class constructor
 
@@ -63,7 +64,7 @@ class Result(BaseItem):
         self.lines = content.count(b'\n')
         self.fuzz_type = fuzz_type
         self.job_description = ''
-        self.scanners_res = {}
+        self.scanners_res: Dict[str, ScannerResult] = {}
         self._payloads = payloads
 
     def __str__(self) -> str:

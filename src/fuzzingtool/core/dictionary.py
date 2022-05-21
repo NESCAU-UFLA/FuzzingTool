@@ -83,12 +83,6 @@ class Dictionary:
         """
         return self.__payloads.empty()
 
-    def reload(self) -> None:
-        """Reloads the payloads queue with the wordlist content"""
-        for payload in self.wordlist:
-            self.__payloads.put(payload)
-            self.__size += 1
-
     def fill_from_queue(self, payloads_queue: Queue, clear: bool = False) -> None:
         """Fill the payloads queue with another queue
 
