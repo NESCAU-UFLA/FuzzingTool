@@ -35,12 +35,12 @@ class RecursionManager(JobProvider):
         directories_queue: The control queue for directories found
         payloads_queue: The jobs queue for the job manager
     """
-    def __init__(self, max_rlevel: int, wordlist: Queue[Tuple[Payload]]):
+    def __init__(self, max_rlevel: int, wordlist: Queue):
         """Class constructor
 
         @type max_rlevel: int
         @param max_rlevel: The maximum jobs recursion level
-        @type wordlist: List[str]
+        @type wordlist: Queue[Tuple[Payload]]
         @param wordlist: The wordlist with base payloads
         """
         self.max_rlevel = max_rlevel
