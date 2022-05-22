@@ -47,6 +47,7 @@ class Backups(BaseScanner, Plugin):
     def __init__(self, extensions: list):
         self.extensions = extensions if extensions else DEFAULT_EXTENSIONS.split(',')
         BaseScanner.__init__(self)
+        self.has_recursion = True
 
     def scan(self, result: Result) -> bool:
         return True

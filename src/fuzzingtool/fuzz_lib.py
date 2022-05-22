@@ -80,6 +80,7 @@ class FuzzLib:
         self._init_matcher()
         self._init_scanners()
         self._init_other_arguments()
+        self._check_for_invalid_recursion()
         self._init_dictionary()
         self._init_managers()
         self._set_observer()
@@ -250,6 +251,13 @@ class FuzzLib:
         self.number_of_threads = self.args["threads"]
         self.has_recursion = self.args["recursive"]
         self.replay_proxy = self.args["replay_proxy"]
+
+    def _check_for_invalid_recursion(self) -> None:
+        """Check the use of recursion features without fuzz mark"""
+        if (FuzzMark.recursion_mark_index == -1 and
+                (self.has_recursion or
+                 any([scanner.has_recursion for scanner in self.scanners]))):
+            raise FuzzLibException("The url must ends with a fuzz mark to use recursion features")
 
     def _init_dictionary(self) -> None:
         """Initialize the dictionary"""

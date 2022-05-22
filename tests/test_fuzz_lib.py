@@ -63,7 +63,7 @@ class TestFuzzLib(FuzzMarkTestCase):
         test_fuzz_lib = FuzzLib(url="http://test-url.com/")
         test_fuzz_lib._init_requester()
         test_fuzz_lib._check_for_recursion_mark()
-        self.assertEqual(FuzzMark.recursion_mark_index, None)
+        self.assertEqual(FuzzMark.recursion_mark_index, -1)
 
     @patch("src.fuzzingtool.fuzz_lib.Matcher.set_status_code")
     def test_init_matcher(self, mock_set_status_code: Mock):
@@ -102,6 +102,13 @@ class TestFuzzLib(FuzzMarkTestCase):
     def test_init_scanners_with_default_scanner(self, mock_get_default_scanner: Mock):
         FuzzLib(url=f"http://test-url.com/{FuzzMark.BASE_MARK}")._init_scanners()
         mock_get_default_scanner.assert_called_once()
+
+    def test_check_for_invalid_recursion(self):
+        test_fuzz_lib = FuzzLib(url=f"http://test-url.com/", recursive=True)
+        test_fuzz_lib._init_other_arguments()
+        with self.assertRaises(FuzzLibException) as e:
+            test_fuzz_lib._check_for_invalid_recursion()
+        self.assertEqual(str(e.exception), "The url must ends with a fuzz mark to use recursion features")
 
     @patch("src.fuzzingtool.fuzz_lib.PluginFactory.object_creator")
     def test_build_encoders_with_encoders(self, mock_object_creator: Mock):

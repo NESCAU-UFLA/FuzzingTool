@@ -18,6 +18,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+from typing import Tuple
+
 from .base_objects import BaseItem
 from .payload import Payload
 from ..exceptions.base_exceptions import FuzzingToolException
@@ -30,7 +32,7 @@ class Error(BaseItem):
         exception: The raised exception by the requester
         payload: The payload used in the request
     """
-    def __init__(self, e: FuzzingToolException, payload: Payload):
+    def __init__(self, e: FuzzingToolException, payloads: Tuple[Payload]):
         """Class constructor
 
         @type e: FuzzingToolException
@@ -40,7 +42,7 @@ class Error(BaseItem):
         """
         super().__init__()
         self.exception = str(e)
-        self.payload = payload.final
+        self.payloads = payloads
 
     def __str__(self) -> str:
         return self.exception

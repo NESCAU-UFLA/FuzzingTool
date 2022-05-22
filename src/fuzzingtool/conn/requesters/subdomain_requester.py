@@ -42,7 +42,7 @@ class SubdomainRequester(Requester):
         """
         try:
             return socket.gethostbyname(hostname)
-        except socket.gaierror:
+        except (socket.gaierror, UnicodeError):
             raise InvalidHostname(f"Can't resolve hostname {hostname}")
 
     def request(self,

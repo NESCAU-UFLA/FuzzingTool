@@ -24,7 +24,7 @@ from typing import List
 class FuzzMark:
     BASE_MARK = "FUZZ"
     all_marks = set()
-    recursion_mark_index: int = None
+    recursion_mark_index: int = -1
 
 
 def has_fuzz_mark(string: str) -> bool:

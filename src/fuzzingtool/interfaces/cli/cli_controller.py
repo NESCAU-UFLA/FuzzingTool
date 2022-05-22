@@ -221,13 +221,13 @@ class CliController(FuzzLib):
         if self.ignore_errors:
             if not self.verbose[0]:
                 self.__print_progress(
-                    error.index, error.payload
+                    error.index, error.payloads
                 )
             else:
                 if self.verbose[1]:
                     self.cli_output.not_worked_box(str(error))
             with self.lock:
-                self.logger.write(str(error), error.payload)
+                self.logger.write(str(error), error.payloads)
         else:
             self.stop_action = str(error)
 
@@ -237,7 +237,7 @@ class CliController(FuzzLib):
                 self.cli_output.not_worked_box(str(error))
         else:
             self.__print_progress(
-                error.index, error.payload
+                error.index, error.payloads
             )
 
     def _init_dictionary(self) -> None:

@@ -9,4 +9,4 @@ class FuzzMarkTestCase(TestCase):
 
     def tearDown(self):
         FuzzMark.all_marks = set()
-        FuzzMark.recursion_mark_index = None
+        FuzzMark.recursion_mark_index = -1

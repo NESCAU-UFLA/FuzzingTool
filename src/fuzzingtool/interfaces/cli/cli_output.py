@@ -293,7 +293,7 @@ class CliOutput:
 
     def progress_status(self,
                         item_index: int,
-                        payloads: str,
+                        payloads: List[str],
                         current_job: int,
                         total_jobs: int) -> None:
         """Output the progress status of the fuzzing

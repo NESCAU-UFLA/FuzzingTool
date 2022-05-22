@@ -35,6 +35,7 @@ class BaseScanner(JobProvider):
     """
     def __init__(self):
         self.payloads_queue = Queue()
+        self.has_recursion = False
         super().__init__()
 
     def __str__(self) -> str:
