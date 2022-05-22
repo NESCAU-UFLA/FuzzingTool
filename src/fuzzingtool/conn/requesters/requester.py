@@ -26,13 +26,12 @@ from typing import List, Dict, Tuple
 import requests
 import urllib3.exceptions
 
-from fuzzingtool.objects.payload import Payload
-
 from ..request_parser import (check_is_url_discovery,
                               check_is_data_fuzzing, request_parser)
 from ...utils.consts import FuzzType
 from ...utils.http_utils import get_parsed_url, get_pure_url, get_url_without_scheme
 from ...objects.fuzz_word import FuzzWord
+from ...objects.payload import Payload
 from ...exceptions.request_exceptions import RequestException
 
 
