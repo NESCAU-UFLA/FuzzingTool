@@ -87,7 +87,8 @@ class Result(BaseItem):
             )
         else:
             for payload in self._payloads:
-                returned_str += ("\n"
+                returned_str += (
+                    "\n"
                     f"    {payload.fuzz_mark}: "
                     f"{fix_payload_to_output(payload.final):<{MAX_PAYLOAD_LENGTH_TO_OUTPUT}}"
                 )

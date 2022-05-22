@@ -21,7 +21,6 @@
 from datetime import datetime
 import threading
 import sys
-from typing import Tuple
 from math import floor, ceil, log10
 from shutil import get_terminal_size
 
@@ -513,7 +512,8 @@ class CliOutput:
             )
         else:
             for payload in result._payloads:
-                formatted_result_str += ("\n"
+                formatted_result_str += (
+                    "\n"
                     f"    {payload.fuzz_mark}: "
                     f"{fix_payload_to_output(payload.final):<{MAX_PAYLOAD_LENGTH_TO_OUTPUT}}"
                 )
