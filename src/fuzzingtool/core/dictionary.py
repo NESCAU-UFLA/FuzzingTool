@@ -19,8 +19,9 @@
 # SOFTWARE.
 
 from queue import Queue
+from itertools import product
 from builtins import zip
-from typing import Iterator, Tuple
+from typing import Iterator, Tuple, List
 
 from .payloader import Payloader
 from ..objects.payload import Payload
@@ -34,13 +35,15 @@ class Dictionary:
         size: The payload queue size
         payloads: The queue that contains all payloads inside the wordlist
     """
-    def __init__(self, wordlist: Queue[Tuple[Payload]], has_recursion: bool):
+    def __init__(self, wordlist: List[List[Payload]], has_recursion: bool = False):
         """Class constructor
 
-        @type wordlist: list
+        @type wordlist: List[List[Payload]]
         @param wordlist: The wordlist and mark with the payloads
         """
-        self.wordlist = wordlist
+        self.wordlist = Queue()
+        for payloads in product(*wordlist):
+            self.wordlist.put(payloads)
         self.__has_recursion = has_recursion
         self.__size = 0
         self.__payloads = Queue()

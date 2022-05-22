@@ -3,7 +3,7 @@ import unittest
 from src.fuzzingtool.core.filter import Filter
 from src.fuzzingtool.objects.result import Result, HttpHistory
 from src.fuzzingtool.exceptions import BadArgumentType, BadArgumentFormat
-from ..mock_utils.response_mock import ResponseMock
+from ..test_utils.response_mock import ResponseMock
 
 
 class TestFilter(unittest.TestCase):

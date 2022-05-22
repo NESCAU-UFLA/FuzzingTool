@@ -277,8 +277,8 @@ class CliOutput:
             dict_size = dictionary['len']
             if 'removed' in dictionary.keys() and dictionary['removed']:
                 dict_size = (f"{dictionary['len']} "
-                            f"(removed {dictionary['removed']} "
-                            f"duplicated payloads)")
+                             f"(removed {dictionary['removed']} "
+                             f"duplicated payloads)")
             self.print_config("Dictionary", f"{dictionary['fuzz_mark']}:{dict_size}")
         print("")
 
@@ -459,7 +459,7 @@ class CliOutput:
             return formatted_payload
         if result.fuzz_type == FuzzType.SUBDOMAIN_FUZZING:
             return result.history.parsed_url.hostname
-        return ':'.join(result.payloads)
+        return result.payloads[0]
 
     def __get_formatted_status(self, status: int) -> str:
         """Formats the status code to output
@@ -484,21 +484,6 @@ class CliOutput:
             status_color += Colors.RED
         return f"{status_color}{status}{Colors.RESET}"
 
-    def __get_formatted_result_items(self, result: Result) -> Tuple[
-        str, str, str, str, str, str
-    ]:
-        """Format the result items to the output
-
-        @type result: Result
-        @param result: The result of the request
-        @returns Tuple[str, str, str, str, str, str]: The tuple with the formatted result items
-        """
-        payload, rtt, length, words, lines = ResultUtils.get_formatted_result(
-            self.__get_formatted_payload(result), result.history.rtt,
-            result.history.body_size, result.words, result.lines
-        )
-        return (payload, self.__get_formatted_status(result.history.status), rtt, length, words, lines)
-
     def __get_formatted_result(self, result: Result) -> str:
         """Format the entire result message
 
@@ -506,15 +491,31 @@ class CliOutput:
         @param result: The result of the request
         @returns str: The formatted result message to output
         """
-        formatted_items = self.__get_formatted_result_items(result)
-        payload, status_code, rtt, length, words, lines = formatted_items
+        status_code, rtt, length, words, lines = (
+            self.__get_formatted_status(result.history.status),
+            *ResultUtils.get_formatted_result(
+                result.history.rtt, result.history.body_size,
+                result.words, result.lines
+            )
+        )
         formatted_result_str = (
-            f"{payload} {Colors.GRAY}["
+            f"{Colors.GRAY}["
             f"{Colors.LIGHT_GRAY}Code{Colors.RESET} {status_code} | "
             f"{Colors.LIGHT_GRAY}RTT{Colors.RESET} {rtt} | "
             f"{Colors.LIGHT_GRAY}Size{Colors.RESET} {length} | "
             f"{Colors.LIGHT_GRAY}Words{Colors.RESET} {words} | "
             f"{Colors.LIGHT_GRAY}Lines{Colors.RESET} {lines}{Colors.GRAY}]{Colors.RESET}"
         )
+        if len(result.payloads) == 1:
+            payload = fix_payload_to_output(self.__get_formatted_payload(result))
+            formatted_result_str = (
+                f"{payload:<{MAX_PAYLOAD_LENGTH_TO_OUTPUT}} {formatted_result_str}"
+            )
+        else:
+            for payload in result._payloads:
+                formatted_result_str += ("\n"
+                    f"    {payload.fuzz_mark}: "
+                    f"{fix_payload_to_output(payload.final):<{MAX_PAYLOAD_LENGTH_TO_OUTPUT}}"
+                )
         formatted_result_str += f"{Colors.LIGHT_YELLOW}{result.get_description()}{Colors.RESET}"
         return formatted_result_str

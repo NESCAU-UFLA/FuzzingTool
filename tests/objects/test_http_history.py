@@ -3,7 +3,7 @@ from unittest.mock import Mock, patch
 
 from src.fuzzingtool.objects.http_history import HttpHistory
 from src.fuzzingtool.utils.http_utils import UrlParse
-from ..mock_utils.response_mock import ResponseMock
+from ..test_utils.response_mock import ResponseMock
 
 
 class TestHttpHistory(unittest.TestCase):

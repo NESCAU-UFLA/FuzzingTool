@@ -109,9 +109,12 @@ def build_wordlist(wordlists: List[str]) -> List[Tuple[List[Tuple[str, str]], st
     """
     wordlists_and_fuzz_marks = []
     for wordlist in wordlists:
-        fuzz_mark = FuzzMark.BASE_MARK
-        if ':' in wordlist:
-            wordlist, fuzz_mark = split_str_to_list(wordlist, separator=':')
+        wordlist_with_mark = split_str_to_list(wordlist, separator=':')
+        if len(wordlist_with_mark) > 1:
+            wordlist, fuzz_mark = wordlist_with_mark
+        else:
+            wordlist = wordlist_with_mark[0]
+            fuzz_mark = FuzzMark.BASE_MARK
         wordlists_and_fuzz_marks.append(([
             parse_option_with_args(w)
             for w in split_str_to_list(wordlist, separator=';')

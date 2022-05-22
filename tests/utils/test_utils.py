@@ -3,31 +3,10 @@ from unittest.mock import Mock, patch
 
 from src.fuzzingtool.utils.utils import *
 from src.fuzzingtool.utils.utils import _get_letter_range, _get_number_range
-from src.fuzzingtool.utils.consts import FUZZING_MARK, FUZZING_MARK_LEN, MAX_PAYLOAD_LENGTH_TO_OUTPUT
+from src.fuzzingtool.utils.consts import MAX_PAYLOAD_LENGTH_TO_OUTPUT
 
 
 class TestUtils(unittest.TestCase):
-    def test_get_indexes_to_parse_without_mark(self):
-        return_expected = []
-        test_content = "payload"
-        returned_data = get_indexes_to_parse(test_content)
-        self.assertIsInstance(returned_data, list)
-        self.assertEqual(returned_data, return_expected)
-
-    def test_get_indexes_to_parse_with_one_mark(self):
-        return_expected = [2]
-        test_content = f"pa{FUZZING_MARK}yload"
-        returned_data = get_indexes_to_parse(test_content)
-        self.assertIsInstance(returned_data, list)
-        self.assertEqual(returned_data, return_expected)
-
-    def test_get_indexes_to_parse_with_two_marks(self):
-        return_expected = [2, (8 + (FUZZING_MARK_LEN - 1))]
-        test_content = f"pa{FUZZING_MARK}yload{FUZZING_MARK}"
-        returned_data = get_indexes_to_parse(test_content)
-        self.assertIsInstance(returned_data, list)
-        self.assertEqual(returned_data, return_expected)
-
     def test_split_str_to_list_with_blank_string(self):
         return_expected = []
         test_content = ''

@@ -2,6 +2,7 @@ import unittest
 from unittest.mock import patch, Mock
 
 from src.fuzzingtool.utils.argument_utils import *
+from src.fuzzingtool.utils.fuzz_mark import FuzzMark
 
 
 class TestArgumentUtils(unittest.TestCase):
@@ -100,10 +101,21 @@ class TestArgumentUtils(unittest.TestCase):
         self.assertIsInstance(returned_target, dict)
         self.assertDictEqual(returned_target, return_expected)
 
-    def test_build_wordlist(self):
-        return_expected = [('DnsZone', ''), ('Robots', 'http://test-url.com/')]
-        returned_wordlist = build_wordlist('DnsZone;Robots=http://test-url.com/')
+    def test_build_wordlist_without_custom_mark(self):
+        return_expected = [([('DnsZone', ''), ('Robots', 'http://test-url.com/')], FuzzMark.BASE_MARK)]
+        returned_wordlist = build_wordlist(['DnsZone;Robots=http\\://test-url.com/'])
         self.assertIsInstance(returned_wordlist, list)
+        self.assertIsInstance(returned_wordlist[0], tuple)
+        self.assertIsInstance(returned_wordlist[0][0], list)
+        self.assertEqual(returned_wordlist, return_expected)
+
+    def test_build_wordlist_with_custom_mark(self):
+        fuzz_mark = "FUZ2Z"
+        return_expected = [([('DnsZone', ''), ('Robots', 'http://test-url.com/')], fuzz_mark)]
+        returned_wordlist = build_wordlist([f'DnsZone;Robots=http\\://test-url.com/:{fuzz_mark}'])
+        self.assertIsInstance(returned_wordlist, list)
+        self.assertIsInstance(returned_wordlist[0], tuple)
+        self.assertIsInstance(returned_wordlist[0][0], list)
         self.assertEqual(returned_wordlist, return_expected)
 
     def test_build_encoder(self):

@@ -20,7 +20,7 @@
 
 from typing import Callable
 
-from ..utils.consts import FUZZING_MARK
+from ..utils.fuzz_mark import FuzzMark
 
 
 class Payload:
@@ -34,7 +34,7 @@ class Payload:
     """
     def __init__(self,
                  payload: str = '',
-                 fuzz_mark: str = FUZZING_MARK):
+                 fuzz_mark: str = FuzzMark.BASE_MARK):
         """Class constructor
 
         @type payload: str

@@ -4,15 +4,17 @@ from queue import Queue
 from src.fuzzingtool.core.job_manager import JobManager
 from src.fuzzingtool.core.dictionary import Dictionary
 from src.fuzzingtool.objects import Payload, HttpHistory, Result
-from ..mock_utils.response_mock import ResponseMock
+from src.fuzzingtool.utils.fuzz_mark import FuzzMark
+from ..test_utils.response_mock import ResponseMock
+from ..test_utils.fuzz_mark_test_case import FuzzMarkTestCase
 
 
-class TestJobManager(unittest.TestCase):
+class TestJobManager(FuzzMarkTestCase):
     def test_update(self):
         test_result = Result(HttpHistory(response=ResponseMock()))
         test_provider = "TestProvider"
         job_manager = JobManager(
-            dictionary=Dictionary(wordlist=["test-payload"]),
+            dictionary=Dictionary(wordlist=[[Payload("test-payload")]]),
             job_providers={},
             max_rlevel=1,
         )
@@ -22,7 +24,7 @@ class TestJobManager(unittest.TestCase):
 
     def test_get_job(self):
         job_manager = JobManager(
-            dictionary=Dictionary(wordlist=["test-payload"]),
+            dictionary=Dictionary(wordlist=[[Payload("test-payload")]]),
             job_providers={},
             max_rlevel=1,
         )
@@ -56,10 +58,11 @@ class TestJobManager(unittest.TestCase):
             job_providers={'test_provider': test_provider_queue},
             max_rlevel=1,
         )
-        test_provider_queue.put("test-payload-job")
+        test_provider_queue.put((Payload("test-payload-job"),))
         self.assertEqual(job_manager.has_pending_jobs_from_providers(), True)
 
     def test_check_for_new_jobs(self):
+        FuzzMark.recursion_mark_index = 0
         test_provider_queue = Queue()
         job_manager = JobManager(
             dictionary=Dictionary(wordlist=[]),
@@ -67,7 +70,7 @@ class TestJobManager(unittest.TestCase):
             max_rlevel=1,
         )
         job_manager.get_job()
-        test_provider_queue.put(Payload("test-payload-job"))
+        test_provider_queue.put((Payload("test-payload-job"),))
         job_manager.check_for_new_jobs()
         job_manager.get_job()
         self.assertEqual(job_manager.current_job_name, "test_provider")

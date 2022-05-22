@@ -1,17 +1,18 @@
-import unittest
 from unittest.mock import Mock, patch
 
 import requests
 
 from src.fuzzingtool.conn.requesters.requester import Requester
 from src.fuzzingtool.objects.fuzz_word import FuzzWord
-from src.fuzzingtool.utils.consts import FUZZING_MARK, FuzzType
+from src.fuzzingtool.utils.consts import FuzzType
 from src.fuzzingtool.exceptions.request_exceptions import RequestException
 from src.fuzzingtool.utils.http_utils import get_parsed_url
-from ...mock_utils.response_mock import ResponseMock
+from src.fuzzingtool.utils.fuzz_mark import FuzzMark
+from ...test_utils.fuzz_mark_test_case import FuzzMarkTestCase
+from ...test_utils.response_mock import ResponseMock
 
 
-class TestRequester(unittest.TestCase):
+class TestRequester(FuzzMarkTestCase):
     def test_setup_url(self):
         expected_url = "https://test-url.com/"
         expected_params = ''
@@ -152,7 +153,7 @@ class TestRequester(unittest.TestCase):
 
     def test_set_fuzzing_type_for_method_fuzzing(self):
         return_expected = FuzzType.HTTP_METHOD_FUZZING
-        test_method = FUZZING_MARK
+        test_method = FuzzMark.BASE_MARK
         requester = Requester("https://test-url.com/", method=test_method)
         returned_data = requester._set_fuzzing_type()
         self.assertIsInstance(returned_data, int)
@@ -162,7 +163,7 @@ class TestRequester(unittest.TestCase):
 
     def test_set_fuzzing_type_for_path_fuzzing(self):
         return_expected = FuzzType.PATH_FUZZING
-        test_url = f"https://test-url.com/{FUZZING_MARK}"
+        test_url = f"https://test-url.com/{FuzzMark.BASE_MARK}"
         requester = Requester(test_url)
         returned_data = requester._set_fuzzing_type()
         self.assertIsInstance(returned_data, int)
@@ -172,7 +173,7 @@ class TestRequester(unittest.TestCase):
 
     def test_set_fuzzing_type_for_data_fuzzing_on_url_params(self):
         return_expected = FuzzType.DATA_FUZZING
-        test_url = f"https://test-url.com/?q={FUZZING_MARK}"
+        test_url = f"https://test-url.com/?q={FuzzMark.BASE_MARK}"
         requester = Requester(test_url)
         returned_data = requester._set_fuzzing_type()
         self.assertIsInstance(returned_data, int)
@@ -182,7 +183,7 @@ class TestRequester(unittest.TestCase):
 
     def test_set_fuzzing_type_for_data_fuzzing_on_body(self):
         return_expected = FuzzType.DATA_FUZZING
-        test_body = f"user={FUZZING_MARK}&pass={FUZZING_MARK}"
+        test_body = f"user={FuzzMark.BASE_MARK}&pass={FuzzMark.BASE_MARK}"
         requester = Requester("https://test-url.com/", body=test_body)
         returned_data = requester._set_fuzzing_type()
         self.assertIsInstance(returned_data, int)
@@ -193,7 +194,7 @@ class TestRequester(unittest.TestCase):
     def test_set_fuzzing_type_for_data_fuzzing_on_headers(self):
         return_expected = FuzzType.DATA_FUZZING
         test_header = {
-            'Cookie': f"TESTSESSID={FUZZING_MARK}"
+            'Cookie': f"TESTSESSID={FuzzMark.BASE_MARK}"
         }
         requester = Requester("https://test-url.com/", headers=test_header)
         returned_data = requester._set_fuzzing_type()

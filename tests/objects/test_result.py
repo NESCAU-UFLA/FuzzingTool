@@ -1,10 +1,12 @@
 import unittest
-from unittest.mock import Mock, patch
 
 from src.fuzzingtool.objects import Payload, Result, HttpHistory, ScannerResult
 from src.fuzzingtool.objects.base_objects import BaseItem
+from src.fuzzingtool.utils.consts import MAX_PAYLOAD_LENGTH_TO_OUTPUT
 from src.fuzzingtool.utils.result_utils import ResultUtils
-from ..mock_utils.response_mock import ResponseMock
+from src.fuzzingtool.utils.fuzz_mark import FuzzMark
+from src.fuzzingtool.utils.utils import fix_payload_to_output
+from ..test_utils.response_mock import ResponseMock
 
 
 class TestResult(unittest.TestCase):
@@ -18,7 +20,7 @@ class TestResult(unittest.TestCase):
         test_response = ResponseMock()
         result = Result(
             history=HttpHistory(response=test_response, rtt=3.0),
-            payload=Payload('test-payload')
+            payloads=(Payload('test-payload'),)
         )
         self.assertEqual(result.words, 5)
         self.assertEqual(result.lines, 2)
@@ -27,7 +29,7 @@ class TestResult(unittest.TestCase):
         test_job_description = "Enqueued new job from Test"
         result = Result(
             history=HttpHistory(response=ResponseMock(), rtt=3.0),
-            payload=Payload('test-payload')
+            payloads=(Payload('test-payload'),)
         )
         result.job_description = test_job_description
         test_scanner = "test-scanner"
@@ -45,18 +47,18 @@ class TestResult(unittest.TestCase):
         self.assertIsInstance(returned_description, str)
         self.assertEqual(returned_description, return_expected)
 
-    def test_result_str(self):
+    def test_result_str_with_single_payload(self):
         test_response = ResponseMock()
         result = Result(
             history=HttpHistory(response=test_response, rtt=3.0),
-            payload=Payload('test-payload')
+            payloads=(Payload('test-payload'),)
         )
-        payload, rtt, length, words, lines = ResultUtils.get_formatted_result(
-            result.payload, result.history.rtt, result.history.body_size,
+        rtt, length, words, lines = ResultUtils.get_formatted_result(
+            result.history.rtt, result.history.body_size,
             result.words, result.lines
         )
         return_expected = (
-            f"{payload} ["
+            f"{fix_payload_to_output(result.payloads[0]):<{MAX_PAYLOAD_LENGTH_TO_OUTPUT}} ["
             f"Code {result.history.status} | "
             f"RTT {rtt} | "
             f"Size {length} | "
@@ -65,15 +67,39 @@ class TestResult(unittest.TestCase):
         )
         self.assertEqual(str(result), return_expected)
 
+    def test_result_str_with_multiple_payload(self):
+        test_response = ResponseMock()
+        result = Result(
+            history=HttpHistory(response=test_response, rtt=3.0),
+            payloads=(
+                Payload('test-payload', fuzz_mark=FuzzMark.BASE_MARK),
+                Payload('test-payload-2', fuzz_mark="FUZ2Z")
+            )
+        )
+        rtt, length, words, lines = ResultUtils.get_formatted_result(
+            result.history.rtt, result.history.body_size,
+            result.words, result.lines
+        )
+        return_expected = (
+            f"[Code {result.history.status} | "
+            f"RTT {rtt} | "
+            f"Size {length} | "
+            f"Words {words} | "
+            f"Lines {lines}]"
+            f"\n    {result._payloads[0].fuzz_mark}: {fix_payload_to_output(result._payloads[0].final):<{MAX_PAYLOAD_LENGTH_TO_OUTPUT}}"
+            f"\n    {result._payloads[1].fuzz_mark}: {fix_payload_to_output(result._payloads[1].final):<{MAX_PAYLOAD_LENGTH_TO_OUTPUT}}"
+        )
+        self.assertEqual(str(result), return_expected)
+
     def test_result_iter(self):
         test_prefix = "test-prefix|"
-        payload: Payload = Payload("test-payload").with_prefix(test_prefix)
+        payloads = (Payload("test-payload").with_prefix(test_prefix),)
         Result.save_payload_configs = True
         Result.save_headers = True
         Result.save_body = True
         result = Result(
             history=HttpHistory(ResponseMock(), 3.0, '127.0.0.1'),
-            payload=payload
+            payloads=payloads
         )
         test_scanner = "test-scanner"
         result.scanners_res[test_scanner] = ScannerResult(test_scanner)
@@ -92,10 +118,10 @@ class TestResult(unittest.TestCase):
             'lines': result.lines,
             'ip': result.history.ip,
             'test-key': "test-value",
-            'payload': result.payload,
-            'payload_raw': payload.raw,
-            'payload_prefix': test_prefix,
-            'headers': result.history.raw_headers,
+            f'payload_{FuzzMark.BASE_MARK}': result.payloads[0],
+            f'payload_{FuzzMark.BASE_MARK}_raw': payloads[0].raw,
+            f'payload_{FuzzMark.BASE_MARK}_prefix': test_prefix,
+            f'headers': result.history.raw_headers,
             'body': result.history.response.text
         }
         self.assertDictEqual(dict(result), expected_result_dict)

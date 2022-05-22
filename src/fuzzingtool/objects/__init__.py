@@ -20,6 +20,7 @@
 
 from .base_objects import BaseItem
 from .error import Error
+from .fuzz_word import FuzzWord
 from .http_history import HttpHistory
 from .payload import Payload
 from .result import Result

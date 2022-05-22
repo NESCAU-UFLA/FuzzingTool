@@ -1,17 +1,23 @@
-import unittest
 from unittest.mock import Mock, patch
+from queue import Queue
+from typing import Tuple
 
 from src.fuzzingtool.core.recursion_manager import RecursionManager
 from src.fuzzingtool.objects import Payload, Result, HttpHistory
-from ..mock_utils.response_mock import ResponseMock
+from src.fuzzingtool.utils.fuzz_mark import FuzzMark
+from ..test_utils.response_mock import ResponseMock
+from ..test_utils.fuzz_mark_test_case import FuzzMarkTestCase
 
 
-class TestRecursionManager(unittest.TestCase):
+class TestRecursionManager(FuzzMarkTestCase):
     def setUp(self):
+        self.base_wordlist = ['test_1', 'test_2']
         self.recursion_manager = RecursionManager(
             max_rlevel=1,
-            wordlist=['test_1', 'test_2']
+            wordlist=Queue()
         )
+        for w in self.base_wordlist:
+            self.recursion_manager.wordlist.put((Payload(w),))
 
     def test_notify(self):
         mock_observer = Mock()
@@ -29,6 +35,7 @@ class TestRecursionManager(unittest.TestCase):
 
     @patch("src.fuzzingtool.core.recursion_manager.RecursionManager.notify")
     def test_check_for_recursion_with_recursion(self, mock_notify: Mock):
+        FuzzMark.recursion_mark_index = 0
         test_directory = "test_directory/"
         test_result = Result(HttpHistory(response=ResponseMock()))
         test_result.history.url += test_directory
@@ -40,13 +47,13 @@ class TestRecursionManager(unittest.TestCase):
         self.assertEqual(enqueued_directory.final, test_directory)
 
     def test_fill_payloads_queue(self):
+        FuzzMark.recursion_mark_index = 0
         test_directory = "test_directory/"
         test_payload = Payload().with_recursion(test_directory)
         self.recursion_manager.directories_queue.put(test_payload)
         self.recursion_manager.fill_payloads_queue()
-        wordlist = self.recursion_manager.wordlist
         i = 0
         while not self.recursion_manager.payloads_queue.empty():
-            this_payload: Payload = self.recursion_manager.payloads_queue.get()
-            self.assertEqual(this_payload.final, f"{test_directory}{wordlist[i]}")
+            this_payloads: Tuple[Payload] = self.recursion_manager.payloads_queue.get()
+            self.assertEqual(this_payloads[0].final, f"{test_directory}{self.base_wordlist[i]}")
             i += 1
