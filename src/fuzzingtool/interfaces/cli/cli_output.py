@@ -23,6 +23,7 @@ import threading
 import sys
 from math import floor, ceil, log10
 from shutil import get_terminal_size
+from typing import List
 
 from ...objects.result import Result
 from ...utils.consts import MAX_PAYLOAD_LENGTH_TO_OUTPUT, FuzzType
@@ -256,12 +257,12 @@ class CliOutput:
 
     def print_configs(self,
                       target: dict,
-                      dictionaries: list[dict]) -> None:
+                      dictionaries: List[dict]) -> None:
         """Prints the program configuration
 
         @type target: dict
         @param taget: The target
-        @type dictionaries: list[dict]
+        @type dictionaries: List[dict]
         @param dictionaries: The dictionaries used in the tests
         """
         print("")
