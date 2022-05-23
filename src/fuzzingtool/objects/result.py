@@ -18,13 +18,15 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from typing import Iterator, Tuple
+from typing import Iterator, Tuple, Dict
 
 from .base_objects import BaseItem
 from .http_history import HttpHistory
 from .payload import Payload
-from ..utils.consts import FuzzType
+from .scanner_result import ScannerResult
+from ..utils.consts import FuzzType, MAX_PAYLOAD_LENGTH_TO_OUTPUT
 from ..utils.result_utils import ResultUtils
+from ..utils.utils import fix_payload_to_output
 
 
 class Result(BaseItem):
@@ -44,7 +46,7 @@ class Result(BaseItem):
 
     def __init__(self,
                  history: HttpHistory,
-                 payload: Payload = Payload(),
+                 payloads: Tuple[Payload] = (Payload(),),
                  fuzz_type: int = FuzzType.UNKNOWN_FUZZING):
         """Class constructor
 
@@ -57,28 +59,39 @@ class Result(BaseItem):
         """
         super().__init__()
         self.history = history
-        self.payload = payload.final
+        self.payloads = [payload.final for payload in payloads]
         content = self.history.response.content
         self.words = len(content.split())
         self.lines = content.count(b'\n')
         self.fuzz_type = fuzz_type
         self.job_description = ''
-        self.scanners_res = {}
-        self._payload = payload
+        self.scanners_res: Dict[str, ScannerResult] = {}
+        self._payloads = payloads
 
     def __str__(self) -> str:
-        payload, rtt, length, words, lines = ResultUtils.get_formatted_result(
-            self.payload, self.history.rtt, self.history.body_size,
+        rtt, length, words, lines = ResultUtils.get_formatted_result(
+            self.history.rtt, self.history.body_size,
             self.words, self.lines
         )
         returned_str = (
-            f"{payload} ["
-            f"Code {self.history.status} | "
+            f"[Code {self.history.status} | "
             f"RTT {rtt} | "
             f"Size {length} | "
             f"Words {words} | "
             f"Lines {lines}]"
         )
+        if len(self.payloads) == 1:
+            returned_str = (
+                f"{fix_payload_to_output(self.payloads[0]):<{MAX_PAYLOAD_LENGTH_TO_OUTPUT}}"
+                f" {returned_str}"
+            )
+        else:
+            for payload in self._payloads:
+                returned_str += (
+                    "\n"
+                    f"    {payload.fuzz_mark}: "
+                    f"{fix_payload_to_output(payload.final):<{MAX_PAYLOAD_LENGTH_TO_OUTPUT}}"
+                )
         returned_str += self.get_description()
         return returned_str
 
@@ -98,12 +111,14 @@ class Result(BaseItem):
             yield 'ip', self.history.ip
         for s_res in self.scanners_res.values():
             for key, value in s_res.data.items():
-                yield key, ResultUtils.format_custom_field(value, force_detailed=True)
-        yield 'payload', self.payload
-        if Result.save_payload_configs:
-            yield 'payload_raw', self._payload.raw
-            for key, value in self._payload.config.items():
-                yield f"payload_{key}", value
+                yield key, ResultUtils.format_data_field(value, force_detailed=True)
+        for payload in self._payloads:
+            payload_key = f"payload_{payload.fuzz_mark}"
+            yield payload_key, payload.final
+            if Result.save_payload_configs:
+                yield f'{payload_key}_raw', payload.raw
+                for key, value in payload.config.items():
+                    yield f"{payload_key}_{key}", value
         if Result.save_headers:
             yield 'headers', self.history.raw_headers
         if Result.save_body:
@@ -121,7 +136,7 @@ class Result(BaseItem):
             for key, value in s_res.data.items():
                 if (value is not None and isinstance(value, bool)) or value:
                     description += (f"\n|_ {key}: "
-                                    f"{ResultUtils.format_custom_field(value)}")
+                                    f"{ResultUtils.format_data_field(value)}")
             if s_res.enqueued_payloads:
                 description += (f"\n|_ Scanner {scanner} enqueued "
                                 f"{s_res.enqueued_payloads} payloads")

@@ -20,21 +20,7 @@
 
 from typing import List, Tuple, Union
 
-from .consts import FUZZING_MARK, MAX_PAYLOAD_LENGTH_TO_OUTPUT
-
-
-def get_indexes_to_parse(content: str,
-                         search_for: str = FUZZING_MARK) -> List[int]:
-    """Gets the indexes of the searched substring into a string content
-
-    @type content: str
-    @param content: The parameter content
-    @type search_for: str
-    @param search_for: The substring to be searched indexes
-                       on the given content
-    @returns List[int]: The positions indexes of the searched substring
-    """
-    return [i for i in range(len(content)) if content.startswith(search_for, i)]
+from .consts import MAX_PAYLOAD_LENGTH_TO_OUTPUT
 
 
 def split_str_to_list(string: str,

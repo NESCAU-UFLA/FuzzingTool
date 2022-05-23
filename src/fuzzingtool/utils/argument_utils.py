@@ -21,7 +21,7 @@
 from collections import deque
 from typing import List, Tuple, Dict
 
-from .consts import FUZZING_MARK
+from .fuzz_mark import FuzzMark, has_fuzz_mark
 from .utils import split_str_to_list, parse_option_with_args
 from .file_utils import read_file
 from ..exceptions import BadArgumentFormat
@@ -39,7 +39,7 @@ def build_target_from_args(url: str, method: str, body: str) -> dict:
     @returns dict: The targets data builded into a dictionary
     """
     if not method:
-        if body and not ('?' in url or FUZZING_MARK in url):
+        if body and not ('?' in url or has_fuzz_mark(url)):
             method = 'POST'
         else:
             method = 'GET'
@@ -100,17 +100,26 @@ def build_target_from_raw_http(raw_http_filename: str, scheme: str) -> dict:
     }
 
 
-def build_wordlist(wordlists: str) -> List[Tuple[str, str]]:
+def build_wordlist(wordlists: List[str]) -> List[Tuple[List[Tuple[str, str]], str]]:
     """Build the wordlists
 
     @type wordlists: str
     @param wordlists: The wordlists from command line
-    @returns List[Tuple[str, str]]: The builded wordlists
+    @returns List[Tuple[List[Tuple[str, str]], str]]: The builded wordlists
     """
-    return [
-        parse_option_with_args(wordlist)
-        for wordlist in split_str_to_list(wordlists, separator=';')
-    ]
+    wordlists_and_fuzz_marks = []
+    for wordlist in wordlists:
+        wordlist_with_mark = split_str_to_list(wordlist, separator=':')
+        if len(wordlist_with_mark) > 1:
+            wordlist, fuzz_mark = wordlist_with_mark
+        else:
+            wordlist = wordlist_with_mark[0]
+            fuzz_mark = FuzzMark.BASE_MARK
+        wordlists_and_fuzz_marks.append(([
+            parse_option_with_args(w)
+            for w in split_str_to_list(wordlist, separator=';')
+        ], fuzz_mark))
+    return wordlists_and_fuzz_marks
 
 
 def build_encoder(encoders: str) -> List[List[Tuple[str, str]]]:

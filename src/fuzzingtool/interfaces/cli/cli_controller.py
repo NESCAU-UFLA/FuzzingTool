@@ -18,6 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+from typing import Tuple
 import time
 import threading
 from argparse import Namespace
@@ -116,7 +117,7 @@ class CliController(FuzzLib):
                 'body': self.args["data"],
                 'type_fuzzing': FUZZ_TYPE_NAME[self.requester.get_fuzzing_type()],
                 },
-            dictionary=self.dict_metadata
+            dictionaries=self.dict_metadata
         )
 
     def check_connection(self) -> None:
@@ -213,20 +214,20 @@ class CliController(FuzzLib):
                 self.summary.results.append(result)
                 self.cli_output.print_result(result, valid)
             self.__print_progress(
-                result.index, result.payload
+                result.index, result.payloads
             )
 
     def _request_exception_callback(self, error: Error) -> None:
         if self.ignore_errors:
             if not self.verbose[0]:
                 self.__print_progress(
-                    error.index, error.payload
+                    error.index, error.payloads
                 )
             else:
                 if self.verbose[1]:
                     self.cli_output.not_worked_box(str(error))
             with self.lock:
-                self.logger.write(str(error), error.payload)
+                self.logger.write(str(error), error.payloads)
         else:
             self.stop_action = str(error)
 
@@ -236,7 +237,7 @@ class CliController(FuzzLib):
                 self.cli_output.not_worked_box(str(error))
         else:
             self.__print_progress(
-                error.index, error.payload
+                error.index, error.payloads
             )
 
     def _init_dictionary(self) -> None:
@@ -368,7 +369,7 @@ class CliController(FuzzLib):
         )
         return (time, length, words, lines)
 
-    def __print_progress(self, index: int, payload: str) -> None:
+    def __print_progress(self, index: int, payloads: Tuple[str]) -> None:
         """Print the progress status
 
         @type index: int
@@ -378,7 +379,7 @@ class CliController(FuzzLib):
         """
         self.cli_output.progress_status(
             item_index=index,
-            payload=payload,
+            payloads=payloads,
             current_job=self.job_manager.current_job,
             total_jobs=self.job_manager.total_jobs,
         )

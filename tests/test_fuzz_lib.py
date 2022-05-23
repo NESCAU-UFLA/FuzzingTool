@@ -1,17 +1,20 @@
-import unittest
+from typing import List
 from unittest.mock import Mock, patch
 
 from src.fuzzingtool.fuzz_lib import FuzzLib
 from src.fuzzingtool.conn.requesters import Requester, SubdomainRequester
-from src.fuzzingtool.utils.consts import PluginCategory, FUZZING_MARK
-from src.fuzzingtool.exceptions import FuzzLibException, WordlistCreationError
 from src.fuzzingtool.core.defaults.scanners import DataScanner, PathScanner, SubdomainScanner
 from src.fuzzingtool.core.plugins.scanners import Reflected
 from src.fuzzingtool.core.plugins.encoders import Html
-from .mock_utils.wordlist_mock import WordlistMock
+from src.fuzzingtool.objects import Payload
+from src.fuzzingtool.exceptions import FuzzLibException, WordlistCreationError
+from src.fuzzingtool.utils.consts import PluginCategory
+from src.fuzzingtool.utils.fuzz_mark import FuzzMark
+from .test_utils.wordlist_mock import WordlistMock
+from .test_utils.fuzz_mark_test_case import FuzzMarkTestCase
 
 
-class TestFuzzController(unittest.TestCase):
+class TestFuzzLib(FuzzMarkTestCase):
     def test_init_requester_with_common_requester(self):
         test_url = "http://test-url.com/"
         test_fuzz_lib = FuzzLib(url=test_url)
@@ -19,7 +22,7 @@ class TestFuzzController(unittest.TestCase):
         self.assertIsInstance(test_fuzz_lib.requester, Requester)
 
     def test_init_requester_with_subdomain_requester(self):
-        test_url = f"http://{FUZZING_MARK}.test-url.com/"
+        test_url = f"http://{FuzzMark.BASE_MARK}.test-url.com/"
         test_fuzz_lib = FuzzLib(url=test_url)
         test_fuzz_lib._init_requester()
         self.assertIsInstance(test_fuzz_lib.requester, SubdomainRequester)
@@ -49,27 +52,40 @@ class TestFuzzController(unittest.TestCase):
             FuzzLib(wordlist="test")._init_requester()
         self.assertEqual(str(e.exception), "A target is needed to make the fuzzing")
 
+    def test_check_for_recursion_mark(self):
+        test_fuzz_lib = FuzzLib(url=f"http://test-url.com/{FuzzMark.BASE_MARK}")
+        test_fuzz_lib._init_requester()
+        test_fuzz_lib._check_for_recursion_mark()
+        self.assertIsInstance(FuzzMark.recursion_mark_index, int)
+        self.assertEqual(FuzzMark.recursion_mark_index, 0)
+
+    def test_check_for_recursion_mark_without_recursion(self):
+        test_fuzz_lib = FuzzLib(url="http://test-url.com/")
+        test_fuzz_lib._init_requester()
+        test_fuzz_lib._check_for_recursion_mark()
+        self.assertEqual(FuzzMark.recursion_mark_index, -1)
+
     @patch("src.fuzzingtool.fuzz_lib.Matcher.set_status_code")
     def test_init_matcher(self, mock_set_status_code: Mock):
-        test_fuzz_lib = FuzzLib(url=f"http://test-url.com/{FUZZING_MARK}")
+        test_fuzz_lib = FuzzLib(url=f"http://test-url.com/{FuzzMark.BASE_MARK}")
         test_fuzz_lib._init_requester()
         test_fuzz_lib._init_matcher()
         mock_set_status_code.assert_called_once_with("200-399,401,403")
 
     def test_get_default_scanner_with_path_scanner(self):
-        test_fuzz_lib = FuzzLib(url=f"http://test-url.com/{FUZZING_MARK}")
+        test_fuzz_lib = FuzzLib(url=f"http://test-url.com/{FuzzMark.BASE_MARK}")
         test_fuzz_lib._init_requester()
         returned_scanner = test_fuzz_lib._FuzzLib__get_default_scanner()
         self.assertIsInstance(returned_scanner, PathScanner)
 
     def test_get_default_scanner_with_subdomain_scanner(self):
-        test_fuzz_lib = FuzzLib(url=f"http://{FUZZING_MARK}.test-url.com/")
+        test_fuzz_lib = FuzzLib(url=f"http://{FuzzMark.BASE_MARK}.test-url.com/")
         test_fuzz_lib._init_requester()
         returned_scanner = test_fuzz_lib._FuzzLib__get_default_scanner()
         self.assertIsInstance(returned_scanner, SubdomainScanner)
 
     def test_get_default_scanner_with_data_scanner(self):
-        test_fuzz_lib = FuzzLib(url=f"http://test-url.com/", data=f"a={FUZZING_MARK}")
+        test_fuzz_lib = FuzzLib(url=f"http://test-url.com/", data=f"a={FuzzMark.BASE_MARK}")
         test_fuzz_lib._init_requester()
         returned_scanner = test_fuzz_lib._FuzzLib__get_default_scanner()
         self.assertIsInstance(returned_scanner, DataScanner)
@@ -84,8 +100,15 @@ class TestFuzzController(unittest.TestCase):
 
     @patch("src.fuzzingtool.fuzz_lib.FuzzLib._FuzzLib__get_default_scanner")
     def test_init_scanners_with_default_scanner(self, mock_get_default_scanner: Mock):
-        FuzzLib(url=f"http://test-url.com/{FUZZING_MARK}")._init_scanners()
+        FuzzLib(url=f"http://test-url.com/{FuzzMark.BASE_MARK}")._init_scanners()
         mock_get_default_scanner.assert_called_once()
+
+    def test_check_for_invalid_recursion(self):
+        test_fuzz_lib = FuzzLib(url=f"http://test-url.com/", recursive=True)
+        test_fuzz_lib._init_other_arguments()
+        with self.assertRaises(FuzzLibException) as e:
+            test_fuzz_lib._check_for_invalid_recursion()
+        self.assertEqual(str(e.exception), "The url must ends with a fuzz mark to use recursion features")
 
     @patch("src.fuzzingtool.fuzz_lib.PluginFactory.object_creator")
     def test_build_encoders_with_encoders(self, mock_object_creator: Mock):
@@ -170,9 +193,31 @@ class TestFuzzController(unittest.TestCase):
         self.assertEqual(str(e.exception), "The wordlist is empty")
 
     @patch("src.fuzzingtool.fuzz_lib.FuzzLib._FuzzLib__build_wordlist")
+    def test_get_wordlists_and_marks(self, mock_build_wordlist: Mock):
+        expected_payloads = ["test", "test", "test2"]
+        mock_build_wordlist.return_value = expected_payloads
+        test_fuzz_lib = FuzzLib(wordlist="test")
+        test_fuzz_lib._pre_init_wordlist()
+        returned_wordlists_and_marks: List[List[Payload]] = test_fuzz_lib._FuzzLib__get_wordlists_and_marks()
+        self.assertIsInstance(returned_wordlists_and_marks, list)
+        self.assertEqual(len(returned_wordlists_and_marks), 1)
+        self.assertIsInstance(returned_wordlists_and_marks[0], list)
+        self.assertEqual(len(returned_wordlists_and_marks[0]), len(expected_payloads))
+        for i, payload_obj in enumerate(returned_wordlists_and_marks[0]):
+            self.assertIsInstance(payload_obj, Payload)
+            self.assertEqual(payload_obj.raw, expected_payloads[i])
+            self.assertEqual(payload_obj.fuzz_mark, FuzzMark.BASE_MARK)
+        self.assertIsInstance(test_fuzz_lib.dict_metadata, list)
+        self.assertEqual(len(test_fuzz_lib.dict_metadata), 1)
+        self.assertIsInstance(test_fuzz_lib.dict_metadata[0], dict)
+        self.assertEqual(test_fuzz_lib.dict_metadata[0]['fuzz_mark'], FuzzMark.BASE_MARK)
+
+    @patch("src.fuzzingtool.fuzz_lib.FuzzLib._FuzzLib__build_wordlist")
     def test_init_dictionary(self, mock_build_wordlist: Mock):
         mock_build_wordlist.return_value = ["test", "test", "test2"]
         test_fuzz_lib = FuzzLib(wordlist="test", unique=True)
+        test_fuzz_lib._pre_init_wordlist()
+        test_fuzz_lib._init_other_arguments()
         test_fuzz_lib._init_dictionary()
-        self.assertEqual(test_fuzz_lib.dict_metadata["removed"], 1)
-        self.assertEqual(test_fuzz_lib.dict_metadata["len"], 2)
+        self.assertEqual(test_fuzz_lib.dict_metadata[0]['removed'], 1)
+        self.assertEqual(test_fuzz_lib.dict_metadata[0]['len'], 2)

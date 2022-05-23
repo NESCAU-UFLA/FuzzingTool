@@ -20,24 +20,19 @@
 
 from typing import Tuple
 
-
-from .consts import MAX_PAYLOAD_LENGTH_TO_OUTPUT
-from .utils import get_human_length, get_formatted_rtt, fix_payload_to_output
+from .utils import get_human_length, get_formatted_rtt
 
 
 class ResultUtils:
     detailed_results = False
 
     @staticmethod
-    def get_formatted_result(payload: str,
-                             rtt: float,
+    def get_formatted_result(rtt: float,
                              length: int,
                              words: int,
                              lines: int) -> Tuple[str, str, str]:
         """Format the result into a dict of strings
 
-        @type payload: str
-        @param payload: The payload used in the request
         @type rtt: float
         @param rtt: The request and response elapsed time
         @type length: int
@@ -51,7 +46,6 @@ class ResultUtils:
         if isinstance(rtt, float):
             rtt = "%.2f" % rtt
         return (
-            f"{fix_payload_to_output(payload):<{MAX_PAYLOAD_LENGTH_TO_OUTPUT}}",
             f"{rtt:>5} {time_order}",
             f"{length:>7} {length_order}",
             '{:>6}'.format(words),
@@ -59,11 +53,11 @@ class ResultUtils:
         )
 
     @staticmethod
-    def format_custom_field(custom_field, force_detailed: bool = False) -> str:
-        """Format the value from key: value pair of the custom field in the result
+    def format_data_field(custom_field, force_detailed: bool = False) -> str:
+        """Format the value from key: value pair of the data field in the ScannerResult object
 
         @type custom_field: Any
-        @param custom_field: The value from key: value pair of the custom field in the result
+        @param custom_field: The value from key: value pair of the custom field in the ScannerResult object
         @returns str: The formatted value, to string
         """
         if isinstance(custom_field, list):

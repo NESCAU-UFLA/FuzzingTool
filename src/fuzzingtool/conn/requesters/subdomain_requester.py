@@ -25,6 +25,7 @@ from requests import Response
 
 from .requester import Requester
 from ..request_parser import request_parser
+from ...objects.payload import Payload
 from ...utils.http_utils import get_parsed_url
 from ...utils.consts import FuzzType
 from ...exceptions.request_exceptions import InvalidHostname
@@ -41,11 +42,11 @@ class SubdomainRequester(Requester):
         """
         try:
             return socket.gethostbyname(hostname)
-        except socket.gaierror:
+        except (socket.gaierror, UnicodeError):
             raise InvalidHostname(f"Can't resolve hostname {hostname}")
 
     def request(self,
-                payload: str = '',
+                payload: Tuple[Payload] = None,
                 replay_proxy: bool = False) -> Tuple[Response, float, Dict[str, str]]:
         with self._lock:
             request_parser.set_payload(payload)

@@ -5,7 +5,7 @@ import operator
 from src.fuzzingtool.core.matcher import Matcher
 from src.fuzzingtool.objects.result import Result, HttpHistory
 from src.fuzzingtool.exceptions import BadArgumentType, BadArgumentFormat
-from ..mock_utils.response_mock import ResponseMock
+from ..test_utils.response_mock import ResponseMock
 
 
 class TestMatcher(unittest.TestCase):

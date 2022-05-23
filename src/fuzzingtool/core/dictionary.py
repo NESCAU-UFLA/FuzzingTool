@@ -19,7 +19,9 @@
 # SOFTWARE.
 
 from queue import Queue
-from typing import List
+from itertools import product
+from builtins import zip
+from typing import Iterator, Tuple, List
 
 from .payloader import Payloader
 from ..objects.payload import Payload
@@ -33,23 +35,30 @@ class Dictionary:
         size: The payload queue size
         payloads: The queue that contains all payloads inside the wordlist
     """
-    def __init__(self, wordlist: list):
+    def __init__(self, wordlist: List[List[Payload]], has_recursion: bool = False):
         """Class constructor
 
-        @type wordlist: list
-        @param wordlist: The wordlist with the payloads
+        @type wordlist: List[List[Payload]]
+        @param wordlist: The wordlist and mark with the payloads
         """
-        self.wordlist = wordlist
+        self.wordlist = Queue()
+        for payloads in product(*wordlist):
+            self.wordlist.put(payloads)
+        self.__has_recursion = has_recursion
         self.__size = 0
         self.__payloads = Queue()
 
-    def __next__(self) -> List[Payload]:
+    def __next__(self) -> Iterator[Tuple[Payload]]:
         """Gets the next payload to be processed
 
         @returns list: The payloads used in the request
         """
+        next_payload_tuple: Tuple[Payload] = self.__payloads.get()
+        if self.__has_recursion:
+            self.wordlist.put(next_payload_tuple)
         self.__size -= 1
-        return Payloader.get_customized_payload(self.__payloads.get())
+        return zip(*[Payloader.get_customized_payload(payload)
+                     for payload in next_payload_tuple])
 
     def __len__(self) -> int:
         """Gets the wordlist length
@@ -76,12 +85,6 @@ class Dictionary:
         @returns bool: The payloads empty queue flag
         """
         return self.__payloads.empty()
-
-    def reload(self) -> None:
-        """Reloads the payloads queue with the wordlist content"""
-        for payload in self.wordlist:
-            self.__payloads.put(payload)
-            self.__size += 1
 
     def fill_from_queue(self, payloads_queue: Queue, clear: bool = False) -> None:
         """Fill the payloads queue with another queue

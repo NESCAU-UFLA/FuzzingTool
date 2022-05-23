@@ -47,6 +47,7 @@ class Backups(BaseScanner, Plugin):
     def __init__(self, extensions: list):
         self.extensions = extensions if extensions else DEFAULT_EXTENSIONS.split(',')
         BaseScanner.__init__(self)
+        self.has_recursion = True
 
     def scan(self, result: Result) -> bool:
         return True
@@ -55,5 +56,5 @@ class Backups(BaseScanner, Plugin):
         if result.history.parsed_url.file_ext not in self.extensions:
             for ext in self.extensions:
                 parsed_url = result.history.parsed_url
-                self.enqueue_payload(result, f"{parsed_url.file_name}{ext}")
-                self.enqueue_payload(result, f"{parsed_url.file}{ext}")
+                self.enqueue_path(result, f"{parsed_url.file_name}{ext}")
+                self.enqueue_path(result, f"{parsed_url.file}{ext}")

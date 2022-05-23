@@ -31,6 +31,7 @@ from ..request_parser import (check_is_url_discovery,
 from ...utils.consts import FuzzType
 from ...utils.http_utils import get_parsed_url, get_pure_url, get_url_without_scheme
 from ...objects.fuzz_word import FuzzWord
+from ...objects.payload import Payload
 from ...exceptions.request_exceptions import RequestException
 
 
@@ -206,22 +207,17 @@ class Requester:
             raise RequestException(f"Failed to establish a connection to {url}")
 
     def request(self,
-                payload: str = '',
+                payload: Tuple[Payload] = (Payload(),),
                 replay_proxy: bool = False) -> Tuple[requests.Response, float]:
         """Make a request and get the response
 
-        @type payload: str
-        @param payload: The payload used in the request
+        @type payload: Tuple[Payload]
+        @param payload: The payload tuple used in the request
         @type replay_proxy: bool
         @param replay_proxy: The replay proxy flag
         @returns Tuple[Response, float]: The response object of the request
         """
-        if not replay_proxy:
-            proxy = self.__proxy
-            if self.__proxies:
-                proxy = random.choice(self.__proxies)
-        else:
-            proxy = self.__replay_proxy
+        proxy = self.__prepare_proxy(replay_proxy)
         method, url, body, url_params, headers = self.__get_request_parameters(payload)
         try:
             before = time.time()
@@ -364,6 +360,16 @@ class Requester:
             'http': f"http://{proxy}",
             'https': f"https://{proxy}",
         }
+
+    def __prepare_proxy(self,
+                        replay_proxy: bool) -> Dict[str, str]:
+        if not replay_proxy:
+            proxy = self.__proxy
+            if self.__proxies:
+                proxy = random.choice(self.__proxies)
+        else:
+            proxy = self.__replay_proxy
+        return proxy
 
     def __get_request_parameters(self, payload: str) -> Tuple[
         str, str, dict, dict, dict

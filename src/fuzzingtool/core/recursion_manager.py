@@ -19,10 +19,10 @@
 # SOFTWARE.
 
 from queue import Queue
-from typing import List
 
 from .bases.job_provider import JobProvider
 from ..objects import Payload, Result
+from ..utils.fuzz_mark import FuzzMark
 
 
 class RecursionManager(JobProvider):
@@ -34,12 +34,12 @@ class RecursionManager(JobProvider):
         directories_queue: The control queue for directories found
         payloads_queue: The jobs queue for the job manager
     """
-    def __init__(self, max_rlevel: int, wordlist: List[str]):
+    def __init__(self, max_rlevel: int, wordlist: Queue):
         """Class constructor
 
         @type max_rlevel: int
         @param max_rlevel: The maximum jobs recursion level
-        @type wordlist: List[str]
+        @type wordlist: Queue[Tuple[Payload]]
         @param wordlist: The wordlist with base payloads
         """
         self.max_rlevel = max_rlevel
@@ -71,18 +71,26 @@ class RecursionManager(JobProvider):
         @type result: Result
         @param result: THe FuzzingTool result object
         """
-        payload = result._payload
-        if result.history.is_path and payload.rlevel < self.max_rlevel:
-            path = result.history.parsed_url.path
-            self.directories_queue.put(
-                Payload().update(payload).with_recursion(path[1:])
-            )
-            self.notify(result, path)
+        if result.history.is_path:
+            recursive_payload: Payload = result._payloads[FuzzMark.recursion_mark_index]
+            if recursive_payload.rlevel < self.max_rlevel:
+                path = result.history.parsed_url.path
+                self.directories_queue.put(
+                    Payload().update(recursive_payload).with_recursion(path[1:])
+                )
+                self.notify(result, path)
 
     def fill_payloads_queue(self) -> None:
         """Fill the payloads queue with recursive directory payloads"""
-        recursive_directory = self.directories_queue.get()
-        for wordlist_payload in self.wordlist:
+        recursive_directory: Payload = self.directories_queue.get()
+        while not self.wordlist.empty():
+            payloads_tuple = self.wordlist.get()
+            raw_payload = payloads_tuple[FuzzMark.recursion_mark_index].raw
             new_payload = Payload().update(recursive_directory)
-            new_payload.final += wordlist_payload
-            self.payloads_queue.put(new_payload)
+            new_payload.raw = raw_payload
+            new_payload.final += raw_payload
+            self.payloads_queue.put((
+                *payloads_tuple[:FuzzMark.recursion_mark_index],
+                new_payload,
+                *payloads_tuple[(FuzzMark.recursion_mark_index+1):]
+            ))

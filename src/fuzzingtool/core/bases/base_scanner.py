@@ -20,9 +20,11 @@
 
 from abc import abstractmethod
 from queue import Queue
+from urllib.parse import urljoin
 
 from .job_provider import JobProvider
 from ...objects import Payload, Result, ScannerResult
+from ...utils.fuzz_mark import FuzzMark
 
 
 class BaseScanner(JobProvider):
@@ -33,6 +35,7 @@ class BaseScanner(JobProvider):
     """
     def __init__(self):
         self.payloads_queue = Queue()
+        self.has_recursion = False
         super().__init__()
 
     def __str__(self) -> str:
@@ -76,16 +79,23 @@ class BaseScanner(JobProvider):
         """
         return result.scanners_res[str(self)]
 
-    def enqueue_payload(self, result: Result, payload: str) -> None:
-        """Enqueue a payload into the payload queue for the next job
+    def enqueue_path(self, result: Result, path: str) -> None:
+        """Enqueue a path into the payload queue for the next job
 
         @type result: Result
         @param result: The result of the payload
-        @type payload: str
-        @param payload: The payload that'll be enqueued
+        @type path: str
+        @param path: The path that'll be enqueued
         """
         was_empty = self.payloads_queue.empty()
-        self.payloads_queue.put(Payload().update(result._payload).with_recursion(payload))
+        self.payloads_queue.put(tuple([
+            Payload().update(result_payload).with_recursion(
+                urljoin(result_payload.final, path)
+            )
+            if i == FuzzMark.recursion_mark_index
+            else result_payload
+            for i, result_payload in enumerate(result._payloads)
+        ]))
         self.get_self_res(result).enqueued_payloads += 1
         if was_empty:
             self.notify(result)

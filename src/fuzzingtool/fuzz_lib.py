@@ -30,6 +30,7 @@ from .utils.argument_utils import (build_target_from_args, build_target_from_raw
 from .utils.consts import PluginCategory
 from .utils.utils import split_str_to_list
 from .utils.file_utils import read_file
+from .utils.fuzz_mark import FuzzMark
 from .utils.result_utils import ResultUtils
 from .core import (BlacklistStatus, Dictionary, Fuzzer, Filter,
                    JobManager, Matcher, Payloader, RecursionManager, Summary)
@@ -72,11 +73,14 @@ class FuzzLib:
         """The initialization function.
            Set the application variables including plugins requires
         """
+        self._pre_init_wordlist()
         self._init_requester()
+        self._check_for_recursion_mark()
         self._init_filter()
         self._init_matcher()
         self._init_scanners()
         self._init_other_arguments()
+        self._check_for_invalid_recursion()
         self._init_dictionary()
         self._init_managers()
         self._set_observer()
@@ -142,6 +146,15 @@ class FuzzLib:
         """
         pass
 
+    def _pre_init_wordlist(self) -> None:
+        """Pre init the wordlist to get the FuzzMarks"""
+        wordlists = self.args["wordlist"]
+        if isinstance(wordlists, str):
+            wordlists = [wordlists]
+        self.__wordlists_and_marks = build_wordlist(wordlists)
+        for _, fuzz_mark in self.__wordlists_and_marks:
+            FuzzMark.all_marks.add(fuzz_mark)
+
     def _init_requester(self) -> None:
         """Initialize the requester"""
         target = None
@@ -172,6 +185,17 @@ class FuzzLib:
             cookie=self.args["cookie"],
             replay_proxy=self.args["replay_proxy"],
         )
+
+    def _check_for_recursion_mark(self) -> None:
+        """Check for recursion fuzz mark on URL"""
+        recursion_mark = None
+        for mark, has_mark in self.requester._url.fuzz_dict.items():
+            if has_mark and self.requester.get_url().endswith(mark):
+                recursion_mark = mark
+        if recursion_mark is not None:
+            for i, fuzz_mark in enumerate(FuzzMark.all_marks):
+                if fuzz_mark == recursion_mark:
+                    FuzzMark.recursion_mark_index = i
 
     def _init_filter(self) -> None:
         """Initialize the filter"""
@@ -228,21 +252,28 @@ class FuzzLib:
         self.has_recursion = self.args["recursive"]
         self.replay_proxy = self.args["replay_proxy"]
 
+    def _check_for_invalid_recursion(self) -> None:
+        """Check the use of recursion features without fuzz mark"""
+        if (FuzzMark.recursion_mark_index == -1 and
+                (self.has_recursion or
+                 any([scanner.has_recursion for scanner in self.scanners]))):
+            raise FuzzLibException("The url must ends with a fuzz mark to use recursion features")
+
     def _init_dictionary(self) -> None:
         """Initialize the dictionary"""
         self.__configure_payloader()
-        final_wordlist = self.__build_wordlist(
-            build_wordlist(self.args["wordlist"])
-        )
-        atual_length = len(final_wordlist)
-        self.dict_metadata = {}
-        if self.args["unique"]:
-            previous_length = atual_length
-            final_wordlist = set(final_wordlist)
-            atual_length = len(final_wordlist)
-            self.dict_metadata['removed'] = previous_length-atual_length
-        self.dict_metadata['len'] = atual_length
-        self.dictionary = Dictionary(final_wordlist)
+        wordlists_and_marks = self.__get_wordlists_and_marks()
+        for i, wordlist in enumerate(wordlists_and_marks):
+            dict_metadata = {}
+            atual_length = len(wordlist)
+            if self.args["unique"]:
+                previous_length = atual_length
+                wordlist[:] = list(set(wordlist))
+                atual_length = len(wordlist)
+                dict_metadata['removed'] = previous_length-atual_length
+            dict_metadata['len'] = atual_length
+            self.dict_metadata[i].update(dict_metadata)
+        self.dictionary = Dictionary(wordlists_and_marks, self.has_recursion)
 
     def _init_managers(self) -> None:
         """Initialize the recursion manager and job manager"""
@@ -377,6 +408,23 @@ class FuzzLib:
             Payloader.set_capitalize()
         if self.args["encoder"]:
             Payloader.encoder.set_encoders(self.__build_encoders())
+
+    def __get_wordlists_and_marks(self) -> List[List[Payload]]:
+        """Get the builded wordlists and their associated fuzz marks on Payload objects
+
+        @returns List[List[Payload]]: The builded wordlists and marks on Payload objects
+        """
+        wordlists_and_marks = []
+        self.dict_metadata: List[dict] = []
+        for wordlists, fuzz_mark in self.__wordlists_and_marks:
+            wordlists_and_marks.append(
+                [Payload(payload, fuzz_mark)
+                 for payload in self.__build_wordlist(wordlists)]
+            )
+            self.dict_metadata.append({
+                'fuzz_mark': fuzz_mark
+            })
+        return wordlists_and_marks
 
     def __build_wordlist(self,
                          wordlists: List[Tuple[str, str]]) -> List[str]:

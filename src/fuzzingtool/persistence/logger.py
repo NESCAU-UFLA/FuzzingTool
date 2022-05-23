@@ -20,7 +20,9 @@
 
 from datetime import datetime
 from pathlib import Path
+from typing import Tuple
 
+from ..objects.payload import Payload
 from ..utils.consts import OUTPUT_DIRECTORY
 
 
@@ -55,14 +57,16 @@ class Logger:
         log_file.close()
         return str(self.__log_full_path)
 
-    def write(self, exception: str, payload: str) -> None:
+    def write(self, exception: str, payloads: Tuple[Payload]) -> None:
         """Write the exception on the log file
 
         @type exception: str
         @param exception: The exception to be saved on the log file
-        @type payload: str
-        @param payload: The payload used in the request
+        @type payloads: Tuple[Payload]
+        @param payloads: The payloads used in the request
         """
         time = datetime.now().strftime("%H:%M:%S")
+        str_payload = ' | '.join([f"{payload.fuzz_mark}: {payload.final}"
+                                  for payload in payloads])
         with open(self.__log_full_path, 'a') as log_file:
-            log_file.write(f'{time} | {exception} using payload: {payload}\n')
+            log_file.write(f'{time} | {exception} using payload: {str_payload}\n')

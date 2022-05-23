@@ -4,7 +4,9 @@ from datetime import datetime
 from pathlib import Path
 
 from src.fuzzingtool.persistence.logger import Logger
+from src.fuzzingtool.objects.payload import Payload
 from src.fuzzingtool.utils.consts import OUTPUT_DIRECTORY
+from src.fuzzingtool.utils.fuzz_mark import FuzzMark
 
 
 class TestLogger(unittest.TestCase):
@@ -43,8 +45,8 @@ class TestLogger(unittest.TestCase):
         test_payload = "wp-admin.php"
         test_exception = f"Couldn't connect to http://{self.test_host}/{test_payload}"
         test_datetime_now = self.default_datetime.strftime("%H:%M:%S")
-        text_to_write = f"{test_datetime_now} | {test_exception} using payload: {test_payload}\n"
+        text_to_write = f"{test_datetime_now} | {test_exception} using payload: {FuzzMark.BASE_MARK}: {test_payload}\n"
         mock_date.now.return_value = self.default_datetime
-        Logger().write(test_exception, test_payload)
+        Logger().write(test_exception, (Payload(test_payload),))
         mock_file.assert_called_once_with('', 'a')
         mock_file().write.assert_called_once_with(text_to_write)

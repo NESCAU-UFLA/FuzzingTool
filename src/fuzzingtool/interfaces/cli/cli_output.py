@@ -21,9 +21,9 @@
 from datetime import datetime
 import threading
 import sys
-from typing import Tuple
 from math import floor, ceil, log10
 from shutil import get_terminal_size
+from typing import List
 
 from ...objects.result import Result
 from ...utils.consts import MAX_PAYLOAD_LENGTH_TO_OUTPUT, FuzzType
@@ -257,13 +257,13 @@ class CliOutput:
 
     def print_configs(self,
                       target: dict,
-                      dictionary: dict) -> None:
+                      dictionaries: List[dict]) -> None:
         """Prints the program configuration
 
         @type target: dict
         @param taget: The target
-        @type dictionary: dict
-        @param dictionary: The dictionary used in the tests
+        @type dictionaries: List[dict]
+        @param dictionaries: The dictionaries used in the tests
         """
         print("")
         spaces = 3
@@ -273,12 +273,13 @@ class CliOutput:
         if target['body']:
             self.print_config("Body data", target['body'], spaces)
         self.print_config("Fuzzing type", target['type_fuzzing'], spaces)
-        dict_size = dictionary['len']
-        if 'removed' in dictionary.keys() and dictionary['removed']:
-            dict_size = (f"{dictionary['len']} "
-                         f"(removed {dictionary['removed']} "
-                         f"duplicated payloads)")
-        self.print_config("Dictionary size", dict_size)
+        for dictionary in dictionaries:
+            dict_size = dictionary['len']
+            if 'removed' in dictionary.keys() and dictionary['removed']:
+                dict_size = (f"{dictionary['len']} "
+                             f"(removed {dictionary['removed']} "
+                             f"duplicated payloads)")
+            self.print_config("Dictionary", f"{dictionary['fuzz_mark']}:{dict_size}")
         print("")
 
     def get_percentage(self, item_index: int) -> str:
@@ -292,22 +293,22 @@ class CliOutput:
 
     def progress_status(self,
                         item_index: int,
-                        payload: str,
+                        payloads: List[str],
                         current_job: int,
                         total_jobs: int) -> None:
         """Output the progress status of the fuzzing
 
         @type item_index: int
         @param item_index: The actual request index
-        @type payload: str
-        @param payload: The payload used in the request
+        @type payloads: str
+        @param payloads: The payloads used in the request
         """
         jobs_indent = ceil(log10(total_jobs))
         progress_length = self.__progress_length + (2 * jobs_indent)
         if progress_length <= get_terminal_size()[0]:
             percentage_value = self._get_percentage_value(item_index, self.__total_requests)
             status = self._get_progress_bar(percentage_value)
-            payload = fix_payload_to_output(payload)
+            payload = fix_payload_to_output(':'.join(payloads))
             status += (f" {Colors.LIGHT_YELLOW}{percentage_value:>3}% {Colors.RESET}"
                        + f"{Colors.GRAY}[{Colors.LIGHT_GRAY}{item_index:>{self.__request_indent}}"
                        + f"{Colors.GRAY}/{Colors.LIGHT_GRAY}{self.__total_requests}"
@@ -458,7 +459,7 @@ class CliOutput:
             return formatted_payload
         if result.fuzz_type == FuzzType.SUBDOMAIN_FUZZING:
             return result.history.parsed_url.hostname
-        return result.payload
+        return result.payloads[0]
 
     def __get_formatted_status(self, status: int) -> str:
         """Formats the status code to output
@@ -483,21 +484,6 @@ class CliOutput:
             status_color += Colors.RED
         return f"{status_color}{status}{Colors.RESET}"
 
-    def __get_formatted_result_items(self, result: Result) -> Tuple[
-        str, str, str, str, str, str
-    ]:
-        """Format the result items to the output
-
-        @type result: Result
-        @param result: The result of the request
-        @returns Tuple[str, str, str, str, str, str]: The tuple with the formatted result items
-        """
-        payload, rtt, length, words, lines = ResultUtils.get_formatted_result(
-            self.__get_formatted_payload(result), result.history.rtt,
-            result.history.body_size, result.words, result.lines
-        )
-        return (payload, self.__get_formatted_status(result.history.status), rtt, length, words, lines)
-
     def __get_formatted_result(self, result: Result) -> str:
         """Format the entire result message
 
@@ -505,15 +491,32 @@ class CliOutput:
         @param result: The result of the request
         @returns str: The formatted result message to output
         """
-        formatted_items = self.__get_formatted_result_items(result)
-        payload, status_code, rtt, length, words, lines = formatted_items
+        status_code, rtt, length, words, lines = (
+            self.__get_formatted_status(result.history.status),
+            *ResultUtils.get_formatted_result(
+                result.history.rtt, result.history.body_size,
+                result.words, result.lines
+            )
+        )
         formatted_result_str = (
-            f"{payload} {Colors.GRAY}["
+            f"{Colors.GRAY}["
             f"{Colors.LIGHT_GRAY}Code{Colors.RESET} {status_code} | "
             f"{Colors.LIGHT_GRAY}RTT{Colors.RESET} {rtt} | "
             f"{Colors.LIGHT_GRAY}Size{Colors.RESET} {length} | "
             f"{Colors.LIGHT_GRAY}Words{Colors.RESET} {words} | "
             f"{Colors.LIGHT_GRAY}Lines{Colors.RESET} {lines}{Colors.GRAY}]{Colors.RESET}"
         )
+        if len(result.payloads) == 1:
+            payload = fix_payload_to_output(self.__get_formatted_payload(result))
+            formatted_result_str = (
+                f"{payload:<{MAX_PAYLOAD_LENGTH_TO_OUTPUT}} {formatted_result_str}"
+            )
+        else:
+            for payload in result._payloads:
+                formatted_result_str += (
+                    "\n"
+                    f"    {payload.fuzz_mark}: "
+                    f"{fix_payload_to_output(payload.final):<{MAX_PAYLOAD_LENGTH_TO_OUTPUT}}"
+                )
         formatted_result_str += f"{Colors.LIGHT_YELLOW}{result.get_description()}{Colors.RESET}"
         return formatted_result_str
