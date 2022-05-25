@@ -23,7 +23,7 @@ from typing import List
 from requests.exceptions import HTTPError
 
 from ...bases.base_plugin import Plugin
-from ...bases.base_wordlist import BaseWordlist
+from ...bases.base_wordlist import BaseListWordlist
 from ....utils.http_utils import get_parsed_url
 from ....conn.requesters.requester import Requester
 from ....decorators.plugin_meta import plugin_meta
@@ -38,7 +38,7 @@ ROBOTS_HTTP_HEADER = {
 
 
 @plugin_meta
-class Robots(BaseWordlist, Plugin):
+class Robots(BaseListWordlist, Plugin):
     __author__ = ("Vitor Oriel",)
     __params__ = {
         'metavar': "TARGET_URL",
@@ -54,7 +54,7 @@ class Robots(BaseWordlist, Plugin):
         if not url.endswith('/'):
             url += '/'
         self.url = url
-        BaseWordlist.__init__(self)
+        BaseListWordlist.__init__(self)
 
     def _build(self) -> List[str]:
         global ROBOTS_HTTP_HEADER

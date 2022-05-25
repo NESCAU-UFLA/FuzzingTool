@@ -34,9 +34,10 @@ from .utils.fuzz_mark import FuzzMark
 from .utils.result_utils import ResultUtils
 from .core import (BlacklistStatus, Dictionary, Fuzzer, Filter,
                    JobManager, Matcher, Payloader, RecursionManager, Summary)
-from .core.bases import BaseScanner, BaseEncoder
+from .core.bases import BaseScanner, BaseEncoder, BaseWordlist
 from .core.defaults.scanners import (DataScanner,
                                      PathScanner, SubdomainScanner)
+from .core.defaults.wordlists.chain_wordlist import ChainWordlist
 from .conn.requesters import Requester, SubdomainRequester
 from .conn.request_parser import check_is_subdomain_fuzzing
 from .factories import PluginFactory, WordlistFactory
@@ -262,17 +263,16 @@ class FuzzLib:
     def _init_dictionary(self) -> None:
         """Initialize the dictionary"""
         self.__configure_payloader()
-        wordlists_and_marks = self.__get_wordlists_and_marks()
-        for i, wordlist in enumerate(wordlists_and_marks):
-            dict_metadata = {}
-            atual_length = len(wordlist)
-            if self.args["unique"]:
-                previous_length = atual_length
-                wordlist[:] = list(set(wordlist))
-                atual_length = len(wordlist)
-                dict_metadata['removed'] = previous_length-atual_length
-            dict_metadata['len'] = atual_length
-            self.dict_metadata[i].update(dict_metadata)
+        wordlists_and_marks: List[BaseWordlist] = []
+        self.dict_metadata: List[dict] = []
+        for wordlists, fuzz_mark in self.__wordlists_and_marks:
+            wordlist_obj = self.__build_wordlist(wordlists)
+            wordlist_obj.set_fuzz_mark(fuzz_mark)
+            wordlists_and_marks.append(wordlist_obj)
+            self.dict_metadata.append({
+                'len': len(wordlist_obj),
+                'fuzz_mark': fuzz_mark,
+            })
         self.dictionary = Dictionary(wordlists_and_marks, self.has_recursion)
 
     def _init_managers(self) -> None:
@@ -409,30 +409,13 @@ class FuzzLib:
         if self.args["encoder"]:
             Payloader.encoder.set_encoders(self.__build_encoders())
 
-    def __get_wordlists_and_marks(self) -> List[List[Payload]]:
-        """Get the builded wordlists and their associated fuzz marks on Payload objects
-
-        @returns List[List[Payload]]: The builded wordlists and marks on Payload objects
-        """
-        wordlists_and_marks = []
-        self.dict_metadata: List[dict] = []
-        for wordlists, fuzz_mark in self.__wordlists_and_marks:
-            wordlists_and_marks.append(
-                [Payload(payload, fuzz_mark)
-                 for payload in self.__build_wordlist(wordlists)]
-            )
-            self.dict_metadata.append({
-                'fuzz_mark': fuzz_mark
-            })
-        return wordlists_and_marks
-
     def __build_wordlist(self,
-                         wordlists: List[Tuple[str, str]]) -> List[str]:
+                         wordlists: List[Tuple[str, str]]) -> BaseWordlist:
         """Build the dictionary
 
         @type wordlists: List[Tuple[str, str]]
         @param wordlists: The wordlists used in the dictionary
-        @returns List[str]: The builded payload wordlist
+        @returns BaseWordlist: The builded payload wordlist
         """
         def run(wordlist: Tuple[str, str]) -> None:
             """Run the wordlist thread function
@@ -447,9 +430,9 @@ class FuzzLib:
             except (WordlistCreationError, BuildWordlistFails) as e:
                 self.wordlist_errors.append(e)
             else:
-                final_wordlist.extend(wordlist_obj.get())
+                final_wordlist.extend(wordlist_obj)
 
-        final_wordlist = []
+        final_wordlist: List[BaseWordlist] = []
         wordlist_threads = [Thread(target=run, args=(wordlist,)) for wordlist in wordlists]
         self.wordlist_errors: List[Union[WordlistCreationError, BuildWordlistFails]] = []
         for thread in wordlist_threads:
@@ -458,7 +441,9 @@ class FuzzLib:
             thread.join()
         if not final_wordlist:
             raise FuzzLibException("The wordlist is empty")
-        return final_wordlist
+        if len(final_wordlist) > 1:
+            return ChainWordlist(final_wordlist)
+        return final_wordlist[0]
 
     def __get_default_scanner(self) -> BaseScanner:
         """Check what's the scanners that will be used

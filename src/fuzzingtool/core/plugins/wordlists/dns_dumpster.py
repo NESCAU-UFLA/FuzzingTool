@@ -24,7 +24,7 @@ from typing import List
 from bs4 import BeautifulSoup as bs
 
 from ...bases.base_plugin import Plugin
-from ...bases.base_wordlist import BaseWordlist
+from ...bases.base_wordlist import BaseListWordlist
 from ....conn.requesters.requester import Requester
 from ....exceptions.request_exceptions import RequestException
 from ....decorators.plugin_meta import plugin_meta
@@ -44,7 +44,7 @@ DNSDUMPSTER_HTTP_HEADER = {
 
 
 @plugin_meta
-class DnsDumpster(BaseWordlist, Plugin):
+class DnsDumpster(BaseListWordlist, Plugin):
     __author__ = ("Vitor Oriel",)
     __params__ = {
         'metavar': "TARGET_HOST",
@@ -58,7 +58,7 @@ class DnsDumpster(BaseWordlist, Plugin):
         if not host:
             raise MissingParameter("target host")
         self.host = host
-        BaseWordlist.__init__(self)
+        BaseListWordlist.__init__(self)
 
     def _build(self) -> List[str]:
         global DNSDUMPSTER_HTTP_HEADER

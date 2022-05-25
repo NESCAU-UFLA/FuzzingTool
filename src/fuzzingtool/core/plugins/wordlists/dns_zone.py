@@ -24,14 +24,14 @@ from socket import gethostbyname, gaierror
 from dns import resolver, query, zone
 
 from ...bases.base_plugin import Plugin
-from ...bases.base_wordlist import BaseWordlist
+from ...bases.base_wordlist import BaseListWordlist
 from ....decorators.plugin_meta import plugin_meta
 from ....utils.consts import FuzzType
 from ....exceptions import MissingParameter, BuildWordlistFails
 
 
 @plugin_meta
-class DnsZone(BaseWordlist, Plugin):
+class DnsZone(BaseListWordlist, Plugin):
     __author__ = ("Vitor Oriel",)
     __params__ = {
         'metavar': "TARGET_HOST",
@@ -45,7 +45,7 @@ class DnsZone(BaseWordlist, Plugin):
         if not host:
             raise MissingParameter("target host")
         self.host = host
-        BaseWordlist.__init__(self)
+        BaseListWordlist.__init__(self)
 
     def _build(self) -> List[str]:
         try:

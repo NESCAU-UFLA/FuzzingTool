@@ -40,8 +40,13 @@ class Overflow(BaseWordlist, Plugin):
     def __init__(self, source_param: str):
         if not source_param:
             raise MissingParameter("quantity of payloads")
-        if ',' in source_param:
-            quantity_of_payloads, payload = source_param.split(',', 1)
+        self.param = source_param
+        self.index = 0
+        BaseWordlist.__init__(self)
+
+    def _build(self) -> None:
+        if ',' in self.param:
+            quantity_of_payloads, payload = self.param.split(',', 1)
             if ':' in payload:
                 try:
                     init_payload, payload, end_payload = payload.split(':', 3)
@@ -53,20 +58,20 @@ class Overflow(BaseWordlist, Plugin):
             else:
                 init_payload, end_payload = '', ''
         else:
-            quantity_of_payloads = source_param
+            quantity_of_payloads = self.param
             init_payload, payload, end_payload = '', '', ''
         try:
             quantity_of_payloads = int(quantity_of_payloads)
         except ValueError:
             raise BadArgumentType("the quantity of payloads must be integer")
-        self.quantity_of_payloads = quantity_of_payloads
         self.init_payload = init_payload
         self.payload = payload
         self.end_payload = end_payload
-        BaseWordlist.__init__(self)
+        self.__count = quantity_of_payloads
 
-    def _build(self) -> List[str]:
-        return [
-            f"{self.init_payload}{self.payload*i}{self.end_payload}"
-            for i in range(self.quantity_of_payloads)
-        ]
+    def _next(self) -> str:
+        if self.index < self.__count:
+            item = f"{self.init_payload}{self.payload*self.index}{self.end_payload}"
+            self.index += 1
+            return item
+        raise StopIteration
