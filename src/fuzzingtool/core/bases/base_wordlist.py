@@ -34,7 +34,6 @@ class BaseWordlist(ABC):
     def __init__(self):
         self.__fuzz_mark = ''
         self.__lock = Lock()
-        self.__count = 0
 
     def __len__(self) -> int:
         return self.__count
@@ -50,14 +49,20 @@ class BaseWordlist(ABC):
         self.__fuzz_mark = fuzz_mark
 
     def build(self) -> None:
-        """Builds the wordlist"""
         self._build()
+        self.__count = self._count()
 
-    def _build(self) -> List[str]:
+    @abstractmethod
+    def _build(self) -> None:
         """The wordlist builder
 
         @returns List[str]: The builded wordlist
         """
+        pass
+
+    @abstractmethod
+    def _count(self) -> int:
+        """Get the quantity of itens on wordlist"""
         pass
 
     @abstractmethod
@@ -74,7 +79,7 @@ class BaseListWordlist(BaseWordlist):
 
     def build(self) -> None:
         self.__wordlist = self._build()
-        self.__count = len(self.__wordlist)
+        self.__count = self._count()
 
     @abstractmethod
     def _build(self) -> List[str]:
@@ -83,6 +88,9 @@ class BaseListWordlist(BaseWordlist):
         @returns List[str]: The builded wordlist
         """
         pass
+
+    def _count(self) -> int:
+        return len(self.__wordlist)
 
     def _next(self) -> str:
         if self.index < self.__count:

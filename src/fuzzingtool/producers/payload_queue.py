@@ -18,26 +18,18 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from typing import List
+from queue import Queue
 
-from ...bases.base_wordlist import BaseWordlist
+from .base_producer import BaseProducer
 
 
-class ChainWordlist(BaseWordlist):
-    def __init__(self, wordlists: List[BaseWordlist]):
+class PayloadQueue(BaseProducer):
+    def __init__(self, queue: Queue):
         super().__init__()
-        self.index = 0
-        self.__wordlists = wordlists
-        self.__len_wordlists = len(self.__wordlists)
-        for wordlist in self.__wordlists:
-            self.__count += len(wordlist)
+        self._iterator = Queue()
+        while not queue.empty():
+            self._iterator.put(queue.get())
+        self._count = self._iterator.qsize()
 
-    def _next(self) -> str:
-        if self.index < self.__len_wordlists:
-            try:
-                item = self.__wordlists[self.index]._next()
-            except StopIteration:
-                self.index += 1
-            else:
-                return item
-        raise StopIteration
+    def __next__(self) -> tuple:
+        return self._iterator.get()

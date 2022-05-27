@@ -263,23 +263,23 @@ class FuzzLib:
     def _init_dictionary(self) -> None:
         """Initialize the dictionary"""
         self.__configure_payloader()
-        wordlists_and_marks: List[BaseWordlist] = []
+        wordlist_objs: List[BaseWordlist] = []
         self.dict_metadata: List[dict] = []
         for wordlists, fuzz_mark in self.__wordlists_and_marks:
             wordlist_obj = self.__build_wordlist(wordlists)
             wordlist_obj.set_fuzz_mark(fuzz_mark)
-            wordlists_and_marks.append(wordlist_obj)
+            wordlist_objs.append(wordlist_obj)
             self.dict_metadata.append({
                 'len': len(wordlist_obj),
                 'fuzz_mark': fuzz_mark,
             })
-        self.dictionary = Dictionary(wordlists_and_marks, self.has_recursion)
+        self.dictionary = Dictionary(wordlist_objs)
 
     def _init_managers(self) -> None:
         """Initialize the recursion manager and job manager"""
         self.recursion_manager = RecursionManager(
             max_rlevel=self.args["max_rlevel"],
-            wordlist=self.dictionary.wordlist
+            wordlist=self.dictionary.wordlists
         )
         self.job_manager = JobManager(
             dictionary=self.dictionary,
@@ -430,7 +430,7 @@ class FuzzLib:
             except (WordlistCreationError, BuildWordlistFails) as e:
                 self.wordlist_errors.append(e)
             else:
-                final_wordlist.extend(wordlist_obj)
+                final_wordlist.append(wordlist_obj)
 
         final_wordlist: List[BaseWordlist] = []
         wordlist_threads = [Thread(target=run, args=(wordlist,)) for wordlist in wordlists]

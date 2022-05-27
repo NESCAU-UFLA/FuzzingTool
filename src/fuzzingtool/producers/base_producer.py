@@ -18,26 +18,20 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from typing import List
-
-from ...bases.base_wordlist import BaseWordlist
+from abc import ABC, abstractmethod
 
 
-class ChainWordlist(BaseWordlist):
-    def __init__(self, wordlists: List[BaseWordlist]):
-        super().__init__()
-        self.index = 0
-        self.__wordlists = wordlists
-        self.__len_wordlists = len(self.__wordlists)
-        for wordlist in self.__wordlists:
-            self.__count += len(wordlist)
+class BaseProducer(ABC):
+    def __init__(self):
+        self._iterator = None
+        self._count = 0
 
-    def _next(self) -> str:
-        if self.index < self.__len_wordlists:
-            try:
-                item = self.__wordlists[self.index]._next()
-            except StopIteration:
-                self.index += 1
-            else:
-                return item
-        raise StopIteration
+    def __len__(self) -> int:
+        return self._count
+
+    @abstractmethod
+    def __next__(self):
+        pass
+
+    def __iter__(self):
+        return self

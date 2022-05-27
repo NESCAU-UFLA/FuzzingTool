@@ -18,8 +18,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from typing import List
-
 from ...bases.base_plugin import Plugin
 from ...bases.base_wordlist import BaseWordlist
 from ....decorators.plugin_meta import plugin_meta
@@ -67,10 +65,13 @@ class Overflow(BaseWordlist, Plugin):
         self.init_payload = init_payload
         self.payload = payload
         self.end_payload = end_payload
-        self.__count = quantity_of_payloads
+        self.count = quantity_of_payloads
+
+    def _count(self) -> int:
+        return self.count
 
     def _next(self) -> str:
-        if self.index < self.__count:
+        if self.index < self.count:
             item = f"{self.init_payload}{self.payload*self.index}{self.end_payload}"
             self.index += 1
             return item

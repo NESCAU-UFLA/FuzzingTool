@@ -18,26 +18,17 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from typing import List
+from itertools import product
+from functools import reduce
 
-from ...bases.base_wordlist import BaseWordlist
+from .base_producer import BaseProducer
 
 
-class ChainWordlist(BaseWordlist):
-    def __init__(self, wordlists: List[BaseWordlist]):
+class Product(BaseProducer):
+    def __init__(self, *iterators):
         super().__init__()
-        self.index = 0
-        self.__wordlists = wordlists
-        self.__len_wordlists = len(self.__wordlists)
-        for wordlist in self.__wordlists:
-            self.__count += len(wordlist)
+        self._iterator = product(*iterators)
+        self._count = reduce(lambda x, y: x * len(y), iterators[1:], len(iterators[0]))
 
-    def _next(self) -> str:
-        if self.index < self.__len_wordlists:
-            try:
-                item = self.__wordlists[self.index]._next()
-            except StopIteration:
-                self.index += 1
-            else:
-                return item
-        raise StopIteration
+    def __next__(self) -> tuple:
+        return next(self._iterator)

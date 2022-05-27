@@ -54,7 +54,7 @@ class JobManager(BaseObserver):
         self.current_job = 0
         self.current_job_name = None
         self.pending_jobs = Queue()
-        self.pending_jobs.put(("wordlist", dictionary.wordlist))
+        self.pending_jobs.put(("wordlist", dictionary.producer))
         self.total_jobs = 1
         self.total_requests = 0
         self.dictionary = dictionary
@@ -75,8 +75,8 @@ class JobManager(BaseObserver):
     def get_job(self) -> None:
         """Gets a new job to run"""
         self.current_job += 1
-        self.current_job_name, job_queue = self.pending_jobs.get()
-        self.dictionary.fill_from_queue(job_queue, clear=True)
+        self.current_job_name, job_producer = self.pending_jobs.get()
+        self.dictionary.set_producer(job_producer)
         self.total_requests = len(self.dictionary)
 
     def has_pending_jobs(self) -> bool:
