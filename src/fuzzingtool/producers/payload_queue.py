@@ -18,22 +18,18 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from typing import List
+from queue import Queue
 
-from ...bases.base_wordlist import BaseListWordlist
-from ....utils.utils import split_str_to_list, check_range_list
+from .base_producer import BaseProducer
 
 
-class ListWordlist(BaseListWordlist):
-    __author__ = ("Vitor Oriel",)
-
-    def __init__(self, payload_list: str):
-        payload_list = payload_list[1:-1]
-        self.payload_list = payload_list
+class PayloadQueue(BaseProducer):
+    def __init__(self, queue: Queue):
         super().__init__()
+        self._iterator = Queue()
+        while not queue.empty():
+            self._iterator.put(queue.get())
+        self._count = self._iterator.qsize()
 
-    def _build(self) -> List[str]:
-        builded_list = []
-        for payload in split_str_to_list(self.payload_list):
-            builded_list.extend(check_range_list(payload))
-        return builded_list
+    def __next__(self) -> tuple:
+        return self._iterator.get()

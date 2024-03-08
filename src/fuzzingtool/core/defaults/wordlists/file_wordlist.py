@@ -18,6 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+from io import TextIOWrapper
 from typing import List
 
 from ...bases.base_wordlist import BaseWordlist
@@ -30,10 +31,23 @@ class FileWordlist(BaseWordlist):
 
     def __init__(self, file_path: str):
         self.file_path = file_path
+        self.file: TextIOWrapper = None
         super().__init__()
 
     def _build(self) -> List[str]:
         try:
-            return list(set(read_file(self.file_path)))
+            self.file = open(self.file_path, 'r')
         except FileNotFoundError as e:
             raise BuildWordlistFails(str(e))
+
+    def _count(self) -> None:
+        count = len(self.file.readlines())
+        self.file.seek(0)
+        return count
+
+    def _next(self):
+        line = next(self.file)
+        if not line:
+            self.file.close()
+            raise StopIteration
+        return line.rstrip()

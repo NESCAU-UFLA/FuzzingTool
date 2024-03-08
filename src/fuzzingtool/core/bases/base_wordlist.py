@@ -20,6 +20,9 @@
 
 from abc import ABC, abstractmethod
 from typing import List
+from threading import Lock
+
+from ...objects.payload import Payload
 
 
 class BaseWordlist(ABC):
@@ -29,21 +32,54 @@ class BaseWordlist(ABC):
         wordlist: The list with the payloads
     """
     def __init__(self):
-        self.__wordlist = []
+        self.__fuzz_mark = ''
+        self.__lock = Lock()
 
     def __len__(self) -> int:
-        return len(self.__wordlist)
+        return self.__count
 
-    def get(self) -> List[str]:
-        """The wordlist getter
+    def __next__(self) -> Payload:
+        with self.__lock:
+            return Payload(self._next(), self.__fuzz_mark)
 
-        @returns List[str]: The list with the payloads
-        """
-        return self.__wordlist
+    def __iter__(self):
+        return self
+
+    def set_fuzz_mark(self, fuzz_mark: str) -> None:
+        self.__fuzz_mark = fuzz_mark
 
     def build(self) -> None:
-        """Builds the wordlist"""
+        self._build()
+        self.__count = self._count()
+
+    @abstractmethod
+    def _build(self) -> None:
+        """The wordlist builder
+
+        @returns List[str]: The builded wordlist
+        """
+        pass
+
+    @abstractmethod
+    def _count(self) -> int:
+        """Get the quantity of itens on wordlist"""
+        pass
+
+    @abstractmethod
+    def _next(self) -> str:
+        """Get the next payload to process"""
+        pass
+
+
+class BaseListWordlist(BaseWordlist):
+    def __init__(self):
+        super().__init__()
+        self.index = 0
+        self.__wordlist = []
+
+    def build(self) -> None:
         self.__wordlist = self._build()
+        self.__count = self._count()
 
     @abstractmethod
     def _build(self) -> List[str]:
@@ -52,3 +88,13 @@ class BaseWordlist(ABC):
         @returns List[str]: The builded wordlist
         """
         pass
+
+    def _count(self) -> int:
+        return len(self.__wordlist)
+
+    def _next(self) -> str:
+        if self.index < self.__count:
+            item = self.__wordlist[self.index]
+            self.index += 1
+            return item
+        raise StopIteration

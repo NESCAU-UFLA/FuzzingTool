@@ -18,22 +18,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from typing import List
-
-from ...bases.base_wordlist import BaseListWordlist
-from ....utils.utils import split_str_to_list, check_range_list
-
-
-class ListWordlist(BaseListWordlist):
-    __author__ = ("Vitor Oriel",)
-
-    def __init__(self, payload_list: str):
-        payload_list = payload_list[1:-1]
-        self.payload_list = payload_list
-        super().__init__()
-
-    def _build(self) -> List[str]:
-        builded_list = []
-        for payload in split_str_to_list(self.payload_list):
-            builded_list.extend(check_range_list(payload))
-        return builded_list
+from .base_producer import BaseProducer
+from .payload_queue import PayloadQueue
+from .product import Product

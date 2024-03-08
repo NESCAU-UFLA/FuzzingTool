@@ -18,22 +18,20 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from typing import List
-
-from ...bases.base_wordlist import BaseListWordlist
-from ....utils.utils import split_str_to_list, check_range_list
+from abc import ABC, abstractmethod
 
 
-class ListWordlist(BaseListWordlist):
-    __author__ = ("Vitor Oriel",)
+class BaseProducer(ABC):
+    def __init__(self):
+        self._iterator = None
+        self._count = 0
 
-    def __init__(self, payload_list: str):
-        payload_list = payload_list[1:-1]
-        self.payload_list = payload_list
-        super().__init__()
+    def __len__(self) -> int:
+        return self._count
 
-    def _build(self) -> List[str]:
-        builded_list = []
-        for payload in split_str_to_list(self.payload_list):
-            builded_list.extend(check_range_list(payload))
-        return builded_list
+    @abstractmethod
+    def __next__(self):
+        pass
+
+    def __iter__(self):
+        return self

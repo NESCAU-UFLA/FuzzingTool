@@ -18,22 +18,17 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from typing import List
+from itertools import product
+from functools import reduce
 
-from ...bases.base_wordlist import BaseListWordlist
-from ....utils.utils import split_str_to_list, check_range_list
+from .base_producer import BaseProducer
 
 
-class ListWordlist(BaseListWordlist):
-    __author__ = ("Vitor Oriel",)
-
-    def __init__(self, payload_list: str):
-        payload_list = payload_list[1:-1]
-        self.payload_list = payload_list
+class Product(BaseProducer):
+    def __init__(self, *iterators):
         super().__init__()
+        self._iterator = product(*iterators)
+        self._count = reduce(lambda x, y: x * len(y), iterators[1:], len(iterators[0]))
 
-    def _build(self) -> List[str]:
-        builded_list = []
-        for payload in split_str_to_list(self.payload_list):
-            builded_list.extend(check_range_list(payload))
-        return builded_list
+    def __next__(self) -> tuple:
+        return next(self._iterator)

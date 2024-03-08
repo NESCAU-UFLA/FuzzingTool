@@ -18,13 +18,13 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from queue import Queue
-from itertools import product
 from builtins import zip
 from typing import Iterator, Tuple, List
 
 from .payloader import Payloader
+from .bases.base_wordlist import BaseWordlist
 from ..objects.payload import Payload
+from ..producers import BaseProducer, Product
 
 
 class Dictionary:
@@ -35,30 +35,24 @@ class Dictionary:
         size: The payload queue size
         payloads: The queue that contains all payloads inside the wordlist
     """
-    def __init__(self, wordlist: List[List[Payload]], has_recursion: bool = False):
+    def __init__(self, wordlists: List[BaseWordlist]):
         """Class constructor
 
-        @type wordlist: List[List[Payload]]
+        @type wordlist: List[BaseWordlist]
         @param wordlist: The wordlist and mark with the payloads
         """
-        self.wordlist = Queue()
-        for payloads in product(*wordlist):
-            self.wordlist.put(payloads)
-        self.__has_recursion = has_recursion
-        self.__size = 0
-        self.__payloads = Queue()
+        self.wordlists = wordlists
+        self.producer: BaseProducer = Product(*self.wordlists)
+        self.__size = 100
 
     def __next__(self) -> Iterator[Tuple[Payload]]:
         """Gets the next payload to be processed
 
         @returns list: The payloads used in the request
         """
-        next_payload_tuple: Tuple[Payload] = self.__payloads.get()
-        if self.__has_recursion:
-            self.wordlist.put(next_payload_tuple)
         self.__size -= 1
         return zip(*[Payloader.get_customized_payload(payload)
-                     for payload in next_payload_tuple])
+                     for payload in next(self.producer)])
 
     def __len__(self) -> int:
         """Gets the wordlist length
@@ -79,24 +73,13 @@ class Dictionary:
                 * length_prefix
                 * length_encoders)
 
-    def is_empty(self) -> bool:
-        """The payloads empty queue flag getter
-
-        @returns bool: The payloads empty queue flag
-        """
-        return self.__payloads.empty()
-
-    def fill_from_queue(self, payloads_queue: Queue, clear: bool = False) -> None:
-        """Fill the payloads queue with another queue
+    def set_producer(self, producer: BaseProducer) -> None:
+        """Set a new producer
 
         @type payloads_queue: Queue
         @param payloads_queue: The other payload quele that'll enqueue the payloads
         @type clear: bool
         @param clear: The flag to say if the payload queue needs to be cleared before
         """
-        if clear:
-            self.__payloads = Queue()
-            self.__size = 0
-        while not payloads_queue.empty():
-            self.__payloads.put(payloads_queue.get())
-            self.__size += 1
+        self.producer = producer
+        self.__size = len(self.producer)

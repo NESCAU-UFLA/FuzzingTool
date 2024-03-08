@@ -20,20 +20,24 @@
 
 from typing import List
 
-from ...bases.base_wordlist import BaseListWordlist
-from ....utils.utils import split_str_to_list, check_range_list
+from ...bases.base_wordlist import BaseWordlist
 
 
-class ListWordlist(BaseListWordlist):
-    __author__ = ("Vitor Oriel",)
-
-    def __init__(self, payload_list: str):
-        payload_list = payload_list[1:-1]
-        self.payload_list = payload_list
+class ChainWordlist(BaseWordlist):
+    def __init__(self, wordlists: List[BaseWordlist]):
         super().__init__()
+        self.index = 0
+        self.__wordlists = wordlists
+        self.__len_wordlists = len(self.__wordlists)
+        for wordlist in self.__wordlists:
+            self.__count += len(wordlist)
 
-    def _build(self) -> List[str]:
-        builded_list = []
-        for payload in split_str_to_list(self.payload_list):
-            builded_list.extend(check_range_list(payload))
-        return builded_list
+    def _next(self) -> str:
+        if self.index < self.__len_wordlists:
+            try:
+                item = self.__wordlists[self.index]._next()
+            except StopIteration:
+                self.index += 1
+            else:
+                return item
+        raise StopIteration
